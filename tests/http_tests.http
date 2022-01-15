@@ -1,0 +1,22 @@
+# Test your FastAPI endpoints
+
+GET http://127.0.0.1:8000/
+Accept: application/json
+
+###
+
+GET http://127.0.0.1:8000/hello/User
+Accept: application/json
+
+> {%
+client.test("Headers option exists", function() {
+  const expectedField = "message";
+  const expectedValue = "Hello User";
+  const expectedStatus = 200;
+  client.assert(response.status === expectedStatus,  `Expected ${expectedStatus} status but received ${response.status}`);
+  client.assert(response.body.hasOwnProperty(expectedField), `Body does not contain ${expectedField} field`);
+  client.assert(response.body[expectedField] === expectedValue, `Body ${expectedField} field is not ${expectedValue}`);
+});
+%}
+
+###
