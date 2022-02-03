@@ -19,24 +19,42 @@ zarr.tree(hdf5_file)
 
 d = {}
 def visitor_func(name, node):
+    root_path = PATH_TO_OUTPUT_DIR + hdf5_file.filename.split('/')[-1].split('.')[0]
     if isinstance(node, h5py.Dataset):
-        if node.dtype in d.keys():     
-            d[node.dtype] = d[node.dtype] + 1
+        if node.dtype == 'object':
+            # Opt 1
+            # arr = zarr.open_array(root_path + node.name, mode='w', shape=node.shape, dtype=node.dtype, object_codec=numcodecs.MsgPack())
+            # arr[...] = node[()]
+            
+            # Opt 2 - works, data is like [b'Drosophila.....']
+            data = [node[()]]
+            arr = zarr.array(data, dtype=node.dtype, object_codec=numcodecs.MsgPack())
+            zarr.save_array(root_path + node.name, arr, object_codec=numcodecs.MsgPack())
+            # print(arr)
+        #     # data = 0 #TODO: add data as numpy arr/ arr-like object
+        #     # zarr.array(data, dtype=object, object_codec=numcodecs.MsgPack())
+        #     # zarr.save(root_path + node.name)
         else:
-            d[node.dtype] = 1
-
+            arr = zarr.open(root_path + node.name, mode='w', shape=node.shape, dtype=node.dtype)
+            arr[...] = node[()]
+            # print(arr)
+        # if node.dtype in d.keys():     
+        #     d[node.dtype] = d[node.dtype] + 1
+        # else:
+        #     d[node.dtype] = 1
         # print(node.name)
     else:
-        print(node.name)
-        # TODO: fix paths
-        zarr.open(PATH_TO_OUTPUT_DIR + hdf5_file.filename.split('/')[-1].split('.')[0] + node.name, mode='w')
-        # print(node.name)
         # node is a group
-
+        # TODO: fix paths
+        zarr.open(root_path + node.name, mode='w')
+        
 hdf5_file.visititems(visitor_func)
-# print(hdf5_file.filename)
 
 hdf5_file.close()
+
+zz = zarr.open_group(PATH_TO_OUTPUT_DIR + 'emd_1832')
+print(zz.tree())
+print(zz['details'][()])
 # print(d)
 
 # TODO: fix path so that it is working irrespectively of where you call script from
