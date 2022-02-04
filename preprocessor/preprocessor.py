@@ -4,11 +4,22 @@ import zarr
 import sfftkrw as sff
 import numpy as np
 import numcodecs
-import msgpack
+# import msgpack
 from sys import stdout
+import base64
+import zlib
 
 PATH_TO_SEG_DIR = ('./sample_segmentations/emdb_sff/')
 PATH_TO_OUTPUT_DIR = ('./output_internal_zarr/')
+
+def decompress_lattice_data(compressed_b64_encoded_data, mode, shape):
+    '''decodes base64 encoded zlib-zipped byte sequence (lattice data)
+    into numpy array that is equal to .data_array of SFFLattice class in sfftkrw'''
+    decoded = base64.b64decode(compressed_b64_encoded_data)
+    decompressed_bytes = zlib.decompress(decoded)
+    raw_arr = np.frombuffer(decompressed_bytes, dtype=mode)
+    arr = raw_arr.reshape(shape)
+    return arr
 
 # TODO: don't forget to close it or open with "with"
 hdf5_file = h5py.File(PATH_TO_SEG_DIR + 'emd_1832.hff', mode='r')
