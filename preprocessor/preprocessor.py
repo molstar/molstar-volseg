@@ -14,6 +14,7 @@ import zlib
 # (e.g. can have 5-6 segments ike 104, 85... in segment_list), perhaps np.max (kinda every other value)
 from skimage.measure import block_reduce
 
+# TODO: use pathlib or similar to fix paths in code
 PATH_TO_SEG_DIR = ('./sample_segmentations/emdb_sff/')
 PATH_TO_OUTPUT_DIR = ('./output_internal_zarr/')
 DOWNSAMPLING_STEPS = 4
@@ -35,12 +36,8 @@ def decompress_lattice_data(compressed_b64_encoded_data, mode, shape):
     arr = raw_arr.reshape(shape)
     return arr
 
-# TODO: don't forget to close it or open with "with"
 hdf5_file = h5py.File(PATH_TO_SEG_DIR + 'emd_1832.hff', mode='r')
-zarr.tree(hdf5_file)
-# dest = zarr.open_group('full_hdf5.zarr', mode='w')
-# zarr.copy_all(hdf5_file, dest, log=stdout)
-# zarr.copy(hdf5_file['global_external_references'], dest, log=stdout)
+# zarr.tree(hdf5_file)
 
 # TODO: potentially may be rewritten using root.create_group/ group.create_array etc. to get rid of paths
 def visitor_func(name, node):
@@ -49,18 +46,12 @@ def visitor_func(name, node):
     if isinstance(node, h5py.Dataset):
         # for text-based fields, including lattice data (as it is b64 encoded zlib-zipped sequence)
         if node.dtype == 'object':
-            # Opt 1
-            # arr = zarr.open_array(root_path + node.name, mode='w', shape=node.shape, dtype=node.dtype, object_codec=numcodecs.MsgPack())
-            # arr[...] = node[()]
-            
-            # Opt 2 - works, data is like [[b'Drosophila.....']], so for access use [0]
             data = [node[()]]
             arr = zarr.array(data, dtype=node.dtype, object_codec=numcodecs.MsgPack())
             zarr.save_array(root_path + node.name, arr, object_codec=numcodecs.MsgPack())
         else:
             arr = zarr.open_array(root_path + node.name, mode='w', shape=node.shape, dtype=node.dtype)
             arr[...] = node[()]
-            # print(arr)
     else:
         # node is a group
         # TODO: fix paths
@@ -88,51 +79,17 @@ for gr_name, gr in zarr_structure.lattice_list.groups():
             shape=data.shape,
             dtype=data.dtype)
         downsampled_data_arr[...] = data
-    # TODO: figure out compression/filters: b64 encoded zlib-zipped .data is just 8 bytes, downsamplings
-    # in raw uncompressed state are much more
-    # TODO: figure out also chunks - currently they are not used
+    # TODO: figure out compression/filters: b64 encoded zlib-zipped .data is just 8 bytes
+    # downsamplings sizes in raw uncompressed state are much bigger 
+    # TODO: figure out what to do with chunks - currently they are not used
 
 # Storing as a file (ZIP, bzip2 compression)
 # Compression constants for compression arg of ZipStore()
 # ZIP_STORED = 0
-# ZIP_DEFLATED = 8 (zlip)
+# ZIP_DEFLATED = 8 (zlib)
 # ZIP_BZIP2 = 12
 # ZIP_LZMA = 14
-# close store after writing! or use 'with' https://zarr.readthedocs.io/en/stable/api/storage.html#zarr.storage.ZipStore
+# close store after writing, or use 'with' https://zarr.readthedocs.io/en/stable/api/storage.html#zarr.storage.ZipStore
 store = zarr.ZipStore(PATH_TO_OUTPUT_DIR + 'emd_1832.zip', mode='w', compression=12)
 zarr.copy_store(zarr_structure.store, store)
 store.close()
-
-# print(zarr_structure.tree())
-# print(zarr_structure['details'][()])
-
-
-
-# TODO: fix path so that it is working irrespectively of where you call script from
-# pathToASegmentation = ("./sample_segmentations/emdb_sff/emd_1832.sff")
-
-# # read from a file
-# seg = sff.SFFSegmentation.from_file(pathToASegmentation)
-
-# print(json.dumps(seg.as_json(), indent=4))
-# print(seg.details)
-# data_arr = seg.lattice_list[0].data_array
-# non_zero_indices = np.nonzero(data_arr)
-# non_zero_values = data_arr[non_zero_indices]
-# # print(non_zero_values)
-
-# create hdf5 file to later add seg.as_hff as hdf5 group to that file
-# TODO: fix file paths
-# hdf5_file = h5py.File('example.h5', mode='w')
-# # hdf5_group = hdf5_file.create_group('example_segmentation')
-# # print(zarr.tree(hdf5_file))
-
-# # convert seg to hff group in new hdf5 file
-# new_hdf5_file = seg.as_hff(hdf5_file)
-# # print(new_hdf5_file)
-# # print(zarr.tree(new_hdf5_file))
-
-# # copy from hdf5 group to .zarr group
-# dest = zarr.open_group('example2.zarr', mode='w')
-# # zarr.copy_all(new_hdf5_file, dest, log=stdout)
-# print(dest.tree())
