@@ -11,8 +11,9 @@ import zlib
 # better version of downsampling: skimage.measure.block_reduce
 # https://scikit-image.org/docs/dev/api/skimage.measure.html#skimage.measure.block_reduce
 # careful with func - it should not be np.mean, as it is segmentation
-# (e.g. can have 5-6 segments ike 104, 85... in segment_list), perhaps np.max (kinda every other value)
+# (e.g. can have 5-6 segments like 104, 85... in segment_list), perhaps np.max (kinda every other value)
 from skimage.measure import block_reduce
+from typing import Tuple
 
 # TODO: use pathlib or similar to fix paths in code
 PATH_TO_SEG_DIR = ('./sample_segmentations/emdb_sff/')
@@ -20,7 +21,7 @@ PATH_TO_OUTPUT_DIR = ('./output_internal_zarr/')
 DOWNSAMPLING_STEPS = 4
 
 # TODO: blosc can replace zlib for better speed: http://python-blosc.blosc.org/tutorial.html 
-def decompress_lattice_data(compressed_b64_encoded_data, mode, shape):
+def decompress_lattice_data(compressed_b64_encoded_data: str, mode: bytes, shape: Tuple[int, int, int]) -> np.ndarray:
     '''
     decodes base64 encoded zlib-zipped byte sequence (lattice data)
     into numpy array that is equal to .data_array of SFFLattice class in sfftkrw
@@ -40,7 +41,7 @@ hdf5_file = h5py.File(PATH_TO_SEG_DIR + 'emd_1832.hff', mode='r')
 # zarr.tree(hdf5_file)
 
 # TODO: potentially may be rewritten using root.create_group/ group.create_array etc. to get rid of paths
-def visitor_func(name, node):
+def visitor_func(name, node: h5py._hl.dataset.Dataset):
     emdb_seg_id = hdf5_file.filename.split('/')[-1].split('.')[0]
     root_path = PATH_TO_OUTPUT_DIR + emdb_seg_id
     if isinstance(node, h5py.Dataset):
