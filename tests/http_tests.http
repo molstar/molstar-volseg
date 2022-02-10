@@ -1,21 +1,19 @@
 # Test your FastAPI endpoints
 
-GET http://127.0.0.1:8000/
-Accept: application/json
-
 ###
 
-GET http://127.0.0.1:8000/hello/User
+GET http://127.0.0.1:8000//volume/TestStructureId/
 Accept: application/json
 
 > {%
-client.test("Headers option exists", function() {
-  const expectedField = "message";
-  const expectedValue = "Hello User";
+client.test("Check body", function() {
+  /*const expectedField = "message";
+  const expectedValue = "Hello User";*/
   const expectedStatus = 200;
+  client.log(`Received ${response.status} with body ${response.body}`)
   client.assert(response.status === expectedStatus,  `Expected ${expectedStatus} status but received ${response.status}`);
-  client.assert(response.body.hasOwnProperty(expectedField), `Body does not contain ${expectedField} field`);
-  client.assert(response.body[expectedField] === expectedValue, `Body ${expectedField} field is not ${expectedValue}`);
+  //client.assert(response.body.hasOwnProperty(expectedField), `Body does not contain ${expectedField} field`);
+  //client.assert(response.body[expectedField] === expectedValue, `Body ${expectedField} field is not ${expectedValue}`);
 });
 %}
 
