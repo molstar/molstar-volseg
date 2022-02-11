@@ -1,0 +1,227 @@
+<?xml version='1.0' encoding='utf-8'?>
+<segmentation>
+    <version>0.8.0.dev1</version>
+    <name>Segmentation of Drosophila melanogaster CMG complex bound to ADP.BeF3</name>
+    <software_list>
+		<software id="0">
+			<name>UCSF Chimera</name>
+			<version>1.13.1</version>
+			<processing_details>All structure docking analyses were done using the ‘Fit in Map’ function of UCSF Chimera.</processing_details>
+		</software>
+	</software_list>
+    <transform_list>
+		<transformation_matrix id="0">
+			<rows>3</rows>
+			<cols>4</cols>
+			<data>1.0 0.0 0.0 1.0 0.0 1.0 0.0 1.0 0.0 0.0 1.0 1.0</data>
+		</transformation_matrix>
+		<transformation_matrix id="1">
+			<rows>3</rows>
+			<cols>4</cols>
+			<data>5.7 0.0 0.0 -182.4 0.0 5.7 0.0 -182.4 0.0 0.0 5.7 -182.4</data>
+		</transformation_matrix>
+	</transform_list>
+    <primary_descriptor>three_d_volume</primary_descriptor>
+    <global_external_references>
+		<ref resource="EuroPMC" url="https://doi.org/10.1038/nsmb.2004" accession="21378962" label="Costa A, Ilves I, Tamberg N, Petojevic T, Nogales E, Botchan MR, Berger JM." description="The structural basis for MCM2-7 helicase activation by GINS and Cdc45."/>
+		<ref resource="UniProt" url="https://www.uniprot.org/uniprot/Q9VBI1" accession="Q9VBI1" label="Q9VBI1_DROME" description="undefined (Drosophila melanogaster (Fruit fly))"/>
+		<ref resource="UniProt" url="https://www.uniprot.org/uniprot/Q9W2V7" accession="Q9W2V7" label="Q9W2V7_DROME" description="undefined (Drosophila melanogaster (Fruit fly))"/>
+		<ref resource="UniProt" url="https://www.uniprot.org/uniprot/Q9VQY9" accession="Q9VQY9" label="PSF2_DROME" description="undefined (Drosophila melanogaster (Fruit fly))"/>
+		<ref resource="UniProt" url="https://www.uniprot.org/uniprot/Q9W0I7" accession="Q9W0I7" label="Q9W0I7_DROME" description="undefined (Drosophila melanogaster (Fruit fly))"/>
+		<ref resource="cco" url="http://identifiers.org/ncbigene/43166" accession="43166" label="Sld5" description="The protein-coding gene Sld5 located on the chromosome 3R mapped at 96F10-96F10."/>
+		<ref resource="cco" url="http://identifiers.org/ncbigene/31967" accession="31967" label="Psf3" description="The protein-coding gene Psf3 located on the chromosome X mapped at 9B14-9B14."/>
+		<ref resource="cco" url="http://identifiers.org/ncbigene/33641" accession="33641" label="Psf2" description="The protein-coding gene Psf2 located on the chromosome 2L mapped at 24F1-24F1."/>
+		<ref resource="cco" url="http://identifiers.org/ncbigene/38136" accession="38136" label="Psf1" description="The protein-coding gene Psf1 located on the chromosome 3L mapped at 61F4-61F4."/>
+		<ref resource="EMDB" url="https://www.ebi.ac.uk/pdbe/entry/emdb/EMD-9400" accession="EMD-9400" label="EMD-9400" description="Cryo-EM structure of Mcm2-7 double hexamer on dsDNA"/>
+		<ref resource="EMDB" url="https://www.ebi.ac.uk/pdbe/entry/emdb/EMD-8540" accession="EMD-8540" label="EMD-8540" description="Structural basis of MCM2-7 replicative helicase loading by ORC-Cdc6 and Cdt1"/>
+		<ref resource="EMDB" url="https://www.ebi.ac.uk/pdbe/entry/emdb/EMD-8519" accession="EMD-8519" label="EMD-8519" description="Structure of Eukaryotic CMG Helicase at a Replication Fork and Implications"/>
+		<ref resource="EMDB" url="https://www.ebi.ac.uk/pdbe/entry/emdb/EMD-8518" accession="EMD-8518" label="EMD-8518" description="Structure of eukaryotic CMG helicase at a replication fork"/>
+		<ref resource="EMDB" url="https://www.ebi.ac.uk/pdbe/entry/emdb/EMD-6671" accession="EMD-6671" label="EMD-6671" description="Cryo-EM structure of the Cdt1-MCM2-7 complex in AMPPNP state"/>
+		<ref resource="EMDB" url="https://www.ebi.ac.uk/pdbe/entry/emdb/EMD-0288" accession="EMD-0288" label="EMD-0288" description="S. cerevisiae CMG-Pol epsilon-DNA"/>
+		<ref resource="EMDB" url="https://www.ebi.ac.uk/pdbe/entry/emdb/EMD-1835" accession="EMD-1835" label="EMD-1835" description="The lockwasher state of the Drosophila melanogaster Mcm2-7 complex"/>
+		<ref resource="EMDB" url="https://www.ebi.ac.uk/pdbe/entry/emdb/EMD-1834" accession="EMD-1834" label="EMD-1834" description="Planar configuration of the Drosophila melanogaster Mcm2-7 complex"/>
+		<ref resource="EMDB" url="https://www.ebi.ac.uk/pdbe/entry/emdb/EMD-1833" accession="EMD-1833" label="EMD-1833" description="Drosophila melanogaster CMG complex - APO"/>
+		<ref resource="chebi" url="http://purl.obolibrary.org/obo/CHEBI_30498" accession="CHEBI_30498" label="trifluoroberyllate(1-)"/>
+		<ref resource="cco" url="http://identifiers.org/ncbigene/37073" accession="37073" label="adp" description="The protein-coding gene adp (adipose) located on the chromosome 2R mapped at 55B9-55B9|2-83.4 cM."/>
+		<ref resource="chebi" url="http://purl.obolibrary.org/obo/CHEBI_16761" accession="CHEBI_16761" label="ADP" description="A purine ribonucleoside 5'-diphosphate having adenine as the nucleobase."/>
+		<ref resource="go" url="http://purl.obolibrary.org/obo/GO_0071162" accession="GO_0071162" label="CMG complex" description="A protein complex that contains the GINS complex, Cdc45p, and the heterohexameric MCM complex, and that is involved in unwinding DNA during replication."/>
+		<ref resource="ncbitaxon" url="http://purl.obolibrary.org/obo/NCBITaxon_7227" accession="NCBITaxon_7227" label="Drosophila melanogaster"/>
+		<ref resource="ncit" url="http://purl.obolibrary.org/obo/NCIT_C14202" accession="NCIT_C14202" label="Drosophila" description="A genus of small, American flies, Diptera. The best known species is D. Melanogaster, often called the fruit fly, but more correctly termed the vinegar fly. First investigated by T.H.Morgan and his group, it has been extensively used in genetic studies. More recently it has been used for studies of embryonic development."/>
+	</global_external_references>
+    <segment_list>
+		<segment id="101" parent_id="0">
+			<biological_annotation>
+				<name>DNA replication licensing factor MCM5</name>
+				
+				<description/>
+				<external_references>nothing
+					<ref resource="go" url="http://purl.obolibrary.org/obo/GO_0006260" accession="GO_0006260" label="DNA replication" description="The cellular metabolic process in which a cell duplicates one or more molecules of DNA. DNA replication begins when specific sequences, known as origins of replication, are recognized and bound by initiation proteins, and ends when the original DNA molecule has been completely duplicated and the copies topologically separated. The unit of replication usually corresponds to the genome of the cell, an organelle, or a virus. The template for replication can either be an existing DNA molecule or RNA."/>
+				
+					<ref resource="go" url="http://purl.obolibrary.org/obo/GO_0030174" accession="GO_0030174" label="regulation of DNA-dependent DNA replication initiation" description="Any process that modulates the frequency, rate or extent of initiation of DNA-dependent DNA replication; the process in which DNA becomes competent to replicate. In eukaryotes, replication competence is established in early G1 and lost during the ensuing S phase."/>
+				
+					<ref resource="pr" url="http://purl.obolibrary.org/obo/PR_000010247" accession="PR_000010247" label="DNA replication licensing factor MCM5" description="A protein that is a translation product of the human MCM5 gene or a 1:1 ortholog thereof."/>
+				
+					<ref resource="ncit" url="http://purl.obolibrary.org/obo/NCIT_C33910" accession="NCIT_C33910" label="DNA Replication Licensing Factor MCM5" description="DNA replication licensing factor MCM5 (734 aa, ~82 kDa) is encoded by the human MCM5 gene. This protein plays a role in DNA replication."/>
+				
+					<ref resource="UniProt" url="https://www.uniprot.org/uniprot/Q9VGW6" accession="Q9VGW6" label="MCM5_DROME" description="undefined (Drosophila melanogaster (Fruit fly))"/>
+				</external_references></biological_annotation>
+			<colour>
+                <red>0.862361133098602</red>
+                <green>0.965298295021057</green>
+                <blue>0.697644174098969</blue>
+            </colour>
+			<three_d_volume>
+				<lattice_id>0</lattice_id>
+				<value>101.</value>
+			</three_d_volume>
+		</segment>
+		<segment id="103" parent_id="0">
+			<biological_annotation>
+				<name>DNA replication licensing factor MCM6</name>
+				
+				<description/>
+				<external_references>nothing
+					<ref resource="go" url="http://purl.obolibrary.org/obo/GO_0006260" accession="GO_0006260" label="DNA replication" description="The cellular metabolic process in which a cell duplicates one or more molecules of DNA. DNA replication begins when specific sequences, known as origins of replication, are recognized and bound by initiation proteins, and ends when the original DNA molecule has been completely duplicated and the copies topologically separated. The unit of replication usually corresponds to the genome of the cell, an organelle, or a virus. The template for replication can either be an existing DNA molecule or RNA."/>
+				
+					<ref resource="go" url="http://purl.obolibrary.org/obo/GO_0030174" accession="GO_0030174" label="regulation of DNA-dependent DNA replication initiation" description="Any process that modulates the frequency, rate or extent of initiation of DNA-dependent DNA replication; the process in which DNA becomes competent to replicate. In eukaryotes, replication competence is established in early G1 and lost during the ensuing S phase."/>
+				
+					<ref resource="pr" url="http://purl.obolibrary.org/obo/PR_000010248" accession="PR_000010248" label="DNA replication licensing factor MCM6" description="A protein that is a translation product of the human MCM6 gene or a 1:1 ortholog thereof."/>
+				
+					<ref resource="ncit" url="http://purl.obolibrary.org/obo/NCIT_C33911" accession="NCIT_C33911" label="DNA Replication Licensing Factor MCM6" description="DNA replication licensing factor MCM6 (821 aa, ~93 kDa) is encoded by the human MCM6 gene. This protein is involved in DNA replication."/>
+				
+					<ref resource="UniProt" url="https://www.uniprot.org/uniprot/Q9V461" accession="Q9V461" label="MCM6_DROME" description="undefined (Drosophila melanogaster (Fruit fly))"/>
+				</external_references></biological_annotation>
+			<colour>
+                <red>0.706890761852264</red>
+                <green>0.626759827136993</green>
+                <blue>0.604495763778687</blue>
+            </colour>
+			<three_d_volume>
+				<lattice_id>0</lattice_id>
+				<value>103.</value>
+			</three_d_volume>
+		</segment>
+		<segment id="104" parent_id="0">
+			<biological_annotation>
+				<name>DNA replication licensing factor MCM7</name>
+				
+				<description/>
+				<external_references>nothing
+					<ref resource="go" url="http://purl.obolibrary.org/obo/GO_0006260" accession="GO_0006260" label="DNA replication" description="The cellular metabolic process in which a cell duplicates one or more molecules of DNA. DNA replication begins when specific sequences, known as origins of replication, are recognized and bound by initiation proteins, and ends when the original DNA molecule has been completely duplicated and the copies topologically separated. The unit of replication usually corresponds to the genome of the cell, an organelle, or a virus. The template for replication can either be an existing DNA molecule or RNA."/>
+				
+					<ref resource="go" url="http://purl.obolibrary.org/obo/GO_0030174" accession="GO_0030174" label="regulation of DNA-dependent DNA replication initiation" description="Any process that modulates the frequency, rate or extent of initiation of DNA-dependent DNA replication; the process in which DNA becomes competent to replicate. In eukaryotes, replication competence is established in early G1 and lost during the ensuing S phase."/>
+				
+					<ref resource="pr" url="http://purl.obolibrary.org/obo/PR_000010249" accession="PR_000010249" label="DNA replication licensing factor MCM7" description="A protein that is a translation product of the human MCM7 gene or a 1:1 ortholog thereof."/>
+				
+					<ref resource="ncit" url="http://purl.obolibrary.org/obo/NCIT_C33912" accession="NCIT_C33912" label="DNA Replication Licensing Factor MCM7" description="DNA replication licensing factor MCM7 (8719 aa, ~81 kDa) is encoded by the human MCM7 gene. This protein plays a role in the synthesis of a single copy of a genome before mitosis."/>
+				
+					<ref resource="UniProt" url="https://www.uniprot.org/uniprot/Q9XYU0" accession="Q9XYU0" label="MCM7_DROME" description="undefined (Drosophila melanogaster (Fruit fly))"/>
+				</external_references></biological_annotation>
+			<colour>
+                <red>0.787909328937531</red>
+                <green>0.924791157245636</green>
+                <blue>0.951091408729553</blue>
+            </colour>
+			<three_d_volume>
+				<lattice_id>0</lattice_id>
+				<value>104.</value>
+			</three_d_volume>
+		</segment>
+		<segment id="85" parent_id="0">
+			<biological_annotation>
+				<name>DNA replication licensing factor MCM2</name>
+				
+				<description/>
+				<external_references>nothing
+					<ref resource="go" url="http://purl.obolibrary.org/obo/GO_0006260" accession="GO_0006260" label="DNA replication" description="The cellular metabolic process in which a cell duplicates one or more molecules of DNA. DNA replication begins when specific sequences, known as origins of replication, are recognized and bound by initiation proteins, and ends when the original DNA molecule has been completely duplicated and the copies topologically separated. The unit of replication usually corresponds to the genome of the cell, an organelle, or a virus. The template for replication can either be an existing DNA molecule or RNA."/>
+				
+					<ref resource="go" url="http://purl.obolibrary.org/obo/GO_0030174" accession="GO_0030174" label="regulation of DNA-dependent DNA replication initiation" description="Any process that modulates the frequency, rate or extent of initiation of DNA-dependent DNA replication; the process in which DNA becomes competent to replicate. In eukaryotes, replication competence is established in early G1 and lost during the ensuing S phase."/>
+				
+					<ref resource="pr" url="http://purl.obolibrary.org/obo/PR_000010242" accession="PR_000010242" label="DNA replication licensing factor MCM2" description="A protein that is a translation product of the human MCM2 gene or a 1:1 ortholog thereof."/>
+				
+					<ref resource="ncit" url="http://purl.obolibrary.org/obo/NCIT_C28642" accession="NCIT_C28642" label="DNA Replication Licensing Factor MCM2" description="DNA replication licensing factor MCM2 (904 aa, ~102 kDa) is encoded by the human MCM2 gene. This protein plays a role in cell cycle regulation."/>
+				
+					<ref resource="UniProt" url="https://www.uniprot.org/uniprot/P49735" accession="P49735" label="MCM2_DROME" description="undefined (Drosophila melanogaster (Fruit fly))"/>
+				</external_references></biological_annotation>
+			<colour>
+                <red>0.521576881408691</red>
+                <green>0.889867722988129</green>
+                <blue>0.848475754261017</blue>
+            </colour>
+			<three_d_volume>
+				<lattice_id>0</lattice_id>
+				<value>85.</value>
+			</three_d_volume>
+		</segment>
+		<segment id="93" parent_id="0">
+			<biological_annotation>
+				<name>DNA replication licensing factor MCM3</name>
+				
+				<description/>
+				<external_references>nothing
+					<ref resource="go" url="http://purl.obolibrary.org/obo/GO_0006260" accession="GO_0006260" label="DNA replication" description="The cellular metabolic process in which a cell duplicates one or more molecules of DNA. DNA replication begins when specific sequences, known as origins of replication, are recognized and bound by initiation proteins, and ends when the original DNA molecule has been completely duplicated and the copies topologically separated. The unit of replication usually corresponds to the genome of the cell, an organelle, or a virus. The template for replication can either be an existing DNA molecule or RNA."/>
+				
+					<ref resource="go" url="http://purl.obolibrary.org/obo/GO_0030174" accession="GO_0030174" label="regulation of DNA-dependent DNA replication initiation" description="Any process that modulates the frequency, rate or extent of initiation of DNA-dependent DNA replication; the process in which DNA becomes competent to replicate. In eukaryotes, replication competence is established in early G1 and lost during the ensuing S phase."/>
+				
+					<ref resource="pr" url="http://purl.obolibrary.org/obo/PR_000010243" accession="PR_000010243" label="DNA replication licensing factor MCM3" description="A protein that is a translation product of the human MCM3 gene or a 1:1 ortholog thereof."/>
+				
+					<ref resource="ncit" url="http://purl.obolibrary.org/obo/NCIT_C28684" accession="NCIT_C28684" label="DNA Replication Licensing Factor MCM3" description="DNA replication licensing factor MCM3 (808aa, ~91 kDa) is encoded by the human MCM3 gene. This protein is involved in the modulation of the cell cycle."/>
+				
+					<ref resource="UniProt" url="https://www.uniprot.org/uniprot/Q9XYU1" accession="Q9XYU1" label="MCM3_DROME" description="undefined (Drosophila melanogaster (Fruit fly))"/>
+				</external_references></biological_annotation>
+			<colour>
+                <red>0.504164099693298</red>
+                <green>0.644178092479706</green>
+                <blue>0.78633439540863</blue>
+            </colour>
+			<three_d_volume>
+				<lattice_id>0</lattice_id>
+				<value>93.</value>
+			</three_d_volume>
+		</segment>
+		<segment id="97" parent_id="0">
+			<biological_annotation>
+				<name>DNA replication licensing factor MCM4</name>
+				
+				<description/>
+				<external_references>nothing
+					<ref resource="go" url="http://purl.obolibrary.org/obo/GO_0006260" accession="GO_0006260" label="DNA replication" description="The cellular metabolic process in which a cell duplicates one or more molecules of DNA. DNA replication begins when specific sequences, known as origins of replication, are recognized and bound by initiation proteins, and ends when the original DNA molecule has been completely duplicated and the copies topologically separated. The unit of replication usually corresponds to the genome of the cell, an organelle, or a virus. The template for replication can either be an existing DNA molecule or RNA."/>
+				
+					<ref resource="go" url="http://purl.obolibrary.org/obo/GO_0030174" accession="GO_0030174" label="regulation of DNA-dependent DNA replication initiation" description="Any process that modulates the frequency, rate or extent of initiation of DNA-dependent DNA replication; the process in which DNA becomes competent to replicate. In eukaryotes, replication competence is established in early G1 and lost during the ensuing S phase."/>
+				
+					<ref resource="pr" url="http://purl.obolibrary.org/obo/PR_000010246" accession="PR_000010246" label="DNA replication licensing factor MCM4" description="A protein that is a translation product of the human MCM4 gene or a 1:1 ortholog thereof."/>
+				
+					<ref resource="ncit" url="http://purl.obolibrary.org/obo/NCIT_C33909" accession="NCIT_C33909" label="DNA Replication Licensing Factor MCM4" description="DNA replication licensing factor MCM4 (863 aa, ~97 kDa) is encoded by the human MCM4 gene. This protein is involved in the initiation of DNA replication."/>
+				
+					<ref resource="UniProt" url="https://www.uniprot.org/uniprot/Q26454" accession="Q26454" label="MCM4_DROME" description="undefined (Drosophila melanogaster (Fruit fly))"/>
+				</external_references></biological_annotation>
+			<colour>
+                <red>0.669882595539093</red>
+                <green>0.86139714717865</green>
+                <blue>0.948218941688538</blue>
+            </colour>
+			<three_d_volume>
+				<lattice_id>0</lattice_id>
+				<value>97.</value>
+			</three_d_volume>
+		</segment>
+	</segment_list>
+    <lattice_list>
+		<lattice id="0">
+            <mode>uint32</mode>
+            <endianness>little</endianness>
+            <size>
+                <cols>64</cols>
+                <rows>64</rows>
+                <sections>64</sections>
+            </size>
+            <start>
+                <cols>0</cols>
+                <rows>0</rows>
+                <sections>0</sections>
+            </start>
+            <data>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</data>
+        </lattice>
+	</lattice_list>
+    <details>Drosophila melanogaster, recombinantly expressed in Baculovirus infected insect cells </details>
+</segmentation>
