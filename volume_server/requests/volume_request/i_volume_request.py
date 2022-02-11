@@ -3,6 +3,10 @@ import abc
 
 class IVolumeRequest(abc.ABC):
     @abc.abstractmethod
+    def source(self) -> str:
+        pass
+
+    @abc.abstractmethod
     def structure_id(self) -> str:
         pass
 

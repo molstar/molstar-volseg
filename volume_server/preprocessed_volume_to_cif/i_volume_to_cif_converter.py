@@ -1,6 +1,6 @@
 import abc
 
-from ..preprocessed_db.i_preprocessed_volume import IPreprocessedVolume
+from db.interface.i_preprocessed_volume import IPreprocessedVolume
 
 
 class IVolumeToCifConverter(abc.ABC):
