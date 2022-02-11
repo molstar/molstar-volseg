@@ -1,10 +1,9 @@
 import abc
 
+from volume_server.requests.volume_request.i_volume_request import IVolumeRequest
+
 
 class IVolumeServer(abc.ABC):
     @abc.abstractmethod
-    def root(self):
-        pass
-
-    def say_hello(self, user: str):
+    async def get_volume(self, volume_request: IVolumeRequest) -> object:  # TODO: add binary cif to the project
         pass
