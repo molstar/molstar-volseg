@@ -27,6 +27,9 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         return self.__path_to_object__(namespace, key).is_file()
 
     async def store(self, namespace: str, key: str, value: object) -> bool:
+        '''
+        Takes processed data (returned by preprocessor) as argument 
+        '''
         return True
 
     # TODO: evaluate passing a dict instead of 4 params
