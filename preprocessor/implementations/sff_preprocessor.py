@@ -13,14 +13,24 @@ from preprocessor.preprocessor import DOWNSAMPLING_STEPS
 
 
 class SFFPreprocessor(IDataPreprocessor):
+    def __init__(self):
+        # path to root of temporary storage for zarr hierarchy
+        self.temp_root_path = Path(__file__).parents[0] / 'temp_zarr_hierarchy_storage'
+        # path to temp storage for that entry (segmentation)
+        self.temp_zarr_structure_path = None
+
     def preprocess(self, file_path: Path):
         '''
         Returns processed data (zarr structure) that will be stored using db.store
         '''
-        zarr_structure = self.__hdf5_to_zarr(file_path)
-        
+        self.__hdf5_to_zarr(file_path)
+        # Re-create zarr hierarchy from opened store
+        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(self.temp_zarr_structure_path, mode='r')
+        zarr_structure: zarr.hierarchy.group = zarr.group(store=store)
         for gr_name, gr in zarr_structure.lattice_list.groups():
             self.__create_downsamplings(gr)
+
+        # TODO: empty the temp storage for zarr hierarchies (maybe that file will be converted again!) 
 
     def __lattice_data_to_np_arr(self, data: str, dtype: str, arr_shape: Tuple[int, int, int]) -> np.ndarray:
         '''
@@ -66,34 +76,35 @@ class SFFPreprocessor(IDataPreprocessor):
         '''
         Returns zarr structure mirroring that of hdf5
         '''
+        self.temp_zarr_structure_path = self.temp_root_path / file_path.stem
+        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(self.temp_zarr_structure_path, mode='r')
+        # may not need to be closed, but just in case
+
         hdf5_file: h5py._hl.files.File = h5py.File(file_path, mode='r')
         hdf5_file.visititems(self.__visitor_function)
         hdf5_file.close()
-        # return zarr.open_group()
+        
+        store.close()
 
     def __visitor_function(self, name: str, node: h5py._hl.dataset.Dataset) -> None:
         '''
-        Helper function used to create zarr hierarchy based on hdf5 hierarchy from sff file,
-        with addtional items (e.g. downsampled_data group, possibly metadata)
+        Helper function used to create zarr hierarchy based on hdf5 hierarchy from sff file
+        Takes nodes one by one and depending of their nature (group/object dataset/non-object dataset)
+        creates the corresponding zarr hierarchy element (group/array)
         '''
         # TODO: may not work as it is a method, not a function. Check?
-        # TODO: rework such that zarr structure is created in memory
-        # 
-        # emdb_seg_id = hdf5_file.filename.split('/')[-1].split('.')[0]
-        # root_path = PATH_TO_OUTPUT_DIR + emdb_seg_id
-        # if isinstance(node, h5py.Dataset):
-        #     # for text-based fields, including lattice data (as it is b64 encoded zlib-zipped sequence)
-        #     if node.dtype == 'object':
-        #         data = [node[()]]
-        #         arr = zarr.array(data, dtype=node.dtype, object_codec=numcodecs.MsgPack())
-        #         zarr.save_array(root_path + node.name, arr, object_codec=numcodecs.MsgPack())
-        #     else:
-        #         arr = zarr.open_array(root_path + node.name, mode='w', shape=node.shape, dtype=node.dtype)
-        #         arr[...] = node[()]
-        # else:
-        #     # node is a group
-        #     # TODO: fix paths
-        #     zarr.open_group(root_path + node.name, mode='w')
-
+        # input hdf5 file may be too large for memory, so we save it in temp storage
+        if isinstance(node, h5py.Dataset):
+            # for text-based fields, including lattice data (as it is b64 encoded zlib-zipped sequence)
+            if node.dtype == 'object':
+                data = [node[()]]
+                arr = zarr.array(data, dtype=node.dtype, object_codec=numcodecs.MsgPack())
+                zarr.save_array(self.temp_zarr_structure_path / node.name, arr, object_codec=numcodecs.MsgPack())
+            else:
+                arr = zarr.open_array(self.temp_zarr_structure_path / node.name, mode='w', shape=node.shape, dtype=node.dtype)
+                arr[...] = node[()]
+        else:
+            # node is a group
+            zarr.open_group(self.temp_zarr_structure_path / node.name, mode='w')
     
 
