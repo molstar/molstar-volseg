@@ -9,7 +9,9 @@ import numcodecs
 import h5py
 import numpy as np
 from preprocessor.interface.i_data_preprocessor import IDataPreprocessor
+# TODO: figure out how to specify N of downsamplings (x2, x4, etc.) in a better way
 from preprocessor.preprocessor import DOWNSAMPLING_STEPS
+from skimage.measure import block_reduce
 
 
 class SFFPreprocessor(IDataPreprocessor):
@@ -21,7 +23,7 @@ class SFFPreprocessor(IDataPreprocessor):
 
     def preprocess(self, file_path: Path):
         '''
-        Returns processed data (zarr structure) that will be stored using db.store
+        Returns path to temporary zarr structure that will be stored using db.store
         '''
         self.__hdf5_to_zarr(file_path)
         # Re-create zarr hierarchy from opened store
@@ -29,8 +31,9 @@ class SFFPreprocessor(IDataPreprocessor):
         zarr_structure: zarr.hierarchy.group = zarr.group(store=store)
         for gr_name, gr in zarr_structure.lattice_list.groups():
             self.__create_downsamplings(gr)
-
-        # TODO: empty the temp storage for zarr hierarchies (maybe that file will be converted again!) 
+        store.close()
+        return self.temp_zarr_structure_path
+        # TODO: empty the temp storage for zarr hierarchies here or in db.store (maybe that file will be converted again!) 
 
     def __lattice_data_to_np_arr(self, data: str, dtype: str, arr_shape: Tuple[int, int, int]) -> np.ndarray:
         '''
@@ -44,8 +47,8 @@ class SFFPreprocessor(IDataPreprocessor):
 
     def __downsample_data(self, arr: np.ndarray, rate) -> np.ndarray:
         '''Returns downsampled (e.g. every other value) np array'''
-        # return block_reduce(arr, block_size=(2, 2, 2), func=np.max)
-        pass
+        # TODO: it is dummy downsampling. Switch to e.g. 'every other' later
+        return block_reduce(arr, block_size=(2, 2, 2), func=np.max)
     
     def __create_downsamplings(self, gr):
         # TODO create x1 "down"sampling too
@@ -74,7 +77,7 @@ class SFFPreprocessor(IDataPreprocessor):
 
     def __hdf5_to_zarr(self, file_path: Path):
         '''
-        Returns zarr structure mirroring that of hdf5
+        Creates temp zarr structure mirroring that of hdf5
         '''
         self.temp_zarr_structure_path = self.temp_root_path / file_path.stem
         store: zarr.storage.DirectoryStore = zarr.DirectoryStore(self.temp_zarr_structure_path, mode='r')

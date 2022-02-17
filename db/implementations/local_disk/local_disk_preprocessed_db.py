@@ -26,10 +26,24 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         '''
         return self.__path_to_object__(namespace, key).is_file()
 
-    async def store(self, namespace: str, key: str, value: object) -> bool:
+    async def store(self, namespace: str, key: str, temp_store_path: Path) -> bool:
         '''
-        Takes processed data (returned by preprocessor) as argument 
+        Takes path to temp zarr structure returned by preprocessor as argument 
         '''
+        # Storing as a file (ZIP, bzip2 compression)
+        # Compression constants for compression arg of ZipStore()
+        # ZIP_STORED = 0
+        # ZIP_DEFLATED = 8 (zlib)
+        # ZIP_BZIP2 = 12
+        # ZIP_LZMA = 1
+        # close store after writing, or use 'with' https://zarr.readthedocs.io/en/stable/api/storage.html#zarr.storage.ZipStore
+        temp_store: zarr.storage.DirectoryStore = zarr.DirectoryStore(temp_store_path, mode='r')
+        perm_store = zarr.ZipStore(self.__path_to_object__(namespace, key) + '.zip', mode='w', compression=12)
+        zarr.copy_store(temp_store, perm_store)
+        temp_store.close()
+        perm_store.close()
+        temp_store.rmdir()
+        # TODO: check if copied and store closed properly
         return True
 
     # TODO: evaluate passing a dict instead of 4 params
@@ -45,7 +59,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         store: zarr.storage.ZipStore = zarr.ZipStore(path, mode='r')
         # Re-create zarr hierarchy from opened store
         root: zarr.hierarchy.group = zarr.group(store=store)
-        read_zarr_arr: np.ndarray = root.lattice_list[lattice_id][down_sampling_ratio]
+        read_zarr_arr: np.ndarray = root.lattice_list[lattice_id].downsampled_data[down_sampling_ratio]
         return LocalDiskPreprocessedVolume(read_zarr_arr)
 
     async def read_metadata(self, namespace: str, key: str) -> IPreprocessedMetadata:
