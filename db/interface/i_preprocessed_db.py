@@ -1,4 +1,5 @@
 import abc
+from typing import Tuple
 
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 from db.interface.i_preprocessed_volume import IPreprocessedVolume
@@ -10,7 +11,11 @@ class IReadOnlyPreprocessedDb(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def read(self, namespace: str, key: str, down_sampling_ratio: int) -> IPreprocessedVolume:
+    async def read(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int) -> IPreprocessedVolume:
+        pass
+    
+    @abc.abstractmethod
+    async def read_slice(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int, box: Tuple[Tuple[float, float, float], Tuple[float, float, float]]) -> IPreprocessedVolume:
         pass
 
     @abc.abstractmethod

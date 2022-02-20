@@ -1,6 +1,7 @@
 
 
 import base64
+import gemmi
 from pathlib import Path
 from typing import Tuple
 import zlib
@@ -21,7 +22,7 @@ class SFFPreprocessor(IDataPreprocessor):
         # path to temp storage for that entry (segmentation)
         self.temp_zarr_structure_path = None
 
-    def preprocess(self, file_path: Path):
+    def preprocess(self, file_path: Path, volume_file_path: Path):
         '''
         Returns path to temporary zarr structure that will be stored using db.store
         '''
@@ -29,11 +30,30 @@ class SFFPreprocessor(IDataPreprocessor):
         # Re-create zarr hierarchy from opened store
         store: zarr.storage.DirectoryStore = zarr.DirectoryStore(self.temp_zarr_structure_path, mode='r')
         zarr_structure: zarr.hierarchy.group = zarr.group(store=store)
+        volume_data_gr: zarr.hierarchy.group = zarr_structure.create_group('_volume_data')
+        segm_data_gr: zarr.hierarchy.group = zarr_structure.create_group('_segmentation_data')
+        
         for gr_name, gr in zarr_structure.lattice_list.groups():
-            self.__create_downsamplings(gr)
+            # TODO create x1 "down"sampling too
+            segm_arr = self.__lattice_data_to_np_arr(
+                gr.data[0],
+                gr.mode[0],
+                (gr.size.cols[...], gr.size.rows[...], gr.size.sections[...]))
+            # specific lattice with specific id
+            lattice_gr = segm_data_gr.create_group(gr_name)
+            self.__create_downsamplings(segm_arr, lattice_gr)
+        
+        volume_arr = self.__read_volume_data(volume_file_path)
+        self.__create_downsamplings(volume_arr, volume_data_gr)
+        
         store.close()
         return self.temp_zarr_structure_path
         # TODO: empty the temp storage for zarr hierarchies here or in db.store (maybe that file will be converted again!) 
+
+    def __read_volume_data(self, file_path) -> np.ndarray:
+        # may not need to add .resolve(), with resolve it returns abs path
+        m = gemmi.read_ccp4_map(str(file_path.resolve()))
+        return np.array(m.grid)
 
     def __lattice_data_to_np_arr(self, data: str, dtype: str, arr_shape: Tuple[int, int, int]) -> np.ndarray:
         '''
@@ -45,30 +65,30 @@ class SFFPreprocessor(IDataPreprocessor):
         byteseq = zlib.decompress(decoded_data)
         return np.frombuffer(byteseq, dtype=dtype).reshape(arr_shape)
 
-    def __downsample_data(self, arr: np.ndarray, rate) -> np.ndarray:
-        '''Returns downsampled (e.g. every other value) np array'''
-        # TODO: it is dummy downsampling. Switch to e.g. 'every other' later
-        return block_reduce(arr, block_size=(2, 2, 2), func=np.max)
+    def __downsample_categorical_data(self, arr: np.ndarray, rate: int) -> np.ndarray:
+        '''Returns downsampled (every other value) np array'''
+        return arr[::rate, ::rate, ::rate]
     
-    def __create_downsamplings(self, gr):
-        # TODO create x1 "down"sampling too
-        data = self.__lattice_data_to_np_arr(
-            gr.data[0],
-            gr.mode[0],
-            (gr.size.cols[...], gr.size.rows[...], gr.size.sections[...]))
+    def __downsample_numerical_data(self, arr: np.ndarray, rate: int) -> np.ndarray:
+        '''Returns downsampled (mean) np array'''
+        return block_reduce(arr, block_size=(rate, rate, rate), func=np.mean)
 
-        downsampled_data_group = gr.create_group('downsampled_data')
+    def __create_downsamplings(self, data: np.ndarray, downsampled_data_group: zarr.hierarchy.group, isCategorical=False):
         # iteratively downsample data, create arr for each dwns. level and store data 
         ratios = 2 ** np.arange(1, DOWNSAMPLING_STEPS + 1)
         for rate in ratios:
-            self.__create_downsampling(data, gr, rate, downsampled_data_group)
+            self.__create_downsampling(data, rate, downsampled_data_group, isCategorical)
         # TODO: figure out compression/filters: b64 encoded zlib-zipped .data is just 8 bytes
         # downsamplings sizes in raw uncompressed state are much bigger 
         # TODO: figure out what to do with chunks - currently they are not used
 
-    def __create_downsampling(self, original_data, rate, downsampled_data_group):
+    def __create_downsampling(self, original_data, rate, downsampled_data_group, isCategorical=False):
         '''Creates zarr array (dataset) filled with downsampled data'''
-        downsampled_data = self.__downsample_data(original_data, rate)
+        if isCategorical:
+            downsampled_data = self.__downsample_categorical_data(original_data, rate)
+        else:
+            downsampled_data = self.__downsample_numerical_data(original_data, rate)
+
         zarr_arr = downsampled_data_group.create_dataset(
             str(rate),
             shape=downsampled_data.shape,

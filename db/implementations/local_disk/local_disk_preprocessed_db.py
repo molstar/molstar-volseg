@@ -49,11 +49,13 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
     # TODO: evaluate passing a dict instead of 4 params
     async def read(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int) -> IPreprocessedVolume:
         '''
+        Deprecated.
         Reads specific (down)sampling of segmentation data from specific entry from DB
         based on key (e.g. EMD-1111), lattice_id (e.g. 0), and downsampling ratio
         (1 => original data, 2 => downsampled by factor of 2 etc.)
         Returns LocalDiskPreprocessedVolume instance. 
         '''
+        print('This method is deprecated, please use read_slice method instead')
         path: Path = self.__path_to_object__(namespace=namespace, key=key)
         # Open already created zip store with internal zarr
         store: zarr.storage.ZipStore = zarr.ZipStore(path, mode='r')
