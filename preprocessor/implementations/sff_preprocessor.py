@@ -1,9 +1,10 @@
 
 
 import base64
+import json
 import gemmi
 from pathlib import Path
-from typing import Tuple
+from typing import Dict, Tuple
 import zlib
 import zarr
 import numcodecs
@@ -14,6 +15,8 @@ from preprocessor.interface.i_data_preprocessor import IDataPreprocessor
 from preprocessor.preprocessor import DOWNSAMPLING_STEPS
 from skimage.measure import block_reduce
 
+VOLUME_DATA_GROUPNAME = '_segmentation_data'
+SEGMENTATION_DATA_GROUPNAME = '_segmentation_data'
 
 class SFFPreprocessor(IDataPreprocessor):
     def __init__(self):
@@ -30,8 +33,8 @@ class SFFPreprocessor(IDataPreprocessor):
         # Re-create zarr hierarchy from opened store
         store: zarr.storage.DirectoryStore = zarr.DirectoryStore(self.temp_zarr_structure_path, mode='r')
         zarr_structure: zarr.hierarchy.group = zarr.group(store=store)
-        volume_data_gr: zarr.hierarchy.group = zarr_structure.create_group('_volume_data')
-        segm_data_gr: zarr.hierarchy.group = zarr_structure.create_group('_segmentation_data')
+        volume_data_gr: zarr.hierarchy.group = zarr_structure.create_group(VOLUME_DATA_GROUPNAME)
+        segm_data_gr: zarr.hierarchy.group = zarr_structure.create_group(SEGMENTATION_DATA_GROUPNAME)
         
         for gr_name, gr in zarr_structure.lattice_list.groups():
             # TODO create x1 "down"sampling too
@@ -46,9 +49,30 @@ class SFFPreprocessor(IDataPreprocessor):
         volume_arr = self.__read_volume_data(volume_file_path)
         self.__create_downsamplings(volume_arr, volume_data_gr)
         
+        metadata = self.__extract_metadata(zarr_structure)
+        self.__temp_save_metadata(metadata, self.temp_zarr_structure_path)
+
         store.close()
         return self.temp_zarr_structure_path
         # TODO: empty the temp storage for zarr hierarchies here or in db.store (maybe that file will be converted again!) 
+
+    def __extract_metadata(zarr_structure) -> Dict:
+        # just sample fields for now
+        root = zarr_structure
+        lattice_dict = {}
+        for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME]:
+            # each key is lattice id
+            lattice_dict[f'lattice_{gr_name}'] = sorted(gr.array_keys())
+
+        return {
+            'details': root.details[...][0],
+            'volume_data_downsamplings': sorted(root[VOLUME_DATA_GROUPNAME].array_keys()),
+            'segmentation_data_downsamplings': lattice_dict,
+        }
+
+    def __temp_save_metadata(metadata: Dict, temp_dir_path: Path) -> None:
+        with temp_dir_path.open('w') as fp:
+            json.dump(metadata, fp)
 
     def __read_volume_data(self, file_path) -> np.ndarray:
         # may not need to add .resolve(), with resolve it returns abs path

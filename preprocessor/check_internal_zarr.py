@@ -13,8 +13,8 @@ from preprocessor import decompress_lattice_data
 PATH_TO_SEG_DIR = ('./sample_segmentations/emdb_sff/')
 PATH_TO_OUTPUT_DIR = ('./output_internal_zarr/')
 
-# Open already created zip store with internal zarr
-store = zarr.ZipStore(PATH_TO_OUTPUT_DIR + 'emd_1832.zip', mode='r')
+# Open already created store with internal zarr
+store = zarr.DirectoryStore(PATH_TO_OUTPUT_DIR + 'emd_1832')
 # Re-create zarr hierarchy from opened store
 root = zarr.group(store=store)
 # Print out some data
