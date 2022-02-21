@@ -17,6 +17,7 @@ from skimage.measure import block_reduce
 
 VOLUME_DATA_GROUPNAME = '_segmentation_data'
 SEGMENTATION_DATA_GROUPNAME = '_segmentation_data'
+METADATA_FILENAME = 'metadata.json'
 
 class SFFPreprocessor(IDataPreprocessor):
     def __init__(self):
@@ -71,7 +72,7 @@ class SFFPreprocessor(IDataPreprocessor):
         }
 
     def __temp_save_metadata(metadata: Dict, temp_dir_path: Path) -> None:
-        with temp_dir_path.open('w') as fp:
+        with (temp_dir_path / METADATA_FILENAME).open('w') as fp:
             json.dump(metadata, fp)
 
     def __read_volume_data(self, file_path) -> np.ndarray:

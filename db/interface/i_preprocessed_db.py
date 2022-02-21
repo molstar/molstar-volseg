@@ -1,4 +1,5 @@
 import abc
+from pathlib import Path
 from typing import Tuple
 
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
@@ -25,5 +26,5 @@ class IReadOnlyPreprocessedDb(abc.ABC):
 
 class IPreprocessedDb(IReadOnlyPreprocessedDb, abc.ABC):
     @abc.abstractmethod
-    async def store(self, namespace: str, key: str, value: object) -> bool:
+    async def store(self, namespace: str, key: str, temp_store_path: Path) -> bool:
         pass

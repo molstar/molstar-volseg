@@ -1,9 +1,13 @@
+import shutil
+from typing import Dict
 import numpy as np
 from pathlib import Path
 import h5py
 import json
 import zarr
 import numcodecs
+
+from preprocessor.implementations.sff_preprocessor import METADATA_FILENAME
 
 from .local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
 from .local_disk_preprocessed_volume import LocalDiskPreprocessedVolume
@@ -38,8 +42,14 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         # ZIP_LZMA = 1
         # close store after writing, or use 'with' https://zarr.readthedocs.io/en/stable/api/storage.html#zarr.storage.ZipStore
         temp_store: zarr.storage.DirectoryStore = zarr.DirectoryStore(temp_store_path, mode='r')
-        perm_store = zarr.ZipStore(self.__path_to_object__(namespace, key) + '.zip', mode='w', compression=12)
+        # perm_store = zarr.ZipStore(self.__path_to_object__(namespace, key) + '.zip', mode='w', compression=12)
+        perm_store = zarr.DirectoryStore(self.__path_to_object__(namespace, key), mode='w')
         zarr.copy_store(temp_store, perm_store)
+
+        # TODO: shutil should work with Path objects, but just in case
+        shutil.copy2(temp_store_path / METADATA_FILENAME, self.__path_to_object__(namespace, key) / METADATA_FILENAME)
+
+        # TODO: check if temp dir will be correctly removed and read at the beginning, given that there is a JSON file inside
         temp_store.close()
         perm_store.close()
         temp_store.rmdir()
@@ -61,9 +71,13 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         store: zarr.storage.ZipStore = zarr.ZipStore(path, mode='r')
         # Re-create zarr hierarchy from opened store
         root: zarr.hierarchy.group = zarr.group(store=store)
-        read_zarr_arr: np.ndarray = root.lattice_list[lattice_id].downsampled_data[down_sampling_ratio]
+        # TODO: rewrite, it is no longer that structure => now it is root._segmentation_data, root._volume_data
+        # read_zarr_arr: np.ndarray = root.lattice_list[lattice_id].downsampled_data[down_sampling_ratio]
         return LocalDiskPreprocessedVolume(read_zarr_arr)
 
     async def read_metadata(self, namespace: str, key: str) -> IPreprocessedMetadata:
-        read_json_of_metadata = ""  # read the same way you read until now
+        path: Path = self.__path_to_object__(namespace=namespace, key=key) / 'metadata.json'
+        with open(path.resolve(), 'r', encoding='utf-8') as f:
+            # reads into dict
+            read_json_of_metadata: Dict = json.load(f)
         return LocalDiskPreprocessedMetadata(read_json_of_metadata)

@@ -1,9 +1,9 @@
-from typing import List
+from typing import List, Dict
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 
 
 class LocalDiskPreprocessedMetadata(IPreprocessedMetadata):
-    def __init__(self, raw_zarr_metadata: object):
+    def __init__(self, raw_zarr_metadata: Dict):
         self.raw_zarr_metadata = raw_zarr_metadata
 
     def lattice_ids(self) -> List[int]:
