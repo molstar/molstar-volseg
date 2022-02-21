@@ -1,5 +1,5 @@
 import shutil
-from typing import Dict
+from typing import Dict, Tuple
 import numpy as np
 from pathlib import Path
 import h5py
@@ -7,7 +7,7 @@ import json
 import zarr
 import numcodecs
 
-from preprocessor.implementations.sff_preprocessor import METADATA_FILENAME
+from preprocessor.implementations.sff_preprocessor import METADATA_FILENAME, SEGMENTATION_DATA_GROUPNAME, VOLUME_DATA_GROUPNAME
 
 from .local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
 from .local_disk_preprocessed_volume import LocalDiskPreprocessedVolume
@@ -63,17 +63,42 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         Reads specific (down)sampling of segmentation data from specific entry from DB
         based on key (e.g. EMD-1111), lattice_id (e.g. 0), and downsampling ratio
         (1 => original data, 2 => downsampled by factor of 2 etc.)
-        Returns LocalDiskPreprocessedVolume instance. 
         '''
         print('This method is deprecated, please use read_slice method instead')
         path: Path = self.__path_to_object__(namespace=namespace, key=key)
-        # Open already created zip store with internal zarr
-        store: zarr.storage.ZipStore = zarr.ZipStore(path, mode='r')
+        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(path)
         # Re-create zarr hierarchy from opened store
         root: zarr.hierarchy.group = zarr.group(store=store)
-        # TODO: rewrite, it is no longer that structure => now it is root._segmentation_data, root._volume_data
-        # read_zarr_arr: np.ndarray = root.lattice_list[lattice_id].downsampled_data[down_sampling_ratio]
+        
+        read_segm_arr: np.ndarray = root[SEGMENTATION_DATA_GROUPNAME][lattice_id]
+        read_volume_arr: np.ndarray = root[VOLUME_DATA_GROUPNAME]
+        # TODO: rewrite return when LocalDiskPreprocessedVolume is changed to Pydantic/built-in data model
+        # both volume and segm data
         return LocalDiskPreprocessedVolume(read_zarr_arr)
+
+    async def read_slice(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]) -> IPreprocessedVolume:
+        '''
+        Reads a slice from a specific (down)sampling of segmentation and volume data
+        from specific entry from DB based on key (e.g. EMD-1111), lattice_id (e.g. 0),
+        downsampling ratio (1 => original data, 2 => downsampled by factor of 2 etc.),
+        and slice box (vec3, vec3) 
+        '''
+        path: Path = self.__path_to_object__(namespace=namespace, key=key)
+        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(path)
+        # Re-create zarr hierarchy from opened store
+        root: zarr.hierarchy.group = zarr.group(store=store)
+        read_segm_arr: np.ndarray = root[SEGMENTATION_DATA_GROUPNAME][lattice_id]
+        read_volume_arr: np.ndarray = root[VOLUME_DATA_GROUPNAME]
+        segm_slice: np.ndarray = self.__get_slice_from_three_d_arr(arr=read_segm_arr, box=box)
+        read_segm_arr[
+            box[0][0] : box[1][0] + 1,
+            box[0][1] : box[1][1] + 1,
+            box[0][2] : box[1][2] + 1
+        ]
+        volume_slice: np.ndarray = self.__get_slice_from_three_d_arr(arr=read_volume_arr, box=box)
+        # TODO: rewrite when LocalDiskPreprocessedVolume is changed to Pydantic/built-in data model
+        # both volume and segm data
+        return
 
     async def read_metadata(self, namespace: str, key: str) -> IPreprocessedMetadata:
         path: Path = self.__path_to_object__(namespace=namespace, key=key) / 'metadata.json'
@@ -81,3 +106,15 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             # reads into dict
             read_json_of_metadata: Dict = json.load(f)
         return LocalDiskPreprocessedMetadata(read_json_of_metadata)
+
+    def __get_slice_from_three_d_arr(arr: np.ndarray, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]) -> np.ndarray:
+        '''
+        Based on (vec3, vec3) tuple (coordinates of corners of the box)
+        returns a slice of 3d array
+        '''
+        slice = arr[
+            box[0][0] : box[1][0] + 1,
+            box[0][1] : box[1][1] + 1,
+            box[0][2] : box[1][2] + 1
+        ]
+        return slice

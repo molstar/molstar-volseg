@@ -16,7 +16,7 @@ class IReadOnlyPreprocessedDb(abc.ABC):
         pass
     
     @abc.abstractmethod
-    async def read_slice(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int, box: Tuple[Tuple[float, float, float], Tuple[float, float, float]]) -> IPreprocessedVolume:
+    async def read_slice(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]) -> IPreprocessedVolume:
         pass
 
     @abc.abstractmethod
