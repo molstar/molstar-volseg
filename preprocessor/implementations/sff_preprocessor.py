@@ -12,7 +12,7 @@ import h5py
 import numpy as np
 from preprocessor.interface.i_data_preprocessor import IDataPreprocessor
 # TODO: figure out how to specify N of downsamplings (x2, x4, etc.) in a better way
-from preprocessor.preprocessor import DOWNSAMPLING_STEPS
+from preprocessor._deprecated_preprocessor import DOWNSAMPLING_STEPS
 from skimage.measure import block_reduce
 
 VOLUME_DATA_GROUPNAME = '_segmentation_data'

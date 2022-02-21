@@ -11,9 +11,9 @@ class IPreprocessorService(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_raw_file_type(self, file_path: Path):
+    def get_raw_file_type(self, file_path: Path) -> str:
         raise NotImplementedError
     
     @abc.abstractmethod
-    def get_preprocessor(self, file_type: str):
+    def get_preprocessor(self, file_type: str) -> IDataPreprocessor:
         raise NotImplementedError
