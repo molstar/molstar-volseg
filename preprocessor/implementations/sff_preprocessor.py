@@ -26,11 +26,11 @@ class SFFPreprocessor(IDataPreprocessor):
         # path to temp storage for that entry (segmentation)
         self.temp_zarr_structure_path = None
 
-    def preprocess(self, file_path: Path, volume_file_path: Path):
+    def preprocess(self, segm_file_path: Path, volume_file_path: Path):
         '''
         Returns path to temporary zarr structure that will be stored using db.store
         '''
-        self.__hdf5_to_zarr(file_path)
+        self.__hdf5_to_zarr(segm_file_path)
         # Re-create zarr hierarchy from opened store
         store: zarr.storage.DirectoryStore = zarr.DirectoryStore(self.temp_zarr_structure_path, mode='r')
         zarr_structure: zarr.hierarchy.group = zarr.group(store=store)
