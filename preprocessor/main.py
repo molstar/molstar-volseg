@@ -1,13 +1,16 @@
 
 
+from multiprocessing import dummy
 from pathlib import Path
 from typing import Dict, List
+from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 
 from db.interface.i_preprocessed_db import IPreprocessedDb
 from preprocessor.implementations.preprocessor_service import PreprocessorService
 
+RAW_INPUT_FILES_DIR = Path(__file__).parent / 'raw_input_files'
 
-def obtain_paths_to_all_files() -> Dict[List[Dict]]:
+def obtain_paths_to_all_files(raw_input_files_dir: Path) -> Dict[List[Dict]]:
     '''
     Returns dict of lists:
     keys = source names (e.g. EMDB), values = Lists of Dicts.
@@ -27,11 +30,43 @@ def obtain_paths_to_all_files() -> Dict[List[Dict]]:
     ]}
     '''
     # TODO: all ids lowercase!
-    pass
+    # TODO: later this dict can be compiled during batch raw file download, it should be easier than doing it like this
+    # d = {}
+    # for dir_path in raw_input_files_dir.iterdir():
+    #     if dir_path.is_dir():
+    #         d[dir_path.stem] = []
+    #         for subdir_path in dir_path.iterdir():
+    #             if subdir_path.is_dir():
+    #                 content = sorted(subdir_path).glob('*')
+    #                 for item in content:
+    #                     if item.is_file():
+    #                         if item.suffix == '.hff':
 
-def preprocess_everything(db: IPreprocessedDb) -> None:
+    #                         if item.suffix == '.map':
+    #                 d[dir_path.stem].append(
+    #                     {
+    #                         'id': subdir_path.stem,
+    #                         # 'volume_file_path': ,
+    #                         # 'segmentation_file_path': ,
+    #                     }
+    #                 )
+
+    # temp implementation
+    # TODO: fill in paths to two files
+    dummy_dict = {
+        'emdb': [
+            {
+                'id': 'emd-1832',
+                'volume_file_path': Path(),
+                'segmentation_file_path': Path()
+            }
+        ]
+    }
+    return dummy_dict
+
+def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path) -> None:
     preprocessor_service = PreprocessorService()
-    files_dict = obtain_paths_to_all_files()
+    files_dict = obtain_paths_to_all_files(raw_input_files_dir)
     for source_name, source_entries in files_dict.items():
         for entry in source_entries:
             segm_file_type = preprocessor_service.get_raw_file_type(entry['segmentation_file_path'])
@@ -43,4 +78,5 @@ def preprocess_everything(db: IPreprocessedDb) -> None:
             db.store(namespace=source_name, key=entry.id, temp_store_path=processed_data_temp_path)
 
 if __name__ == '__main__':
-    preprocess_everything()
+    db = LocalDiskPreprocessedDb()
+    preprocess_everything(db, RAW_INPUT_FILES_DIR)
