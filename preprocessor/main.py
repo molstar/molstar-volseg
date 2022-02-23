@@ -1,6 +1,4 @@
 
-
-from multiprocessing import dummy
 from pathlib import Path
 from typing import Dict, List
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
@@ -52,13 +50,12 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path) -> Dict[List[Dict]]:
     #                 )
 
     # temp implementation
-    # TODO: fill in paths to two files
     dummy_dict = {
         'emdb': [
             {
                 'id': 'emd-1832',
-                'volume_file_path': Path(),
-                'segmentation_file_path': Path()
+                'volume_file_path': Path(__file__) / RAW_INPUT_FILES_DIR / 'emdb' / 'emd-1832' / 'EMD-1832.map',
+                'segmentation_file_path': Path(__file__) / RAW_INPUT_FILES_DIR / 'emdb' / 'emd-1832' / 'emd_1832.hff',
             }
         ]
     }
