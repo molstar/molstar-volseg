@@ -1,17 +1,19 @@
+from asgiref.sync import async_to_sync
 
 from pathlib import Path
 from typing import Dict, List
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 
+
 from db.interface.i_preprocessed_db import IPreprocessedDb
 from preprocessor.implementations.preprocessor_service import PreprocessorService
+from preprocessor.implementations.sff_preprocessor import SFFPreprocessor
 
 RAW_INPUT_FILES_DIR = Path(__file__).parent / 'raw_input_files'
 
-def obtain_paths_to_all_files(raw_input_files_dir: Path) -> Dict[List[Dict]]:
+def obtain_paths_to_all_files(raw_input_files_dir: Path) -> Dict:
     '''
-    Returns dict of lists:
-    keys = source names (e.g. EMDB), values = Lists of Dicts.
+    Returns dict where keys = source names (e.g. EMDB), values = Lists of Dicts.
     In each (sub)Dict, Path objects to volume and segmentation files are provided along with entry name.
     Both files are located in one dir (name = entry name)
     ----
@@ -62,7 +64,7 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path) -> Dict[List[Dict]]:
     return dummy_dict
 
 def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path) -> None:
-    preprocessor_service = PreprocessorService()
+    preprocessor_service = PreprocessorService([SFFPreprocessor()])
     files_dict = obtain_paths_to_all_files(raw_input_files_dir)
     for source_name, source_entries in files_dict.items():
         for entry in source_entries:
@@ -72,7 +74,7 @@ def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path) -> Non
                 segm_file_path = entry['segmentation_file_path'],
                 volume_file_path = entry['volume_file_path']
             )
-            db.store(namespace=source_name, key=entry.id, temp_store_path=processed_data_temp_path)
+            async_to_sync(db.store)(namespace=source_name, key=entry['id'], temp_store_path=processed_data_temp_path)
 
 if __name__ == '__main__':
     db = LocalDiskPreprocessedDb()

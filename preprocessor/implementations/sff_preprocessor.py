@@ -12,17 +12,17 @@ import h5py
 import numpy as np
 from preprocessor.interface.i_data_preprocessor import IDataPreprocessor
 # TODO: figure out how to specify N of downsamplings (x2, x4, etc.) in a better way
-from preprocessor._deprecated_preprocessor import DOWNSAMPLING_STEPS
 from skimage.measure import block_reduce
 
-VOLUME_DATA_GROUPNAME = '_segmentation_data'
+DOWNSAMPLING_STEPS = 4
+VOLUME_DATA_GROUPNAME = '_volume_data'
 SEGMENTATION_DATA_GROUPNAME = '_segmentation_data'
 METADATA_FILENAME = 'metadata.json'
 
 class SFFPreprocessor(IDataPreprocessor):
     def __init__(self):
         # path to root of temporary storage for zarr hierarchy
-        self.temp_root_path = Path(__file__).parents[0] / 'temp_zarr_hierarchy_storage'
+        self.temp_root_path = Path(__file__).parents[1] / 'temp_zarr_hierarchy_storage'
         # path to temp storage for that entry (segmentation)
         self.temp_zarr_structure_path = None
 
@@ -31,9 +31,10 @@ class SFFPreprocessor(IDataPreprocessor):
         Returns path to temporary zarr structure that will be stored using db.store
         '''
         self.__hdf5_to_zarr(segm_file_path)
-        # Re-create zarr hierarchy from opened store
-        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(self.temp_zarr_structure_path, mode='r')
+        # Re-create zarr hierarchy
+        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(self.temp_zarr_structure_path)
         zarr_structure: zarr.hierarchy.group = zarr.group(store=store)
+        # zarr_structure: zarr.hierarchy.group = zarr.open_group(store=self.temp_zarr_structure_path, mode='r')
         volume_data_gr: zarr.hierarchy.group = zarr_structure.create_group(VOLUME_DATA_GROUPNAME)
         segm_data_gr: zarr.hierarchy.group = zarr_structure.create_group(SEGMENTATION_DATA_GROUPNAME)
         
@@ -53,25 +54,24 @@ class SFFPreprocessor(IDataPreprocessor):
         metadata = self.__extract_metadata(zarr_structure)
         self.__temp_save_metadata(metadata, self.temp_zarr_structure_path)
 
-        store.close()
         return self.temp_zarr_structure_path
         # TODO: empty the temp storage for zarr hierarchies here or in db.store (maybe that file will be converted again!) 
 
-    def __extract_metadata(zarr_structure) -> Dict:
+    def __extract_metadata(self, zarr_structure) -> Dict:
         # just sample fields for now
         root = zarr_structure
         lattice_dict = {}
-        for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME]:
+        for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
             # each key is lattice id
             lattice_dict[f'lattice_{gr_name}'] = sorted(gr.array_keys())
 
         return {
-            'details': root.details[...][0],
+            'details': root.details[...][0].decode('utf-8'),
             'volume_data_downsamplings': sorted(root[VOLUME_DATA_GROUPNAME].array_keys()),
             'segmentation_data_downsamplings': lattice_dict,
         }
 
-    def __temp_save_metadata(metadata: Dict, temp_dir_path: Path) -> None:
+    def __temp_save_metadata(self, metadata: Dict, temp_dir_path: Path) -> None:
         with (temp_dir_path / METADATA_FILENAME).open('w') as fp:
             json.dump(metadata, fp)
 
@@ -125,14 +125,12 @@ class SFFPreprocessor(IDataPreprocessor):
         Creates temp zarr structure mirroring that of hdf5
         '''
         self.temp_zarr_structure_path = self.temp_root_path / file_path.stem
-        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(self.temp_zarr_structure_path, mode='r')
-        # may not need to be closed, but just in case
+        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(self.temp_zarr_structure_path)
+        # directory store does not need to be closed, zip does
 
         hdf5_file: h5py._hl.files.File = h5py.File(file_path, mode='r')
         hdf5_file.visititems(self.__visitor_function)
         hdf5_file.close()
-        
-        store.close()
 
     def __visitor_function(self, name: str, node: h5py._hl.dataset.Dataset) -> None:
         '''
@@ -142,17 +140,18 @@ class SFFPreprocessor(IDataPreprocessor):
         '''
         # TODO: may not work as it is a method, not a function. Check?
         # input hdf5 file may be too large for memory, so we save it in temp storage
+        node_name = node.name[1:]
         if isinstance(node, h5py.Dataset):
             # for text-based fields, including lattice data (as it is b64 encoded zlib-zipped sequence)
             if node.dtype == 'object':
                 data = [node[()]]
                 arr = zarr.array(data, dtype=node.dtype, object_codec=numcodecs.MsgPack())
-                zarr.save_array(self.temp_zarr_structure_path / node.name, arr, object_codec=numcodecs.MsgPack())
+                zarr.save_array(self.temp_zarr_structure_path / node_name, arr, object_codec=numcodecs.MsgPack())
             else:
-                arr = zarr.open_array(self.temp_zarr_structure_path / node.name, mode='w', shape=node.shape, dtype=node.dtype)
+                arr = zarr.open_array(self.temp_zarr_structure_path / node_name, mode='w', shape=node.shape, dtype=node.dtype)
                 arr[...] = node[()]
         else:
             # node is a group
-            zarr.open_group(self.temp_zarr_structure_path / node.name, mode='w')
+            zarr.open_group(self.temp_zarr_structure_path / node_name, mode='w')
     
 

@@ -6,6 +6,7 @@ import h5py
 import json
 import zarr
 import numcodecs
+from sys import stdout
 
 from preprocessor.implementations.sff_preprocessor import METADATA_FILENAME, SEGMENTATION_DATA_GROUPNAME, VOLUME_DATA_GROUPNAME
 
@@ -22,14 +23,14 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         '''
         Returns path to DB entry based on namespace and key
         '''
-        return Path(__file__).parents[1] / 'db' / namespace / key
+        return Path(__file__).resolve().parents[2] / namespace / key
 
     async def contains(self, namespace: str, key: str) -> bool:
         '''
         Checks if DB entry exists
         '''
         return self.__path_to_object__(namespace, key).is_file()
-
+    
     async def store(self, namespace: str, key: str, temp_store_path: Path) -> bool:
         '''
         Takes path to temp zarr structure returned by preprocessor as argument 
@@ -41,17 +42,17 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         # ZIP_BZIP2 = 12
         # ZIP_LZMA = 1
         # close store after writing, or use 'with' https://zarr.readthedocs.io/en/stable/api/storage.html#zarr.storage.ZipStore
-        temp_store: zarr.storage.DirectoryStore = zarr.DirectoryStore(temp_store_path, mode='r')
+        temp_store: zarr.storage.DirectoryStore = zarr.DirectoryStore(temp_store_path)
         # perm_store = zarr.ZipStore(self.__path_to_object__(namespace, key) + '.zip', mode='w', compression=12)
-        perm_store = zarr.DirectoryStore(self.__path_to_object__(namespace, key), mode='w')
-        zarr.copy_store(temp_store, perm_store)
+        perm_store = zarr.DirectoryStore(self.__path_to_object__(namespace, key))
+        zarr.copy_store(temp_store, perm_store, log=stdout)
 
         # TODO: shutil should work with Path objects, but just in case
         shutil.copy2(temp_store_path / METADATA_FILENAME, self.__path_to_object__(namespace, key) / METADATA_FILENAME)
 
         # TODO: check if temp dir will be correctly removed and read at the beginning, given that there is a JSON file inside
-        temp_store.close()
-        perm_store.close()
+        # temp_store.close()
+        # perm_store.close()
         temp_store.rmdir()
         # TODO: check if copied and store closed properly
         return True
