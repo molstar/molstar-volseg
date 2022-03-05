@@ -91,11 +91,6 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         read_segm_arr: np.ndarray = root[SEGMENTATION_DATA_GROUPNAME][lattice_id]
         read_volume_arr: np.ndarray = root[VOLUME_DATA_GROUPNAME]
         segm_slice: np.ndarray = self.__get_slice_from_three_d_arr(arr=read_segm_arr, box=box)
-        read_segm_arr[
-            box[0][0] : box[1][0] + 1,
-            box[0][1] : box[1][1] + 1,
-            box[0][2] : box[1][2] + 1
-        ]
         volume_slice: np.ndarray = self.__get_slice_from_three_d_arr(arr=read_volume_arr, box=box)
         # TODO: rewrite when LocalDiskPreprocessedVolume is changed to Pydantic/built-in data model
         # both volume and segm data
