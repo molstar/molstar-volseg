@@ -46,10 +46,10 @@ class SFFPreprocessor(IDataPreprocessor):
                 (gr.size.cols[...], gr.size.rows[...], gr.size.sections[...]))
             # specific lattice with specific id
             lattice_gr = segm_data_gr.create_group(gr_name)
-            self.__create_downsamplings(segm_arr, lattice_gr)
+            self.__create_downsamplings(segm_arr, lattice_gr, isCategorical=True)
         
         volume_arr = self.__read_volume_data(volume_file_path)
-        self.__create_downsamplings(volume_arr, volume_data_gr)
+        self.__create_downsamplings(volume_arr, volume_data_gr, isCategorical=False)
         
         metadata = self.__extract_metadata(zarr_structure)
         self.__temp_save_metadata(metadata, self.temp_zarr_structure_path)
@@ -92,6 +92,7 @@ class SFFPreprocessor(IDataPreprocessor):
 
     def __downsample_categorical_data(self, arr: np.ndarray, rate: int) -> np.ndarray:
         '''Returns downsampled (every other value) np array'''
+        # TODO: if choosing between '0' and non-zero value, it should perhaps leave non-zero value
         return arr[::rate, ::rate, ::rate]
     
     def __downsample_numerical_data(self, arr: np.ndarray, rate: int) -> np.ndarray:
@@ -138,7 +139,6 @@ class SFFPreprocessor(IDataPreprocessor):
         Takes nodes one by one and depending of their nature (group/object dataset/non-object dataset)
         creates the corresponding zarr hierarchy element (group/array)
         '''
-        # TODO: may not work as it is a method, not a function. Check?
         # input hdf5 file may be too large for memory, so we save it in temp storage
         node_name = node.name[1:]
         if isinstance(node, h5py.Dataset):
