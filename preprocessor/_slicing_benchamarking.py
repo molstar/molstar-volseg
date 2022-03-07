@@ -1,9 +1,11 @@
 from pathlib import Path
 from timeit import timeit
+from typing import Tuple
 import zarr
 import numpy as np
 import dask.array as da
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
+from timeit import default_timer as timer
 
 from asgiref.sync import async_to_sync
 
@@ -17,12 +19,80 @@ MODES_LIST = [
     'dask_from_zarr',
     'tensorstore'
 ]
+TEMP_STORE_PATH = Path(__file__).parents[0] / 'temp'
+def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
+    '''
+    np - for 400*** grid - 1*10-5 sec
+    zarr -||-              0.4 sec
+    '''
+    np_arr = np.arange(shape[0] * shape[1] * shape[2]).reshape(shape[0], shape[1], shape[2])
+    
+    store: zarr.storage.DirectoryStore = zarr.DirectoryStore(TEMP_STORE_PATH)
+    zarr_structure: zarr.hierarchy.group = zarr.group(store=store)
+    dummy_group: zarr.hierarchy.group = zarr_structure.create_group('0')
+    stored_zarr_arr: zarr.core.Array = dummy_group.create_dataset(
+        'arr',
+        shape=np_arr.shape,
+        dtype=np_arr.dtype)
+    stored_zarr_arr[...] = np_arr
+
+    path: Path = Path(dummy_group.store.path).resolve() / dummy_group.path / 'stored_np_arr'
+    zarr.save_array(path.resolve(), np_arr)
+
+    print(f'SHAPE: {shape}')
+    
+    np_arr_slicing(np_arr)
+    zarr_arr_slicing(stored_zarr_arr)
+    zarr_arr_dask_slicing(stored_zarr_arr)
+    stored_np_arr_slicing(path)
+
+    store.rmdir()
+
+def np_arr_slicing(np_arr: np.ndarray):
+    start = timer()
+    np_slice = np_arr[100:300, 100:300, 100:300]
+    end = timer()
+    print(f'np arr slicing: {end - start}')
+
+def zarr_arr_slicing(zarr_arr: zarr.core.Array):
+    start = timer()
+    zarr_slice = zarr_arr[100:300, 100:300, 100:300]
+    end = timer()
+    print(f'zarr_arr arr slicing: {end - start}')
+
+def zarr_arr_dask_slicing(zarr_arr: zarr.core.Array):
+    start = timer()
+    zd = da.from_array(zarr_arr)
+    dask_slice = zd[100:300, 100:300, 100:300]
+    end = timer()
+    print(f'zarr_arr arr slicing with dask: {end - start}')
+
+def stored_np_arr_slicing(path: Path):
+    start_loading = timer()
+    stored_np_arr = zarr.load(path.resolve())
+    end_loading = timer()
+    start_slicing = timer()
+    np_slice = stored_np_arr[100:300, 100:300, 100:300]
+    end_slicing = timer()
+    print(f'np arr loading: {end_loading - start_loading}')
+    print(f'np arr slicing: {end_slicing - start_slicing}')
+    print(f'stored np array total slicing+loading: {end_slicing - start_loading} ')
+
 
 if __name__ == '__main__':
     db = LocalDiskPreprocessedDb()
     #     # continue from here: try timeit, try default_timer
     #     # https://stackoverflow.com/questions/7370801/how-to-measure-elapsed-time-in-python
-    for mode in MODES_LIST:    
-        slice_dict = async_to_sync(db.read_slice)('emdb', 'emd-1832', 0, 2, ((10,10,10), (25,25,25)), mode=mode)
+    # for mode in MODES_LIST:    
+    #     slice_dict = async_to_sync(db.read_slice)('emdb', 'emd-1832', 0, 2, ((10,10,10), (25,25,25)), mode=mode)
         # timeit('print(z[:].tobytes())', number=1, globals=globals())
         # print(slice_dict)
+    SHAPES_LIST = [
+        (100, 100, 100),
+        (200, 200, 200),
+        (400, 400, 400),
+        # (800, 800, 800) # freezes
+    ]
+    for shape in SHAPES_LIST:
+        dummy_arr_benchmarking(shape=shape)
+    

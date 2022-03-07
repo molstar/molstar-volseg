@@ -1,5 +1,6 @@
 ### Custom
 preprocessor/output_internal_zarr/
+preprocessor/temp/
 
 ### VisualStudioCode template
 .vscode/*
