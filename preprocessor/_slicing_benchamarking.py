@@ -24,6 +24,7 @@ def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
     '''
     np - for 400*** grid - 1*10-5 sec
     zarr -||-              0.4 sec
+    slicing with dask from_zarr is fastest, at least after 200*** grid
     '''
     np_arr = np.arange(shape[0] * shape[1] * shape[2]).reshape(shape[0], shape[1], shape[2])
     
@@ -43,8 +44,10 @@ def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
     
     np_arr_slicing(np_arr)
     zarr_arr_slicing(stored_zarr_arr)
+    zarr_arr_to_np_slicing(stored_zarr_arr)
     zarr_arr_dask_slicing(stored_zarr_arr)
     stored_np_arr_slicing(path)
+    zarr_arr_dask_from_zarr_slicing(stored_zarr_arr)
 
     store.rmdir()
 
@@ -60,12 +63,31 @@ def zarr_arr_slicing(zarr_arr: zarr.core.Array):
     end = timer()
     print(f'zarr_arr arr slicing: {end - start}')
 
+def zarr_arr_to_np_slicing(zarr_arr: zarr.core.Array):
+    start = timer()
+    np_arr = np.array(zarr_arr)
+    np_arr_slice = np_arr[100:300, 100:300, 100:300]
+    end = timer()
+    print(f'zarr_arr converted to np arr slicing: {end - start}')
+
+# TODO: try https://stackoverflow.com/questions/61807955/efficient-way-of-storing-1tb-of-random-data-with-zarr
+# i.e. creating dask arr, storing to zarr storage, would it be faster to load dask arr from zarr storage
+# compared to doing da.from_zarr?
+
 def zarr_arr_dask_slicing(zarr_arr: zarr.core.Array):
     start = timer()
     zd = da.from_array(zarr_arr)
     dask_slice = zd[100:300, 100:300, 100:300]
     end = timer()
     print(f'zarr_arr arr slicing with dask: {end - start}')
+
+def zarr_arr_dask_from_zarr_slicing(zarr_arr: zarr.core.Array):
+    start = timer()
+    zd = da.from_zarr(zarr_arr)
+    dask_slice = zd[100:300, 100:300, 100:300]
+    end = timer()
+    print(f'zarr_arr arr slicing with dask from_zarr: {end - start}')
+
 
 def stored_np_arr_slicing(path: Path):
     start_loading = timer()
@@ -74,15 +96,11 @@ def stored_np_arr_slicing(path: Path):
     start_slicing = timer()
     np_slice = stored_np_arr[100:300, 100:300, 100:300]
     end_slicing = timer()
-    print(f'np arr loading: {end_loading - start_loading}')
-    print(f'np arr slicing: {end_slicing - start_slicing}')
-    print(f'stored np array total slicing+loading: {end_slicing - start_loading} ')
+    print(f'stored np array total slicing+loading: {end_slicing - start_loading} = loading: {end_loading - start_loading} + slicing: {end_slicing - start_slicing}')
 
 
 if __name__ == '__main__':
     db = LocalDiskPreprocessedDb()
-    #     # continue from here: try timeit, try default_timer
-    #     # https://stackoverflow.com/questions/7370801/how-to-measure-elapsed-time-in-python
     # for mode in MODES_LIST:    
     #     slice_dict = async_to_sync(db.read_slice)('emdb', 'emd-1832', 0, 2, ((10,10,10), (25,25,25)), mode=mode)
         # timeit('print(z[:].tobytes())', number=1, globals=globals())
