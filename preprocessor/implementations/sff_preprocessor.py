@@ -118,7 +118,10 @@ class SFFPreprocessor(IDataPreprocessor):
         zarr_arr = downsampled_data_group.create_dataset(
             str(rate),
             shape=downsampled_data.shape,
-            dtype=downsampled_data.dtype)
+            dtype=downsampled_data.dtype,
+            # TODO: figure out how to determine optimal chunk size depending on the data
+            chunks=(50, 50, 50)
+            )
         zarr_arr[...] = downsampled_data
 
     def __hdf5_to_zarr(self, file_path: Path):

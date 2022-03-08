@@ -1,6 +1,7 @@
 ### Custom
 preprocessor/output_internal_zarr/
 preprocessor/temp/
+db/emdb/
 
 ### VisualStudioCode template
 .vscode/*

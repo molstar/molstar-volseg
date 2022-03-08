@@ -19,7 +19,11 @@ MODES_LIST = [
     'dask_from_zarr',
     'tensorstore'
 ]
+
+CHUNK_SIZES = [25, 50, 100, 400]
+
 TEMP_STORE_PATH = Path(__file__).parents[0] / 'temp'
+
 def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
     '''
     np - for 400*** grid - 1*10-5 sec
@@ -28,26 +32,37 @@ def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
     '''
     np_arr = np.arange(shape[0] * shape[1] * shape[2]).reshape(shape[0], shape[1], shape[2])
     
+    start_zarr_structure = timer()
     store: zarr.storage.DirectoryStore = zarr.DirectoryStore(TEMP_STORE_PATH)
     zarr_structure: zarr.hierarchy.group = zarr.group(store=store)
     dummy_group: zarr.hierarchy.group = zarr_structure.create_group('0')
-    stored_zarr_arr: zarr.core.Array = dummy_group.create_dataset(
-        'arr',
-        shape=np_arr.shape,
-        dtype=np_arr.dtype)
-    stored_zarr_arr[...] = np_arr
+    end_zarr_structure =  timer()
+
+    print(f'CREATING ZARR STRUCTURE: {end_zarr_structure - start_zarr_structure}')
+    for chunk_size in CHUNK_SIZES:
+        stored_zarr_arr = dummy_group.create_dataset(
+            chunk_size,
+            shape=np_arr.shape,
+            dtype=np_arr.dtype,
+            chunks=(chunk_size, chunk_size, chunk_size)
+        )
+        stored_zarr_arr[...] = np_arr
 
     path: Path = Path(dummy_group.store.path).resolve() / dummy_group.path / 'stored_np_arr'
     zarr.save_array(path.resolve(), np_arr)
 
     print(f'SHAPE: {shape}')
     
-    np_arr_slicing(np_arr)
-    zarr_arr_slicing(stored_zarr_arr)
-    zarr_arr_to_np_slicing(stored_zarr_arr)
-    zarr_arr_dask_slicing(stored_zarr_arr)
-    stored_np_arr_slicing(path)
-    zarr_arr_dask_from_zarr_slicing(stored_zarr_arr)
+    for arr_name, arr in dummy_group.arrays():
+        print(f'CHUNK SIZE: {arr.chunks}')
+        np_arr_slicing(np_arr)
+        zarr_arr_slicing(arr)
+        # too slow
+        # zarr_arr_to_np_slicing(arr)
+        zarr_arr_dask_slicing(arr)
+        # too slow
+        # stored_np_arr_slicing(path)
+        zarr_arr_dask_from_zarr_slicing(arr)
 
     store.rmdir()
 
@@ -83,7 +98,7 @@ def zarr_arr_dask_slicing(zarr_arr: zarr.core.Array):
 
 def zarr_arr_dask_from_zarr_slicing(zarr_arr: zarr.core.Array):
     start = timer()
-    zd = da.from_zarr(zarr_arr)
+    zd = da.from_zarr(zarr_arr, chunks=zarr_arr.chunks)
     dask_slice = zd[100:300, 100:300, 100:300]
     end = timer()
     print(f'zarr_arr arr slicing with dask from_zarr: {end - start}')
@@ -96,7 +111,7 @@ def stored_np_arr_slicing(path: Path):
     start_slicing = timer()
     np_slice = stored_np_arr[100:300, 100:300, 100:300]
     end_slicing = timer()
-    print(f'stored np array total slicing+loading: {end_slicing - start_loading} = loading: {end_loading - start_loading} + slicing: {end_slicing - start_slicing}')
+    print(f'stored np array total slicing+loading: {end_slicing - start_loading}')
 
 
 if __name__ == '__main__':
@@ -106,11 +121,16 @@ if __name__ == '__main__':
         # timeit('print(z[:].tobytes())', number=1, globals=globals())
         # print(slice_dict)
     SHAPES_LIST = [
-        (100, 100, 100),
-        (200, 200, 200),
+        # (100, 100, 100),
+        # (200, 200, 200),
         (400, 400, 400),
         # (800, 800, 800) # freezes
     ]
     for shape in SHAPES_LIST:
         dummy_arr_benchmarking(shape=shape)
+        # pass
+
+    # slice_dict = async_to_sync(db.read_slice)('emdb', 'emd-1832', 0, 2, ((10,10,10), (25,25,25)), mode='dask')
+
+
     

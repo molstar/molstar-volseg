@@ -76,7 +76,10 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         read_volume_arr: np.ndarray = root[VOLUME_DATA_GROUPNAME]
         # TODO: rewrite return when LocalDiskPreprocessedVolume is changed to Pydantic/built-in data model
         # both volume and segm data
-        return LocalDiskPreprocessedVolume(read_zarr_arr)
+        return {
+            'segmentation': read_segm_arr,
+            'volume': read_volume_arr
+        }
 
     async def read_slice(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str) -> IPreprocessedVolume:
         '''
