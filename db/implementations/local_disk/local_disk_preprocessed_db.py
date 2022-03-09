@@ -8,6 +8,7 @@ from sys import stdout
 import numpy as np
 import dask.array as da
 from timeit import default_timer as timer
+import tensorstore as ts
 
 from preprocessor.implementations.sff_preprocessor import METADATA_FILENAME, SEGMENTATION_DATA_GROUPNAME, VOLUME_DATA_GROUPNAME
 
@@ -30,7 +31,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         '''
         Checks if DB entry exists
         '''
-        return self.__path_to_object__(namespace, key).is_file()
+        return self.__path_to_object__(namespace, key).is_dir()
     
     async def store(self, namespace: str, key: str, temp_store_path: Path) -> bool:
         '''
@@ -98,11 +99,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         segm_slice = None
         volume_slice = None
         start = timer()
-        if mode == 'np':
-            # 1: numpy slicing (default)
-            segm_slice: np.ndarray = self.__get_slice_from_np_three_d_arr(arr=segm_arr, box=box)
-            volume_slice: np.ndarray = self.__get_slice_from_np_three_d_arr(arr=volume_arr, box=box)
-        elif mode =='zarr_colon':
+        if mode =='zarr_colon':
             # 2: zarr slicing via : notation
             segm_slice: np.ndarray = self.__get_slice_from_zarr_three_d_arr(arr=segm_arr, box=box)
             volume_slice: np.ndarray = self.__get_slice_from_zarr_three_d_arr(arr=volume_arr, box=box)
@@ -116,15 +113,13 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             volume_slice: np.ndarray = self.__get_slice_from_zarr_three_d_arr_dask(arr=volume_arr, box=box)
             
         elif mode == 'dask_from_zarr':
-            pass
-        #     # 5: dask array from zarr? https://github.com/zarr-developers/zarr-python/issues/843
-        #     # Using dask to slice the store with steps (dask.array.from_zarr(store)[::512].compute())
-        #     # maybe compute() is not necessary
-        #     segm_slice: np.ndarray = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=segm_arr, box=box)
-        #     volume_slice: np.ndarray = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=volume_arr, box=box)
-        elif mode == 'tensorstore ':
-            # https://stackoverflow.com/questions/64924224/getting-a-view-of-a-zarr-array-slice
-            pass
+            segm_slice: np.ndarray = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=segm_arr, box=box)
+            volume_slice: np.ndarray = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=volume_arr, box=box)
+        elif mode == 'tensorstore':
+            # TODO: figure out variable types https://stackoverflow.com/questions/64924224/getting-a-view-of-a-zarr-array-slice
+            # it can be 'view' or np array etc.
+            segm_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=segm_arr, box=box)
+            volume_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=volume_arr, box=box)
         
         end = timer()
         print(f'read_slice with mode {mode}: {end - start}')
@@ -142,20 +137,12 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             # reads into dict
             read_json_of_metadata: Dict = json.load(f)
         return LocalDiskPreprocessedMetadata(read_json_of_metadata)
-
-    def __get_slice_from_np_three_d_arr(self, arr: np.ndarray, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]) -> np.ndarray:
+    
+    def __get_slice_from_zarr_three_d_arr(self, arr: zarr.core.Array, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
         '''
         Based on (vec3, vec3) tuple (coordinates of corners of the box)
         returns a slice of 3d array
         '''
-        sliced = arr[
-            box[0][0] : box[1][0] + 1,
-            box[0][1] : box[1][1] + 1,
-            box[0][2] : box[1][2] + 1
-        ]
-        return sliced
-    
-    def __get_slice_from_zarr_three_d_arr(self, arr: zarr.core.Array, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
         sliced = arr[
             box[0][0] : box[1][0] + 1,
             box[0][1] : box[1][1] + 1,
@@ -177,7 +164,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
     def __get_slice_from_zarr_three_d_arr_dask(self, arr: zarr.core.Array, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
         # TODO: check if slice is correct and equal to : notation slice
         # 4: dask slicing: https://github.com/zarr-developers/zarr-python/issues/478#issuecomment-531148674
-        zd = da.from_array(arr)
+        zd = da.from_array(arr, chunks=arr.chunks)
         sliced = zd[
             box[0][0] : box[1][0] + 1,
             box[0][1] : box[1][1] + 1,
@@ -186,15 +173,44 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         return sliced
 
     def __get_slice_from_zarr_three_d_arr_dask_from_zarr(self, arr: zarr.core.Array, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
-        '''
-        deprecated
-        '''
-        # TODO: check if slice is correct and equal to : notation slice
-        # dask.array.from_zarr(store)[::512].compute()
-        zd = da.array.from_zarr(store)[::512]
+        zd = da.from_zarr(arr, chunks=arr.chunks)
         sliced = zd[
             box[0][0] : box[1][0] + 1,
             box[0][1] : box[1][1] + 1,
             box[0][2] : box[1][2] + 1
         ]
         return sliced
+
+    def __get_slice_from_zarr_three_d_arr_tensorstore(self, arr: zarr.core.Array, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
+        # TODO: check if slice is correct and equal to : notation slice
+        # TODO: await?
+        path = self.__get_path_to_zarr_object(arr)
+        store = ts.open(
+            {
+                'driver': 'zarr',
+                'kvstore': {
+                    'driver': 'file',
+                    'path': str(path.resolve()),
+                },
+            },
+            read=True
+        )
+        # store - future object, result - ONE of the ways how to get it sync (can be async)
+        # store.read() - returns everything as future object. again result() or other methods
+        # can be store[1:10].read() ...
+        print(store.result())
+        
+        # zd = da.from_zarr(arr, chunks=arr.chunks)
+        # sliced = zd[
+        #     box[0][0] : box[1][0] + 1,
+        #     box[0][1] : box[1][1] + 1,
+        #     box[0][2] : box[1][2] + 1
+        # ]
+        # return sliced
+
+    def __get_path_to_zarr_object(self, zarr_obj: object) -> Path:
+        '''
+        Returns Path to zarr object (array or group)
+        '''
+        path: Path = Path(zarr_obj.store.path).resolve() / zarr_obj.path
+        return path

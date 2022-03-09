@@ -91,7 +91,7 @@ def zarr_arr_to_np_slicing(zarr_arr: zarr.core.Array):
 
 def zarr_arr_dask_slicing(zarr_arr: zarr.core.Array):
     start = timer()
-    zd = da.from_array(zarr_arr)
+    zd = da.from_array(zarr_arr, chunks=zarr_arr.chunks)
     dask_slice = zd[100:300, 100:300, 100:300]
     end = timer()
     print(f'zarr_arr arr slicing with dask: {end - start}')
@@ -113,21 +113,27 @@ def stored_np_arr_slicing(path: Path):
     end_slicing = timer()
     print(f'stored np array total slicing+loading: {end_slicing - start_loading}')
 
+def _get_sample_zarr_structure():
+    PATH = Path('db') / 'emdb' / 'emd-1832'
+    store: zarr.storage.DirectoryStore = zarr.DirectoryStore(PATH)
+    # Re-create zarr hierarchy from opened store
+    root: zarr.hierarchy.group = zarr.group(store=store)
+    return root
 
 if __name__ == '__main__':
     db = LocalDiskPreprocessedDb()
-    # for mode in MODES_LIST:    
-    #     slice_dict = async_to_sync(db.read_slice)('emdb', 'emd-1832', 0, 2, ((10,10,10), (25,25,25)), mode=mode)
+    for mode in MODES_LIST:    
+        slice_dict = async_to_sync(db.read_slice)('emdb', 'emd-1832', 0, 2, ((10,10,10), (25,25,25)), mode=mode)
         # timeit('print(z[:].tobytes())', number=1, globals=globals())
         # print(slice_dict)
-    SHAPES_LIST = [
-        # (100, 100, 100),
-        # (200, 200, 200),
-        (400, 400, 400),
-        # (800, 800, 800) # freezes
-    ]
-    for shape in SHAPES_LIST:
-        dummy_arr_benchmarking(shape=shape)
+    # SHAPES_LIST = [
+    #     # (100, 100, 100),
+    #     # (200, 200, 200),
+    #     (400, 400, 400),
+    #     # (800, 800, 800) # freezes
+    # ]
+    # for shape in SHAPES_LIST:
+    #     dummy_arr_benchmarking(shape=shape)
         # pass
 
     # slice_dict = async_to_sync(db.read_slice)('emdb', 'emd-1832', 0, 2, ((10,10,10), (25,25,25)), mode='dask')
