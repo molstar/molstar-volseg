@@ -6,13 +6,13 @@ import numpy as np
 import dask.array as da
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 from timeit import default_timer as timer
+import tensorstore as ts
 
 from asgiref.sync import async_to_sync
 
 from preprocessor.implementations.sff_preprocessor import SEGMENTATION_DATA_GROUPNAME, VOLUME_DATA_GROUPNAME
 
 MODES_LIST = [
-    'np',
     'zarr_colon',
     'zarr_gbs',
     'dask',
@@ -22,7 +22,7 @@ MODES_LIST = [
 
 CHUNK_SIZES = [25, 50, 100, 400]
 
-TEMP_STORE_PATH = Path(__file__).parents[0] / 'temp'
+TEMP_STORE_PATH = Path(__file__).parents[0] / 'temp' / 'benchmarking_zarr_structure'
 
 def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
     '''
@@ -63,6 +63,7 @@ def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
         # too slow
         # stored_np_arr_slicing(path)
         zarr_arr_dask_from_zarr_slicing(arr)
+        zarr_arr_tensorstore_slicing(arr)
 
     store.rmdir()
 
@@ -103,6 +104,23 @@ def zarr_arr_dask_from_zarr_slicing(zarr_arr: zarr.core.Array):
     end = timer()
     print(f'zarr_arr arr slicing with dask from_zarr: {end - start}')
 
+def zarr_arr_tensorstore_slicing(zarr_arr: zarr.core.Array):
+    start = timer()
+    path: Path = Path(zarr_arr.store.path).resolve() / zarr_arr.path
+    store = ts.open(
+        {
+            'driver': 'zarr',
+            'kvstore': {
+                'driver': 'file',
+                'path': str(path.resolve()),
+            },
+        },
+        read=True
+    ).result()
+    sliced = store[100:300, 100:300, 100:300].read().result()
+    end = timer()
+    # print(store)
+    print(f'zarr_arr arr slicing with tensorstore: {end - start}')
 
 def stored_np_arr_slicing(path: Path):
     start_loading = timer()
@@ -120,23 +138,21 @@ def _get_sample_zarr_structure():
     root: zarr.hierarchy.group = zarr.group(store=store)
     return root
 
+
+
 if __name__ == '__main__':
     db = LocalDiskPreprocessedDb()
-    for mode in MODES_LIST:    
-        slice_dict = async_to_sync(db.read_slice)('emdb', 'emd-1832', 0, 2, ((10,10,10), (25,25,25)), mode=mode)
-        # timeit('print(z[:].tobytes())', number=1, globals=globals())
-        # print(slice_dict)
-    # SHAPES_LIST = [
-    #     # (100, 100, 100),
-    #     # (200, 200, 200),
-    #     (400, 400, 400),
-    #     # (800, 800, 800) # freezes
-    # ]
-    # for shape in SHAPES_LIST:
-    #     dummy_arr_benchmarking(shape=shape)
+    # for mode in MODES_LIST:    
+    #     slice_dict = async_to_sync(db.read_slice)('emdb', 'emd-1832', 0, 2, ((10,10,10), (25,25,25)), mode=mode)
+        
+    SHAPES_LIST = [
+        # (100, 100, 100),
+        # (200, 200, 200),
+        (400, 400, 400),
+        # (800, 800, 800) # freezes
+    ]
+    for shape in SHAPES_LIST:
+        dummy_arr_benchmarking(shape=shape)
         # pass
-
-    # slice_dict = async_to_sync(db.read_slice)('emdb', 'emd-1832', 0, 2, ((10,10,10), (25,25,25)), mode='dask')
-
 
     

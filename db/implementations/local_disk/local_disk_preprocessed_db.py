@@ -183,7 +183,10 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
 
     def __get_slice_from_zarr_three_d_arr_tensorstore(self, arr: zarr.core.Array, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
         # TODO: check if slice is correct and equal to : notation slice
-        # TODO: await?
+        # TODO: await? # store - future object, result - ONE of the ways how to get it sync (can be async)
+        # store.read() - returns everything as future object. again result() or other methods
+        # can be store[1:10].read() ...
+        
         path = self.__get_path_to_zarr_object(arr)
         store = ts.open(
             {
@@ -194,19 +197,13 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
                 },
             },
             read=True
-        )
-        # store - future object, result - ONE of the ways how to get it sync (can be async)
-        # store.read() - returns everything as future object. again result() or other methods
-        # can be store[1:10].read() ...
-        print(store.result())
-        
-        # zd = da.from_zarr(arr, chunks=arr.chunks)
-        # sliced = zd[
-        #     box[0][0] : box[1][0] + 1,
-        #     box[0][1] : box[1][1] + 1,
-        #     box[0][2] : box[1][2] + 1
-        # ]
-        # return sliced
+        ).result()
+        sliced = store[
+            box[0][0] : box[1][0] + 1,
+            box[0][1] : box[1][1] + 1,
+            box[0][2] : box[1][2] + 1
+        ].read().result()
+        return sliced
 
     def __get_path_to_zarr_object(self, zarr_obj: object) -> Path:
         '''
