@@ -1,6 +1,7 @@
 
 
 import base64
+from importlib.machinery import PathFinder
 import json
 import gemmi
 from pathlib import Path
@@ -10,6 +11,8 @@ import zarr
 import numcodecs
 import h5py
 import numpy as np
+import decimal
+from decimal import Decimal
 from preprocessor.interface.i_data_preprocessor import IDataPreprocessor
 # TODO: figure out how to specify N of downsamplings (x2, x4, etc.) in a better way
 from skimage.measure import block_reduce
@@ -48,7 +51,7 @@ class SFFPreprocessor(IDataPreprocessor):
             lattice_gr = segm_data_gr.create_group(gr_name)
             self.__create_downsamplings(segm_arr, lattice_gr, isCategorical=True)
         
-        volume_arr = self.__read_volume_data(volume_file_path)
+        volume_arr = self.__read_volume_data(volume_file_path, volume_file_path)
         self.__create_downsamplings(volume_arr, volume_data_gr, isCategorical=False)
         
         metadata = self.__extract_metadata(zarr_structure)
@@ -57,18 +60,62 @@ class SFFPreprocessor(IDataPreprocessor):
         return self.temp_zarr_structure_path
         # TODO: empty the temp storage for zarr hierarchies here or in db.store (maybe that file will be converted again!) 
 
-    def __extract_metadata(self, zarr_structure) -> Dict:
-        # just sample fields for now
+    def __get_voxel_size(volume_map_obj) -> Tuple[float, float, float]:
+        m = volume_map_obj
+        m.header_float(11)
+
+    def __extract_metadata(self, zarr_structure, volume_file_path: Path) -> Dict:
         root = zarr_structure
+
+        volume_downsamplings = sorted(root[VOLUME_DATA_GROUPNAME].array_keys())
         lattice_dict = {}
         for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
             # each key is lattice id
             lattice_dict[f'lattice_{gr_name}'] = sorted(gr.array_keys())
 
+        # read ccp4 map to gemmi.Ccp4Map 
+        # https://www.ccpem.ac.uk/mrc_format/mrc2014.php
+        # https://www.ccp4.ac.uk/html/maplib.html
+        volume_map = gemmi.read_ccp4_map(str(volume_file_path.resolve()))
+        m = volume_map
+        # get voxel size based on CELLA and NX/NC, NY/NR, NZ/NS variables (words 1, 2, 3) in CCP4 file
+        # may need to use MX, NY, MZ instead of N*s (words 8, 9, 10)
+        ctx = decimal.getcontext()
+        ctx.rounding = decimal.ROUND_CEILING
+
+        cella_X = round(Decimal(m.header_float(11)), 1)
+        cella_Y = round(Decimal(m.header_float(12)), 1)
+        cella_Z = round(Decimal(m.header_float(13)), 1)
+        nx = m.header_i32(1)
+        ny = m.header_i32(2)
+        nz = m.header_i32(3)
+        nc_start = m.header_i32(5)
+        nr_start = m.header_i32(6)
+        ns_start = m.header_i32(7)
+        original_voxel_size: Tuple[float, float, float] = (cella_X / nx, cella_Y / ny, cella_Z / nz)
+
+        voxel_sizes_in_downsamplings: Dict = {}
+        for downsampling_rate in volume_downsamplings:
+            voxel_sizes_in_downsamplings[downsampling_rate] = original_voxel_size * int(downsampling_rate)
+
+        # get origin of grid based on NC/NR/NSSTART variables (5, 6, 7) and original voxel size
+        origin: Tuple[float, float, float] = (
+            m.header_i32(5) * original_voxel_size[0],
+            m.header_i32(6) * original_voxel_size[1],
+            m.header_i32(7) * original_voxel_size[2],
+        )
+
+        # get grid dimensions based on NX/NC, NY/NR, NZ/NS variables (words 1, 2, 3) in CCP4 file
+        grid_dimensions: Tuple[int, int, int] = (nx, ny, nz)
+
         return {
             'details': root.details[...][0].decode('utf-8'),
-            'volume_data_downsamplings': sorted(root[VOLUME_DATA_GROUPNAME].array_keys()),
+            'volume_data_downsamplings': volume_downsamplings,
             'segmentation_data_downsamplings': lattice_dict,
+            # downsamplings have different voxel size so it is a dict
+            'voxel_size': voxel_sizes_in_downsamplings,
+            'origin': origin,
+            'grid_dimensions': grid_dimensions,
         }
 
     def __temp_save_metadata(self, metadata: Dict, temp_dir_path: Path) -> None:
@@ -78,6 +125,7 @@ class SFFPreprocessor(IDataPreprocessor):
     def __read_volume_data(self, file_path) -> np.ndarray:
         # may not need to add .resolve(), with resolve it returns abs path
         m = gemmi.read_ccp4_map(str(file_path.resolve()))
+        # TODO: can be dask array to save memory?
         return np.array(m.grid)
 
     def __lattice_data_to_np_arr(self, data: str, dtype: str, arr_shape: Tuple[int, int, int]) -> np.ndarray:
