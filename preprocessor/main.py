@@ -58,7 +58,17 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path) -> Dict:
                 'id': 'emd-1832',
                 'volume_file_path': Path(__file__) / RAW_INPUT_FILES_DIR / 'emdb' / 'emd-1832' / 'EMD-1832.map',
                 'segmentation_file_path': Path(__file__) / RAW_INPUT_FILES_DIR / 'emdb' / 'emd-1832' / 'emd_1832.hff',
-            }
+            },
+            # {
+            #     'id': 'empiar_10087_c2_tomo02',
+            #     'volume_file_path': Path(__file__) / RAW_INPUT_FILES_DIR / 'emdb' / 'empiar_10087_c2_tomo02' / 'C2_tomo02.mrc',
+            #     'segmentation_file_path': Path(__file__) / RAW_INPUT_FILES_DIR / 'emdb' / 'empiar_10087_c2_tomo02' / 'empiar_10087_c2_tomo02.hff',
+            # },
+            # {
+            #     'id': 'empiar_10087_e64_tomo03',
+            #     'volume_file_path': Path(__file__) / RAW_INPUT_FILES_DIR / 'emdb' / 'empiar_10087_e64_tomo03' / 'E64_tomo03.mrc',
+            #     'segmentation_file_path': Path(__file__) / RAW_INPUT_FILES_DIR / 'emdb' / 'emd-empiar_10087_e64_tomo03' / 'empiar_10087_e64_tomo03.hff',
+            # }
         ]
     }
     return dummy_dict
@@ -79,3 +89,21 @@ def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path) -> Non
 if __name__ == '__main__':
     db = LocalDiskPreprocessedDb()
     preprocess_everything(db, RAW_INPUT_FILES_DIR)
+    # event loop works, while async to sync returns Metadata class
+    # https://stackoverflow.com/questions/44048536/python3-get-result-from-async-method
+    # metadata = async_to_sync(db.read_metadata)(namespace='emdb', key='emd-1832')
+    # print(metadata)
+
+    # lat_ids = metadata.segmentation_lattice_ids()
+    # segm_dwnsmplings = metadata.segmentation_downsamplings(lat_ids[0])
+    # volume_downsamplings = metadata.volume_downsamplings()
+    # origin = metadata.origin()
+    # voxel_size = metadata.volume_downsamplings()
+    # grid_dimensions = metadata.grid_dimensions()
+
+    # print(lat_ids)
+    # print(segm_dwnsmplings)
+    # print(volume_downsamplings)
+    # print(origin)
+    # print(voxel_size)
+    # print(grid_dimensions)

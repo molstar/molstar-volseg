@@ -12,11 +12,11 @@ class IReadOnlyPreprocessedDb(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def read(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int) -> IPreprocessedVolume:
+    async def read(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int) -> Dict:
         pass
     
     @abc.abstractmethod
-    async def read_slice(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str) -> IPreprocessedVolume:
+    async def read_slice(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask') -> Dict:
         pass
 
     @abc.abstractmethod

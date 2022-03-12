@@ -51,27 +51,25 @@ class SFFPreprocessor(IDataPreprocessor):
             lattice_gr = segm_data_gr.create_group(gr_name)
             self.__create_downsamplings(segm_arr, lattice_gr, isCategorical=True)
         
-        volume_arr = self.__read_volume_data(volume_file_path, volume_file_path)
+        volume_arr = self.__read_volume_data(volume_file_path)
         self.__create_downsamplings(volume_arr, volume_data_gr, isCategorical=False)
         
-        metadata = self.__extract_metadata(zarr_structure)
+        metadata = self.__extract_metadata(zarr_structure, volume_file_path)
         self.__temp_save_metadata(metadata, self.temp_zarr_structure_path)
 
         return self.temp_zarr_structure_path
-        # TODO: empty the temp storage for zarr hierarchies here or in db.store (maybe that file will be converted again!) 
-
-    def __get_voxel_size(volume_map_obj) -> Tuple[float, float, float]:
-        m = volume_map_obj
-        m.header_float(11)
-
+        
     def __extract_metadata(self, zarr_structure, volume_file_path: Path) -> Dict:
         root = zarr_structure
-
         volume_downsamplings = sorted(root[VOLUME_DATA_GROUPNAME].array_keys())
+
         lattice_dict = {}
+        lattice_ids = []
         for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
             # each key is lattice id
-            lattice_dict[f'lattice_{gr_name}'] = sorted(gr.array_keys())
+            lattice_id = int(gr_name)
+            lattice_dict[lattice_id] = sorted(gr.array_keys())
+            lattice_ids.append(lattice_id)
 
         # read ccp4 map to gemmi.Ccp4Map 
         # https://www.ccpem.ac.uk/mrc_format/mrc2014.php
@@ -92,11 +90,17 @@ class SFFPreprocessor(IDataPreprocessor):
         nc_start = m.header_i32(5)
         nr_start = m.header_i32(6)
         ns_start = m.header_i32(7)
-        original_voxel_size: Tuple[float, float, float] = (cella_X / nx, cella_Y / ny, cella_Z / nz)
+        original_voxel_size: Tuple[float, float, float] = (
+            cella_X / nx,
+            cella_Y / ny,
+            cella_Z / nz
+        )
 
         voxel_sizes_in_downsamplings: Dict = {}
-        for downsampling_rate in volume_downsamplings:
-            voxel_sizes_in_downsamplings[downsampling_rate] = original_voxel_size * int(downsampling_rate)
+        for rate in volume_downsamplings:
+            voxel_sizes_in_downsamplings[rate] = tuple(
+                [float(str(i * Decimal(rate))) for i in original_voxel_size]
+            )
 
         # get origin of grid based on NC/NR/NSSTART variables (5, 6, 7) and original voxel size
         origin: Tuple[float, float, float] = (
@@ -104,14 +108,17 @@ class SFFPreprocessor(IDataPreprocessor):
             m.header_i32(6) * original_voxel_size[1],
             m.header_i32(7) * original_voxel_size[2],
         )
+        # Converting to strings, then to floats to make it JSON serializable (decimals are not)
+        origin = tuple([float(str(i)) for i in origin])
 
         # get grid dimensions based on NX/NC, NY/NR, NZ/NS variables (words 1, 2, 3) in CCP4 file
         grid_dimensions: Tuple[int, int, int] = (nx, ny, nz)
 
         return {
             'details': root.details[...][0].decode('utf-8'),
-            'volume_data_downsamplings': volume_downsamplings,
-            'segmentation_data_downsamplings': lattice_dict,
+            'volume_downsamplings': volume_downsamplings,
+            'segmentation_lattice_ids': lattice_ids,
+            'segmentation_downsamplings': lattice_dict,
             # downsamplings have different voxel size so it is a dict
             'voxel_size': voxel_sizes_in_downsamplings,
             'origin': origin,
