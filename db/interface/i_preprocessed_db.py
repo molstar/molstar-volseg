@@ -1,6 +1,6 @@
 import abc
 from pathlib import Path
-from typing import Tuple
+from typing import Dict, Tuple
 
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 from db.interface.i_preprocessed_volume import IPreprocessedVolume
