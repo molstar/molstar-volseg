@@ -34,3 +34,7 @@ class IVolumeRequest(abc.ABC):
     def z_max(self) -> float:
         pass
 
+    @abc.abstractmethod
+    def max_size_kb(self) -> int:
+        pass
+
