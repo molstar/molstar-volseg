@@ -1,6 +1,5 @@
 import shutil
 from typing import Dict, Tuple
-import numpy as np
 from pathlib import Path
 import json
 import zarr
@@ -13,9 +12,7 @@ import tensorstore as ts
 from preprocessor.implementations.sff_preprocessor import METADATA_FILENAME, SEGMENTATION_DATA_GROUPNAME, VOLUME_DATA_GROUPNAME
 
 from .local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
-from .local_disk_preprocessed_volume import LocalDiskPreprocessedVolume
 from db.interface.i_preprocessed_db import IPreprocessedDb
-from db.interface.i_preprocessed_volume import IPreprocessedVolume
 from ...interface.i_preprocessed_medatada import IPreprocessedMetadata
 
 
