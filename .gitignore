@@ -1,7 +1,9 @@
 ### Custom
 preprocessor/output_internal_zarr/
 preprocessor/temp/
-db/emdb/
+#preprocessor/raw_input_files/
+#preprocessor/sample_segmentations/
+preprocessor/temp_zarr_hierarchy_storage/
 
 ### VisualStudioCode template
 .vscode/*
