@@ -187,11 +187,11 @@ class SFFPreprocessor(IDataPreprocessor):
         store: zarr.storage.DirectoryStore = zarr.DirectoryStore(self.temp_zarr_structure_path)
         # directory store does not need to be closed, zip does
 
-        hdf5_file: h5py._hl.files.File = h5py.File(file_path, mode='r')
+        hdf5_file: h5py.File = h5py.File(file_path, mode='r')
         hdf5_file.visititems(self.__visitor_function)
         hdf5_file.close()
 
-    def __visitor_function(self, name: str, node: h5py._hl.dataset.Dataset) -> None:
+    def __visitor_function(self, name: str, node: h5py.Dataset) -> None:
         '''
         Helper function used to create zarr hierarchy based on hdf5 hierarchy from sff file
         Takes nodes one by one and depending of their nature (group/object dataset/non-object dataset)
