@@ -1,14 +1,5 @@
-import h5py
-import json
 import zarr
-import sfftkrw as sff
-import numpy as np
-import numcodecs
-# import msgpack
-from sys import stdout
-import base64
-import zlib
-from preprocessor import decompress_lattice_data
+from _deprecated_preprocessor import decompress_lattice_data
 
 PATH_TO_SEG_DIR = ('./sample_segmentations/emdb_sff/')
 PATH_TO_OUTPUT_DIR = ('./output_internal_zarr/')

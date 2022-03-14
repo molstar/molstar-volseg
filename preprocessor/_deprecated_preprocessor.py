@@ -1,11 +1,7 @@
 import h5py
-import json
 import zarr
-import sfftkrw as sff
 import numpy as np
 import numcodecs
-# import msgpack
-from sys import stdout
 import base64
 import zlib
 # better version of downsampling: skimage.measure.block_reduce
@@ -19,6 +15,7 @@ from typing import Tuple
 PATH_TO_SEG_DIR = ('./sample_segmentations/emdb_sff/')
 PATH_TO_OUTPUT_DIR = ('./output_internal_zarr/')
 DOWNSAMPLING_STEPS = 4
+
 
 # TODO: blosc can replace zlib for better speed: http://python-blosc.blosc.org/tutorial.html 
 def decompress_lattice_data(compressed_b64_encoded_data: str, mode: bytes, shape: Tuple[int, int, int]) -> np.ndarray:
@@ -37,11 +34,13 @@ def decompress_lattice_data(compressed_b64_encoded_data: str, mode: bytes, shape
     arr = raw_arr.reshape(shape)
     return arr
 
+
 hdf5_file = h5py.File(PATH_TO_SEG_DIR + 'emd_1832.hff', mode='r')
 # zarr.tree(hdf5_file)
 
+
 # TODO: potentially may be rewritten using root.create_group/ group.create_array etc. to get rid of paths
-def visitor_func(name, node: h5py._hl.dataset.Dataset):
+def visitor_func(name, node: h5py.Dataset):
     emdb_seg_id = hdf5_file.filename.split('/')[-1].split('.')[0]
     root_path = PATH_TO_OUTPUT_DIR + emdb_seg_id
     if isinstance(node, h5py.Dataset):
@@ -57,6 +56,7 @@ def visitor_func(name, node: h5py._hl.dataset.Dataset):
         # node is a group
         # TODO: fix paths
         zarr.open_group(root_path + node.name, mode='w')
+
 
 # HDF5 => Zarr structure conversion
 hdf5_file.visititems(visitor_func)

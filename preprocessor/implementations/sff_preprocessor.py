@@ -1,7 +1,4 @@
-
-
 import base64
-from importlib.machinery import PathFinder
 import json
 import gemmi
 from pathlib import Path
@@ -21,6 +18,7 @@ DOWNSAMPLING_STEPS = 4
 VOLUME_DATA_GROUPNAME = '_volume_data'
 SEGMENTATION_DATA_GROUPNAME = '_segmentation_data'
 METADATA_FILENAME = 'metadata.json'
+
 
 class SFFPreprocessor(IDataPreprocessor):
     def __init__(self):
@@ -58,7 +56,7 @@ class SFFPreprocessor(IDataPreprocessor):
         self.__temp_save_metadata(metadata, self.temp_zarr_structure_path)
 
         return self.temp_zarr_structure_path
-        
+
     def __extract_metadata(self, zarr_structure, volume_file_path: Path) -> Dict:
         root = zarr_structure
         volume_downsamplings = sorted(root[VOLUME_DATA_GROUPNAME].array_keys())
@@ -81,9 +79,9 @@ class SFFPreprocessor(IDataPreprocessor):
         ctx = decimal.getcontext()
         ctx.rounding = decimal.ROUND_CEILING
 
-        cella_X = round(Decimal(m.header_float(11)), 1)
-        cella_Y = round(Decimal(m.header_float(12)), 1)
-        cella_Z = round(Decimal(m.header_float(13)), 1)
+        cella_x = round(Decimal(m.header_float(11)), 1)
+        cella_y = round(Decimal(m.header_float(12)), 1)
+        cella_z = round(Decimal(m.header_float(13)), 1)
         nx = m.header_i32(1)
         ny = m.header_i32(2)
         nz = m.header_i32(3)
@@ -91,25 +89,24 @@ class SFFPreprocessor(IDataPreprocessor):
         nr_start = m.header_i32(6)
         ns_start = m.header_i32(7)
         original_voxel_size: Tuple[float, float, float] = (
-            cella_X / nx,
-            cella_Y / ny,
-            cella_Z / nz
+            cella_x / nx,
+            cella_y / ny,
+            cella_z / nz
         )
 
         voxel_sizes_in_downsamplings: Dict = {}
         for rate in volume_downsamplings:
             voxel_sizes_in_downsamplings[rate] = tuple(
-                [float(str(i * Decimal(rate))) for i in original_voxel_size]
+                [float(Decimal(i) * Decimal(rate)) for i in original_voxel_size]
             )
 
         # get origin of grid based on NC/NR/NSSTART variables (5, 6, 7) and original voxel size
+        # Converting to strings, then to floats to make it JSON serializable (decimals are not) -> ??
         origin: Tuple[float, float, float] = (
-            m.header_i32(5) * original_voxel_size[0],
-            m.header_i32(6) * original_voxel_size[1],
-            m.header_i32(7) * original_voxel_size[2],
+            float(str(m.header_i32(5) * original_voxel_size[0])),
+            float(str(m.header_i32(6) * original_voxel_size[1])),
+            float(str(m.header_i32(7) * original_voxel_size[2])),
         )
-        # Converting to strings, then to floats to make it JSON serializable (decimals are not)
-        origin = tuple([float(str(i)) for i in origin])
 
         # get grid dimensions based on NX/NC, NY/NR, NZ/NS variables (words 1, 2, 3) in CCP4 file
         grid_dimensions: Tuple[int, int, int] = (nx, ny, nz)
@@ -184,14 +181,14 @@ class SFFPreprocessor(IDataPreprocessor):
         Creates temp zarr structure mirroring that of hdf5
         '''
         self.temp_zarr_structure_path = self.temp_root_path / file_path.stem
-        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(self.temp_zarr_structure_path)
+        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(self.temp_zarr_structure_path))
         # directory store does not need to be closed, zip does
 
-        hdf5_file: h5py._hl.files.File = h5py.File(file_path, mode='r')
+        hdf5_file: h5py.File = h5py.File(file_path, mode='r')
         hdf5_file.visititems(self.__visitor_function)
         hdf5_file.close()
 
-    def __visitor_function(self, name: str, node: h5py._hl.dataset.Dataset) -> None:
+    def __visitor_function(self, name: str, node: h5py.Dataset) -> None:
         '''
         Helper function used to create zarr hierarchy based on hdf5 hierarchy from sff file
         Takes nodes one by one and depending of their nature (group/object dataset/non-object dataset)

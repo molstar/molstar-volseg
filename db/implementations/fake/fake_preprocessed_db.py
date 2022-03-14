@@ -1,4 +1,5 @@
 from os import path
+from typing import Tuple, Dict
 
 import numpy
 
@@ -10,6 +11,10 @@ from ...interface.i_preprocessed_medatada import IPreprocessedMetadata
 
 
 class FakePreprocessedDb(IPreprocessedDb):
+    async def read_slice(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int,
+                         box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask') -> Dict:
+        return dict()
+
     async def read_metadata(self, namespace: str, key: str) -> IPreprocessedMetadata:
         return FakePreprocessedMetadata()
 
@@ -23,5 +28,5 @@ class FakePreprocessedDb(IPreprocessedDb):
     async def store(self, namespace: str, key: str, value: object) -> bool:
         return True
 
-    async def read(self, namespace: str, key: str, down_sampling_ratio: int) -> IPreprocessedVolume:
+    async def read(self, namespace: str, key: str, lattice_id: int,  down_sampling_ratio: int) -> IPreprocessedVolume:
         return FakePreprocessedVolume(numpy.array([0]))

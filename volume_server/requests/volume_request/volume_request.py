@@ -5,12 +5,13 @@ class VolumeRequest(IVolumeRequest):
     def __init__(self,
                  source: str,
                  structure_id: str,
-                 x_min: int = -1,
-                 y_min: int = -1,
-                 z_min: int = -1,
-                 x_max: int = -1,
-                 y_max: int = -1,
-                 z_max: int = -1
+                 x_min: float,
+                 y_min: float,
+                 z_min: float,
+                 x_max: float,
+                 y_max: float,
+                 z_max: float,
+                 max_size_kb: int
                  ):
         self._source = source
         self._structure_id = structure_id
@@ -20,6 +21,7 @@ class VolumeRequest(IVolumeRequest):
         self._x_max = x_max
         self._y_max = y_max
         self._z_max = z_max
+        self._max_size_kb = max_size_kb
 
     def source(self) -> str:
         return self._source
@@ -44,4 +46,7 @@ class VolumeRequest(IVolumeRequest):
 
     def z_max(self) -> float:
         return self._z_max
+
+    def max_size_kb(self) -> int:
+        return self._max_size_kb
 

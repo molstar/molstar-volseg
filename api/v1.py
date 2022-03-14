@@ -1,23 +1,26 @@
-import numpy
+from typing import Optional
+
 from fastapi import FastAPI
 from volume_server.i_volume_server import IVolumeServer
 from volume_server.requests.volume_request.volume_request import VolumeRequest
 
 
 def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
-    @app.get("/{source}/{structure_id}/")
+    @app.get("/{source}/{id}/box/{a1}/{a2}/{a3}/{b1}/{b2}/{b3}/{max_size_kb}")
     async def get_volume(
             source: str,
-            structure_id: str,
-            x_min: int = -1,
-            y_min: int = -1,
-            z_min: int = -1,
-            x_max: int = -1,
-            y_max: int = -1,
-            z_max: int = -1
+            id: str,
+            a1: float,
+            a2: float,
+            a3: float,
+            b1: float,
+            b2: float,
+            b3: float,
+            max_size_kb: Optional[int] = 0
     ):
-        volume_request = VolumeRequest(source, structure_id, x_min, y_min, z_min, x_max, y_max, z_max)
-        volume_result = await volume_server.get_volume(volume_request)
+        volume_request = VolumeRequest(source, id, a1, a2, a3, b1, b2, b3, max_size_kb)
+        requested_slice = await volume_server.get_volume(volume_request)
 
         # TODO: serialize
-        return str(numpy.ndarray(volume_result).dumps())
+        serialized = str(requested_slice.dumps())
+        return serialized

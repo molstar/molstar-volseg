@@ -7,4 +7,4 @@ class FakeVolumeToCifConverter(IVolumeToCifConverter):
         pass
 
     def convert(self, preprocessed_volume: IPreprocessedVolume) -> object:  # TODO: add binary cif to the project
-        return preprocessed_volume.get_data()
+        return preprocessed_volume
