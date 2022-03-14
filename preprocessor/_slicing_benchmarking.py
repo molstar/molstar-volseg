@@ -33,7 +33,7 @@ def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
     np_arr = np.arange(shape[0] * shape[1] * shape[2]).reshape((shape[0], shape[1], shape[2]))
     
     start_zarr_structure = timer()
-    store: zarr.storage.DirectoryStore = zarr.DirectoryStore(TEMP_STORE_PATH)
+    store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(TEMP_STORE_PATH))
     zarr_structure: zarr.hierarchy.group = zarr.group(store=store)
 
     # Group for storing zarr arrays
@@ -47,16 +47,16 @@ def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
     print(f'CREATING ZARR STRUCTURE: {end_zarr_structure - start_zarr_structure}')
     for chunk_size in CHUNK_SIZES:
         stored_zarr_arr = dummy_group.create_dataset(
-            chunk_size,
+            str(chunk_size),
             shape=np_arr.shape,
             dtype=np_arr.dtype,
             chunks=(chunk_size, chunk_size, chunk_size)
         )
         stored_zarr_arr[...] = np_arr
 
-        dask_arr = da.from_array(np_arr, chunks= (chunk_size, chunk_size, chunk_size))
+        dask_arr = da.from_array(np_arr, chunks=(chunk_size, chunk_size, chunk_size))
         stored_dask_arr = dummy_group_for_dask_arr.create_dataset(
-            chunk_size,
+            str(chunk_size),
             shape=dask_arr.shape,
             dtype=dask_arr.dtype,
             chunks=(chunk_size, chunk_size, chunk_size)
@@ -65,7 +65,7 @@ def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
         dask_arr.store(stored_dask_arr)
 
     path: Path = Path(dummy_group.store.path).resolve() / dummy_group.path / 'stored_np_arr'
-    zarr.save_array(path.resolve(), np_arr)
+    zarr.save_array(str(path.resolve()), np_arr)
 
     print(f'SHAPE: {shape}')
 
@@ -166,7 +166,7 @@ def zarr_arr_tensorstore_slicing(zarr_arr: zarr.core.Array):
 
 def stored_np_arr_slicing(path: Path):
     start_loading = timer()
-    stored_np_arr = zarr.load(path.resolve())
+    stored_np_arr = zarr.load(str(path.resolve()))
     end_loading = timer()
     start_slicing = timer()
     np_slice = stored_np_arr[100:300, 100:300, 100:300]
@@ -175,7 +175,7 @@ def stored_np_arr_slicing(path: Path):
 
 def _get_sample_zarr_structure():
     PATH = Path('db') / 'emdb' / 'emd-1832'
-    store: zarr.storage.DirectoryStore = zarr.DirectoryStore(PATH)
+    store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(PATH))
     # Re-create zarr hierarchy from opened store
     root: zarr.hierarchy.group = zarr.group(store=store)
     return root
