@@ -99,7 +99,7 @@ class SFFPreprocessor(IDataPreprocessor):
         voxel_sizes_in_downsamplings: Dict = {}
         for rate in volume_downsamplings:
             voxel_sizes_in_downsamplings[rate] = tuple(
-                [float(str(i * Decimal(rate))) for i in original_voxel_size]
+                [float(Decimal(i) * Decimal(rate)) for i in original_voxel_size]
             )
 
         # get origin of grid based on NC/NR/NSSTART variables (5, 6, 7) and original voxel size
