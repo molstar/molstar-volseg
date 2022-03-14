@@ -1,5 +1,5 @@
 import shutil
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 from pathlib import Path
 import json
 import zarr
@@ -93,8 +93,8 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         segm_arr: zarr.core.Array = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio]
         volume_arr: zarr.core.Array = root[VOLUME_DATA_GROUPNAME][down_sampling_ratio]
         
-        segm_slice: np.ndarray
-        volume_slice: np.ndarray
+        segm_slice: Optional[np.ndarray] = None
+        volume_slice: Optional[np.ndarray] = None
         start = timer()
         if mode == 'zarr_colon':
             # 2: zarr slicing via : notation

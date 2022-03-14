@@ -30,7 +30,7 @@ def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
     zarr -||-              0.4 sec
     slicing with dask from_zarr is fastest, at least after 200*** grid
     '''
-    np_arr = np.arange(shape[0] * shape[1] * shape[2]).reshape(shape[0], shape[1], shape[2])
+    np_arr = np.arange(shape[0] * shape[1] * shape[2]).reshape((shape[0], shape[1], shape[2]))
     
     start_zarr_structure = timer()
     store: zarr.storage.DirectoryStore = zarr.DirectoryStore(TEMP_STORE_PATH)
