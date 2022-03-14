@@ -1,5 +1,5 @@
 import shutil
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
 from pathlib import Path
 import json
 import zarr
@@ -199,7 +199,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         ].read().result()
         return sliced
 
-    def __get_path_to_zarr_object(self, zarr_obj: zarr.core.Array) -> Path:
+    def __get_path_to_zarr_object(self, zarr_obj: Union[zarr.hierarchy.Group, zarr.core.Array]) -> Path:
         '''
         Returns Path to zarr object (array or group)
         '''
