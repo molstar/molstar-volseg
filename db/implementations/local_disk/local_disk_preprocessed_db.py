@@ -1,6 +1,5 @@
 import shutil
-from typing import Dict, Tuple, TypedDict
-import numpy as np
+from typing import Dict, Tuple
 from pathlib import Path
 import json
 import zarr
@@ -13,15 +12,9 @@ import tensorstore as ts
 from preprocessor.implementations.sff_preprocessor import METADATA_FILENAME, SEGMENTATION_DATA_GROUPNAME, VOLUME_DATA_GROUPNAME
 
 from .local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
-from .local_disk_preprocessed_volume import LocalDiskPreprocessedVolume
-from db.interface.i_preprocessed_db import IPreprocessedDb
-from db.interface.i_preprocessed_volume import IPreprocessedVolume
+from db.interface.i_preprocessed_db import IPreprocessedDb, ProcessedVolumeSliceData
 from ...interface.i_preprocessed_medatada import IPreprocessedMetadata
 
-
-class ProcessedVolumeSliceData(TypedDict):
-    segmentation_slice: np.ndarray
-    volume_slice: np.ndarray
 
 class LocalDiskPreprocessedDb(IPreprocessedDb):
     @staticmethod
@@ -86,7 +79,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             'volume': read_volume_arr
         }
 
-    async def read_slice(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask') -> Dict:
+    async def read_slice(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask') -> ProcessedVolumeSliceData:
         '''
         Reads a slice from a specific (down)sampling of segmentation and volume data
         from specific entry from DB based on key (e.g. EMD-1111), lattice_id (e.g. 0),
@@ -127,10 +120,10 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         end = timer()
         print(f'read_slice with mode {mode}: {end - start}')
 
-        return ProcessedVolumeSliceData(
-            segmentation_slice=segm_slice,
-            volume_slice=volume_slice
-        )
+        return {
+            "segmentation_slice": segm_slice,
+            "volume_slice": volume_slice
+        }
 
     async def read_metadata(self, namespace: str, key: str) -> IPreprocessedMetadata:
         path: Path = self.__path_to_object__(namespace=namespace, key=key) / 'metadata.json'
