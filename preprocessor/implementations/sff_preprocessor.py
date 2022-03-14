@@ -1,7 +1,4 @@
-
-
 import base64
-from importlib.machinery import PathFinder
 import json
 import gemmi
 from pathlib import Path
@@ -21,6 +18,7 @@ DOWNSAMPLING_STEPS = 4
 VOLUME_DATA_GROUPNAME = '_volume_data'
 SEGMENTATION_DATA_GROUPNAME = '_segmentation_data'
 METADATA_FILENAME = 'metadata.json'
+
 
 class SFFPreprocessor(IDataPreprocessor):
     def __init__(self):
@@ -58,7 +56,7 @@ class SFFPreprocessor(IDataPreprocessor):
         self.__temp_save_metadata(metadata, self.temp_zarr_structure_path)
 
         return self.temp_zarr_structure_path
-        
+
     def __extract_metadata(self, zarr_structure, volume_file_path: Path) -> Dict:
         root = zarr_structure
         volume_downsamplings = sorted(root[VOLUME_DATA_GROUPNAME].array_keys())
@@ -81,9 +79,9 @@ class SFFPreprocessor(IDataPreprocessor):
         ctx = decimal.getcontext()
         ctx.rounding = decimal.ROUND_CEILING
 
-        cella_X = round(Decimal(m.header_float(11)), 1)
-        cella_Y = round(Decimal(m.header_float(12)), 1)
-        cella_Z = round(Decimal(m.header_float(13)), 1)
+        cella_x = round(Decimal(m.header_float(11)), 1)
+        cella_y = round(Decimal(m.header_float(12)), 1)
+        cella_z = round(Decimal(m.header_float(13)), 1)
         nx = m.header_i32(1)
         ny = m.header_i32(2)
         nz = m.header_i32(3)
@@ -91,9 +89,9 @@ class SFFPreprocessor(IDataPreprocessor):
         nr_start = m.header_i32(6)
         ns_start = m.header_i32(7)
         original_voxel_size: Tuple[float, float, float] = (
-            cella_X / nx,
-            cella_Y / ny,
-            cella_Z / nz
+            cella_x / nx,
+            cella_y / ny,
+            cella_z / nz
         )
 
         voxel_sizes_in_downsamplings: Dict = {}
