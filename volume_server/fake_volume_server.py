@@ -16,9 +16,9 @@ class FakeVolumeServer(IVolumeServer):
         key = self.__volume_request_to_key__(volume_request)
         preprocessed_volume = await self.db.read(self.db_namespace, key, 1, 2)
         # TODO: do something with preprocessed?
-        cif = self.volume_to_cif.convert(preprocessed_volume)
+        #cif = self.volume_to_cif.convert(preprocessed_volume)
         # TODO: do something with cif?
-        return cif
+        return preprocessed_volume
 
     @staticmethod
     def __volume_request_to_key__(volume_request: IVolumeRequest) -> str:

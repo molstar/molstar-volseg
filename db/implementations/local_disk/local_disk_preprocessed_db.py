@@ -116,6 +116,8 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             # it can be 'view' or np array etc.
             segm_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=segm_arr, box=box)
             volume_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=volume_arr, box=box)
+        else:
+            raise ValueError("Invalid mode for reading slice: " + mode)
         
         end = timer()
         print(f'read_slice with mode {mode}: {end - start}')
