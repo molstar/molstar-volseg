@@ -44,9 +44,9 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         # ZIP_BZIP2 = 12
         # ZIP_LZMA = 1
         # close store after writing, or use 'with' https://zarr.readthedocs.io/en/stable/api/storage.html#zarr.storage.ZipStore
-        temp_store: zarr.storage.DirectoryStore = zarr.DirectoryStore(temp_store_path)
+        temp_store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(temp_store_path))
         # perm_store = zarr.ZipStore(self.__path_to_object__(namespace, key) + '.zip', mode='w', compression=12)
-        perm_store = zarr.DirectoryStore(self.__path_to_object__(namespace, key))
+        perm_store = zarr.DirectoryStore(str(self.__path_to_object__(namespace, key)))
         zarr.copy_store(temp_store, perm_store, log=stdout)
 
         # TODO: shutil should work with Path objects, but just in case
@@ -69,7 +69,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         '''
         print('This method is deprecated, please use read_slice method instead')
         path: Path = self.__path_to_object__(namespace=namespace, key=key)
-        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(path)
+        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
         # Re-create zarr hierarchy from opened store
         root: zarr.hierarchy.group = zarr.group(store=store)
         
@@ -90,31 +90,30 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         and slice box (vec3, vec3) 
         '''
         path: Path = self.__path_to_object__(namespace=namespace, key=key)
-        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(path)
+        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
         # Re-create zarr hierarchy from opened store
         root: zarr.hierarchy.group = zarr.group(store=store)
         segm_arr: zarr.core.Array = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio]
         volume_arr: zarr.core.Array = root[VOLUME_DATA_GROUPNAME][down_sampling_ratio]
         
-        segm_slice = None
-        volume_slice = None
+        segm_slice: np.ndarray = None
+        volume_slice: np.ndarray = None
         start = timer()
-        if mode =='zarr_colon':
+        if mode == 'zarr_colon':
             # 2: zarr slicing via : notation
-            segm_slice: np.ndarray = self.__get_slice_from_zarr_three_d_arr(arr=segm_arr, box=box)
-            volume_slice: np.ndarray = self.__get_slice_from_zarr_three_d_arr(arr=volume_arr, box=box)
+            segm_slice = self.__get_slice_from_zarr_three_d_arr(arr=segm_arr, box=box)
+            volume_slice = self.__get_slice_from_zarr_three_d_arr(arr=volume_arr, box=box)
         elif mode == 'zarr_gbs':
             # 3: zarr slicing via get_basic_selection and python slices
-            segm_slice: np.ndarray = self.__get_slice_from_zarr_three_d_arr_gbs(arr=segm_arr, box=box)
-            volume_slice: np.ndarray = self.__get_slice_from_zarr_three_d_arr_gbs(arr=volume_arr, box=box)
+            segm_slice = self.__get_slice_from_zarr_three_d_arr_gbs(arr=segm_arr, box=box)
+            volume_slice = self.__get_slice_from_zarr_three_d_arr_gbs(arr=volume_arr, box=box)
         elif mode == 'dask':
             # 4: dask slicing: https://github.com/zarr-developers/zarr-python/issues/478#issuecomment-531148674
-            segm_slice: np.ndarray = self.__get_slice_from_zarr_three_d_arr_dask(arr=segm_arr, box=box)
-            volume_slice: np.ndarray = self.__get_slice_from_zarr_three_d_arr_dask(arr=volume_arr, box=box)
-            
+            segm_slice = self.__get_slice_from_zarr_three_d_arr_dask(arr=segm_arr, box=box)
+            volume_slice = self.__get_slice_from_zarr_three_d_arr_dask(arr=volume_arr, box=box)
         elif mode == 'dask_from_zarr':
-            segm_slice: np.ndarray = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=segm_arr, box=box)
-            volume_slice: np.ndarray = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=volume_arr, box=box)
+            segm_slice = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=segm_arr, box=box)
+            volume_slice = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=volume_arr, box=box)
         elif mode == 'tensorstore':
             # TODO: figure out variable types https://stackoverflow.com/questions/64924224/getting-a-view-of-a-zarr-array-slice
             # it can be 'view' or np array etc.
