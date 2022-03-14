@@ -103,13 +103,12 @@ class SFFPreprocessor(IDataPreprocessor):
             )
 
         # get origin of grid based on NC/NR/NSSTART variables (5, 6, 7) and original voxel size
+        # Converting to strings, then to floats to make it JSON serializable (decimals are not) -> ??
         origin: Tuple[float, float, float] = (
-            m.header_i32(5) * original_voxel_size[0],
-            m.header_i32(6) * original_voxel_size[1],
-            m.header_i32(7) * original_voxel_size[2],
+            float(str(m.header_i32(5) * original_voxel_size[0])),
+            float(str(m.header_i32(6) * original_voxel_size[1])),
+            float(str(m.header_i32(7) * original_voxel_size[2])),
         )
-        # Converting to strings, then to floats to make it JSON serializable (decimals are not)
-        origin = tuple([float(str(i)) for i in origin])
 
         # get grid dimensions based on NX/NC, NY/NR, NZ/NS variables (words 1, 2, 3) in CCP4 file
         grid_dimensions: Tuple[int, int, int] = (nx, ny, nz)
