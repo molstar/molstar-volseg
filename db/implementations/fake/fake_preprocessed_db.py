@@ -28,5 +28,5 @@ class FakePreprocessedDb(IPreprocessedDb):
     async def store(self, namespace: str, key: str, value: object) -> bool:
         return True
 
-    async def read(self, namespace: str, key: str, down_sampling_ratio: int) -> IPreprocessedVolume:
+    async def read(self, namespace: str, key: str, lattice_id: int,  down_sampling_ratio: int) -> IPreprocessedVolume:
         return FakePreprocessedVolume(numpy.array([0]))
