@@ -1,8 +1,5 @@
-import json
 from typing import Optional
 
-import numpy
-import numpy as np
 from fastapi import FastAPI
 from volume_server.i_volume_server import IVolumeServer
 from volume_server.requests.volume_request.volume_request import VolumeRequest
