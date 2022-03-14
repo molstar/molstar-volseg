@@ -183,7 +183,7 @@ class SFFPreprocessor(IDataPreprocessor):
         Creates temp zarr structure mirroring that of hdf5
         '''
         self.temp_zarr_structure_path = self.temp_root_path / file_path.stem
-        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(self.temp_zarr_structure_path)
+        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(self.temp_zarr_structure_path))
         # directory store does not need to be closed, zip does
 
         hdf5_file: h5py.File = h5py.File(file_path, mode='r')
