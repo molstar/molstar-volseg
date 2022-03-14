@@ -1,6 +1,5 @@
 import h5py
 import zarr
-import sfftkrw as sff
 import numpy as np
 import numcodecs
 import base64

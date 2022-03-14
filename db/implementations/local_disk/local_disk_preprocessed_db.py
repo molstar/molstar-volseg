@@ -201,7 +201,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         ].read().result()
         return sliced
 
-    def __get_path_to_zarr_object(self, zarr_obj: object) -> Path:
+    def __get_path_to_zarr_object(self, zarr_obj: zarr.core.Array) -> Path:
         '''
         Returns Path to zarr object (array or group)
         '''
