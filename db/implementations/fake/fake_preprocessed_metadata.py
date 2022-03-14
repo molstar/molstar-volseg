@@ -11,10 +11,10 @@ class FakePreprocessedMetadata(IPreprocessedMetadata):
         return [0, 0, 0]
 
     def volume_downsamplings(self) -> List[int]:
-        [0]
+        return [0]
 
     def origin(self) -> List[float]:
-        pass
+        return [0, 0, 0]
 
     def voxel_size(self, downsampling_rate: int) -> List[float]:
         return [0, 0, 0]
