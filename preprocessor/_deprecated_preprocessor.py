@@ -38,7 +38,7 @@ hdf5_file = h5py.File(PATH_TO_SEG_DIR + 'emd_1832.hff', mode='r')
 # zarr.tree(hdf5_file)
 
 # TODO: potentially may be rewritten using root.create_group/ group.create_array etc. to get rid of paths
-def visitor_func(name, node: h5py._hl.dataset.Dataset):
+def visitor_func(name, node: h5py.Dataset):
     emdb_seg_id = hdf5_file.filename.split('/')[-1].split('.')[0]
     root_path = PATH_TO_OUTPUT_DIR + emdb_seg_id
     if isinstance(node, h5py.Dataset):
