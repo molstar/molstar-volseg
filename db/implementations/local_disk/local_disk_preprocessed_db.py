@@ -170,7 +170,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             box[0][1] : box[1][1] + 1,
             box[0][2] : box[1][2] + 1
         ]
-        return sliced
+        return sliced.compute()
 
     def __get_slice_from_zarr_three_d_arr_dask_from_zarr(self, arr: zarr.core.Array, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
         zd = da.from_zarr(arr, chunks=arr.chunks)
@@ -179,7 +179,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             box[0][1] : box[1][1] + 1,
             box[0][2] : box[1][2] + 1
         ]
-        return sliced
+        return sliced.compute()
 
     def __get_slice_from_zarr_three_d_arr_tensorstore(self, arr: zarr.core.Array, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
         # TODO: check if slice is correct and equal to : notation slice
