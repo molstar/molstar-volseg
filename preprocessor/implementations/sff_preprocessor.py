@@ -40,7 +40,6 @@ class SFFPreprocessor(IDataPreprocessor):
         segm_data_gr: zarr.hierarchy.group = zarr_structure.create_group(SEGMENTATION_DATA_GROUPNAME)
         
         for gr_name, gr in zarr_structure.lattice_list.groups():
-            # TODO create x1 "down"sampling too
             segm_arr = self.__lattice_data_to_np_arr(
                 gr.data[0],
                 gr.mode[0],
@@ -144,16 +143,20 @@ class SFFPreprocessor(IDataPreprocessor):
 
     def __downsample_categorical_data(self, arr: np.ndarray, rate: int) -> np.ndarray:
         '''Returns downsampled (every other value) np array'''
+        if rate == 1:
+            return arr
         # TODO: if choosing between '0' and non-zero value, it should perhaps leave non-zero value
         return arr[::rate, ::rate, ::rate]
     
     def __downsample_numerical_data(self, arr: np.ndarray, rate: int) -> np.ndarray:
         '''Returns downsampled (mean) np array'''
+        if rate == 1:
+            return arr
         return block_reduce(arr, block_size=(rate, rate, rate), func=np.mean)
 
     def __create_downsamplings(self, data: np.ndarray, downsampled_data_group: zarr.hierarchy.group, isCategorical=False):
         # iteratively downsample data, create arr for each dwns. level and store data 
-        ratios = 2 ** np.arange(1, DOWNSAMPLING_STEPS + 1)
+        ratios = 2 ** np.arange(0, DOWNSAMPLING_STEPS + 1)
         for rate in ratios:
             self.__create_downsampling(data, rate, downsampled_data_group, isCategorical)
         # TODO: figure out compression/filters: b64 encoded zlib-zipped .data is just 8 bytes
