@@ -1,7 +1,7 @@
 from asgiref.sync import async_to_sync
 
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 
 
