@@ -1,5 +1,5 @@
 import shutil
-from typing import Dict, Tuple
+from typing import Dict, Tuple, TypedDict
 import numpy as np
 from pathlib import Path
 import json
@@ -18,6 +18,10 @@ from db.interface.i_preprocessed_db import IPreprocessedDb
 from db.interface.i_preprocessed_volume import IPreprocessedVolume
 from ...interface.i_preprocessed_medatada import IPreprocessedMetadata
 
+
+class ProcessedVolumeSliceData(TypedDict):
+    segmentation_slice: np.ndarray
+    volume_slice: np.ndarray
 
 class LocalDiskPreprocessedDb(IPreprocessedDb):
     @staticmethod
@@ -124,12 +128,10 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         end = timer()
         print(f'read_slice with mode {mode}: {end - start}')
 
-        # TODO: rewrite when LocalDiskPreprocessedVolume is changed to Pydantic/built-in data model
-        # both volume and segm data
-        return {
-            'segmentation_slice': segm_slice,
-            'volume_slice': volume_slice
-        }
+        return ProcessedVolumeSliceData(
+            segmentation_slice=segm_slice,
+            volume_slice=volume_slice
+        )
 
     async def read_metadata(self, namespace: str, key: str) -> IPreprocessedMetadata:
         path: Path = self.__path_to_object__(namespace=namespace, key=key) / 'metadata.json'
