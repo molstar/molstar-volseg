@@ -87,9 +87,8 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         and slice box (vec3, vec3) 
         '''
         path: Path = self.__path_to_object__(namespace=namespace, key=key)
-        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
-        # Re-create zarr hierarchy from opened store
-        root: zarr.hierarchy.group = zarr.group(store=store)
+        root: zarr.hierarchy.group = __open_zarr_structure_from_path(path)
+
         segm_arr: zarr.core.Array = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio]
         volume_arr: zarr.core.Array = root[VOLUME_DATA_GROUPNAME][down_sampling_ratio]
         
@@ -205,3 +204,10 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         '''
         path: Path = Path(zarr_obj.store.path).resolve() / zarr_obj.path
         return path
+
+
+def __open_zarr_structure_from_path(path: Path) -> zarr.hierarchy.Group:
+    store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
+    # Re-create zarr hierarchy from opened store
+    root: zarr.hierarchy.group = zarr.group(store=store)
+    return root
