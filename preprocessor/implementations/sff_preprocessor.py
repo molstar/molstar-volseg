@@ -154,6 +154,8 @@ class SFFPreprocessor(IDataPreprocessor):
         # may not need to add .resolve(), with resolve it returns abs path
         m = gemmi.read_ccp4_map(str(file_path.resolve()))
         # TODO: can be dask array to save memory?
+        # just reorders axis to X, Y, Z (https://gemmi.readthedocs.io/en/latest/grid.html#setup)
+        m.setup(float('nan'), gemmi.MapSetup.ReorderOnly)
         return np.array(m.grid)
 
     def __lattice_data_to_np_arr(self, data: str, dtype: str, arr_shape: Tuple[int, int, int]) -> np.ndarray:
