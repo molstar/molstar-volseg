@@ -13,12 +13,12 @@ from decimal import Decimal
 from preprocessor.interface.i_data_preprocessor import IDataPreprocessor
 # TODO: figure out how to specify N of downsamplings (x2, x4, etc.) in a better way
 from skimage.measure import block_reduce
+import math
 
-DOWNSAMPLING_STEPS = 4
 VOLUME_DATA_GROUPNAME = '_volume_data'
 SEGMENTATION_DATA_GROUPNAME = '_segmentation_data'
 METADATA_FILENAME = 'metadata.json'
-
+MIN_GRID_SIZE = 100 **3
 
 class SFFPreprocessor(IDataPreprocessor):
     def __init__(self):
@@ -43,18 +43,43 @@ class SFFPreprocessor(IDataPreprocessor):
             segm_arr = self.__lattice_data_to_np_arr(
                 gr.data[0],
                 gr.mode[0],
-                (gr.size.cols[...], gr.size.rows[...], gr.size.sections[...]))
+                (gr.size.cols[...], gr.size.rows[...], gr.size.sections[...])
+            )
+            segmentation_downsampling_steps = self.__compute_number_of_downsampling_steps(
+                MIN_GRID_SIZE,
+                input_grid_size=math.prod(segm_arr.shape)
+            )
             # specific lattice with specific id
             lattice_gr = segm_data_gr.create_group(gr_name)
-            self.__create_downsamplings(segm_arr, lattice_gr, isCategorical=True)
+            self.__create_downsamplings(
+                segm_arr,
+                lattice_gr,
+                isCategorical=True,
+                downsampling_steps = segmentation_downsampling_steps
+            )
         
         volume_arr = self.__read_volume_data(volume_file_path)
-        self.__create_downsamplings(volume_arr, volume_data_gr, isCategorical=False)
+        volume_downsampling_steps = self.__compute_number_of_downsampling_steps(
+            MIN_GRID_SIZE,
+            input_grid_size=math.prod(volume_arr.shape)
+        )
+        self.__create_downsamplings(
+            volume_arr,
+            volume_data_gr,
+            isCategorical=False,
+            downsampling_steps = volume_downsampling_steps
+        )
         
         metadata = self.__extract_metadata(zarr_structure, volume_file_path)
         self.__temp_save_metadata(metadata, self.temp_zarr_structure_path)
 
         return self.temp_zarr_structure_path
+
+    def __compute_number_of_downsampling_steps(self, min_grid_size: int, input_grid_size: int) -> int:
+        if input_grid_size <= min_grid_size:
+            return 1
+        num_of_downsampling_steps: int = math.ceil(math.log2(input_grid_size/min_grid_size))
+        return num_of_downsampling_steps
 
     def __extract_metadata(self, zarr_structure, volume_file_path: Path) -> Dict:
         root = zarr_structure
@@ -154,9 +179,9 @@ class SFFPreprocessor(IDataPreprocessor):
             return arr
         return block_reduce(arr, block_size=(rate, rate, rate), func=np.mean)
 
-    def __create_downsamplings(self, data: np.ndarray, downsampled_data_group: zarr.hierarchy.group, isCategorical=False):
+    def __create_downsamplings(self, data: np.ndarray, downsampled_data_group: zarr.hierarchy.group, isCategorical: bool = False, downsampling_steps: int = 1):
         # iteratively downsample data, create arr for each dwns. level and store data 
-        ratios = 2 ** np.arange(0, DOWNSAMPLING_STEPS + 1)
+        ratios = 2 ** np.arange(0, downsampling_steps + 1)
         for rate in ratios:
             self.__create_downsampling(data, rate, downsampled_data_group, isCategorical)
         # TODO: figure out compression/filters: b64 encoded zlib-zipped .data is just 8 bytes
