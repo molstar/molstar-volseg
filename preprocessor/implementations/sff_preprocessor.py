@@ -156,6 +156,8 @@ class SFFPreprocessor(IDataPreprocessor):
         # TODO: can be dask array to save memory?
         # just reorders axis to X, Y, Z (https://gemmi.readthedocs.io/en/latest/grid.html#setup)
         m.setup(float('nan'), gemmi.MapSetup.ReorderOnly)
+        new_axis_order = m.header_i32(17), m.header_i32(18), m.header_i32(19)
+        assert new_axis_order == (1, 2, 3), f'Axis order is {new_axis_order}, should be (1, 2, 3) or X, Y, Z'
         return np.array(m.grid)
 
     def __lattice_data_to_np_arr(self, data: str, dtype: str, arr_shape: Tuple[int, int, int]) -> np.ndarray:
