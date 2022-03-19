@@ -38,7 +38,8 @@ class SFFPreprocessor(IDataPreprocessor):
             self.temp_zarr_structure_path)
         
         # TODO: read map
-        map_object = None
+        map_object = self.__read_volume_map_to_object(volume_file_path)
+
         # TODO: read params for metadata computing
         # TODO: reorder axis
         # TODO: check axis order
@@ -48,29 +49,35 @@ class SFFPreprocessor(IDataPreprocessor):
         self.__process_segmentation_data(zarr_structure)
         self.__process_volume_data(zarr_structure, map_object)
         
-        # TODO: change extract metadata such that it takes map object, and does not read map file again
-        metadata = self.__extract_metadata(zarr_structure, volume_file_path)
+        metadata = self.__extract_metadata(zarr_structure, map_object)
         self.__temp_save_metadata(metadata, self.temp_zarr_structure_path)
 
         return self.temp_zarr_structure_path
+
+    def __read_volume_map_to_object(volume_file_path: Path) -> gemmi.Ccp4Map:
+        '''
+        Reads ccp4 map to gemmi.Ccp4Map object 
+        '''
+        # https://www.ccpem.ac.uk/mrc_format/mrc2014.php
+        # https://www.ccp4.ac.uk/html/maplib.html
+        return gemmi.read_ccp4_map(str(volume_file_path.resolve()))
 
     def __process_volume_data(self, zarr_structure: zarr.hierarchy.group, map_object):
         '''
         Takes read map object, extracts volume data, downsamples it, stores to zarr_structure
         '''
-        # volume_data_gr: zarr.hierarchy.group = zarr_structure.create_group(VOLUME_DATA_GROUPNAME)        
-        # volume_arr = self.__read_volume_data(volume_file_path)
-        # volume_downsampling_steps = self.__compute_number_of_downsampling_steps(
-        #     MIN_GRID_SIZE,
-        #     input_grid_size=math.prod(volume_arr.shape)
-        # )
-        # self.__create_downsamplings(
-        #     volume_arr,
-        #     volume_data_gr,
-        #     isCategorical=False,
-        #     downsampling_steps = volume_downsampling_steps
-        # )
-        pass
+        volume_data_gr: zarr.hierarchy.group = zarr_structure.create_group(VOLUME_DATA_GROUPNAME)        
+        volume_arr = self.__read_volume_data(map_object)
+        volume_downsampling_steps = self.__compute_number_of_downsampling_steps(
+            MIN_GRID_SIZE,
+            input_grid_size=math.prod(volume_arr.shape)
+        )
+        self.__create_downsamplings(
+            volume_arr,
+            volume_data_gr,
+            isCategorical=False,
+            downsampling_steps = volume_downsampling_steps
+        )
 
     def __process_segmentation_data(self, zarr_structure: zarr.hierarchy.group) -> None:
         '''
@@ -103,7 +110,7 @@ class SFFPreprocessor(IDataPreprocessor):
         num_of_downsampling_steps: int = math.ceil(math.log2(input_grid_size/min_grid_size))
         return num_of_downsampling_steps
 
-    def __extract_metadata(self, zarr_structure, volume_file_path: Path) -> Dict:
+    def __extract_metadata(self, zarr_structure: zarr.hierarchy.group, map_object) -> Dict:
         root = zarr_structure
         volume_downsamplings = sorted(root[VOLUME_DATA_GROUPNAME].array_keys())
 
@@ -115,11 +122,7 @@ class SFFPreprocessor(IDataPreprocessor):
             lattice_dict[lattice_id] = sorted(gr.array_keys())
             lattice_ids.append(lattice_id)
 
-        # read ccp4 map to gemmi.Ccp4Map 
-        # https://www.ccpem.ac.uk/mrc_format/mrc2014.php
-        # https://www.ccp4.ac.uk/html/maplib.html
-        volume_map = gemmi.read_ccp4_map(str(volume_file_path.resolve()))
-        m = volume_map
+        m = map_object
         # get voxel size based on CELLA and NX/NC, NY/NR, NZ/NS variables (words 1, 2, 3) in CCP4 file
         # may need to use MX, NY, MZ instead of N*s (words 8, 9, 10)
         ctx = decimal.getcontext()
@@ -172,14 +175,17 @@ class SFFPreprocessor(IDataPreprocessor):
         with (temp_dir_path / METADATA_FILENAME).open('w') as fp:
             json.dump(metadata, fp)
 
-    def __read_volume_data(self, file_path) -> np.ndarray:
+    def __read_volume_data(self, m) -> np.ndarray:
+        '''
+        Takes read map object (axis normalized upfront) and returns numpy arr with volume data
+        '''
         # may not need to add .resolve(), with resolve it returns abs path
-        m = gemmi.read_ccp4_map(str(file_path.resolve()))
+        # m = gemmi.read_ccp4_map(str(file_path.resolve()))
         # TODO: can be dask array to save memory?
         # just reorders axis to X, Y, Z (https://gemmi.readthedocs.io/en/latest/grid.html#setup)
-        m.setup(float('nan'), gemmi.MapSetup.ReorderOnly)
-        new_axis_order = m.header_i32(17), m.header_i32(18), m.header_i32(19)
-        assert new_axis_order == (1, 2, 3), f'Axis order is {new_axis_order}, should be (1, 2, 3) or X, Y, Z'
+        # m.setup(float('nan'), gemmi.MapSetup.ReorderOnly)
+        # new_axis_order = m.header_i32(17), m.header_i32(18), m.header_i32(19)
+        # assert new_axis_order == (1, 2, 3), f'Axis order is {new_axis_order}, should be (1, 2, 3) or X, Y, Z'
         return np.array(m.grid)
 
     def __lattice_data_to_np_arr(self, data: str, dtype: str, arr_shape: Tuple[int, int, int]) -> np.ndarray:
