@@ -11,7 +11,6 @@ import numpy as np
 import decimal
 from decimal import Decimal
 from preprocessor.interface.i_data_preprocessor import IDataPreprocessor
-from db.implementations.local_disk.local_disk_preprocessed_db import __open_zarr_structure_from_path
 # TODO: figure out how to specify N of downsamplings (x2, x4, etc.) in a better way
 from skimage.measure import block_reduce
 import math
@@ -34,27 +33,33 @@ class SFFPreprocessor(IDataPreprocessor):
         '''
         self.__hdf5_to_zarr(segm_file_path)
         # Re-create zarr hierarchy
-        zarr_structure: zarr.hierarchy.group = __open_zarr_structure_from_path(
+        zarr_structure: zarr.hierarchy.group = open_zarr_structure_from_path(
             self.temp_zarr_structure_path)
         
-        # TODO: read map
+        # read map
         map_object = self.__read_volume_map_to_object(volume_file_path)
-
-        # TODO: read params for metadata computing
-        # TODO: reorder axis
-        # TODO: check axis order
-        # TODO: check if params for metadata computing are on correct places
-        # TODO: compute metadata
-
-        self.__process_segmentation_data(zarr_structure)
-        self.__process_volume_data(zarr_structure, map_object)
+        normalized_axis_map_object = self.__normalize_axis_order(map_object)
         
-        metadata = self.__extract_metadata(zarr_structure, map_object)
+        self.__process_segmentation_data(zarr_structure)
+        self.__process_volume_data(zarr_structure, normalized_axis_map_object)
+        
+        metadata = self.__extract_metadata(zarr_structure, normalized_axis_map_object)
         self.__temp_save_metadata(metadata, self.temp_zarr_structure_path)
 
         return self.temp_zarr_structure_path
 
-    def __read_volume_map_to_object(volume_file_path: Path) -> gemmi.Ccp4Map:
+    def __normalize_axis_order(self, map_object: gemmi.Ccp4Map):
+        '''
+        Normalizes axis order to X, Y, Z (1, 2, 3)
+        '''
+        # just reorders axis to X, Y, Z (https://gemmi.readthedocs.io/en/latest/grid.html#setup)
+        map_object.setup(float('nan'), gemmi.MapSetup.ReorderOnly)
+        ccp4_header = self.__read_ccp4_words_to_dict(map_object)
+        new_axis_order = ccp4_header['MAPC'], ccp4_header['MAPR'], ccp4_header['MAPS']
+        assert new_axis_order == (1, 2, 3), f'Axis order is {new_axis_order}, should be (1, 2, 3) or X, Y, Z'
+        return map_object
+
+    def __read_volume_map_to_object(self, volume_file_path: Path) -> gemmi.Ccp4Map:
         '''
         Reads ccp4 map to gemmi.Ccp4Map object 
         '''
@@ -62,7 +67,7 @@ class SFFPreprocessor(IDataPreprocessor):
         # https://www.ccp4.ac.uk/html/maplib.html
         return gemmi.read_ccp4_map(str(volume_file_path.resolve()))
 
-    def __process_volume_data(self, zarr_structure: zarr.hierarchy.group, map_object):
+    def __process_volume_data(self, zarr_structure: zarr.hierarchy.group, map_object: gemmi.Ccp4Map):
         '''
         Takes read map object, extracts volume data, downsamples it, stores to zarr_structure
         '''
@@ -110,6 +115,18 @@ class SFFPreprocessor(IDataPreprocessor):
         num_of_downsampling_steps: int = math.ceil(math.log2(input_grid_size/min_grid_size))
         return num_of_downsampling_steps
 
+    def __read_ccp4_words_to_dict(self, m: gemmi.Ccp4Map) -> Dict:
+        ctx = decimal.getcontext()
+        ctx.rounding = decimal.ROUND_CEILING
+        d = {}
+        d['NC'], d['NR'], d['NS'] = m.header_i32(1), m.header_i32(2), m.header_i32(3)
+        d['NCSTART'], d['NRSTART'], d['NSSTART'] = m.header_i32(5), m.header_i32(6), m.header_i32(7)
+        d['xLength'] = round(Decimal(m.header_float(11)), 1)
+        d['yLength'] = round(Decimal(m.header_float(12)), 1)
+        d['zLength'] = round(Decimal(m.header_float(13)), 1)
+        d['MAPC'], d['MAPR'], d['MAPS'] = m.header_i32(17), m.header_i32(18), m.header_i32(19)
+        return d
+
     def __extract_metadata(self, zarr_structure: zarr.hierarchy.group, map_object) -> Dict:
         root = zarr_structure
         volume_downsamplings = sorted(root[VOLUME_DATA_GROUPNAME].array_keys())
@@ -122,25 +139,12 @@ class SFFPreprocessor(IDataPreprocessor):
             lattice_dict[lattice_id] = sorted(gr.array_keys())
             lattice_ids.append(lattice_id)
 
-        m = map_object
-        # get voxel size based on CELLA and NX/NC, NY/NR, NZ/NS variables (words 1, 2, 3) in CCP4 file
-        # may need to use MX, NY, MZ instead of N*s (words 8, 9, 10)
-        ctx = decimal.getcontext()
-        ctx.rounding = decimal.ROUND_CEILING
+        d = self.__read_ccp4_words_to_dict(map_object)
 
-        cella_x = round(Decimal(m.header_float(11)), 1)
-        cella_y = round(Decimal(m.header_float(12)), 1)
-        cella_z = round(Decimal(m.header_float(13)), 1)
-        nx = m.header_i32(1)
-        ny = m.header_i32(2)
-        nz = m.header_i32(3)
-        nc_start = m.header_i32(5)
-        nr_start = m.header_i32(6)
-        ns_start = m.header_i32(7)
         original_voxel_size: Tuple[float, float, float] = (
-            cella_x / nx,
-            cella_y / ny,
-            cella_z / nz
+            d['xLength'] / d['NC'],
+            d['yLength'] / d['NR'],
+            d['zLength'] / d['NS']
         )
 
         voxel_sizes_in_downsamplings: Dict = {}
@@ -152,13 +156,13 @@ class SFFPreprocessor(IDataPreprocessor):
         # get origin of grid based on NC/NR/NSSTART variables (5, 6, 7) and original voxel size
         # Converting to strings, then to floats to make it JSON serializable (decimals are not) -> ??
         origin: Tuple[float, float, float] = (
-            float(str(nc_start * original_voxel_size[0])),
-            float(str(nr_start * original_voxel_size[1])),
-            float(str(ns_start * original_voxel_size[2])),
+            float(str(d['NCSTART'] * original_voxel_size[0])),
+            float(str(d['NRSTART'] * original_voxel_size[1])),
+            float(str(d['NSSTART'] * original_voxel_size[2])),
         )
 
         # get grid dimensions based on NX/NC, NY/NR, NZ/NS variables (words 1, 2, 3) in CCP4 file
-        grid_dimensions: Tuple[int, int, int] = (nx, ny, nz)
+        grid_dimensions: Tuple[int, int, int] = (d['NC'], d['NR'], d['NS'])
 
         return {
             'details': root.details[...][0].decode('utf-8'),
@@ -179,13 +183,7 @@ class SFFPreprocessor(IDataPreprocessor):
         '''
         Takes read map object (axis normalized upfront) and returns numpy arr with volume data
         '''
-        # may not need to add .resolve(), with resolve it returns abs path
-        # m = gemmi.read_ccp4_map(str(file_path.resolve()))
         # TODO: can be dask array to save memory?
-        # just reorders axis to X, Y, Z (https://gemmi.readthedocs.io/en/latest/grid.html#setup)
-        # m.setup(float('nan'), gemmi.MapSetup.ReorderOnly)
-        # new_axis_order = m.header_i32(17), m.header_i32(18), m.header_i32(19)
-        # assert new_axis_order == (1, 2, 3), f'Axis order is {new_axis_order}, should be (1, 2, 3) or X, Y, Z'
         return np.array(m.grid)
 
     def __lattice_data_to_np_arr(self, data: str, dtype: str, arr_shape: Tuple[int, int, int]) -> np.ndarray:
@@ -269,4 +267,8 @@ class SFFPreprocessor(IDataPreprocessor):
             # node is a group
             zarr.open_group(self.temp_zarr_structure_path / node_name, mode='w')
     
-
+def open_zarr_structure_from_path(path: Path) -> zarr.hierarchy.Group:
+    store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
+    # Re-create zarr hierarchy from opened store
+    root: zarr.hierarchy.group = zarr.group(store=store)
+    return root
