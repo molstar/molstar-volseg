@@ -11,6 +11,7 @@ import numpy as np
 import decimal
 from decimal import Decimal
 from preprocessor.interface.i_data_preprocessor import IDataPreprocessor
+from db.implementations.local_disk.local_disk_preprocessed_db import __open_zarr_structure_from_path
 # TODO: figure out how to specify N of downsamplings (x2, x4, etc.) in a better way
 from skimage.measure import block_reduce
 import math
@@ -29,14 +30,52 @@ class SFFPreprocessor(IDataPreprocessor):
 
     def preprocess(self, segm_file_path: Path, volume_file_path: Path):
         '''
-        Returns path to temporary zarr structure that will be stored using db.store
+        Returns path to temporary zarr structure that will be stored permanently using db.store
         '''
         self.__hdf5_to_zarr(segm_file_path)
         # Re-create zarr hierarchy
-        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(self.temp_zarr_structure_path)
-        zarr_structure: zarr.hierarchy.group = zarr.group(store=store)
-        # zarr_structure: zarr.hierarchy.group = zarr.open_group(store=self.temp_zarr_structure_path, mode='r')
-        volume_data_gr: zarr.hierarchy.group = zarr_structure.create_group(VOLUME_DATA_GROUPNAME)
+        zarr_structure: zarr.hierarchy.group = __open_zarr_structure_from_path(
+            self.temp_zarr_structure_path)
+        
+        # TODO: read map
+        map_object = None
+        # TODO: read params for metadata computing
+        # TODO: reorder axis
+        # TODO: check axis order
+        # TODO: check if params for metadata computing are on correct places
+        # TODO: compute metadata
+
+        self.__process_segmentation_data(zarr_structure)
+        self.__process_volume_data(zarr_structure, map_object)
+        
+        # TODO: change extract metadata such that it takes map object, and does not read map file again
+        metadata = self.__extract_metadata(zarr_structure, volume_file_path)
+        self.__temp_save_metadata(metadata, self.temp_zarr_structure_path)
+
+        return self.temp_zarr_structure_path
+
+    def __process_volume_data(self, zarr_structure: zarr.hierarchy.group, map_object):
+        '''
+        Takes read map object, extracts volume data, downsamples it, stores to zarr_structure
+        '''
+        # volume_data_gr: zarr.hierarchy.group = zarr_structure.create_group(VOLUME_DATA_GROUPNAME)        
+        # volume_arr = self.__read_volume_data(volume_file_path)
+        # volume_downsampling_steps = self.__compute_number_of_downsampling_steps(
+        #     MIN_GRID_SIZE,
+        #     input_grid_size=math.prod(volume_arr.shape)
+        # )
+        # self.__create_downsamplings(
+        #     volume_arr,
+        #     volume_data_gr,
+        #     isCategorical=False,
+        #     downsampling_steps = volume_downsampling_steps
+        # )
+        pass
+
+    def __process_segmentation_data(self, zarr_structure: zarr.hierarchy.group) -> None:
+        '''
+        Extracts segmentation data from lattice, downsamples it, stores to zarr structure
+        '''
         segm_data_gr: zarr.hierarchy.group = zarr_structure.create_group(SEGMENTATION_DATA_GROUPNAME)
         
         for gr_name, gr in zarr_structure.lattice_list.groups():
@@ -57,23 +96,6 @@ class SFFPreprocessor(IDataPreprocessor):
                 isCategorical=True,
                 downsampling_steps = segmentation_downsampling_steps
             )
-        
-        volume_arr = self.__read_volume_data(volume_file_path)
-        volume_downsampling_steps = self.__compute_number_of_downsampling_steps(
-            MIN_GRID_SIZE,
-            input_grid_size=math.prod(volume_arr.shape)
-        )
-        self.__create_downsamplings(
-            volume_arr,
-            volume_data_gr,
-            isCategorical=False,
-            downsampling_steps = volume_downsampling_steps
-        )
-        
-        metadata = self.__extract_metadata(zarr_structure, volume_file_path)
-        self.__temp_save_metadata(metadata, self.temp_zarr_structure_path)
-
-        return self.temp_zarr_structure_path
 
     def __compute_number_of_downsampling_steps(self, min_grid_size: int, input_grid_size: int) -> int:
         if input_grid_size <= min_grid_size:
@@ -127,9 +149,9 @@ class SFFPreprocessor(IDataPreprocessor):
         # get origin of grid based on NC/NR/NSSTART variables (5, 6, 7) and original voxel size
         # Converting to strings, then to floats to make it JSON serializable (decimals are not) -> ??
         origin: Tuple[float, float, float] = (
-            float(str(m.header_i32(5) * original_voxel_size[0])),
-            float(str(m.header_i32(6) * original_voxel_size[1])),
-            float(str(m.header_i32(7) * original_voxel_size[2])),
+            float(str(nc_start * original_voxel_size[0])),
+            float(str(nr_start * original_voxel_size[1])),
+            float(str(ns_start * original_voxel_size[2])),
         )
 
         # get grid dimensions based on NX/NC, NY/NR, NZ/NS variables (words 1, 2, 3) in CCP4 file
