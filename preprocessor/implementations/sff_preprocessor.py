@@ -208,6 +208,8 @@ class SFFPreprocessor(IDataPreprocessor):
         if rate == 1:
             return arr
         return block_reduce(arr, block_size=(rate, rate, rate), func=np.mean)
+        # TODO:
+        # return __downsample_using_magic_kernel(arr)
 
     def __create_downsamplings(self, data: np.ndarray, downsampled_data_group: zarr.hierarchy.group, isCategorical: bool = False, downsampling_steps: int = 1):
         # iteratively downsample data, create arr for each dwns. level and store data 
@@ -272,3 +274,6 @@ def open_zarr_structure_from_path(path: Path) -> zarr.hierarchy.Group:
     # Re-create zarr hierarchy from opened store
     root: zarr.hierarchy.group = zarr.group(store=store)
     return root
+
+def __downsample_using_magic_kernel(arr: np.ndarray) -> np.ndarray:
+    pass
