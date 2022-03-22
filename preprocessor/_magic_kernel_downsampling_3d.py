@@ -2,14 +2,18 @@ from itertools import product
 from typing import Tuple
 import numpy as np
 # TODO: address overflow (see todo somewhere below)
-def extract_target_voxels_coords():
+def extract_target_voxels_coords(max_grid_coords: Tuple[int, int, int]):
     '''
-    Takes 3d arr and extract coords of target voxels (every other in all three dimensions)
+    Takes max grid coords (X, Y, Z; zero based!) and returns coords of target voxels
+    (every other in all three dimensions)
+    that will be the centers of 5x5 boxes on which magic kernel is applied
     '''
-    # repeat - n of dimensions, list = list of values of group for that permutation
-    # TODO: determine lst based on grid dimensions
-    lst = [0, 2, 4]
-    permutations = product(lst, repeat=3)
+    max_x = list(range(0, max_grid_coords[0] + 1, 2))
+    max_y = list(range(0, max_grid_coords[1] + 1, 2))
+    max_z = list(range(0, max_grid_coords[2] + 1, 2))
+    
+    lst = [max_x, max_y, max_z]
+    permutations = product(*lst)
     # TODO: assert permutations == grid x/2 y/2 z/2
     return tuple(permutations)
 
@@ -42,6 +46,7 @@ def get_voxel_coords_at_radius(target_voxel_coords: Tuple[int, int, int], radius
     # and replaces them with the corresponding coord of the boundary (origin or max_dims) 
     origin = np.array([0, 0, 0])
     # TODO: if possible - optimize later on (is it possible without looping?)
+    # some np.all or whatever or
     # e.g. https://stackoverflow.com/questions/42150110/comparing-subarrays-in-numpy
     for v in voxels_at_radius:
         if (v < origin).any():
@@ -82,3 +87,15 @@ for coords in lst_of_coords:
     r = get_voxel_coords_at_radius(coords, radius, max_dims)
     print(r)
     print(len(r))
+
+lst_of_max_coords = [
+    (4, 5, 4),
+    (10, 12, 14),
+    (2, 11, 2),
+    (10, 4, 8)
+]
+
+for coords in lst_of_max_coords:
+    result = extract_target_voxels_coords(coords)
+    print(f'For {coords} there are {len(result)} target voxels')
+    print()
