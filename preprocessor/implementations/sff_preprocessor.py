@@ -14,12 +14,13 @@ from preprocessor.interface.i_data_preprocessor import IDataPreprocessor
 # TODO: figure out how to specify N of downsamplings (x2, x4, etc.) in a better way
 from skimage.measure import block_reduce
 import math
-from preprocessor._magic_kernel_downsampling_3d import __downsample_using_magic_kernel
+from preprocessor._magic_kernel_downsampling_3d import downsample_using_magic_kernel
 
 VOLUME_DATA_GROUPNAME = '_volume_data'
 SEGMENTATION_DATA_GROUPNAME = '_segmentation_data'
 METADATA_FILENAME = 'metadata.json'
 MIN_GRID_SIZE = 100 **3
+DOWNSAMPLING_KERNEL = (1, 4, 6, 4, 1)
 
 class SFFPreprocessor(IDataPreprocessor):
     def __init__(self):
@@ -210,7 +211,7 @@ class SFFPreprocessor(IDataPreprocessor):
             return arr
         # return block_reduce(arr, block_size=(rate, rate, rate), func=np.mean)
         # TODO:
-        return __downsample_using_magic_kernel(arr)
+        return downsample_using_magic_kernel(arr, DOWNSAMPLING_KERNEL)
 
     def __create_downsamplings(self, data: np.ndarray, downsampled_data_group: zarr.hierarchy.group, isCategorical: bool = False, downsampling_steps: int = 1):
         # iteratively downsample data, create arr for each dwns. level and store data 

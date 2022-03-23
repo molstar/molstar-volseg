@@ -12,6 +12,7 @@ preprocessor/sample_segmentations/emdb_sff/empiar_10087_e64_tomo03.hff
 preprocessor/sample_segmentations/emdb_sff/empiar_10087_e64_tomo03.json
 iota_yzx.ccp4.gz
 _read_ccp4_fields.py
+preprocessor/sample_arr_plots/
 
 ### VisualStudioCode template
 .vscode/*

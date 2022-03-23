@@ -137,14 +137,14 @@ def __testing_with_dummy_arr():
     SHAPE = (10, 12, 14)
     KERNEL = (1, 4, 6, 4, 1)
     arr =__generate_dummy_arr(SHAPE)
-    downsampled_arr = __downsample_using_magic_kernel(arr, KERNEL)
+    downsampled_arr = downsample_using_magic_kernel(arr, KERNEL)
     print(f'ORIGINAL ARR, SHAPE {arr.shape}')
     print(arr)
     print(f'DOWNSAMPLED ARR, SHAPE {downsampled_arr.shape}')
     print(downsampled_arr)
     
     
-def __downsample_using_magic_kernel(arr: np.ndarray, kernel: Tuple[int, int, int, int, int]) -> np.ndarray:
+def downsample_using_magic_kernel(arr: np.ndarray, kernel: Tuple[int, int, int, int, int]) -> np.ndarray:
     # empty 3D arr with /2 dimensions compared to original 3D arr
     downsampled_arr = np.full([
         ceil(arr.shape[0] / 2),
@@ -170,6 +170,6 @@ def __downsample_using_magic_kernel(arr: np.ndarray, kernel: Tuple[int, int, int
 
     return downsampled_arr
 
-
-# __testing()
-__testing_with_dummy_arr()
+if __name__ == '__main__':
+    # __testing()
+    __testing_with_dummy_arr()
