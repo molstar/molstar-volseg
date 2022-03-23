@@ -1,6 +1,7 @@
 from itertools import product
 from typing import Tuple
 import numpy as np
+from math import ceil
 
 def extract_target_voxels_coords(arr_shape: Tuple[int, int, int]):
     '''
@@ -56,7 +57,9 @@ def get_voxel_coords_at_radius(target_voxel_coords: Tuple[int, int, int], radius
             voxels_at_radius = np.fmax(voxels_at_radius, origin)
         if (v > max_grid_coords).any():
             voxels_at_radius = np.fmin(voxels_at_radius, max_grid_coords)
-
+    
+    # in roder to use it for indexing 3D array it needs to be a list of tuples, not np array
+    voxels_at_radius = list(map(tuple, voxels_at_radius))
     return voxels_at_radius
 
 def compute_downsampled_voxel_value(arr: np.ndarray,
@@ -72,13 +75,13 @@ def compute_downsampled_voxel_value(arr: np.ndarray,
     target_voxel_value = arr[voxel_coords]
     inner_layer_voxel_values = np.array([arr[i] for i in inner_layer_voxel_coords])
     outer_layer_voxel_values = np.array([arr[i] for i in outer_layer_voxel_coords])
-    print(inner_layer_voxel_values)
-    print(outer_layer_voxel_values)
-    print(target_voxel_value)
-    values_sum = k[2] * voxel_coords + k[1] * inner_layer_voxel_values.sum() + k[0] * outer_layer_voxel_values.sum()
+    # print(inner_layer_voxel_values)
+    # print(outer_layer_voxel_values)
+    # print(target_voxel_value)
+    values_sum = k[2] * target_voxel_value + k[1] * inner_layer_voxel_values.sum() + k[0] * outer_layer_voxel_values.sum()
     new_value = values_sum / sum(k)
-    print(values_sum)
-    print(new_value)
+    # print(values_sum)
+    # print(new_value)
     return new_value
 
 
@@ -135,11 +138,20 @@ def __testing_with_dummy_arr():
     KERNEL = (1, 4, 6, 4, 1)
     arr =__generate_dummy_arr(SHAPE)
     downsampled_arr = __downsample_using_magic_kernel(arr, KERNEL)
+    print(f'ORIGINAL ARR, SHAPE {arr.shape}')
     print(arr)
+    print(f'DOWNSAMPLED ARR, SHAPE {downsampled_arr.shape}')
     print(downsampled_arr)
     
     
 def __downsample_using_magic_kernel(arr: np.ndarray, kernel: Tuple[int, int, int, int, int]) -> np.ndarray:
+    # empty 3D arr with /2 dimensions compared to original 3D arr
+    downsampled_arr = np.full([
+        ceil(arr.shape[0] / 2),
+        ceil(arr.shape[1] / 2),
+        ceil(arr.shape[2] / 2)
+    ], np.nan)
+
     target_voxels_coords = extract_target_voxels_coords(arr.shape)
     for voxel_coords in target_voxels_coords:
         inner_layer_voxel_coords = get_voxel_coords_at_radius(voxel_coords, 1, arr.shape)
@@ -151,6 +163,12 @@ def __downsample_using_magic_kernel(arr: np.ndarray, kernel: Tuple[int, int, int
             inner_layer_voxel_coords,
             outer_layer_voxel_coords
         )
+        new_x = int(voxel_coords[0] / 2)
+        new_y = int(voxel_coords[1] / 2)
+        new_z = int(voxel_coords[2] / 2)
+        downsampled_arr[new_x][new_y][new_z] = downsampled_voxel_value
+
+    return downsampled_arr
 
 
 # __testing()
