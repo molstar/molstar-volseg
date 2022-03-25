@@ -22,6 +22,32 @@ METADATA_FILENAME = 'metadata.json'
 MIN_GRID_SIZE = 100 **3
 DOWNSAMPLING_KERNEL = (1, 4, 6, 4, 1)
 
+
+def open_zarr_structure_from_path(path: Path) -> zarr.hierarchy.Group:
+    store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
+    # Re-create zarr hierarchy from opened store
+    root: zarr.hierarchy.group = zarr.group(store=store)
+    return root
+
+class SegmentationSetTable:
+    def __init__(self, lattice):
+        self.entries: Dict = self.__convert_lattice_to_dict_of_sets(lattice)
+        # figure out how to create entries upon initialization given the original segm lattice
+    
+    def __convert_lattice_to_dict_of_sets(self, lattice: np.ndarray) -> Dict:
+        '''
+        Converts original latice to dict of singletons
+        '''
+        unique_values: np.ndarray = np.unique(lattice)
+        z = zip(unique_values, unique_values)
+        return dict(z)
+
+    def get_categories(self, ids: Tuple) -> Tuple:
+        '''
+        Returns sets from the dict of sets (entries) based on provided IDs
+        '''
+        return tuple([self.entries[i] for i in ids])
+
 class SFFPreprocessor(IDataPreprocessor):
     def __init__(self):
         # path to root of temporary storage for zarr hierarchy
@@ -216,18 +242,44 @@ class SFFPreprocessor(IDataPreprocessor):
     def __create_downsamplings(self, data: np.ndarray, downsampled_data_group: zarr.hierarchy.group, isCategorical: bool = False, downsampling_steps: int = 1):
         # iteratively downsample data, create arr for each dwns. level and store data 
         ratios = 2 ** np.arange(0, downsampling_steps + 1)
-        for rate in ratios:
-            self.__create_downsampling(data, rate, downsampled_data_group, isCategorical)
+        if isCategorical:
+            # separate function as we need to keep info from previous dwns lvl
+            self.__create_category_set_downsamplings(data, downsampling_steps, downsampled_data_group)
+        else:
+            for rate in ratios:
+                self.__create_downsampling(data, rate, downsampled_data_group, isCategorical)
         # TODO: figure out compression/filters: b64 encoded zlib-zipped .data is just 8 bytes
         # downsamplings sizes in raw uncompressed state are much bigger 
         # TODO: figure out what to do with chunks - currently they are not used
 
+    def __create_category_set_downsamplings(self, original_data: np.ndarray, downsampled_data_group):
+        '''
+        Take original segmentation data, do all downsampling levels, create zarr datasets for each
+        '''
+        pass
+
+    def __downsample_2x2x2_block(self, block: np.ndarray, current_table: SegmentationSetTable, previous_table: SegmentationSetTable) -> int:
+        combintation = self.__compute_union(block, previous_table)
+
+    def __compute_union(self, block: np.ndarray, previous_table: SegmentationSetTable) -> Set:
+        # in general, where x y z are sets
+        # result = x.union(y, z) 
+        block_values: Tuple = tuple(block.flatten())
+        categories: Tuple = previous_table.get_categories(block_values)
+        union: Set = set().union(*categories)
+        return union
+
     def __create_downsampling(self, original_data, rate, downsampled_data_group, isCategorical=False):
         '''Creates zarr array (dataset) filled with downsampled data'''
-        if isCategorical:
-            downsampled_data = self.__downsample_categorical_data(original_data, rate)
-        else:
-            downsampled_data = self.__downsample_numerical_data(original_data, rate)
+        # now this function is just for volume data dwnsmpling
+
+        # not used as we switch to category-set-downsampling
+        # if isCategorical:
+        #     downsampled_data = self.__downsample_categorical_data(original_data, rate)
+        # else:
+        #     downsampled_data = self.__downsample_numerical_data(original_data, rate)
+        
+        downsampled_data = self.__downsample_numerical_data(original_data, rate)
 
         zarr_arr = downsampled_data_group.create_dataset(
             str(rate),
@@ -270,12 +322,8 @@ class SFFPreprocessor(IDataPreprocessor):
         else:
             # node is a group
             zarr.open_group(self.temp_zarr_structure_path / node_name, mode='w')
-    
-def open_zarr_structure_from_path(path: Path) -> zarr.hierarchy.Group:
-    store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
-    # Re-create zarr hierarchy from opened store
-    root: zarr.hierarchy.group = zarr.group(store=store)
-    return root
+
+
 
 # def __downsample_using_magic_kernel(arr: np.ndarray) -> np.ndarray:
 #     pass
