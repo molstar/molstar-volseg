@@ -2,7 +2,7 @@ import base64
 import json
 import gemmi
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, Set, Tuple
 import zlib
 import zarr
 import numcodecs
@@ -14,7 +14,8 @@ from preprocessor.interface.i_data_preprocessor import IDataPreprocessor
 # TODO: figure out how to specify N of downsamplings (x2, x4, etc.) in a better way
 from skimage.measure import block_reduce
 import math
-from preprocessor._magic_kernel_downsampling_3d import downsample_using_magic_kernel
+from preprocessor._magic_kernel_downsampling_3d import downsample_using_magic_kernel, get_voxel_coords_at_radius
+from skimage.util import view_as_blocks
 
 VOLUME_DATA_GROUPNAME = '_volume_data'
 SEGMENTATION_DATA_GROUPNAME = '_segmentation_data'
@@ -47,6 +48,36 @@ class SegmentationSetTable:
         Returns sets from the dict of sets (entries) based on provided IDs
         '''
         return tuple([self.entries[i] for i in ids])
+
+    def __find_category(self, target_category: Set) -> Union[int, None]:
+        '''
+        Looks up a category (set) in entries dict, returns its id or None if not found
+        '''
+        # TODO: check if dict has unique categories indeed!
+        for id, category in self.entries.iteritems():
+            if category == target_category:
+                return id
+        return None
+
+    def __add_category(self, target_category: Set) -> int:
+        '''
+        Adds new category to entries and returns its id
+        '''
+        new_id = max(self.entries.keys()) + 1
+        self.entries[new_id] = target_category
+        return new_id
+
+    def resolve_category(self, target_category: Set):
+        '''
+        Looks up a category (set) in entries dict, returns its id
+        If not found, adds new category to entries and returns its id
+        '''
+        if id := self.__find_category(target_category):
+            return id
+        else:
+            return self.__add_category(target_category)
+
+
 
 class SFFPreprocessor(IDataPreprocessor):
     def __init__(self):
@@ -252,14 +283,47 @@ class SFFPreprocessor(IDataPreprocessor):
         # downsamplings sizes in raw uncompressed state are much bigger 
         # TODO: figure out what to do with chunks - currently they are not used
 
-    def __create_category_set_downsamplings(self, original_data: np.ndarray, downsampled_data_group):
+    def __create_category_set_downsamplings(self, original_data: np.ndarray, downsampling_steps: int, downsampled_data_group):
         '''
         Take original segmentation data, do all downsampling levels, create zarr datasets for each
         '''
-        pass
+        # table with just singletons, e.g. "104": {104}, "94" :{94}
+        initial_set_table = SegmentationSetTable(original_data)
+        
+        levels = [{'grid': original_data, 'set_table': initial_set_table}]
+        for i in range(downsampling_steps):
+            current_set_table = SegmentationSetTable(original_data)
+            # on first iteration (i.e. when doing x2 downsampling), it takes original_data and initial_set_table with set of singletons 
+            levels.append(self.__downsample_categorical_data_using_category_sets(levels[i], current_set_table))
 
-    def __downsample_2x2x2_block(self, block: np.ndarray, current_table: SegmentationSetTable, previous_table: SegmentationSetTable) -> int:
-        combintation = self.__compute_union(block, previous_table)
+        # TODO: store levels list in zarr structure (can be separate function)
+
+    def __downsample_categorical_data_using_category_sets(self, previous_level_dict: Dict, current_set_table: SegmentationSetTable) -> Dict:
+        '''
+        Downsample data returning a dict for that level containing new grid and a set table for that level
+        '''
+        previous_level_grid: np.ndarray = previous_level_dict['grid']
+        previous_level_set_table: SegmentationSetTable = previous_level_dict['set_table']
+
+        # TODO: figure out how to select block
+        # this will not work for e.g. 5**3 grid, as block size = 2,2,2
+        # blocks: np.ndarray = view_as_blocks(previous_level_grid, (2, 2, 2))
+        # TODO: for loop does not know the coordinates
+        # get them?
+        for block in blocks:
+            id = self.__downsample_2x2x2_categorical_block(block, current_set_table, previous_level_set_table)
+            # TODO: put that id in the location of new grid corresponding to that block
+            # , and write it into 'grid' key of new level dict
+
+        # TODO: add current level set table to new level dict
+        # and return that dict (will have a new grid and a new set table)  
+
+
+    def __downsample_2x2x2_categorical_block(self, block: np.ndarray, current_table: SegmentationSetTable, previous_table: SegmentationSetTable) -> int:
+        potentially_new_category: Set = self.__compute_union(block, previous_table)
+        id: int = current_table.resolve_category(potentially_new_category)
+        return id
+
 
     def __compute_union(self, block: np.ndarray, previous_table: SegmentationSetTable) -> Set:
         # in general, where x y z are sets
