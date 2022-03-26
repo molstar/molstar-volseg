@@ -2,7 +2,7 @@ import base64
 import json
 import gemmi
 from pathlib import Path
-from typing import Dict, Set, Tuple
+from typing import Dict, Set, Tuple, Union
 import zlib
 import zarr
 import numcodecs
@@ -14,7 +14,7 @@ from preprocessor.interface.i_data_preprocessor import IDataPreprocessor
 # TODO: figure out how to specify N of downsamplings (x2, x4, etc.) in a better way
 from skimage.measure import block_reduce
 import math
-from preprocessor._magic_kernel_downsampling_3d import downsample_using_magic_kernel, get_voxel_coords_at_radius
+from preprocessor._magic_kernel_downsampling_3d import downsample_using_magic_kernel, extract_target_voxels_coords, create_x2_downsampled_grid
 from skimage.util import view_as_blocks
 
 VOLUME_DATA_GROUPNAME = '_volume_data'
@@ -304,20 +304,45 @@ class SFFPreprocessor(IDataPreprocessor):
         '''
         previous_level_grid: np.ndarray = previous_level_dict['grid']
         previous_level_set_table: SegmentationSetTable = previous_level_dict['set_table']
+        current_level_grid: np.ndarray = create_x2_downsampled_grid(previous_level_grid.shape, np.nan)
 
-        # TODO: figure out how to select block
-        # this will not work for e.g. 5**3 grid, as block size = 2,2,2
+        # Select block
+        # The following will not work for e.g. 5**3 grid, as block size = 2,2,2
         # blocks: np.ndarray = view_as_blocks(previous_level_grid, (2, 2, 2))
-        # TODO: for loop does not know the coordinates
-        # get them?
-        for block in blocks:
-            id = self.__downsample_2x2x2_categorical_block(block, current_set_table, previous_level_set_table)
-            # TODO: put that id in the location of new grid corresponding to that block
-            # , and write it into 'grid' key of new level dict
+        # instead, get target voxels, e.g. for 1st block it is *0,0,0) voxel
+        target_voxels_coords = np.array(extract_target_voxels_coords(previous_level_grid.shape))
+        origin_coords = np.array([0, 0, 0])
+        max_coords = np.subtract(previous_level_grid.shape, (1, 1, 1))
+        # loop over voxels, c = coords of a single voxel
+        for start_coords in target_voxels_coords:
+            # end coords for start_coords 0,0,0 are 2,2,2
+            # (it will actually select from 0,0,0 to 1,1,1 as slicing end index is non-inclusive)
+            end_coords = start_coords + 2
+            if end_coords < origin_coords:
+                end_coords = np.fmax(end_coords, origin_coords)
+            if end_coords > max_coords:
+                end_coords = np.fmin(end_coords, max_coords)
+            
+            block: np.ndarray = previous_level_grid[
+                start_coords[0] : end_coords[0],
+                start_coords[1] : end_coords[1],
+                start_coords[2] : end_coords[2]
+            ]
 
-        # TODO: add current level set table to new level dict
+            new_id: int = self.__downsample_2x2x2_categorical_block(block, current_set_table, previous_level_set_table)
+            # putting that id in the location of new grid corresponding to that block
+            current_level_grid[
+                start_coords[0],
+                start_coords[1],
+                start_coords[2]
+            ] = new_id
+        
+        # write grid into 'grid' key of new level dict
+        # add current level set table to new level dict
+        new_dict = {'grid': current_level_grid, 'set_table': current_set_table}
         # and return that dict (will have a new grid and a new set table)  
-
+        return new_dict
+        
 
     def __downsample_2x2x2_categorical_block(self, block: np.ndarray, current_table: SegmentationSetTable, previous_table: SegmentationSetTable) -> int:
         potentially_new_category: Set = self.__compute_union(block, previous_table)

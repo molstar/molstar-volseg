@@ -49,16 +49,13 @@ def get_voxel_coords_at_radius(target_voxel_coords: Tuple[int, int, int], radius
     # and replaces them with the corresponding coord of the boundary (origin or max_grid_coords) 
     origin = np.array([0, 0, 0])
     max_grid_coords = np.subtract(arr_shape, (1, 1, 1))
-    # TODO: if possible - optimize later on (is it possible without looping?)
-    # some np.all or whatever or
-    # e.g. https://stackoverflow.com/questions/42150110/comparing-subarrays-in-numpy
-    for v in voxels_at_radius:
-        if (v < origin).any():
-            voxels_at_radius = np.fmax(voxels_at_radius, origin)
-        if (v > max_grid_coords).any():
-            voxels_at_radius = np.fmin(voxels_at_radius, max_grid_coords)
+    # checking for possible out-of-bound indeces
+    if (voxels_at_radius < origin).any():
+        voxels_at_radius = np.fmax(voxels_at_radius, origin)
+    if (voxels_at_radius > max_grid_coords).any():
+        voxels_at_radius = np.fmin(voxels_at_radius, max_grid_coords)
     
-    # in roder to use it for indexing 3D array it needs to be a list of tuples, not np array
+    # in order to use it for indexing 3D array it needs to be a list of tuples, not np array
     voxels_at_radius = list(map(tuple, voxels_at_radius))
     return voxels_at_radius
 
@@ -146,12 +143,7 @@ def __testing_with_dummy_arr():
     
 def downsample_using_magic_kernel(arr: np.ndarray, kernel: Tuple[int, int, int, int, int]) -> np.ndarray:
     # empty 3D arr with /2 dimensions compared to original 3D arr
-    downsampled_arr = np.full([
-        ceil(arr.shape[0] / 2),
-        ceil(arr.shape[1] / 2),
-        ceil(arr.shape[2] / 2)
-    ], np.nan)
-
+    downsampled_arr = create_x2_downsampled_grid(arr.shape, np.nan)
     target_voxels_coords = extract_target_voxels_coords(arr.shape)
     for voxel_coords in target_voxels_coords:
         inner_layer_voxel_coords = get_voxel_coords_at_radius(voxel_coords, 1, arr.shape)
@@ -169,6 +161,14 @@ def downsample_using_magic_kernel(arr: np.ndarray, kernel: Tuple[int, int, int, 
         downsampled_arr[new_x][new_y][new_z] = downsampled_voxel_value
 
     return downsampled_arr
+
+def create_x2_downsampled_grid(original_grid_shape: Tuple[int, int, int], fill_value) -> np.ndarray:
+    empty_downsampled_grid = np.full([
+        ceil(original_grid_shape.shape[0] / 2),
+        ceil(original_grid_shape.shape[1] / 2),
+        ceil(original_grid_shape.shape[2] / 2)
+    ], fill_value)
+    return empty_downsampled_grid
 
 if __name__ == '__main__':
     # __testing()
