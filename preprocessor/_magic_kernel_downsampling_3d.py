@@ -164,9 +164,9 @@ def downsample_using_magic_kernel(arr: np.ndarray, kernel: Tuple[int, int, int, 
 
 def create_x2_downsampled_grid(original_grid_shape: Tuple[int, int, int], fill_value) -> np.ndarray:
     empty_downsampled_grid = np.full([
-        ceil(original_grid_shape.shape[0] / 2),
-        ceil(original_grid_shape.shape[1] / 2),
-        ceil(original_grid_shape.shape[2] / 2)
+        ceil(original_grid_shape[0] / 2),
+        ceil(original_grid_shape[1] / 2),
+        ceil(original_grid_shape[2] / 2)
     ], fill_value)
     return empty_downsampled_grid
 

@@ -2,7 +2,7 @@ import base64
 import json
 import gemmi
 from pathlib import Path
-from typing import Dict, Set, Tuple, Union
+from typing import Dict, Set, Tuple, Union, List
 import zlib
 import zarr
 import numcodecs
@@ -16,6 +16,8 @@ from skimage.measure import block_reduce
 import math
 from preprocessor._magic_kernel_downsampling_3d import downsample_using_magic_kernel, extract_target_voxels_coords, create_x2_downsampled_grid
 from skimage.util import view_as_blocks
+import copy
+
 
 VOLUME_DATA_GROUPNAME = '_volume_data'
 SEGMENTATION_DATA_GROUPNAME = '_segmentation_data'
@@ -30,18 +32,49 @@ def open_zarr_structure_from_path(path: Path) -> zarr.hierarchy.Group:
     root: zarr.hierarchy.group = zarr.group(store=store)
     return root
 
+class DownsamplingLevelDict:
+    def __init__(self, level_dict):
+        '''
+        Dict for categorical set downsampling level
+        '''
+        self.downsampling_ratio: int = level_dict['ratio']
+        self.grid: np.ndarray = level_dict['grid']
+        self.set_table: SegmentationSetTable = level_dict['set_table']
+
+    def get_grid(self):
+        return self.grid
+    
+    def get_set_table(self):
+        return self.set_table
+
+    def get_ratio(self):
+        return self.downsampling_ratio
+
 class SegmentationSetTable:
     def __init__(self, lattice):
         self.entries: Dict = self.__convert_lattice_to_dict_of_sets(lattice)
         # figure out how to create entries upon initialization given the original segm lattice
+
+    def get_serializable_repr(self) -> Dict:
+        '''
+        Converts sets in self.entries to lists, and returns the whole table as a dict
+        '''
+        d: Dict = copy.deepcopy(self.entries)
+        for i in d:
+            d[i] = list(d[i])
+
+        return d
     
     def __convert_lattice_to_dict_of_sets(self, lattice: np.ndarray) -> Dict:
         '''
         Converts original latice to dict of singletons
         '''
-        unique_values: np.ndarray = np.unique(lattice)
-        z = zip(unique_values, unique_values)
-        return dict(z)
+        unique_values: list = np.unique(lattice).tolist()
+        d = {}
+        for i in unique_values:
+            d[i] = {i}
+        
+        return d
 
     def get_categories(self, ids: Tuple) -> Tuple:
         '''
@@ -54,7 +87,7 @@ class SegmentationSetTable:
         Looks up a category (set) in entries dict, returns its id or None if not found
         '''
         # TODO: check if dict has unique categories indeed!
-        for id, category in self.entries.iteritems():
+        for id, category in self.entries.items():
             if category == target_category:
                 return id
         return None
@@ -63,7 +96,7 @@ class SegmentationSetTable:
         '''
         Adds new category to entries and returns its id
         '''
-        new_id = max(self.entries.keys()) + 1
+        new_id: int = max(self.entries.keys()) + 1
         self.entries[new_id] = target_category
         return new_id
 
@@ -267,7 +300,6 @@ class SFFPreprocessor(IDataPreprocessor):
         if rate == 1:
             return arr
         # return block_reduce(arr, block_size=(rate, rate, rate), func=np.mean)
-        # TODO:
         return downsample_using_magic_kernel(arr, DOWNSAMPLING_KERNEL)
 
     def __create_downsamplings(self, data: np.ndarray, downsampled_data_group: zarr.hierarchy.group, isCategorical: bool = False, downsampling_steps: int = 1):
@@ -283,27 +315,66 @@ class SFFPreprocessor(IDataPreprocessor):
         # downsamplings sizes in raw uncompressed state are much bigger 
         # TODO: figure out what to do with chunks - currently they are not used
 
-    def __create_category_set_downsamplings(self, original_data: np.ndarray, downsampling_steps: int, downsampled_data_group):
+    def __create_category_set_downsamplings(self, original_data: np.ndarray, downsampling_steps: int, downsampled_data_group: zarr.hierarchy.Group):
         '''
         Take original segmentation data, do all downsampling levels, create zarr datasets for each
         '''
         # table with just singletons, e.g. "104": {104}, "94" :{94}
         initial_set_table = SegmentationSetTable(original_data)
         
-        levels = [{'grid': original_data, 'set_table': initial_set_table}]
+        # for now contains just x1 downsampling lvl dict, in loop new dicts for new levels are appended
+        levels = [
+            DownsamplingLevelDict({'ratio': 1, 'grid': original_data, 'set_table': initial_set_table})
+            ]
         for i in range(downsampling_steps):
             current_set_table = SegmentationSetTable(original_data)
             # on first iteration (i.e. when doing x2 downsampling), it takes original_data and initial_set_table with set of singletons 
             levels.append(self.__downsample_categorical_data_using_category_sets(levels[i], current_set_table))
 
         # TODO: store levels list in zarr structure (can be separate function)
+        self.__store_downsampling_level_in_zarr_structure(levels, downsampled_data_group)
 
-    def __downsample_categorical_data_using_category_sets(self, previous_level_dict: Dict, current_set_table: SegmentationSetTable) -> Dict:
+# TODO: make dwnsmpling rate a param and include into lvl dict, make lvl dict a typed dict or class
+    def __store_downsampling_level_in_zarr_structure(self, levels_list: List[DownsamplingLevelDict], downsampled_data_group: zarr.hierarchy.Group):
+        for level_dict in levels_list:
+            grid = level_dict.get_grid()
+            table = level_dict.get_set_table()
+            ratio = level_dict.get_ratio()
+
+            # TODO: +1 x2 name of group
+            new_level_group: zarr.hierarchy.Group = downsampled_data_group.create_group(str(ratio))
+            grid_arr = new_level_group.create_dataset(
+                data=grid,
+                name='grid',
+                shape=grid.shape,
+                dtype=grid.dtype,
+                # # TODO: figure out how to determine optimal chunk size depending on the data
+                chunks=(25, 25, 25)
+            )
+            # TODO: change to zarr.array as create_dataset
+            
+            
+            
+            
+            # TODO: check if volume downsampled data did not change (git)
+
+
+
+            table_obj_arr = new_level_group.create_dataset(
+                # TODO: be careful here, encoding JSON, sets as lists, maybe upstream in code
+                name='set_table',
+                data=table.get_serializable_repr(),
+                # try JSON if something does not work with MsgPack
+                object_codec=numcodecs.MsgPack(),
+                dtype=object
+            )
+
+    def __downsample_categorical_data_using_category_sets(self, previous_level_dict: DownsamplingLevelDict, current_set_table: SegmentationSetTable) -> DownsamplingLevelDict:
         '''
         Downsample data returning a dict for that level containing new grid and a set table for that level
         '''
-        previous_level_grid: np.ndarray = previous_level_dict['grid']
-        previous_level_set_table: SegmentationSetTable = previous_level_dict['set_table']
+        previous_level_grid: np.ndarray = previous_level_dict.get_grid()
+        previous_level_set_table: SegmentationSetTable = previous_level_dict.get_set_table()
         current_level_grid: np.ndarray = create_x2_downsampled_grid(previous_level_grid.shape, np.nan)
 
         # Select block
@@ -318,9 +389,9 @@ class SFFPreprocessor(IDataPreprocessor):
             # end coords for start_coords 0,0,0 are 2,2,2
             # (it will actually select from 0,0,0 to 1,1,1 as slicing end index is non-inclusive)
             end_coords = start_coords + 2
-            if end_coords < origin_coords:
+            if (end_coords < origin_coords).any():
                 end_coords = np.fmax(end_coords, origin_coords)
-            if end_coords > max_coords:
+            if (end_coords > max_coords).any():
                 end_coords = np.fmin(end_coords, max_coords)
             
             block: np.ndarray = previous_level_grid[
@@ -332,14 +403,18 @@ class SFFPreprocessor(IDataPreprocessor):
             new_id: int = self.__downsample_2x2x2_categorical_block(block, current_set_table, previous_level_set_table)
             # putting that id in the location of new grid corresponding to that block
             current_level_grid[
-                start_coords[0],
-                start_coords[1],
-                start_coords[2]
+                round(start_coords[0] / 2),
+                round(start_coords[1] / 2),
+                round(start_coords[2] / 2)
             ] = new_id
         
         # write grid into 'grid' key of new level dict
         # add current level set table to new level dict
-        new_dict = {'grid': current_level_grid, 'set_table': current_set_table}
+        new_dict = DownsamplingLevelDict({
+            'ratio': round(previous_level_dict.get_ratio()),
+            'grid': current_level_grid,
+            'set_table': current_set_table
+            })
         # and return that dict (will have a new grid and a new set table)  
         return new_dict
         
