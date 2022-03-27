@@ -323,6 +323,10 @@ class SFFPreprocessor(IDataPreprocessor):
         # table with just singletons, e.g. "104": {104}, "94" :{94}
         initial_set_table = SegmentationSetTable(original_data)
         
+        # TODO: uncomment and see if works
+        # to make it uniform int32 with other level grids
+        # original_data = original_data.astype(np.int32)
+
         # for now contains just x1 downsampling lvl dict, in loop new dicts for new levels are appended
         levels = [
             DownsamplingLevelDict({'ratio': 1, 'grid': original_data, 'set_table': initial_set_table})
@@ -343,8 +347,6 @@ class SFFPreprocessor(IDataPreprocessor):
             ratio = level_dict.get_ratio()
 
             # TODO: check why grid is float values (type?)
-            # TODO: table.get_serializable_repr dict is too big. There is 31k keys,
-            # majority of keys are with [0] value
             new_level_group: zarr.hierarchy.Group = downsampled_data_group.create_group(str(ratio))
             grid_arr = new_level_group.create_dataset(
                 data=grid,
@@ -356,10 +358,9 @@ class SFFPreprocessor(IDataPreprocessor):
             )
             
             table_obj_arr = new_level_group.create_dataset(
-                # TODO: be careful here, encoding JSON, sets as lists, maybe upstream in code
+                # be careful here, encoding JSON, sets need to be converted to lists
                 name='set_table',
-                #  MsgPack bug/error: int is not allowed for map key when strict_map_key=True
-                # TODO: check if JSON will not produce same error as MsgPack
+                # MsgPack leads to bug/error: int is not allowed for map key when strict_map_key=True
                 dtype=object,
                 object_codec=numcodecs.JSON(),
                 shape=1
@@ -406,6 +407,10 @@ class SFFPreprocessor(IDataPreprocessor):
                 round(start_coords[2] / 2)
             ] = new_id
         
+        # need to check before conversion to int as in int grid nans => some guge number
+        assert np.isnan(current_level_grid).any() == False, f'Segmentation grid contain NAN values'
+
+        current_level_grid = current_level_grid.astype(np.int32)
         # write grid into 'grid' key of new level dict
         # add current level set table to new level dict
         new_dict = DownsamplingLevelDict({
