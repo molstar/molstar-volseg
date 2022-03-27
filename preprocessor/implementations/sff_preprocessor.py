@@ -87,9 +87,9 @@ class SegmentationSetTable:
         Looks up a category (set) in entries dict, returns its id or None if not found
         '''
         # TODO: check if dict has unique categories indeed!
-        for id, category in self.entries.items():
+        for category_id, category in self.entries.items():
             if category == target_category:
-                return id
+                return category_id
         return None
 
     def __add_category(self, target_category: Set) -> int:
@@ -105,8 +105,9 @@ class SegmentationSetTable:
         Looks up a category (set) in entries dict, returns its id
         If not found, adds new category to entries and returns its id
         '''
-        if id := self.__find_category(target_category):
-            return id
+        category_id = self.__find_category(target_category)
+        if category_id != None:
+            return category_id
         else:
             return self.__add_category(target_category)
 
@@ -228,7 +229,7 @@ class SFFPreprocessor(IDataPreprocessor):
         for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
             # each key is lattice id
             lattice_id = int(gr_name)
-            lattice_dict[lattice_id] = sorted(gr.array_keys())
+            lattice_dict[lattice_id] = sorted(gr.group_keys())
             lattice_ids.append(lattice_id)
 
         d = self.__read_ccp4_words_to_dict(map_object)
@@ -341,7 +342,9 @@ class SFFPreprocessor(IDataPreprocessor):
             table = level_dict.get_set_table()
             ratio = level_dict.get_ratio()
 
-            # TODO: +1 x2 name of group
+            # TODO: check why grid is float values (type?)
+            # TODO: table.get_serializable_repr dict is too big. There is 31k keys,
+            # majority of keys are with [0] value
             new_level_group: zarr.hierarchy.Group = downsampled_data_group.create_group(str(ratio))
             grid_arr = new_level_group.create_dataset(
                 data=grid,
@@ -351,23 +354,18 @@ class SFFPreprocessor(IDataPreprocessor):
                 # # TODO: figure out how to determine optimal chunk size depending on the data
                 chunks=(25, 25, 25)
             )
-            # TODO: change to zarr.array as create_dataset
             
-            
-            
-            
-            # TODO: check if volume downsampled data did not change (git)
-
-
-
             table_obj_arr = new_level_group.create_dataset(
                 # TODO: be careful here, encoding JSON, sets as lists, maybe upstream in code
                 name='set_table',
-                data=table.get_serializable_repr(),
-                # try JSON if something does not work with MsgPack
-                object_codec=numcodecs.MsgPack(),
-                dtype=object
+                #  MsgPack bug/error: int is not allowed for map key when strict_map_key=True
+                # TODO: check if JSON will not produce same error as MsgPack
+                dtype=object,
+                object_codec=numcodecs.JSON(),
+                shape=1
             )
+
+            table_obj_arr[...] = [table.get_serializable_repr()]
 
     def __downsample_categorical_data_using_category_sets(self, previous_level_dict: DownsamplingLevelDict, current_set_table: SegmentationSetTable) -> DownsamplingLevelDict:
         '''
@@ -411,7 +409,7 @@ class SFFPreprocessor(IDataPreprocessor):
         # write grid into 'grid' key of new level dict
         # add current level set table to new level dict
         new_dict = DownsamplingLevelDict({
-            'ratio': round(previous_level_dict.get_ratio()),
+            'ratio': round(previous_level_dict.get_ratio() * 2),
             'grid': current_level_grid,
             'set_table': current_set_table
             })
@@ -421,8 +419,8 @@ class SFFPreprocessor(IDataPreprocessor):
 
     def __downsample_2x2x2_categorical_block(self, block: np.ndarray, current_table: SegmentationSetTable, previous_table: SegmentationSetTable) -> int:
         potentially_new_category: Set = self.__compute_union(block, previous_table)
-        id: int = current_table.resolve_category(potentially_new_category)
-        return id
+        category_id: int = current_table.resolve_category(potentially_new_category)
+        return category_id
 
 
     def __compute_union(self, block: np.ndarray, previous_table: SegmentationSetTable) -> Set:
@@ -486,8 +484,3 @@ class SFFPreprocessor(IDataPreprocessor):
         else:
             # node is a group
             zarr.open_group(self.temp_zarr_structure_path / node_name, mode='w')
-
-
-
-# def __downsample_using_magic_kernel(arr: np.ndarray) -> np.ndarray:
-#     pass
