@@ -22,7 +22,8 @@ import copy
 VOLUME_DATA_GROUPNAME = '_volume_data'
 SEGMENTATION_DATA_GROUPNAME = '_segmentation_data'
 METADATA_FILENAME = 'metadata.json'
-MIN_GRID_SIZE = 100 **3
+# should be 100**3, but temporarly set to 32 to check at least x4 downsampling with 64**3 emd-1832 grid
+MIN_GRID_SIZE = 32 **3
 DOWNSAMPLING_KERNEL = (1, 4, 6, 4, 1)
 
 
@@ -297,7 +298,7 @@ class SFFPreprocessor(IDataPreprocessor):
         return arr[::rate, ::rate, ::rate]
     
     def __downsample_numerical_data(self, arr: np.ndarray, rate: int) -> np.ndarray:
-        '''Returns downsampled (mean) np array'''
+        '''Deprecated. Returns downsampled (mean) np array'''
         if rate == 1:
             return arr
         # return block_reduce(arr, block_size=(rate, rate, rate), func=np.mean)
@@ -305,16 +306,39 @@ class SFFPreprocessor(IDataPreprocessor):
 
     def __create_downsamplings(self, data: np.ndarray, downsampled_data_group: zarr.hierarchy.group, isCategorical: bool = False, downsampling_steps: int = 1):
         # iteratively downsample data, create arr for each dwns. level and store data 
-        ratios = 2 ** np.arange(0, downsampling_steps + 1)
         if isCategorical:
             # separate function as we need to keep info from previous dwns lvl
             self.__create_category_set_downsamplings(data, downsampling_steps, downsampled_data_group)
         else:
-            for rate in ratios:
-                self.__create_downsampling(data, rate, downsampled_data_group, isCategorical)
-        # TODO: figure out compression/filters: b64 encoded zlib-zipped .data is just 8 bytes
+            self.__create_volume_downsamplings(data, downsampling_steps, downsampled_data_group)
+        # # TODO: figure out compression/filters: b64 encoded zlib-zipped .data is just 8 bytes
         # downsamplings sizes in raw uncompressed state are much bigger 
-        # TODO: figure out what to do with chunks - currently they are not used
+        # TODO: figure out what to do with chunks - currently their size is not optimized
+
+    def __create_volume_downsamplings(self, original_data: np.ndarray, downsampling_steps: int, downsampled_data_group: zarr.hierarchy.Group):
+        '''
+        Take original volume data, do all downsampling levels and store in zarr struct one by one
+        '''
+        # TODO: do we need to make it uniform float64 as other other level grids? x1 is float32
+        # original_data = original_data.astype(np.float)
+        current_level_data = original_data
+        self.__store_single_volume_downsampling_in_zarr_stucture(current_level_data, downsampled_data_group, 1)
+        for i in range(downsampling_steps):
+            current_ratio = 2**(i + 1)
+            downsampled_data = downsample_using_magic_kernel(current_level_data, DOWNSAMPLING_KERNEL)
+            self.__store_single_volume_downsampling_in_zarr_stucture(downsampled_data, downsampled_data_group, current_ratio)
+            current_level_data = downsampled_data
+            
+
+    def __store_single_volume_downsampling_in_zarr_stucture(self, downsampled_data: np.ndarray, downsampled_data_group: zarr.hierarchy.Group, ratio: int):
+        downsampled_data_group.create_dataset(
+            data=downsampled_data,
+            name=str(ratio),
+            shape=downsampled_data.shape,
+            dtype=downsampled_data.dtype,
+            # # TODO: figure out how to determine optimal chunk size depending on the data
+            chunks=(50, 50, 50)
+        )
 
     def __create_category_set_downsamplings(self, original_data: np.ndarray, downsampling_steps: int, downsampled_data_group: zarr.hierarchy.Group):
         '''
@@ -323,9 +347,8 @@ class SFFPreprocessor(IDataPreprocessor):
         # table with just singletons, e.g. "104": {104}, "94" :{94}
         initial_set_table = SegmentationSetTable(original_data)
         
-        # TODO: uncomment and see if works
         # to make it uniform int32 with other level grids
-        # original_data = original_data.astype(np.int32)
+        original_data = original_data.astype(np.int32)
 
         # for now contains just x1 downsampling lvl dict, in loop new dicts for new levels are appended
         levels = [
@@ -336,17 +359,15 @@ class SFFPreprocessor(IDataPreprocessor):
             # on first iteration (i.e. when doing x2 downsampling), it takes original_data and initial_set_table with set of singletons 
             levels.append(self.__downsample_categorical_data_using_category_sets(levels[i], current_set_table))
 
-        # TODO: store levels list in zarr structure (can be separate function)
-        self.__store_downsampling_level_in_zarr_structure(levels, downsampled_data_group)
+        # store levels list in zarr structure (can be separate function)
+        self.__store_downsampling_levels_in_zarr_structure(levels, downsampled_data_group)
 
-# TODO: make dwnsmpling rate a param and include into lvl dict, make lvl dict a typed dict or class
-    def __store_downsampling_level_in_zarr_structure(self, levels_list: List[DownsamplingLevelDict], downsampled_data_group: zarr.hierarchy.Group):
+    def __store_downsampling_levels_in_zarr_structure(self, levels_list: List[DownsamplingLevelDict], downsampled_data_group: zarr.hierarchy.Group):
         for level_dict in levels_list:
             grid = level_dict.get_grid()
             table = level_dict.get_set_table()
             ratio = level_dict.get_ratio()
 
-            # TODO: check why grid is float values (type?)
             new_level_group: zarr.hierarchy.Group = downsampled_data_group.create_group(str(ratio))
             grid_arr = new_level_group.create_dataset(
                 data=grid,
@@ -437,7 +458,7 @@ class SFFPreprocessor(IDataPreprocessor):
         return union
 
     def __create_downsampling(self, original_data, rate, downsampled_data_group, isCategorical=False):
-        '''Creates zarr array (dataset) filled with downsampled data'''
+        '''Deprecated. Creates zarr array (dataset) filled with downsampled data'''
         # now this function is just for volume data dwnsmpling
 
         # not used as we switch to category-set-downsampling

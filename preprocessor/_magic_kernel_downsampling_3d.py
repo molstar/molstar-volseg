@@ -142,6 +142,9 @@ def __testing_with_dummy_arr():
     
     
 def downsample_using_magic_kernel(arr: np.ndarray, kernel: Tuple[int, int, int, int, int]) -> np.ndarray:
+    '''
+    Returns x2 downsampled data using provided kernel
+    '''
     # empty 3D arr with /2 dimensions compared to original 3D arr
     downsampled_arr = create_x2_downsampled_grid(arr.shape, np.nan)
     target_voxels_coords = extract_target_voxels_coords(arr.shape)
