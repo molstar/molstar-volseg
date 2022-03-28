@@ -47,17 +47,39 @@ def plot_3d_array_color(arr: np.ndarray, arr_name: str):
     # plt.show()
     plt.savefig(Path(f'preprocessor/sample_arr_plots/{arr_name}.png'))
 
+def plot_all_volume_data(volume_data):
+    for arr_name, arr in volume_data.arrays():
+        print(arr_name)
+        print(arr[...])
+    # without it, there still would be a plot, but some runtime error related to sqrt from negative
+        negative_to_zero = arr[...].clip(min=0)
+    
+    # plot_3d_array_grayscale(arr[...], arr_name)
+        plot_3d_array_color(negative_to_zero, arr_name)
+
+def print_segm_values_as_freq_table(arr: np.ndarray):
+    # non_zero_ind = arr.nonzero()
+    # non_zero_values = arr[non_zero_ind]
+    unique, counts = np.unique(arr, return_counts=True)
+    print(np.asarray((unique, counts)).T)
+
+def print_all_segm_data(segm_data):
+    for gr_name, gr in segm_data.groups():
+        print(f'Lattice #{gr_name}')  
+        for dwns_lvl_name, dwns_lvl_gr in gr.groups():
+            print(f'Downsampling level x{dwns_lvl_name}')
+            print_segm_values_as_freq_table(dwns_lvl_gr.grid[...])
+
+
 PATH_TO_SAMPLE_SEGMENTATION = Path('db\emdb\emd-1832')
 
 root = open_zarr_structure_from_path(PATH_TO_SAMPLE_SEGMENTATION)
 volume_data = root._volume_data
 segm_data = root._segmentation_data
 
-for arr_name, arr in volume_data.arrays():
-    print(arr_name)
-    print(arr[...])
-    # without it, there still would be a plot, but some runtime error related to sqrt from negative
-    negative_to_zero = arr[...].clip(min=0)
-    
-    # plot_3d_array_grayscale(arr[...], arr_name)
-    plot_3d_array_color(negative_to_zero, arr_name)
+plot_all_volume_data(volume_data)
+
+print_all_segm_data(segm_data)
+
+
+
