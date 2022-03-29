@@ -5,6 +5,7 @@ class VolumeRequest(IVolumeRequest):
     def __init__(self,
                  source: str,
                  structure_id: str,
+                 segmentation_id: int,
                  x_min: float,
                  y_min: float,
                  z_min: float,
@@ -15,6 +16,7 @@ class VolumeRequest(IVolumeRequest):
                  ):
         self._source = source
         self._structure_id = structure_id
+        self._segmentation_id = segmentation_id
         self._x_min = x_min
         self._y_min = y_min
         self._z_min = z_min
@@ -28,6 +30,9 @@ class VolumeRequest(IVolumeRequest):
 
     def structure_id(self) -> str:
         return self._structure_id
+
+    def segmentation_id(self) -> int:
+        return self._segmentation_id
 
     def x_min(self) -> float:
         return self._x_min

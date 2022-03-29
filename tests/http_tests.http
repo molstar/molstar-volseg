@@ -2,7 +2,7 @@
 
 ###
 
-GET http://127.0.0.1:8000/emdb/emd-1832/box/0/0/0/1/1/1/100
+GET http://127.0.0.1:8000/emdb/emd-1832/box/0/-100/-100/-100/50/50/50/100
 Accept: application/json
 
 > {%
