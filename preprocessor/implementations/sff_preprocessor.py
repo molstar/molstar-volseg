@@ -68,12 +68,27 @@ class SegmentationSetTable:
     
     def __convert_lattice_to_dict_of_sets(self, lattice: np.ndarray) -> Dict:
         '''
-        Converts original latice to dict of singletons
+        Converts original latice to dict of singletons.
+        Each singleton should contain segment ID rather than value used to represent that segment in grid
         '''
+
+        def get_segment_id_by_value(value):
+            '''
+            Finds segment id by the value used in the grid to represent it
+            '''
+            pass
+            
+
         unique_values: list = np.unique(lattice).tolist()
         d = {}
-        for i in unique_values:
-            d[i] = {i}
+        for segment_value in unique_values:
+            pass
+            # here we need a way to access zarr data (segment_list)
+            # and find segment id for each value (traverse dict backwards)
+            # and set d[segment_value] = to the found segment id
+            # That's it
+        
+            # d[i] = {i}
         
         return d
 
@@ -134,6 +149,16 @@ class SFFPreprocessor(IDataPreprocessor):
         map_object = self.__read_volume_map_to_object(volume_file_path)
         normalized_axis_map_object = self.__normalize_axis_order(map_object)
         
+        # TODO: create value-to-segment-id mapping
+        value_to_segment_id_dict = self.__create_value_to_segment_id_mapping(zarr_structure)
+        
+        
+        
+        
+        # TODO: pass that dict to process_segm_data function
+
+
+
         self.__process_segmentation_data(zarr_structure)
         self.__process_volume_data(zarr_structure, normalized_axis_map_object)
         
@@ -141,6 +166,12 @@ class SFFPreprocessor(IDataPreprocessor):
         self.__temp_save_metadata(metadata, self.temp_zarr_structure_path)
 
         return self.temp_zarr_structure_path
+
+    def __create_value_to_segment_id_mapping(zarr_structure):
+        '''
+        Iterates over zarr structure and returns dict with keys=grid values, values=segm ids
+        '''
+        pass
 
     def __normalize_axis_order(self, map_object: gemmi.Ccp4Map):
         '''
@@ -171,10 +202,9 @@ class SFFPreprocessor(IDataPreprocessor):
             MIN_GRID_SIZE,
             input_grid_size=math.prod(volume_arr.shape)
         )
-        self.__create_downsamplings(
-            volume_arr,
-            volume_data_gr,
-            isCategorical=False,
+        self.__create_volume_downsamplings(
+            original_data=volume_arr,
+            downsampled_data_group=volume_data_gr,
             downsampling_steps = volume_downsampling_steps
         )
 
@@ -196,10 +226,9 @@ class SFFPreprocessor(IDataPreprocessor):
             )
             # specific lattice with specific id
             lattice_gr = segm_data_gr.create_group(gr_name)
-            self.__create_downsamplings(
-                segm_arr,
-                lattice_gr,
-                isCategorical=True,
+            self.__create_category_set_downsamplings(
+                original_data = segm_arr,
+                downsampled_data_group=lattice_gr,
                 downsampling_steps = segmentation_downsampling_steps
             )
 
@@ -311,17 +340,6 @@ class SFFPreprocessor(IDataPreprocessor):
         # return block_reduce(arr, block_size=(rate, rate, rate), func=np.mean)
         return downsample_using_magic_kernel(arr, DOWNSAMPLING_KERNEL)
 
-    def __create_downsamplings(self, data: np.ndarray, downsampled_data_group: zarr.hierarchy.group, isCategorical: bool = False, downsampling_steps: int = 1):
-        # iteratively downsample data, create arr for each dwns. level and store data 
-        if isCategorical:
-            # separate function as we need to keep info from previous dwns lvl
-            self.__create_category_set_downsamplings(data, downsampling_steps, downsampled_data_group)
-        else:
-            self.__create_volume_downsamplings(data, downsampling_steps, downsampled_data_group)
-        # # TODO: figure out compression/filters: b64 encoded zlib-zipped .data is just 8 bytes
-        # downsamplings sizes in raw uncompressed state are much bigger 
-        # TODO: figure out what to do with chunks - currently their size is not optimized
-
     def __create_volume_downsamplings(self, original_data: np.ndarray, downsampling_steps: int, downsampled_data_group: zarr.hierarchy.Group):
         '''
         Take original volume data, do all downsampling levels and store in zarr struct one by one
@@ -335,7 +353,9 @@ class SFFPreprocessor(IDataPreprocessor):
             downsampled_data = downsample_using_magic_kernel(current_level_data, DOWNSAMPLING_KERNEL)
             self.__store_single_volume_downsampling_in_zarr_stucture(downsampled_data, downsampled_data_group, current_ratio)
             current_level_data = downsampled_data
-            
+        # # TODO: figure out compression/filters: b64 encoded zlib-zipped .data is just 8 bytes
+        # downsamplings sizes in raw uncompressed state are much bigger 
+        # TODO: figure out what to do with chunks - currently their size is not optimized
 
     def __store_single_volume_downsampling_in_zarr_stucture(self, downsampled_data: np.ndarray, downsampled_data_group: zarr.hierarchy.Group, ratio: int):
         downsampled_data_group.create_dataset(
