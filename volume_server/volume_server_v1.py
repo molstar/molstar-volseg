@@ -3,21 +3,25 @@ from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 from .i_volume_server import IVolumeServer
 from .preprocessed_volume_to_cif.i_volume_to_cif_converter import IVolumeToCifConverter
 from volume_server.requests.volume_request.i_volume_request import IVolumeRequest
+from .requests.metadata_request.i_metadata_request import IMetadataRequest
 
 
 class VolumeServerV1(IVolumeServer):
+    async def get_metadata(self, req: IMetadataRequest) -> IPreprocessedMetadata:
+        return await self.db.read_metadata(req.source(), req.structure_id())
+
     def __init__(self, db: IReadOnlyPreprocessedDb, volume_to_cif: IVolumeToCifConverter):
         self.db = db
         self.volume_to_cif = volume_to_cif
 
-    async def get_volume(self, vr: IVolumeRequest) -> object:  # TODO: add binary cif to the project
-        metadata = await self.db.read_metadata(vr.source(), vr.structure_id())
+    async def get_volume(self, req: IVolumeRequest) -> object:  # TODO: add binary cif to the project
+        metadata = await self.db.read_metadata(req.source(), req.structure_id())
         lattice = self.decide_lattice(metadata)
         down_sampling = self.decide_down_sampling(metadata)
-        grid = self.decide_grid(down_sampling, metadata, vr)
+        grid = self.decide_grid(down_sampling, metadata, req)
         db_slice = await self.db.read_slice(
-            vr.source(),
-            vr.structure_id(),
+            req.source(),
+            req.structure_id(),
             lattice,
             down_sampling,
             grid,
