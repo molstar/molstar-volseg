@@ -3,9 +3,10 @@ from typing import Tuple
 import zarr
 import numpy as np
 import dask.array as da
-from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
+from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb, __open_zarr_structure_from_path
 from timeit import default_timer as timer
 import tensorstore as ts
+import shutil
 
 
 MODES_LIST = [
@@ -20,27 +21,23 @@ CHUNK_SIZES = [25, 50, 100, 400]
 
 TEMP_STORE_PATH = Path(__file__).parents[0] / 'temp' / 'benchmarking_zarr_structure'
 
-
-def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
-    '''
-    np - for 400*** grid - 1*10-5 sec
-    zarr -||-              0.4 sec
-    slicing with dask from_zarr is fastest, at least after 200*** grid
-    '''
+def __generate_dummy_arr(shape: Tuple[int, int, int]) -> np.ndarray:
     np_arr = np.arange(shape[0] * shape[1] * shape[2]).reshape((shape[0], shape[1], shape[2]))
-    
-    start_zarr_structure = timer()
+    return np_arr
+
+def __create_dummy_zarr_structure(path: Path, np_arr: np.ndarray) -> zarr.hierarchy.group:
+    if TEMP_STORE_PATH.exists():
+        shutil.rmtree(TEMP_STORE_PATH)
+
+    # start_zarr_structure = timer()
     store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(TEMP_STORE_PATH))
     zarr_structure: zarr.hierarchy.group = zarr.group(store=store)
 
     # Group for storing zarr arrays
-    dummy_group: zarr.hierarchy.group = zarr_structure.create_group('0')
-    end_zarr_structure =  timer()
-
+    dummy_group: zarr.hierarchy.group = zarr_structure.create_group('zarr_group')
     # Group for storing dask arrays in zarr arrays storage
     dummy_group_for_dask_arr: zarr.hierarchy.group = zarr_structure.create_group('dask_group')
 
-    print(f'CREATING ZARR STRUCTURE: {end_zarr_structure - start_zarr_structure}')
     for chunk_size in CHUNK_SIZES:
         stored_zarr_arr = dummy_group.create_dataset(
             str(chunk_size),
@@ -62,11 +59,23 @@ def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
 
     path: Path = Path(dummy_group.store.path).resolve() / dummy_group.path / 'stored_np_arr'
     zarr.save_array(str(path.resolve()), np_arr)
+    # end_zarr_structure =  timer()
+    # print(f'CREATING ZARR STRUCTURE: {end_zarr_structure - start_zarr_structure}')
 
-    print(f'SHAPE: {shape}')
+
+def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
+    np_arr = __generate_dummy_arr(shape)
+    __create_dummy_zarr_structure(TEMP_STORE_PATH, np_arr)
+    
+    zarr_structure_opening_start = timer()
+    zarr_structure = __open_zarr_structure_from_path(TEMP_STORE_PATH)
+    zarr_structure_opening_end = timer()
+    print(f'OPENING ZARR STRUCTURE: {zarr_structure_opening_end - zarr_structure_opening_start}')
+
+    print(f'ARRAY SHAPE: {shape}')
 
     print(f'---ZARR arrs storing ZARR arrs')
-    for arr_name, arr in dummy_group.arrays():
+    for arr_name, arr in zarr_structure['zarr_group'].arrays():
         print(f'CHUNK SIZE: {arr.chunks}')
         np_arr_slicing(np_arr)
         zarr_arr_slicing(arr)
@@ -79,7 +88,7 @@ def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
         zarr_arr_tensorstore_slicing(arr)
     
     print(f'---ZARR arrs storing DASK arrs')
-    for arr_name, arr in dummy_group_for_dask_arr.arrays():
+    for arr_name, arr in zarr_structure['dask_group'].arrays():
         print(f'CHUNK SIZE: {arr.chunks}')
         np_arr_slicing(np_arr)
         zarr_arr_slicing(arr)
@@ -92,7 +101,7 @@ def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
         zarr_arr_tensorstore_slicing(arr)
         dask_arr_stored_to_zarr_slicing(arr)
 
-    store.rmdir()
+    zarr_structure.store.rmdir()
 
 
 def np_arr_slicing(np_arr: np.ndarray):
@@ -120,7 +129,7 @@ def zarr_arr_to_np_slicing(zarr_arr: zarr.core.Array):
 def zarr_arr_dask_slicing(zarr_arr: zarr.core.Array):
     start = timer()
     zd = da.from_array(zarr_arr, chunks=zarr_arr.chunks)
-    dask_slice = zd[100:300, 100:300, 100:300]
+    dask_slice = zd[100:300, 100:300, 100:300].compute()
     end = timer()
     print(f'zarr_arr arr slicing with dask: {end - start}')
 
@@ -128,7 +137,7 @@ def zarr_arr_dask_slicing(zarr_arr: zarr.core.Array):
 def zarr_arr_dask_from_zarr_slicing(zarr_arr: zarr.core.Array):
     start = timer()
     zd = da.from_zarr(zarr_arr, chunks=zarr_arr.chunks)
-    dask_slice = zd[100:300, 100:300, 100:300]
+    dask_slice = zd[100:300, 100:300, 100:300].compute()
     end = timer()
     print(f'zarr_arr arr slicing with dask from_zarr: {end - start}')
 
@@ -143,7 +152,7 @@ def dask_arr_stored_to_zarr_slicing(zarr_arr: zarr.core.Array):
     # dask_slice = zarr_arr[100:300, 100:300, 100:300]
 
     zd = da.from_zarr(zarr_arr, chunks=zarr_arr.chunks)
-    dask_slice = zd[100:300, 100:300, 100:300]
+    dask_slice = zd[100:300, 100:300, 100:300].compute()
     end = timer()
     print(f'dask arr slicing stored in zarr arr: {end - start}')
     

@@ -1,5 +1,5 @@
 import shutil
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
 from pathlib import Path
 import json
 import zarr
@@ -10,6 +10,7 @@ from timeit import default_timer as timer
 import tensorstore as ts
 
 from preprocessor.implementations.sff_preprocessor import METADATA_FILENAME, SEGMENTATION_DATA_GROUPNAME, VOLUME_DATA_GROUPNAME
+from preprocessor.implementations.sff_preprocessor import open_zarr_structure_from_path
 
 from .local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
 from db.interface.i_preprocessed_db import IPreprocessedDb, ProcessedVolumeSliceData
@@ -87,9 +88,8 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         and slice box (vec3, vec3) 
         '''
         path: Path = self.__path_to_object__(namespace=namespace, key=key)
-        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
-        # Re-create zarr hierarchy from opened store
-        root: zarr.hierarchy.group = zarr.group(store=store)
+        root: zarr.hierarchy.group = open_zarr_structure_from_path(path)
+
         segm_arr: zarr.core.Array = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio]
         volume_arr: zarr.core.Array = root[VOLUME_DATA_GROUPNAME][down_sampling_ratio]
         
@@ -201,9 +201,10 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         ].read().result()
         return sliced
 
-    def __get_path_to_zarr_object(self, zarr_obj: zarr.core.Array) -> Path:
+    def __get_path_to_zarr_object(self, zarr_obj: Union[zarr.hierarchy.Group, zarr.core.Array]) -> Path:
         '''
         Returns Path to zarr object (array or group)
         '''
         path: Path = Path(zarr_obj.store.path).resolve() / zarr_obj.path
         return path
+
