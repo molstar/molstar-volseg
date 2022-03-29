@@ -47,17 +47,37 @@ def plot_3d_array_color(arr: np.ndarray, arr_name: str):
     # plt.show()
     plt.savefig(Path(f'preprocessor/sample_arr_plots/{arr_name}.png'))
 
-def plot_all_volume_data(volume_data):
-    for arr_name, arr in volume_data.arrays():
-        print(arr_name)
-        print(arr[...])
-    # without it, there still would be a plot, but some runtime error related to sqrt from negative
-        negative_to_zero = arr[...].clip(min=0)
-    
-    # plot_3d_array_grayscale(arr[...], arr_name)
-        plot_3d_array_color(negative_to_zero, arr_name)
+def normalize_absolute_value(original_value, mean_v, std_v):
+    '''
+    Value = (value - mean)/std
+    '''
+    value = (original_value - mean_v) / std_v
+    return value
 
-def print_segm_values_as_freq_table(arr: np.ndarray):
+def plot_all_volume_data(volume_data):
+    # just remove negative and plot all as absolute values
+    for arr_name, arr in volume_data.arrays():
+        no_negative = arr[...].clip(min=0)
+        plot_3d_array_color(no_negative, f'{arr_name}_abs_val')
+
+    # calc mean & std and adjust on it first, then set negative values to zero
+    for arr_name, arr in volume_data.arrays():
+        mean_val = np.mean(arr[...])
+        std_val =  np.std(arr[...])
+        normalized_arr = np.array([normalize_absolute_value(x, mean_val, std_val) for x in arr[...]])
+        no_negative = normalized_arr.clip(min=0)
+        plot_3d_array_color(no_negative, f'{arr_name}_adjust_then_negative_to_zero')
+
+    # set negative values to zero first, then calc mean & std and adjust on it
+    for arr_name, arr in volume_data.arrays():
+        no_negative = arr[...].clip(min=0)
+        mean_val = np.mean(no_negative)
+        std_val =  np.std(no_negative)
+        normalized_arr = np.array([normalize_absolute_value(x, mean_val, std_val) for x in no_negative])
+        plot_3d_array_color(normalized_arr, f'{arr_name}_negative_to_zero_then_adjust')
+
+
+def print_arr_values_as_freq_table(arr: np.ndarray):
     # non_zero_ind = arr.nonzero()
     # non_zero_values = arr[non_zero_ind]
     unique, counts = np.unique(arr, return_counts=True)
@@ -68,7 +88,7 @@ def print_all_segm_data(segm_data):
         print(f'Lattice #{gr_name}')  
         for dwns_lvl_name, dwns_lvl_gr in gr.groups():
             print(f'Downsampling level x{dwns_lvl_name}')
-            print_segm_values_as_freq_table(dwns_lvl_gr.grid[...])
+            print_arr_values_as_freq_table(dwns_lvl_gr.grid[...])
 
 
 PATH_TO_SAMPLE_SEGMENTATION = Path('db\emdb\emd-1832')
