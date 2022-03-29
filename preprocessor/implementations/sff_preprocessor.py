@@ -224,13 +224,20 @@ class SFFPreprocessor(IDataPreprocessor):
     def __extract_metadata(self, zarr_structure: zarr.hierarchy.group, map_object) -> Dict:
         root = zarr_structure
         volume_downsamplings = sorted(root[VOLUME_DATA_GROUPNAME].array_keys())
+        # convert to ints
+        volume_downsamplings = [int(x) for x in volume_downsamplings] 
 
         lattice_dict = {}
         lattice_ids = []
         for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
             # each key is lattice id
             lattice_id = int(gr_name)
-            lattice_dict[lattice_id] = sorted(gr.group_keys())
+
+            segm_downsamplings = sorted(gr.group_keys())
+            # convert to ints
+            segm_downsamplings = [int(x) for x in segm_downsamplings]
+
+            lattice_dict[lattice_id] = segm_downsamplings
             lattice_ids.append(lattice_id)
 
         d = self.__read_ccp4_words_to_dict(map_object)
