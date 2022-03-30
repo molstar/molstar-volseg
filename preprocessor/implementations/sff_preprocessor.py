@@ -84,9 +84,6 @@ class SegmentationSetTable:
             # here we need a way to access zarr data (segment_list)
             # and find segment id for each value (traverse dict backwards)
             # and set d[segment_value] = to the found segment id
-            # That's it
-        
-            # d[i] = {i}
         
         return d
 

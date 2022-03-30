@@ -13,7 +13,7 @@ from preprocessor.implementations.sff_preprocessor import METADATA_FILENAME, SEG
 from preprocessor.implementations.sff_preprocessor import open_zarr_structure_from_path
 
 from .local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
-from db.interface.i_preprocessed_db import IPreprocessedDb, ProcessedVolumeSliceData
+from db.interface.i_preprocessed_db import IPreprocessedDb, ProcessedVolumeSliceData, SegmentationSliceData
 from ...interface.i_preprocessed_medatada import IPreprocessedMetadata
 
 
@@ -73,7 +73,6 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         
         read_segm_arr: np.ndarray = root[SEGMENTATION_DATA_GROUPNAME][lattice_id]
         read_volume_arr: np.ndarray = root[VOLUME_DATA_GROUPNAME]
-        # TODO: rewrite return when LocalDiskPreprocessedVolume is changed to Pydantic/built-in data model
         # both volume and segm data
         return {
             'segmentation': read_segm_arr,
@@ -89,15 +88,20 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         '''
         path: Path = self.__path_to_object__(namespace=namespace, key=key)
         root: zarr.hierarchy.group = open_zarr_structure_from_path(path)
-
-        segm_arr: zarr.core.Array = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio]
+        # TODO: segm arr will change address as there going to be a group for each ratio instead of zarr arr
+        # TODO: in that group there should be arr of "values" and dict object
+        segm_arr: zarr.core.Array = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].grid
+        segm_dict: Dict = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].set_table[0]
         volume_arr: zarr.core.Array = root[VOLUME_DATA_GROUPNAME][down_sampling_ratio]
         
+        # TODO: segm slice would be TypedDict (arr + dict with sets)
         segm_slice: np.ndarray
         volume_slice: np.ndarray
         start = timer()
         if mode == 'zarr_colon':
             # 2: zarr slicing via : notation
+            # TODO: here and in each mode: change impl of segm slice: get_slice from segm_arr separately
+            # and then get the corresponding dict (json obj from that group) which explain the meaning of "values" in segm_arr (pointers to sets in dict)
             segm_slice = self.__get_slice_from_zarr_three_d_arr(arr=segm_arr, box=box)
             volume_slice = self.__get_slice_from_zarr_three_d_arr(arr=volume_arr, box=box)
         elif mode == 'zarr_gbs':
@@ -121,7 +125,10 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         print(f'read_slice with mode {mode}: {end - start}')
 
         return {
-            "segmentation_slice": segm_slice,
+            "segmentation_slice": {
+                "category_set_ids": segm_slice,
+                "category_set_dict": segm_dict
+            },
             "volume_slice": volume_slice
         }
 

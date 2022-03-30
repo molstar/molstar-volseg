@@ -6,11 +6,16 @@ import numpy as np
 
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 
+class SegmentationSliceData(TypedDict):
+    # array with set ids
+    category_set_ids: np.ndarray
+    # dict mapping set ids to the actual segment ids (e.g. for set id=1, there may be several segment ids)
+    category_set_dict: Dict
 
 class ProcessedVolumeSliceData(TypedDict):
-    segmentation_slice: np.ndarray
+    # changed segm slice to another typeddict
+    segmentation_slice: SegmentationSliceData
     volume_slice: np.ndarray
-
 
 class IReadOnlyPreprocessedDb(abc.ABC):
     @abc.abstractmethod

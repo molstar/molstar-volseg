@@ -1,4 +1,5 @@
 from asgiref.sync import async_to_sync
+import asyncio
 
 from pathlib import Path
 from typing import Dict
@@ -86,9 +87,26 @@ def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path) -> Non
             )
             async_to_sync(db.store)(namespace=source_name, key=entry['id'], temp_store_path=processed_data_temp_path)
 
+async def check_read_slice(db: LocalDiskPreprocessedDb):
+    box = ((0, 0, 0), (10, 10, 10), (10, 10, 10))
+    slice = await db.read_slice(
+        'emdb',
+        'emd-1832',
+        0,
+        2,
+        box
+    )
+    # print(slice)
+    return slice
+
+
 if __name__ == '__main__':
     db = LocalDiskPreprocessedDb()
     preprocess_everything(db, RAW_INPUT_FILES_DIR)
+    # uncomment to check read slice method
+    # slice = asyncio.run(check_read_slice(db))
+    # print(slice)
+    
     # event loop works, while async to sync returns Metadata class
     # https://stackoverflow.com/questions/44048536/python3-get-result-from-async-method
     # metadata = async_to_sync(db.read_metadata)(namespace='emdb', key='emd-1832')
