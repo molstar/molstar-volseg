@@ -52,10 +52,10 @@ class DownsamplingLevelDict:
         return self.downsampling_ratio
 
 class SegmentationSetTable:
-    def __init__(self, lattice):
+    def __init__(self, lattice, value_to_segment_id_dict_for_specific_lattice_id):
+        self.value_to_segment_id_dict = value_to_segment_id_dict_for_specific_lattice_id
         self.entries: Dict = self.__convert_lattice_to_dict_of_sets(lattice)
-        # figure out how to create entries upon initialization given the original segm lattice
-
+        
     def get_serializable_repr(self) -> Dict:
         '''
         Converts sets in self.entries to lists, and returns the whole table as a dict
@@ -69,20 +69,18 @@ class SegmentationSetTable:
     def __convert_lattice_to_dict_of_sets(self, lattice: np.ndarray) -> Dict:
         '''
         Converts original latice to dict of singletons.
-        Each singleton should contain segment ID rather than value used to represent that segment in grid
+        Each singleton should contain segment ID rather than value
+         used to represent that segment in grid
         '''
 
-        def get_segment_id_by_value(value):
-            '''
-            Finds segment id by the value used in the grid to represent it
-            '''
-            pass
-            
-
         unique_values: list = np.unique(lattice).tolist()
+        # value 0 is not assigned to any segment, it is just nothing
         d = {}
-        for segment_value in unique_values:
-            pass
+        for grid_value_of_segment in unique_values:
+            if grid_value_of_segment == 0:
+                d[grid_value_of_segment] = {0}
+            else:
+                d[grid_value_of_segment] = {self.value_to_segment_id_dict[grid_value_of_segment]}
             # here we need a way to access zarr data (segment_list)
             # and find segment id for each value (traverse dict backwards)
             # and set d[segment_value] = to the found segment id
@@ -149,16 +147,6 @@ class SFFPreprocessor(IDataPreprocessor):
         map_object = self.__read_volume_map_to_object(volume_file_path)
         normalized_axis_map_object = self.__normalize_axis_order(map_object)
         
-        # TODO: create value-to-segment-id mapping
-        value_to_segment_id_dict = self.__create_value_to_segment_id_mapping(zarr_structure)
-        
-        
-        
-        
-        # TODO: pass that dict to process_segm_data function
-
-
-
         self.__process_segmentation_data(zarr_structure)
         self.__process_volume_data(zarr_structure, normalized_axis_map_object)
         
@@ -167,11 +155,22 @@ class SFFPreprocessor(IDataPreprocessor):
 
         return self.temp_zarr_structure_path
 
-    def __create_value_to_segment_id_mapping(zarr_structure):
+    def __create_value_to_segment_id_mapping(self, zarr_structure):
         '''
-        Iterates over zarr structure and returns dict with keys=grid values, values=segm ids
+        Iterates over zarr structure and returns dict with 
+        keys=lattice_id, and for each lattice id => keys=grid values, values=segm ids
         '''
-        pass
+        root = zarr_structure
+        d = {}
+        for segment_name, segment in root.segment_list.groups():
+            lat_id = int(segment.three_d_volume.lattice_id[...])
+            value = int(segment.three_d_volume.value[...])
+            segment_id = int(segment.id[...])
+            if lat_id not in d:
+                d[lat_id] = {}
+            d[lat_id][value] = segment_id
+        # print(d)
+        return d
 
     def __normalize_axis_order(self, map_object: gemmi.Ccp4Map):
         '''
@@ -213,8 +212,11 @@ class SFFPreprocessor(IDataPreprocessor):
         Extracts segmentation data from lattice, downsamples it, stores to zarr structure
         '''
         segm_data_gr: zarr.hierarchy.group = zarr_structure.create_group(SEGMENTATION_DATA_GROUPNAME)
-        
+        value_to_segment_id_dict = self.__create_value_to_segment_id_mapping(zarr_structure)
+
         for gr_name, gr in zarr_structure.lattice_list.groups():
+            # gr is a 'lattice' obj in lattice list
+            lattice_id = int(gr.id[...])
             segm_arr = self.__lattice_data_to_np_arr(
                 gr.data[0],
                 gr.mode[0],
@@ -229,7 +231,8 @@ class SFFPreprocessor(IDataPreprocessor):
             self.__create_category_set_downsamplings(
                 original_data = segm_arr,
                 downsampled_data_group=lattice_gr,
-                downsampling_steps = segmentation_downsampling_steps
+                downsampling_steps = segmentation_downsampling_steps,
+                value_to_segment_id_dict_for_specific_lattice_id = value_to_segment_id_dict[lattice_id]
             )
 
     def __compute_number_of_downsampling_steps(self, min_grid_size: int, input_grid_size: int) -> int:
@@ -367,12 +370,18 @@ class SFFPreprocessor(IDataPreprocessor):
             chunks=(50, 50, 50)
         )
 
-    def __create_category_set_downsamplings(self, original_data: np.ndarray, downsampling_steps: int, downsampled_data_group: zarr.hierarchy.Group):
+    def __create_category_set_downsamplings(
+        self,
+        original_data: np.ndarray,
+        downsampling_steps: int,
+        downsampled_data_group: zarr.hierarchy.Group,
+        value_to_segment_id_dict_for_specific_lattice_id: Dict
+        ):
         '''
         Take original segmentation data, do all downsampling levels, create zarr datasets for each
         '''
         # table with just singletons, e.g. "104": {104}, "94" :{94}
-        initial_set_table = SegmentationSetTable(original_data)
+        initial_set_table = SegmentationSetTable(original_data, value_to_segment_id_dict_for_specific_lattice_id)
         
         # to make it uniform int32 with other level grids
         original_data = original_data.astype(np.int32)
@@ -382,7 +391,7 @@ class SFFPreprocessor(IDataPreprocessor):
             DownsamplingLevelDict({'ratio': 1, 'grid': original_data, 'set_table': initial_set_table})
             ]
         for i in range(downsampling_steps):
-            current_set_table = SegmentationSetTable(original_data)
+            current_set_table = SegmentationSetTable(original_data, value_to_segment_id_dict_for_specific_lattice_id)
             # on first iteration (i.e. when doing x2 downsampling), it takes original_data and initial_set_table with set of singletons 
             levels.append(self.__downsample_categorical_data_using_category_sets(levels[i], current_set_table))
 
