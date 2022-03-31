@@ -148,6 +148,12 @@ def downsample_using_magic_kernel(arr: np.ndarray, kernel: Tuple[int, int, int, 
     # empty 3D arr with /2 dimensions compared to original 3D arr
     downsampled_arr = create_x2_downsampled_grid(arr.shape, np.nan)
     target_voxels_coords = extract_target_voxels_coords(arr.shape)
+
+    #TODO: optimize using https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.convolve.html instead of for loop (for 1000**3 it consumes 12GB RAM)
+    # Or use generator (expression or generator function
+    # https://www.lachlaneagling.com/reducing-memory-consumption-python/
+    # https://stackoverflow.com/questions/37156574/why-does-a-generator-expression-need-a-lot-of-memory
+
     for voxel_coords in target_voxels_coords:
         inner_layer_voxel_coords = get_voxel_coords_at_radius(voxel_coords, 1, arr.shape)
         outer_layer_voxel_coords = get_voxel_coords_at_radius(voxel_coords, 2, arr.shape)
