@@ -1,6 +1,7 @@
 from typing import List, Dict
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 
+
 class LocalDiskPreprocessedMetadata(IPreprocessedMetadata):
     def __init__(self, raw_metadata: Dict):
         self.raw_metadata = raw_metadata

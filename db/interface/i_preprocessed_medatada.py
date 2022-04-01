@@ -1,15 +1,5 @@
 import abc
-from typing import List, TypedDict
-
-# TODO: when retriving annotations, remember that in dict value = 0 is assigned segm id = 0, but
-# there is no such segment in annotation. Leave it like this or switch to None.
-# it simply should be taken into account when retriving annotations for a segment id
-# e.g. if segm_id == 0 => return None or don't allow to put < 1 as argument to method retrieving annotation
-class AnnotationAndMetadata(TypedDict):
-    pass
-    # TODO: define a structure
-
-# TODO: define sequentially inner TypedDicts
+from typing import List
 
 
 class IPreprocessedMetadata(abc.ABC):
@@ -45,10 +35,3 @@ class IPreprocessedMetadata(abc.ABC):
         Returns the number of points along each axis (X, Y, Z)
         '''
         pass    
-    
-    @abc.abstractmethod
-    def annotations_and_metadata(self) -> AnnotationAndMetadata:
-        '''
-        Returns all annotations/metadata as a typedDict
-        '''
-        pass

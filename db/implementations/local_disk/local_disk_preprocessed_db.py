@@ -132,13 +132,20 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             "volume_slice": volume_slice
         }
 
-    async def read_metadata(self, namespace: str, key: str) -> IPreprocessedMetadata:
-        path: Path = self.__path_to_object__(namespace=namespace, key=key) / 'metadata.json'
+    async def read_grid_metadata(self, namespace: str, key: str) -> IPreprocessedMetadata:
+        path: Path = self.__path_to_object__(namespace=namespace, key=key) / GRID_METADATA_FILENAME
         with open(path.resolve(), 'r', encoding='utf-8') as f:
             # reads into dict
             read_json_of_metadata: Dict = json.load(f)
         return LocalDiskPreprocessedMetadata(read_json_of_metadata)
     
+    async def read_annotation_metadata(self, namespace: str, key: str) -> Dict:
+        path: Path = self.__path_to_object__(namespace=namespace, key=key) / ANNOTATION_METADATA_FILENAME
+        with open(path.resolve(), 'r', encoding='utf-8') as f:
+            # reads into dict
+            read_json_of_metadata: Dict = json.load(f)
+        return read_json_of_metadata
+
     def __get_slice_from_zarr_three_d_arr(self, arr: zarr.core.Array, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
         '''
         Based on (vec3, vec3) tuple (coordinates of corners of the box)
