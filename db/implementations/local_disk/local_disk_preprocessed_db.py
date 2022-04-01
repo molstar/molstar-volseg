@@ -9,7 +9,7 @@ import dask.array as da
 from timeit import default_timer as timer
 import tensorstore as ts
 
-from preprocessor.implementations.sff_preprocessor import METADATA_FILENAME, SEGMENTATION_DATA_GROUPNAME, VOLUME_DATA_GROUPNAME
+from preprocessor.implementations.sff_preprocessor import ANNOTATION_METADATA_FILENAME, GRID_METADATA_FILENAME, SEGMENTATION_DATA_GROUPNAME, VOLUME_DATA_GROUPNAME
 from preprocessor.implementations.sff_preprocessor import open_zarr_structure_from_path
 
 from .local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
@@ -48,8 +48,8 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         zarr.copy_store(temp_store, perm_store, log=stdout)
 
         # TODO: shutil should work with Path objects, but just in case
-        shutil.copy2(temp_store_path / METADATA_FILENAME, self.__path_to_object__(namespace, key) / METADATA_FILENAME)
-
+        shutil.copy2(temp_store_path / GRID_METADATA_FILENAME, self.__path_to_object__(namespace, key) / GRID_METADATA_FILENAME)
+        shutil.copy2(temp_store_path / ANNOTATION_METADATA_FILENAME, self.__path_to_object__(namespace, key) / ANNOTATION_METADATA_FILENAME)
         # TODO: check if temp dir will be correctly removed and read at the beginning, given that there is a JSON file inside
         # temp_store.close()
         # perm_store.close()

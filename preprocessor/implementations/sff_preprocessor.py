@@ -17,11 +17,12 @@ import math
 from preprocessor._magic_kernel_downsampling_3d import downsample_using_magic_kernel, extract_target_voxels_coords, create_x2_downsampled_grid
 from skimage.util import view_as_blocks
 import copy
-
+from sfftkrw import SFFSegmentation
 
 VOLUME_DATA_GROUPNAME = '_volume_data'
 SEGMENTATION_DATA_GROUPNAME = '_segmentation_data'
-METADATA_FILENAME = 'metadata.json'
+GRID_METADATA_FILENAME = 'grid_metadata.json'
+ANNOTATION_METADATA_FILENAME = 'annotation_metadata.json'
 # should be 100**3, but temporarly set to 32 to check at least x4 downsampling with 64**3 emd-1832 grid
 MIN_GRID_SIZE = 32 **3
 DOWNSAMPLING_KERNEL = (1, 4, 6, 4, 1)
@@ -147,8 +148,11 @@ class SFFPreprocessor(IDataPreprocessor):
         self.__process_segmentation_data(zarr_structure)
         self.__process_volume_data(zarr_structure, normalized_axis_map_object)
         
-        metadata = self.__extract_metadata(zarr_structure, normalized_axis_map_object)
-        self.__temp_save_metadata(metadata, self.temp_zarr_structure_path)
+        grid_metadata = self.__extract_grid_metadata(zarr_structure, normalized_axis_map_object)
+        self.__temp_save_metadata(grid_metadata, GRID_METADATA_FILENAME, self.temp_zarr_structure_path)
+
+        annotation_metadata = self.__extract_annotation_metadata(segm_file_path)
+        self.__temp_save_metadata(annotation_metadata, ANNOTATION_METADATA_FILENAME, self.temp_zarr_structure_path)
 
         return self.temp_zarr_structure_path
 
@@ -250,7 +254,32 @@ class SFFPreprocessor(IDataPreprocessor):
         d['MAPC'], d['MAPR'], d['MAPS'] = m.header_i32(17), m.header_i32(18), m.header_i32(19)
         return d
 
-    def __extract_metadata(self, zarr_structure: zarr.hierarchy.group, map_object) -> Dict:
+    def __extract_annotation_metadata(self, segm_file_path: Path) -> Dict:
+        '''Returns processed dict of annotation metadata (some fields are removed)'''
+        segm_obj = self.__open_hdf5_as_segmentation_object(segm_file_path)
+        segm_dict = segm_obj.as_json()
+        for lattice in segm_dict['lattice_list']:
+            del lattice['data']
+
+        return segm_dict
+        # root = zarr_structure
+        # root.visititems(__visitior_function_for_annotation_metadata)
+    
+        # d = {}
+        # def __visitior_function_for_annotation_metadata(name: str, zarr_obj) -> None:
+        #     '''Helper function for creating JSON with metadata'''
+        #     zarr_obj_name = str(zarr_obj.name.split('/')[-1])
+        
+        #     if isinstance(zarr_obj, zarr.core.Array):
+        #         d[zarr_obj_name] = zarr_obj[0]
+        #     elif isinstance(zarr_obj, zarr.hierarchy.Group):
+        #         # d[lattice]
+        #         pass
+        #     else:
+        #         raise Exception('zarr object should be either group or array')
+
+
+    def __extract_grid_metadata(self, zarr_structure: zarr.hierarchy.group, map_object) -> Dict:
         root = zarr_structure
         volume_downsamplings = sorted(root[VOLUME_DATA_GROUPNAME].array_keys())
         # convert to ints
@@ -305,8 +334,8 @@ class SFFPreprocessor(IDataPreprocessor):
             'grid_dimensions': grid_dimensions,
         }
 
-    def __temp_save_metadata(self, metadata: Dict, temp_dir_path: Path) -> None:
-        with (temp_dir_path / METADATA_FILENAME).open('w') as fp:
+    def __temp_save_metadata(self, metadata: Dict, metadata_filename: Path, temp_dir_path: Path) -> None:
+        with (temp_dir_path / metadata_filename).open('w') as fp:
             json.dump(metadata, fp)
 
     def __read_volume_data(self, m) -> np.ndarray:
@@ -522,6 +551,9 @@ class SFFPreprocessor(IDataPreprocessor):
         hdf5_file: h5py.File = h5py.File(file_path, mode='r')
         hdf5_file.visititems(self.__visitor_function)
         hdf5_file.close()
+    
+    def __open_hdf5_as_segmentation_object(self, file_path: Path) -> SFFSegmentation:
+        return SFFSegmentation.from_file(str(file_path.resolve()))
 
     def __visitor_function(self, name: str, node: h5py.Dataset) -> None:
         '''
