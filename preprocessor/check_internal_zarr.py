@@ -35,6 +35,7 @@ def plot_3d_array_grayscale(arr: np.ndarray, arr_name: str):
 
     plt.show()
     plt.savefig(f'{arr_name}.png')
+    plt.close()
 
 def plot_3d_array_color(arr: np.ndarray, arr_name: str):
     # source: https://stackoverflow.com/questions/45969974/what-is-the-most-efficient-way-to-plot-3d-array-in-python
@@ -43,9 +44,10 @@ def plot_3d_array_color(arr: np.ndarray, arr_name: str):
     ax = fig.add_subplot(projection="3d")
     space = np.array([*product(range(shape[0]), range(shape[1]), range(shape[2]))]) # all possible triplets of numbers from 0 to N-1
     volume = arr
-    ax.scatter(space[:,0], space[:,1], space[:,2], c=space/max(shape), s=volume*100)
+    ax.scatter(space[:,0], space[:,1], space[:,2], c=space/max(shape), s=volume*3)
     # plt.show()
     plt.savefig(Path(f'preprocessor/sample_arr_plots/{arr_name}.png'))
+    plt.close()
 
 def normalize_absolute_value(original_value, mean_v, std_v):
     '''
@@ -85,11 +87,11 @@ def plot_all_segmentation_data(segmentation_data, zarr_structure):
                 masked_arr = d[lattice_id][dwns_lvl][segment_id]
                 plot_3d_array_color(masked_arr, f'{lattice_id}_x{dwns_lvl}_segment_{segment_id}.png')
 
-def print_arr_values_as_freq_table(arr: np.ndarray):
+def get_arr_values_as_freq_table(arr: np.ndarray):
     # non_zero_ind = arr.nonzero()
     # non_zero_values = arr[non_zero_ind]
     unique, counts = np.unique(arr, return_counts=True)
-    print(np.asarray((unique, counts)).T)
+    return np.asarray((unique, counts)).T
 
 def _convert_all_segmentation_data_to_per_segment_masked_arrs(segm_data, zarr_structure):
     root = zarr_structure

@@ -285,6 +285,16 @@ class SFFPreprocessor(IDataPreprocessor):
         # convert to ints
         volume_downsamplings = [int(x) for x in volume_downsamplings] 
 
+        # TODO:
+        mean_dict = {}
+        std_dict = {}
+
+        for arr_name, arr in root[VOLUME_DATA_GROUPNAME].arrays():
+            mean_val = str(np.mean(arr[...]))
+            std_val =  str(np.std(arr[...]))
+            mean_dict[str(arr_name)] = mean_val
+            std_dict[str(arr_name)] = std_val
+
         lattice_dict = {}
         lattice_ids = []
         for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
@@ -332,6 +342,8 @@ class SFFPreprocessor(IDataPreprocessor):
             'voxel_size': voxel_sizes_in_downsamplings,
             'origin': origin,
             'grid_dimensions': grid_dimensions,
+            'mean': mean_dict,
+            'std': std_dict
         }
 
     def __temp_save_metadata(self, metadata: Dict, metadata_filename: Path, temp_dir_path: Path) -> None:
