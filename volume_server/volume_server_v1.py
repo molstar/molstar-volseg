@@ -1,3 +1,5 @@
+from math import ceil
+
 from db.interface.i_preprocessed_db import IReadOnlyPreprocessedDb
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 from .i_volume_server import IVolumeServer
@@ -8,14 +10,14 @@ from .requests.metadata_request.i_metadata_request import IMetadataRequest
 
 class VolumeServerV1(IVolumeServer):
     async def get_metadata(self, req: IMetadataRequest) -> IPreprocessedMetadata:
-        return await self.db.read_metadata(req.source(), req.structure_id())
+        return await self.db.read_grid_metadata(req.source(), req.structure_id())
 
     def __init__(self, db: IReadOnlyPreprocessedDb, volume_to_cif: IVolumeToCifConverter):
         self.db = db
         self.volume_to_cif = volume_to_cif
 
     async def get_volume(self, req: IVolumeRequest) -> object:  # TODO: add binary cif to the project
-        metadata = await self.db.read_metadata(req.source(), req.structure_id())
+        metadata = await self.db.read_grid_metadata(req.source(), req.structure_id())
         lattice = self.decide_lattice(req, metadata)
         grid = self.decide_grid(req, metadata)
         print("Converted grid to: " + str(grid))
@@ -51,15 +53,16 @@ class VolumeServerV1(IVolumeServer):
         # TODO: it seems that downsamplings are strings -> check and fix
 
         down_samplings = metadata.volume_downsamplings()
-        if not req.max_size_kb():
+        if not req.max_points():
             return 1 if '1' in down_samplings else int(down_samplings[0])
 
         grid_x = original_grid[1][0] - original_grid[0][0]
         grid_y = original_grid[1][1] - original_grid[0][1]
         grid_z = original_grid[1][2] - original_grid[0][2]
 
-        # TODO: improve rounding depending on conservative, strict, etc approach on bytes rule
-        desired_down_sampling = round(self._bytes_for_grid_size(grid_x * grid_y * grid_z)/(req.max_size_kb()*1024))
+        grid_size = grid_x * grid_y * grid_z
+        # TODO: improve rounding depending on conservative, strict, etc approach
+        desired_down_sampling = ceil(grid_size/req.max_points())
 
         for ds in down_samplings:
             if int(ds) >= desired_down_sampling:
@@ -83,7 +86,6 @@ class VolumeServerV1(IVolumeServer):
 
         result: list[list] = []
 
-        #T TODO: optimize if needed
         if down_sampling > 1:
             for i in range(2):
                 result.append([])
@@ -91,11 +93,6 @@ class VolumeServerV1(IVolumeServer):
                     result[i].append(round(original_grid[i][j]/2))
 
         return result
-
-
-
-    def _bytes_for_grid_size(self, grid_size: int) -> float:
-        return grid_size * 2 # TODO estimate based on encoding
 
     def _float_to_grid(self, origin: float, step: float, grid_size: int, to_convert: float) -> int:
         if to_convert < origin:

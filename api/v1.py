@@ -11,7 +11,7 @@ from volume_server.requests.volume_request.volume_request import VolumeRequest
 
 
 def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
-    @app.get("/{source}/{id}/box/{segmentation}/{a1}/{a2}/{a3}/{b1}/{b2}/{b3}/{max_size_kb}")
+    @app.get("/{source}/{id}/box/{segmentation}/{a1}/{a2}/{a3}/{b1}/{b2}/{b3}/{max_points}")
     async def get_volume(
             source: str,
             id: str,
@@ -22,9 +22,9 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
             b1: float,
             b2: float,
             b3: float,
-            max_size_kb: Optional[int] = 0
+            max_points: Optional[int] = 0
     ):
-        request = VolumeRequest(source, id, segmentation, a1, a2, a3, b1, b2, b3, max_size_kb)
+        request = VolumeRequest(source, id, segmentation, a1, a2, a3, b1, b2, b3, max_points)
         requested_slice = await volume_server.get_volume(request)
 
         # TODO: serialize
