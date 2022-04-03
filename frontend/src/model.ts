@@ -46,7 +46,6 @@ export class AppModel {
     }
 
     createSegment(volume: Volume, level: number): Volume {
-        console.log(level);
         const { mean, sigma } = volume.grid.stats;
         const { data, space } = volume.grid.cells;
         const newData = new Float32Array(data.length);
@@ -63,18 +62,14 @@ export class AppModel {
             }   
         }
 
-        // for (let i = 0; i < newData.length; i++) {
-        //     const v = Math.floor((data[i] - mean) / sigma) === level ? 1 : 0;
-        //     newData[i] = v;
-        // }
-
         return {
             sourceData: { kind: 'custom', name: 'test', data: newData as any },
             customProperties: new CustomProperties(),
             _propertyData: {},
             grid: {
                 ...volume.grid,
-                stats: { min: 0, max: 1, mean: arrayMean(newData), sigma: arrayRms(newData) },
+                //stats: { min: 0, max: 1, mean: newMean, sigma: arrayRms(newData) },
+                stats: { min: 0, max: 1, mean: 0, sigma: 1 },
                 cells: {
                     ...volume.grid.cells,
                     data: newData as any,
@@ -98,37 +93,38 @@ export class AppModel {
         const root = update.toRoot().apply(CreateVolume, { volume });
         this.currentLevel = root.selector;
 
-        // root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
-        //     type: 'isosurface',
-        //     typeParams: { alpha: 1, isoValue: Volume.IsoValue.absolute(0.5) },
-        //     color: 'uniform',
-        //     colorParams: { value: Color(Math.round(Math.random() * 0xffffff)) }
-        // }));
-
-        const controlPoints: Vec2[] = [
-            Vec2.create(0, 0),
-            Vec2.create(0.5, 0),
-            Vec2.create(0.98, 1),
-            Vec2.create(1.1, 1),
-        ]
-
-        // const list = {
-        //     kind: 'interpolate' as const,
-        //     colors: [
-        //         [Color(0x0), 0]
-        //     ]
-        // }
-
         root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
-            type: 'direct-volume',
-            typeParams: { 
-                ignoreLight: true,
-                stepsPerCell: 2,
-                controlPoints,
-            },
+            type: 'isosurface',
+            typeParams: { alpha: 1, isoValue: Volume.IsoValue.absolute(0.95) },
             color: 'uniform',
             colorParams: { value: Color(Math.round(Math.random() * 0xffffff)) }
         }));
+
+        // const controlPoints: Vec2[] = [
+        //     Vec2.create(0, 0),
+        //     Vec2.create(0.5, 0),
+        //     Vec2.create(0.98, 1),
+        //     Vec2.create(1.1, 1),
+        // ]
+
+        // // const list = {
+        // //     kind: 'interpolate' as const,
+        // //     colors: [
+        // //         [Color(0x0), 0]
+        // //     ]
+        // // }
+
+        // root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
+        //     type: 'direct-volume',
+        //     typeParams: { 
+        //         ignoreLight: true,
+        //         stepsPerCell: 1,
+        //         controlPoints,
+        //         xrayShaded: false,
+        //     },
+        //     color: 'uniform',
+        //     colorParams: { value: Color(Math.round(Math.random() * 0xffffff)) }
+        // }));
 
         await update.commit();
     }
