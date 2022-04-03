@@ -9,8 +9,10 @@ from .requests.metadata_request.i_metadata_request import IMetadataRequest
 
 
 class VolumeServerV1(IVolumeServer):
-    async def get_metadata(self, req: IMetadataRequest) -> IPreprocessedMetadata:
-        return await self.db.read_grid_metadata(req.source(), req.structure_id())
+    async def get_metadata(self, req: IMetadataRequest) -> object:
+        metadata = await self.db.read_grid_metadata(req.source(), req.structure_id())
+        converted = self.volume_to_cif.convert_metadata(metadata)
+        return converted
 
     def __init__(self, db: IReadOnlyPreprocessedDb, volume_to_cif: IVolumeToCifConverter):
         self.db = db
