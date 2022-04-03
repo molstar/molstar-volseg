@@ -1,6 +1,8 @@
 import abc
 from typing import List
 
+import numpy as np
+
 
 class IPreprocessedMetadata(abc.ABC):
     @abc.abstractmethod
@@ -34,4 +36,14 @@ class IPreprocessedMetadata(abc.ABC):
         '''
         Returns the number of points along each axis (X, Y, Z)
         '''
-        pass    
+        pass
+
+    @abc.abstractmethod
+    def mean(self, level: int)  -> np.float64:
+        '''Return mean for data at given downsampling level'''
+        pass
+
+    @abc.abstractmethod
+    def std(self, level: int)  -> np.float64:
+        '''Return standard deviation for data at given downsampling level'''
+        pass

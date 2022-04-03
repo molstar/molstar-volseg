@@ -1,4 +1,5 @@
 ### Custom
+db/emdb/
 preprocessor/output_internal_zarr/
 preprocessor/temp/
 #preprocessor/raw_input_files/

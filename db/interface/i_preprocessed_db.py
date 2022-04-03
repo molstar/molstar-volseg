@@ -6,11 +6,16 @@ import numpy as np
 
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 
+class SegmentationSliceData(TypedDict):
+    # array with set ids
+    category_set_ids: np.ndarray
+    # dict mapping set ids to the actual segment ids (e.g. for set id=1, there may be several segment ids)
+    category_set_dict: Dict
 
 class ProcessedVolumeSliceData(TypedDict):
-    segmentation_slice: np.ndarray
+    # changed segm slice to another typeddict
+    segmentation_slice: SegmentationSliceData
     volume_slice: np.ndarray
-
 
 class IReadOnlyPreprocessedDb(abc.ABC):
     @abc.abstractmethod
@@ -26,7 +31,11 @@ class IReadOnlyPreprocessedDb(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def read_metadata(self, namespace: str, key: str) -> IPreprocessedMetadata:
+    async def read_grid_metadata(self, namespace: str, key: str) -> IPreprocessedMetadata:
+        pass
+
+    @abc.abstractmethod
+    async def read_annotation_metadata(self, namespace: str, key: str) -> Dict:
         pass
 
 

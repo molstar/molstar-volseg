@@ -1,4 +1,6 @@
 from typing import List, Dict
+
+import numpy as np
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 
 
@@ -40,4 +42,11 @@ class LocalDiskPreprocessedMetadata(IPreprocessedMetadata):
         '''
         return self.raw_metadata['grid_dimensions']
 
+    def mean(self, level: int)  -> np.float64:
+        '''Return mean for data at given downsampling level'''
+        return np.float32(self.raw_metadata['mean'][str(level)])
+
+    def std(self, level: int)  -> np.float64:
+        '''Return standard deviation for data at given downsampling level'''
+        return np.float32(self.raw_metadata['std'][str(level)])
 

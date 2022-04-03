@@ -17,11 +17,12 @@ import math
 from preprocessor._magic_kernel_downsampling_3d import downsample_using_magic_kernel, extract_target_voxels_coords, create_x2_downsampled_grid
 from skimage.util import view_as_blocks
 import copy
-
+from sfftkrw import SFFSegmentation
 
 VOLUME_DATA_GROUPNAME = '_volume_data'
 SEGMENTATION_DATA_GROUPNAME = '_segmentation_data'
-METADATA_FILENAME = 'metadata.json'
+GRID_METADATA_FILENAME = 'grid_metadata.json'
+ANNOTATION_METADATA_FILENAME = 'annotation_metadata.json'
 # should be 100**3, but temporarly set to 32 to check at least x4 downsampling with 64**3 emd-1832 grid
 MIN_GRID_SIZE = 32 **3
 DOWNSAMPLING_KERNEL = (1, 4, 6, 4, 1)
@@ -52,10 +53,10 @@ class DownsamplingLevelDict:
         return self.downsampling_ratio
 
 class SegmentationSetTable:
-    def __init__(self, lattice):
+    def __init__(self, lattice, value_to_segment_id_dict_for_specific_lattice_id):
+        self.value_to_segment_id_dict = value_to_segment_id_dict_for_specific_lattice_id
         self.entries: Dict = self.__convert_lattice_to_dict_of_sets(lattice)
-        # figure out how to create entries upon initialization given the original segm lattice
-
+        
     def get_serializable_repr(self) -> Dict:
         '''
         Converts sets in self.entries to lists, and returns the whole table as a dict
@@ -68,12 +69,22 @@ class SegmentationSetTable:
     
     def __convert_lattice_to_dict_of_sets(self, lattice: np.ndarray) -> Dict:
         '''
-        Converts original latice to dict of singletons
+        Converts original latice to dict of singletons.
+        Each singleton should contain segment ID rather than value
+         used to represent that segment in grid
         '''
+
         unique_values: list = np.unique(lattice).tolist()
+        # value 0 is not assigned to any segment, it is just nothing
         d = {}
-        for i in unique_values:
-            d[i] = {i}
+        for grid_value_of_segment in unique_values:
+            if grid_value_of_segment == 0:
+                d[grid_value_of_segment] = {0}
+            else:
+                d[grid_value_of_segment] = {self.value_to_segment_id_dict[grid_value_of_segment]}
+            # here we need a way to access zarr data (segment_list)
+            # and find segment id for each value (traverse dict backwards)
+            # and set d[segment_value] = to the found segment id
         
         return d
 
@@ -137,10 +148,30 @@ class SFFPreprocessor(IDataPreprocessor):
         self.__process_segmentation_data(zarr_structure)
         self.__process_volume_data(zarr_structure, normalized_axis_map_object)
         
-        metadata = self.__extract_metadata(zarr_structure, normalized_axis_map_object)
-        self.__temp_save_metadata(metadata, self.temp_zarr_structure_path)
+        grid_metadata = self.__extract_grid_metadata(zarr_structure, normalized_axis_map_object)
+        self.__temp_save_metadata(grid_metadata, GRID_METADATA_FILENAME, self.temp_zarr_structure_path)
+
+        annotation_metadata = self.__extract_annotation_metadata(segm_file_path)
+        self.__temp_save_metadata(annotation_metadata, ANNOTATION_METADATA_FILENAME, self.temp_zarr_structure_path)
 
         return self.temp_zarr_structure_path
+
+    def __create_value_to_segment_id_mapping(self, zarr_structure):
+        '''
+        Iterates over zarr structure and returns dict with 
+        keys=lattice_id, and for each lattice id => keys=grid values, values=segm ids
+        '''
+        root = zarr_structure
+        d = {}
+        for segment_name, segment in root.segment_list.groups():
+            lat_id = int(segment.three_d_volume.lattice_id[...])
+            value = int(segment.three_d_volume.value[...])
+            segment_id = int(segment.id[...])
+            if lat_id not in d:
+                d[lat_id] = {}
+            d[lat_id][value] = segment_id
+        # print(d)
+        return d
 
     def __normalize_axis_order(self, map_object: gemmi.Ccp4Map):
         '''
@@ -171,10 +202,9 @@ class SFFPreprocessor(IDataPreprocessor):
             MIN_GRID_SIZE,
             input_grid_size=math.prod(volume_arr.shape)
         )
-        self.__create_downsamplings(
-            volume_arr,
-            volume_data_gr,
-            isCategorical=False,
+        self.__create_volume_downsamplings(
+            original_data=volume_arr,
+            downsampled_data_group=volume_data_gr,
             downsampling_steps = volume_downsampling_steps
         )
 
@@ -183,8 +213,11 @@ class SFFPreprocessor(IDataPreprocessor):
         Extracts segmentation data from lattice, downsamples it, stores to zarr structure
         '''
         segm_data_gr: zarr.hierarchy.group = zarr_structure.create_group(SEGMENTATION_DATA_GROUPNAME)
-        
+        value_to_segment_id_dict = self.__create_value_to_segment_id_mapping(zarr_structure)
+
         for gr_name, gr in zarr_structure.lattice_list.groups():
+            # gr is a 'lattice' obj in lattice list
+            lattice_id = int(gr.id[...])
             segm_arr = self.__lattice_data_to_np_arr(
                 gr.data[0],
                 gr.mode[0],
@@ -196,11 +229,11 @@ class SFFPreprocessor(IDataPreprocessor):
             )
             # specific lattice with specific id
             lattice_gr = segm_data_gr.create_group(gr_name)
-            self.__create_downsamplings(
-                segm_arr,
-                lattice_gr,
-                isCategorical=True,
-                downsampling_steps = segmentation_downsampling_steps
+            self.__create_category_set_downsamplings(
+                original_data = segm_arr,
+                downsampled_data_group=lattice_gr,
+                downsampling_steps = segmentation_downsampling_steps,
+                value_to_segment_id_dict_for_specific_lattice_id = value_to_segment_id_dict[lattice_id]
             )
 
     def __compute_number_of_downsampling_steps(self, min_grid_size: int, input_grid_size: int) -> int:
@@ -221,16 +254,58 @@ class SFFPreprocessor(IDataPreprocessor):
         d['MAPC'], d['MAPR'], d['MAPS'] = m.header_i32(17), m.header_i32(18), m.header_i32(19)
         return d
 
-    def __extract_metadata(self, zarr_structure: zarr.hierarchy.group, map_object) -> Dict:
+    def __extract_annotation_metadata(self, segm_file_path: Path) -> Dict:
+        '''Returns processed dict of annotation metadata (some fields are removed)'''
+        segm_obj = self.__open_hdf5_as_segmentation_object(segm_file_path)
+        segm_dict = segm_obj.as_json()
+        for lattice in segm_dict['lattice_list']:
+            del lattice['data']
+
+        return segm_dict
+        # root = zarr_structure
+        # root.visititems(__visitior_function_for_annotation_metadata)
+    
+        # d = {}
+        # def __visitior_function_for_annotation_metadata(name: str, zarr_obj) -> None:
+        #     '''Helper function for creating JSON with metadata'''
+        #     zarr_obj_name = str(zarr_obj.name.split('/')[-1])
+        
+        #     if isinstance(zarr_obj, zarr.core.Array):
+        #         d[zarr_obj_name] = zarr_obj[0]
+        #     elif isinstance(zarr_obj, zarr.hierarchy.Group):
+        #         # d[lattice]
+        #         pass
+        #     else:
+        #         raise Exception('zarr object should be either group or array')
+
+
+    def __extract_grid_metadata(self, zarr_structure: zarr.hierarchy.group, map_object) -> Dict:
         root = zarr_structure
         volume_downsamplings = sorted(root[VOLUME_DATA_GROUPNAME].array_keys())
+        # convert to ints
+        volume_downsamplings = [int(x) for x in volume_downsamplings] 
+
+        # TODO:
+        mean_dict = {}
+        std_dict = {}
+
+        for arr_name, arr in root[VOLUME_DATA_GROUPNAME].arrays():
+            mean_val = str(np.mean(arr[...]))
+            std_val =  str(np.std(arr[...]))
+            mean_dict[str(arr_name)] = mean_val
+            std_dict[str(arr_name)] = std_val
 
         lattice_dict = {}
         lattice_ids = []
         for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
             # each key is lattice id
             lattice_id = int(gr_name)
-            lattice_dict[lattice_id] = sorted(gr.group_keys())
+
+            segm_downsamplings = sorted(gr.group_keys())
+            # convert to ints
+            segm_downsamplings = [int(x) for x in segm_downsamplings]
+
+            lattice_dict[lattice_id] = segm_downsamplings
             lattice_ids.append(lattice_id)
 
         d = self.__read_ccp4_words_to_dict(map_object)
@@ -267,10 +342,12 @@ class SFFPreprocessor(IDataPreprocessor):
             'voxel_size': voxel_sizes_in_downsamplings,
             'origin': origin,
             'grid_dimensions': grid_dimensions,
+            'mean': mean_dict,
+            'std': std_dict
         }
 
-    def __temp_save_metadata(self, metadata: Dict, temp_dir_path: Path) -> None:
-        with (temp_dir_path / METADATA_FILENAME).open('w') as fp:
+    def __temp_save_metadata(self, metadata: Dict, metadata_filename: Path, temp_dir_path: Path) -> None:
+        with (temp_dir_path / metadata_filename).open('w') as fp:
             json.dump(metadata, fp)
 
     def __read_volume_data(self, m) -> np.ndarray:
@@ -304,17 +381,6 @@ class SFFPreprocessor(IDataPreprocessor):
         # return block_reduce(arr, block_size=(rate, rate, rate), func=np.mean)
         return downsample_using_magic_kernel(arr, DOWNSAMPLING_KERNEL)
 
-    def __create_downsamplings(self, data: np.ndarray, downsampled_data_group: zarr.hierarchy.group, isCategorical: bool = False, downsampling_steps: int = 1):
-        # iteratively downsample data, create arr for each dwns. level and store data 
-        if isCategorical:
-            # separate function as we need to keep info from previous dwns lvl
-            self.__create_category_set_downsamplings(data, downsampling_steps, downsampled_data_group)
-        else:
-            self.__create_volume_downsamplings(data, downsampling_steps, downsampled_data_group)
-        # # TODO: figure out compression/filters: b64 encoded zlib-zipped .data is just 8 bytes
-        # downsamplings sizes in raw uncompressed state are much bigger 
-        # TODO: figure out what to do with chunks - currently their size is not optimized
-
     def __create_volume_downsamplings(self, original_data: np.ndarray, downsampling_steps: int, downsampled_data_group: zarr.hierarchy.Group):
         '''
         Take original volume data, do all downsampling levels and store in zarr struct one by one
@@ -328,7 +394,9 @@ class SFFPreprocessor(IDataPreprocessor):
             downsampled_data = downsample_using_magic_kernel(current_level_data, DOWNSAMPLING_KERNEL)
             self.__store_single_volume_downsampling_in_zarr_stucture(downsampled_data, downsampled_data_group, current_ratio)
             current_level_data = downsampled_data
-            
+        # # TODO: figure out compression/filters: b64 encoded zlib-zipped .data is just 8 bytes
+        # downsamplings sizes in raw uncompressed state are much bigger 
+        # TODO: figure out what to do with chunks - currently their size is not optimized
 
     def __store_single_volume_downsampling_in_zarr_stucture(self, downsampled_data: np.ndarray, downsampled_data_group: zarr.hierarchy.Group, ratio: int):
         downsampled_data_group.create_dataset(
@@ -340,12 +408,18 @@ class SFFPreprocessor(IDataPreprocessor):
             chunks=(50, 50, 50)
         )
 
-    def __create_category_set_downsamplings(self, original_data: np.ndarray, downsampling_steps: int, downsampled_data_group: zarr.hierarchy.Group):
+    def __create_category_set_downsamplings(
+        self,
+        original_data: np.ndarray,
+        downsampling_steps: int,
+        downsampled_data_group: zarr.hierarchy.Group,
+        value_to_segment_id_dict_for_specific_lattice_id: Dict
+        ):
         '''
         Take original segmentation data, do all downsampling levels, create zarr datasets for each
         '''
         # table with just singletons, e.g. "104": {104}, "94" :{94}
-        initial_set_table = SegmentationSetTable(original_data)
+        initial_set_table = SegmentationSetTable(original_data, value_to_segment_id_dict_for_specific_lattice_id)
         
         # to make it uniform int32 with other level grids
         original_data = original_data.astype(np.int32)
@@ -355,7 +429,7 @@ class SFFPreprocessor(IDataPreprocessor):
             DownsamplingLevelDict({'ratio': 1, 'grid': original_data, 'set_table': initial_set_table})
             ]
         for i in range(downsampling_steps):
-            current_set_table = SegmentationSetTable(original_data)
+            current_set_table = SegmentationSetTable(original_data, value_to_segment_id_dict_for_specific_lattice_id)
             # on first iteration (i.e. when doing x2 downsampling), it takes original_data and initial_set_table with set of singletons 
             levels.append(self.__downsample_categorical_data_using_category_sets(levels[i], current_set_table))
 
@@ -489,6 +563,9 @@ class SFFPreprocessor(IDataPreprocessor):
         hdf5_file: h5py.File = h5py.File(file_path, mode='r')
         hdf5_file.visititems(self.__visitor_function)
         hdf5_file.close()
+    
+    def __open_hdf5_as_segmentation_object(self, file_path: Path) -> SFFSegmentation:
+        return SFFSegmentation.from_file(str(file_path.resolve()))
 
     def __visitor_function(self, name: str, node: h5py.Dataset) -> None:
         '''
