@@ -6,7 +6,7 @@ from scipy import ndimage, signal
 # TODO: apply on actual code (make comparison of outputs by copying old images
 # and creating a separate func + conditional in (as it accepts 3D kernel, not 1D as the current func)
 # 
-def _generate_kernel_3d_arr(pattern: List[int]) -> np.ndarray:
+def generate_kernel_3d_arr(pattern: List[int]) -> np.ndarray:
     '''
     Generates conv kernel based on pattern provided as a half of equivalent symmetric 1D kernel
     E.g., to generate kernel for 3d using [1,4,6,4,1] kernel, provide it as input
@@ -21,7 +21,7 @@ def _generate_kernel_3d_arr(pattern: List[int]) -> np.ndarray:
     print(f'Kernel generated (further divided by sum): {x}')
     return k
 
-k = _generate_kernel_3d_arr([1, 4, 6])
+k = generate_kernel_3d_arr([1, 4, 6])
 
 a = np.arange(125).reshape(5,5,5).astype(np.float64)
 # a = np.random.normal(0, 10, (5, 5, 5))#.astype(np.int)
