@@ -46,7 +46,7 @@ def plot_3d_array_color(arr: np.ndarray, arr_name: str):
     volume = arr
     ax.scatter(space[:,0], space[:,1], space[:,2], c=space/max(shape), s=volume*3)
     # plt.show()
-    plt.savefig(Path(f'preprocessor/sample_arr_plots/{arr_name}.png'))
+    plt.savefig(Path(__file__).resolve().parents[0] / f'sample_arr_plots/{arr_name}.png')
     plt.close()
 
 def normalize_absolute_value(original_value, mean_v, std_v):

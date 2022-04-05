@@ -11,7 +11,7 @@ from preprocessor.implementations.sff_preprocessor import downsample_using_magic
 
 # TODO: put that on sabre
 # DUMMY_ARR_SHAPE = (1000, 1000, 1000)
-DUMMY_ARR_SHAPE = (50, 50, 50)
+DUMMY_ARR_SHAPE = (10, 10, 10)
 
 ONE_D_KERNEL = [1, 4, 6, 4, 1]
 LIST_OF_METHODS = [
