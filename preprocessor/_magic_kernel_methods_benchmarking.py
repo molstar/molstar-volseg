@@ -9,7 +9,10 @@ from preprocessor._convolve_magic_kernel_experimental import generate_kernel_3d_
 from scipy import ndimage, signal
 from preprocessor.implementations.sff_preprocessor import downsample_using_magic_kernel
 
-DUMMY_ARR_SHAPE = (1000, 1000, 1000)
+# TODO: put that on sabre
+# DUMMY_ARR_SHAPE = (1000, 1000, 1000)
+DUMMY_ARR_SHAPE = (200, 200, 200)
+
 ONE_D_KERNEL = [1, 4, 6, 4, 1]
 LIST_OF_METHODS = [
     'scipy.ndimage.convolve',
@@ -30,9 +33,7 @@ def downsample_using_magic_kernel_wrapper(method, mode, kernel, input_arr):
     '''
     k = kernel
     a = input_arr
-    result: np.ndarray
-    r = result
-
+    r = np.array([0])
     # for now just method, add mode (avg over 2x2x2 blocks or simple) afterwards
     if method == 'for_loop':
         # it takes 1d kernel as tuple
@@ -67,7 +68,7 @@ def run_benchmarking() -> Dict:
             start = timer()
             d[method][mode] = downsample_using_magic_kernel_wrapper(method, mode, kernel, dummy_arr)
             end = timer()
-            print(f'{end - start}')
+            print(f'{method}, {mode} took {end - start}')
 
     return d
 

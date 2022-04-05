@@ -150,14 +150,14 @@ def _get_list_of_seg_ids(zarr_structure):
         l.append(segment_id)
 
     return l
+if __name__ == '__main__':
+    PATH_TO_SAMPLE_SEGMENTATION = Path('db\emdb\emd-1832')
 
-PATH_TO_SAMPLE_SEGMENTATION = Path('db\emdb\emd-1832')
+    root = open_zarr_structure_from_path(PATH_TO_SAMPLE_SEGMENTATION)
+    volume_data = root._volume_data
+    segm_data = root._segmentation_data
 
-root = open_zarr_structure_from_path(PATH_TO_SAMPLE_SEGMENTATION)
-volume_data = root._volume_data
-segm_data = root._segmentation_data
+    # plot_all_volume_data(volume_data)
 
-# plot_all_volume_data(volume_data)
-
-plot_all_segmentation_data(segm_data, root)
+    plot_all_segmentation_data(segm_data, root)
 

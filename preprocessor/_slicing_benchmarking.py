@@ -3,7 +3,7 @@ from typing import Tuple
 import zarr
 import numpy as np
 import dask.array as da
-from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb, __open_zarr_structure_from_path
+from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb, open_zarr_structure_from_path
 from timeit import default_timer as timer
 import tensorstore as ts
 import shutil
@@ -68,7 +68,7 @@ def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
     __create_dummy_zarr_structure(TEMP_STORE_PATH, np_arr)
     
     zarr_structure_opening_start = timer()
-    zarr_structure = __open_zarr_structure_from_path(TEMP_STORE_PATH)
+    zarr_structure = open_zarr_structure_from_path(TEMP_STORE_PATH)
     zarr_structure_opening_end = timer()
     print(f'OPENING ZARR STRUCTURE: {zarr_structure_opening_end - zarr_structure_opening_start}')
 
