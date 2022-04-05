@@ -46,7 +46,7 @@ def downsample_using_magic_kernel_wrapper(method, mode, kernel, input_arr):
         r = signal.convolve(a, k, mode='same', method='fft')
 
     # TODO: add mode for averaging 2x2x2
-    if mode == 'regular':
+    if mode == 'regular' and method != 'for_loop':
         r = r[::2, ::2, ::2]
     # ... other?
     return r
