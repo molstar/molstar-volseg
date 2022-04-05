@@ -379,7 +379,7 @@ class SFFPreprocessor(IDataPreprocessor):
         if rate == 1:
             return arr
         # return block_reduce(arr, block_size=(rate, rate, rate), func=np.mean)
-        return downsample_using_magic_kernel(arr, DOWNSAMPLING_KERNEL)
+        # return downsample_using_magic_kernel(arr, DOWNSAMPLING_KERNEL)
 
     def __create_volume_downsamplings(self, original_data: np.ndarray, downsampling_steps: int, downsampled_data_group: zarr.hierarchy.Group):
         '''

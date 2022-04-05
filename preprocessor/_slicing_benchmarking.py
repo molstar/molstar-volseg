@@ -21,7 +21,7 @@ CHUNK_SIZES = [25, 50, 100, 400]
 
 TEMP_STORE_PATH = Path(__file__).parents[0] / 'temp' / 'benchmarking_zarr_structure'
 
-def __generate_dummy_arr(shape: Tuple[int, int, int]) -> np.ndarray:
+def generate_dummy_arr(shape: Tuple[int, int, int]) -> np.ndarray:
     np_arr = np.arange(shape[0] * shape[1] * shape[2]).reshape((shape[0], shape[1], shape[2]))
     return np_arr
 
@@ -64,7 +64,7 @@ def __create_dummy_zarr_structure(path: Path, np_arr: np.ndarray) -> zarr.hierar
 
 
 def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
-    np_arr = __generate_dummy_arr(shape)
+    np_arr = generate_dummy_arr(shape)
     __create_dummy_zarr_structure(TEMP_STORE_PATH, np_arr)
     
     zarr_structure_opening_start = timer()

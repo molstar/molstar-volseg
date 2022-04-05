@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 from scipy import ndimage, signal
 
@@ -5,12 +6,13 @@ from scipy import ndimage, signal
 # TODO: apply on actual code (make comparison of outputs by copying old images
 # and creating a separate func + conditional in (as it accepts 3D kernel, not 1D as the current func)
 # 
-def _generate_kernel_3d_arr(pattern: list) -> np.ndarray:
+def _generate_kernel_3d_arr(pattern: List[int]) -> np.ndarray:
     '''
     Generates conv kernel based on pattern provided as a half of equivalent symmetric 1D kernel
-    E.g., to generate kernel for 3d using [1,4,6,4,1] kernel, input should be [1,4,6] since it is symmetric
+    E.g., to generate kernel for 3d using [1,4,6,4,1] kernel, provide it as input
     https://stackoverflow.com/questions/71739757/generate-3d-numpy-array-based-on-provided-pattern/71742892#71742892
     '''
+    pattern = pattern[0:3]
     x = np.array(pattern[-1]).reshape([1,1,1])
     for p in reversed(pattern[:-1]):
         x = np.pad(x, mode='constant', constant_values=p, pad_width=1)
