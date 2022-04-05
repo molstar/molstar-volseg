@@ -1,34 +1,54 @@
 
 from timeit import default_timer as timer
+
+import numpy as np
 from preprocessor._slicing_benchmarking import generate_dummy_arr
 from typing import Dict
 from preprocessor.check_internal_zarr import plot_volume_data_from_np_arr
 from preprocessor._convolve_magic_kernel_experimental import generate_kernel_3d_arr
 from scipy import ndimage, signal
+from preprocessor.implementations.sff_preprocessor import downsample_using_magic_kernel
 
 DUMMY_ARR_SHAPE = (1000, 1000, 1000)
 ONE_D_KERNEL = [1, 4, 6, 4, 1]
+LIST_OF_METHODS = [
+    'scipy.ndimage.convolve',
+    'scipy.signal.convolve_direct',
+    'scipy.signal.convolve_fft'
+    'for_loop'
+]
 
-def downsample_using_magic_kernel_wrapper(method, mode, kernel, input_arr, OTHER_ARGS_TODO):
+LIST_OF_MODES = [
+    'regular'
+    # TODO: add mode for averaging over eight 2x2x2 blocks instead of ::2 ::2 ::2
+]
+
+def downsample_using_magic_kernel_wrapper(method, mode, kernel, input_arr):
     '''
     Internally calls different implementations of convolve or previous magic kernel downsampling
     using for loop
     '''
     k = kernel
     a = input_arr
-
-    # c_ndimage = ndimage.convolve(a, k, mode='constant', cval=0.0)
-    # c_convolve = signal.convolve(a, k, mode='same', method='fft')
-    # print(a)
-    # print(c_ndimage[::2, ::2])
-    # print(c_convolve[::2, ::2])
+    result: np.ndarray
+    r = result
 
     # for now just method, add mode (avg over 2x2x2 blocks or simple) afterwards
-    if method == _:
-        pass
-    elif method == _:
-        pass
-    # ..
+    if method == 'for_loop':
+        # it takes 1d kernel as tuple
+        r = downsample_using_magic_kernel(a, tuple(ONE_D_KERNEL))
+    elif method == 'scipy.ndimage.convolve':
+        r = ndimage.convolve(a, k, mode='constant', cval=0.0)
+    elif method == 'scipy.signal.convolve_direct':
+        r = signal.convolve(a, k, mode='same', method='direct')
+    elif method == 'scipy.signal.convolve_fft':
+        r = signal.convolve(a, k, mode='same', method='fft')
+
+    # TODO: add mode for averaging 2x2x2
+    if mode == 'regular':
+        r = r[::2, ::2, ::2]
+    # ... other?
+    return r
 
 def run_benchmarking() -> Dict:
     '''
@@ -45,7 +65,7 @@ def run_benchmarking() -> Dict:
         for mode in LIST_OF_MODES:
             d[method][mode] = {}
             start = timer()
-            d[method][mode] = downsample_using_magic_kernel_wrapper(method, mode, kernel, dummy_arr, OTHER_ARGS_TODO)
+            d[method][mode] = downsample_using_magic_kernel_wrapper(method, mode, kernel, dummy_arr)
             end = timer()
             print(f'{end - start}')
 
