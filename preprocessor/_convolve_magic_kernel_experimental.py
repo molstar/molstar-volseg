@@ -39,6 +39,7 @@ if __name__ == '__main__':
     c_convolve_same = signal.convolve(a, k, mode='same', method='fft')
     c_ndimage = ndimage.convolve(a, k, mode='constant', cval=0.0)
 
+    # TODO: use numpy.isclose(a, b, rtol=1e-05, atol=1e-08, equal_nan=False)
     if np.array_equal(c_convolve_same, c_ndimage):
         print('ndimage and convolve_same are equal')
     else:

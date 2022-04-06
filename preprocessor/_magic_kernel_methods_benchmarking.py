@@ -16,7 +16,9 @@ DUMMY_ARR_SHAPE = (10, 10, 10)
 ONE_D_KERNEL = [1, 4, 6, 4, 1]
 LIST_OF_METHODS = [
     'for_loop',
-    'scipy.ndimage.convolve',
+    'scipy.ndimage.convolve_constant',
+    'scipy.ndimage.convolve_reflect',
+    'scipy.ndimage.convolve_mirror',
     'scipy.signal.convolve_fft',
     'scipy.signal.convolve_direct',
 ]
@@ -38,8 +40,12 @@ def downsample_using_magic_kernel_wrapper(method, mode, kernel, input_arr):
     if method == 'for_loop':
         # it takes 1d kernel as tuple
         r = downsample_using_magic_kernel(a, tuple(ONE_D_KERNEL))
-    elif method == 'scipy.ndimage.convolve':
+    elif method == 'scipy.ndimage.convolve_constant':
         r = ndimage.convolve(a, k, mode='constant', cval=0.0)
+    elif method == 'scipy.ndimage.convolve_reflect':
+        r = ndimage.convolve(a, k, mode='reflect', cval=0.0)
+    elif method == 'scipy.ndimage.convolve_mirror':
+        r = ndimage.convolve(a, k, mode='mirror', cval=0.0)
     elif method == 'scipy.signal.convolve_direct':
         r = signal.convolve(a, k, mode='same', method='direct')
     elif method == 'scipy.signal.convolve_fft':
@@ -48,7 +54,8 @@ def downsample_using_magic_kernel_wrapper(method, mode, kernel, input_arr):
     # TODO: add mode for averaging 2x2x2
     if mode == 'regular' and method != 'for_loop':
         r = r[::2, ::2, ::2]
-    # ... other?
+    # print(f'{method}, {mode}: downsampled data shape: {r.shape}')
+    # print(r)
     return r
 
 def run_benchmarking() -> Dict:
@@ -60,7 +67,9 @@ def run_benchmarking() -> Dict:
 
     kernel = generate_kernel_3d_arr(ONE_D_KERNEL)
 
-    dummy_arr = generate_dummy_arr(DUMMY_ARR_SHAPE)
+    dummy_arr = generate_dummy_arr(DUMMY_ARR_SHAPE).astype(np.float64)
+    # print(f'ORIGINAL DATA')
+    # print((dummy_arr))
     for method in LIST_OF_METHODS:
         d[method] = {}
         for mode in LIST_OF_MODES:
