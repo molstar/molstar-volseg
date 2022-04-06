@@ -1,6 +1,6 @@
 
 from timeit import default_timer as timer
-
+from itertools import combinations
 import numpy as np
 from preprocessor._slicing_benchmarking import generate_dummy_arr
 from typing import Dict
@@ -8,6 +8,8 @@ from preprocessor.check_internal_zarr import plot_volume_data_from_np_arr
 from preprocessor._convolve_magic_kernel_experimental import generate_kernel_3d_arr
 from scipy import ndimage, signal
 from preprocessor.implementations.sff_preprocessor import downsample_using_magic_kernel
+from skimage.measure import block_reduce
+from pprint import pprint
 
 # TODO: put that on sabre
 # DUMMY_ARR_SHAPE = (1000, 1000, 1000)
@@ -24,8 +26,8 @@ LIST_OF_METHODS = [
 ]
 
 LIST_OF_MODES = [
-    'regular'
-    # TODO: add mode for averaging over eight 2x2x2 blocks instead of ::2 ::2 ::2
+    'regular',
+    'average_2x2x2_blocks'
 ]
 
 def downsample_using_magic_kernel_wrapper(method, mode, kernel, input_arr):
@@ -51,9 +53,12 @@ def downsample_using_magic_kernel_wrapper(method, mode, kernel, input_arr):
     elif method == 'scipy.signal.convolve_fft':
         r = signal.convolve(a, k, mode='same', method='fft')
 
-    # TODO: add mode for averaging 2x2x2
+    
     if mode == 'regular' and method != 'for_loop':
         r = r[::2, ::2, ::2]
+    elif mode == 'average_2x2x2_blocks' and method != 'for_loop':
+        rate = 2
+        r = block_reduce(r, block_size=(rate, rate, rate), func=np.mean)
     # print(f'{method}, {mode}: downsampled data shape: {r.shape}')
     # print(r)
     return r
@@ -73,6 +78,9 @@ def run_benchmarking() -> Dict:
     for method in LIST_OF_METHODS:
         d[method] = {}
         for mode in LIST_OF_MODES:
+            # there is just the downsampled voxels in for_loop method, nothing to average
+            if method == 'for_loop' and mode == 'average_2x2x2_blocks':
+                continue
             d[method][mode] = {}
             start = timer()
             d[method][mode] = downsample_using_magic_kernel_wrapper(method, mode, kernel, dummy_arr)
@@ -82,6 +90,8 @@ def run_benchmarking() -> Dict:
     return d
 
 def plot_everything(dict_with_arrs):
+    # print('Plotting the following dict with arrs:')
+    # print(dict_with_arrs)
     d = dict_with_arrs
     for method in d:
         for mode in d[method]:
@@ -89,7 +99,43 @@ def plot_everything(dict_with_arrs):
             arr_name = f'{mode}_{method}'
             plot_volume_data_from_np_arr(arr, arr_name)
 
+def approximate_equality_check(dict_with_arrs):
+    '''
+    Warning. The results won't be equal as methods use different padding
+    '''
+    d = dict_with_arrs
+    # dict where keys are modes
+    per_mode_d = {}
+    for mode in LIST_OF_MODES:
+        per_mode_d[mode] = {}
+        for method in d:
+            if method == 'for_loop' and mode == 'average_2x2x2_blocks':
+                continue
+            if method == 'scipy.ndimage.convolve_reflect' or method == 'scipy.ndimage.convolve_mirror':
+                continue
+            arr = d[method][mode]
+            per_mode_d[mode][f'{method}-{mode}'] = arr
+
+    # print(f'per mode dict keys: {per_mode_d.keys()}')
+
+    pairwise_approach_dict = {}
+
+    for mode in LIST_OF_MODES:
+        pairwise_approach_dict[mode] = {}
+        for pair in combinations(per_mode_d[mode], 2):
+            equal = np.all(np.isclose(per_mode_d[mode][pair[0]], per_mode_d[mode][pair[1]],
+                rtol=1e-10, 
+                atol=1e-10,
+                equal_nan=False))
+            
+            # dict with results of pairwise comparison of outcomes of each method
+            pairwise_approach_dict[mode][f'{pair[0]}-vs-{pair[1]}'] = equal
+
+    pprint(pairwise_approach_dict)
+        
+
 if __name__ == '__main__':
     # __testing()
     d = run_benchmarking()
     plot_everything(d)
+    approximate_equality_check(d)
