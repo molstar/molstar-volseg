@@ -16,7 +16,7 @@ from pprint import pprint
 # DUMMY_ARR_SHAPE = (500, 500, 500)
 # DUMMY_ARR_SHAPE = (20,20,20)
 # hardcoded for sabre 
-REAL_MAP_FILEPATH = 'emd_9199_.map'
+REAL_MAP_FILEPATH = Path('emd_9199_.map')
 
 ONE_D_KERNEL = [1, 4, 6, 4, 1]
 LIST_OF_METHODS = [
