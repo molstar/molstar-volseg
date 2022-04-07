@@ -67,11 +67,11 @@ def downsample_using_magic_kernel_wrapper(method, mode, kernel, input_arr):
     return r
 
 def read_real_volume_data(volume_file_path: Path) -> np.ndarray:
-    # TODO: from some big map e.g. emd_9199_.map (2000*2000*800)
+    # from some big map e.g. emd_9199_.map (2000*2000*800)
     prep = SFFPreprocessor()
-    map_object = prep.__read_volume_map_to_object(volume_file_path)
-    normalized_axis_map_object = prep.__normalize_axis_order(map_object)
-    real_arr = prep.__read_volume_data(normalized_axis_map_object)
+    map_object = prep._SFFPreprocessor__read_volume_map_to_object(volume_file_path)
+    normalized_axis_map_object = prep._SFFPreprocessor__normalize_axis_order(map_object)
+    real_arr = prep._SFFPreprocessor__read_volume_data(normalized_axis_map_object)
     return real_arr
 
 def run_benchmarking() -> Dict:
