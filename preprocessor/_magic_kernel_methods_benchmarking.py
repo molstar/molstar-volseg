@@ -12,8 +12,8 @@ from skimage.measure import block_reduce
 from pprint import pprint
 
 # TODO: put that on sabre
-# DUMMY_ARR_SHAPE = (1000, 1000, 1000)
-DUMMY_ARR_SHAPE = (10, 10, 10)
+# DUMMY_ARR_SHAPE = (500, 500, 500)
+DUMMY_ARR_SHAPE = (5,5,5)
 
 ONE_D_KERNEL = [1, 4, 6, 4, 1]
 LIST_OF_METHODS = [
@@ -89,6 +89,24 @@ def run_benchmarking() -> Dict:
 
     return d
 
+def run_benchmarking_without_dict_plotting_one_by_one():
+    kernel = generate_kernel_3d_arr(ONE_D_KERNEL)
+
+    dummy_arr = generate_dummy_arr(DUMMY_ARR_SHAPE).astype(np.float64)
+    # print(f'ORIGINAL DATA')
+    # print((dummy_arr))
+    for method in LIST_OF_METHODS:
+        for mode in LIST_OF_MODES:
+            # there is just the downsampled voxels in for_loop method, nothing to average
+            if method == 'for_loop' and mode == 'average_2x2x2_blocks':
+                continue
+            start = timer()
+            downsampled_arr = downsample_using_magic_kernel_wrapper(method, mode, kernel, dummy_arr)
+            end = timer()
+            print(f'{method}, {mode} took {end - start}')
+            plot_volume_data_from_np_arr(downsampled_arr, f'{mode}_{method}_{DUMMY_ARR_SHAPE[0]}-grid')
+
+
 def plot_everything(dict_with_arrs):
     # print('Plotting the following dict with arrs:')
     # print(dict_with_arrs)
@@ -96,7 +114,7 @@ def plot_everything(dict_with_arrs):
     for method in d:
         for mode in d[method]:
             arr = d[method][mode]
-            arr_name = f'{mode}_{method}'
+            arr_name = f'{mode}_{method}_{DUMMY_ARR_SHAPE[0]}-grid'
             plot_volume_data_from_np_arr(arr, arr_name)
 
 def approximate_equality_check(dict_with_arrs):
@@ -132,10 +150,18 @@ def approximate_equality_check(dict_with_arrs):
             pairwise_approach_dict[mode][f'{pair[0]}-vs-{pair[1]}'] = equal
 
     pprint(pairwise_approach_dict)
-        
 
-if __name__ == '__main__':
-    # __testing()
+def run_regular_benchmarking():
+    '''Results are collected into dict (requires more memory)'''
     d = run_benchmarking()
     plot_everything(d)
     approximate_equality_check(d)
+
+def run_one_by_one_benchmarking():
+    '''Results are collected into dict (requires more memory). No equality check'''
+    run_benchmarking_without_dict_plotting_one_by_one()
+
+if __name__ == '__main__':
+    # run_regular_benchmarking()
+    run_one_by_one_benchmarking()
+    
