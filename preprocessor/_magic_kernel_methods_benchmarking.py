@@ -15,8 +15,13 @@ from pprint import pprint
 # TODO: put that on sabre
 # DUMMY_ARR_SHAPE = (500, 500, 500)
 # DUMMY_ARR_SHAPE = (20,20,20)
-# hardcoded for sabre 
-REAL_MAP_FILEPATH = Path('emd_9199_.map')
+# hardcoded for sabre
+# 2000 * 2000 * 800 grid 
+# REAL_MAP_FILEPATH = Path('emd_9199_.map')
+# 64**3 grid
+# REAL_MAP_FILEPATH = Path('emd-1832.map')
+# 640**3 grid
+REAL_MAP_FILEPATH = Path('emd_13793.map')
 
 ONE_D_KERNEL = [1, 4, 6, 4, 1]
 LIST_OF_METHODS = [
@@ -89,6 +94,7 @@ def run_benchmarking() -> Dict:
     print(f'shape of volume is {dummy_arr.shape}')
     # print(f'ORIGINAL DATA')
     # print((dummy_arr))
+    plot_volume_data_from_np_arr(dummy_arr, f'original_{dummy_arr.shape}-grid')
     for method in LIST_OF_METHODS:
         d[method] = {}
         for mode in LIST_OF_MODES:
@@ -112,6 +118,7 @@ def run_benchmarking_without_dict_plotting_one_by_one():
     print(f'shape of volume is {dummy_arr.shape}')
     # print(f'ORIGINAL DATA')
     # print((dummy_arr))
+    plot_volume_data_from_np_arr(dummy_arr, f'original_{dummy_arr.shape}-grid')
     for method in LIST_OF_METHODS:
         for mode in LIST_OF_MODES:
             # there is just the downsampled voxels in for_loop method, nothing to average
