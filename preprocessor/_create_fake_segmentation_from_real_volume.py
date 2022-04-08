@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Tuple
 import numpy as np
 from preprocessor.implementations.sff_preprocessor import SFFPreprocessor
 
@@ -24,6 +25,11 @@ def get_mask(center_coords: Tuple[int, int, int], radius: int, arr: np.ndarray):
 
     # TODO: get indices (coords) instead of bool mask to be able to exclude those indices from list
     # of all coords of voxels whose values are > 2sigma 
+
+def logical_subtract(A, B):
+    '''For subtracting boolean arrays (kinda set difference)'''
+    # Source: https://github.com/numpy/numpy/issues/15856
+    return A.astype(np.int) - B.astype(np.int) == 1
 
 
 
