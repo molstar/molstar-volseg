@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Dict
 import numpy as np
 from preprocessor.implementations.sff_preprocessor import SFFPreprocessor
 from preprocessor.check_internal_zarr import plot_3d_array_color
@@ -8,7 +8,7 @@ from preprocessor.check_internal_zarr import plot_3d_array_color
 # TODO: change to the biggest at EMDB
 MAP_FILEPATH = Path('preprocessor\sample_volumes\emdb_sff\EMD-1832.map')
 
-def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_segments: int) -> np.ndarray:
+def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_segments: int) -> Dict:
     prep = SFFPreprocessor()
     volume_grid: np.ndarray = prep.read_and_normalize_volume_map(volume_filepath)
     # empty segm grid
@@ -20,7 +20,9 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_s
     # be careful - there may be no point greater than certain sigma level (2, 1 etc.)
     isovalue_mask = volume_grid > 1 * std
 
+    segm_ids = []
     for i in range(1, number_of_segments + 1):
+        segm_ids.append(i)
         # coords of random 'True' from isovalue mask
         random_voxel_coords = get_coords_of_random_true_element(isovalue_mask)
         random_radius = get_random_radius(
@@ -40,8 +42,13 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_s
     last_segm_id = number_of_segments + 1
     # TODO: uncomment or leave it like this
     # Fill remaining part of (all True left in isovalue mask) with one last segm id
+    # segm_ids.append(last_segm_id)
     # segmentation_grid[isovalue_mask] = last_segm_id
-    return segmentation_grid
+    grid_and_segm_ids = {
+        'grid': segmentation_grid,
+        'ids': segm_ids
+    }
+    return grid_and_segm_ids
 
 
 def get_shape_mask(center_coords: Tuple[int, int, int], radius: int, arr: np.ndarray):
