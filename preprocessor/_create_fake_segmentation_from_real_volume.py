@@ -21,9 +21,12 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path) -> np.ndarr
     for i in range(1, 11):
         # coords of random 'True' from isovalue mask
         random_voxel_coords = get_coords_of_random_true_element(isovalue_mask)
-        random_radius = get_random_radius(threshold = np.min(volume_grid.shape)/3)
+        random_radius = get_random_radius(
+            int(np.min(volume_grid.shape)/20),
+            int(np.min(volume_grid.shape)/3)
+            )
 
-        shape_mask = get_shape_mask(random_voxel_coords, random_radius)
+        shape_mask = get_shape_mask(random_voxel_coords, random_radius, segmentation_grid)
         
         shape_within_isoval_mask = shape_mask & isovalue_mask
 
@@ -38,7 +41,7 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path) -> np.ndarr
     last_segm_id = 100
     # Fill remaining part of (all True left in isovalue mask) with one last segm id
     segmentation_grid[isovalue_mask] = last_segm_id
-
+    return segmentation_grid
 
 
 def get_shape_mask(center_coords: Tuple[int, int, int], radius: int, arr: np.ndarray):
@@ -58,7 +61,7 @@ def get_coords_of_random_true_element(mask: np.ndarray) -> Tuple[int, int, int]:
     # TODO:
     pass
 
-def get_random_radius(threshold: int) -> int:
+def get_random_radius(min_value: int, max_value: int) -> int:
     # TODO: google how to generate random number withing range
     return 10
 
