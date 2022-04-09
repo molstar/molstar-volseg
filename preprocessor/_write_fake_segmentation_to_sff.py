@@ -14,7 +14,6 @@ def write_fake_segmentation_to_sff(output_filepath: Path, lattice_data: np.ndarr
     Creates a single lattice
     '''
     seg = sff.SFFSegmentation(name="my segmentation", primary_descriptor="three_d_volume")
-    seg.to_file(str(output_filepath.resolve()))
 
     # TODO:
     # we need:
@@ -34,19 +33,25 @@ def write_fake_segmentation_to_sff(output_filepath: Path, lattice_data: np.ndarr
     _start = sff.SFFVolumeIndex(cols=0, rows=0, sections=0)
 
     lattice_obj = sff.SFFLattice.from_array(
-        id=0,
         data=lattice_data,
         mode='uint32',
         endianness='little',
         size=_size,
         start=_start,
     )
+    lattice_obj.id = 0
     seg.lattice_list.append(lattice_obj)
 
     seg.segment_list = sff.SFFSegmentList()
     for segment_id in segm_ids:
-        segment = _instantiate_segment(segment_id)
+        segment = _instantiate_segment(segment_id, value=segment_id)
         seg.segment_list.append(segment)
+
+    try:
+        seg.to_file(str(output_filepath.resolve()))
+        # probably sfftk bug: module 'os' has no attribute 'EX_OK'
+    except AttributeError:
+        pass
 
 
 def _instantiate_segment(segm_id: int, value, lattice_id=0):
@@ -66,7 +71,9 @@ def _instantiate_segment(segm_id: int, value, lattice_id=0):
 
 if __name__ == '__main__':
     # TODO: change to big EMDB entry name once ready
-    OUTPUT_FILEPATH = Path('preprocessor\fake_segmentations\fake_emd_1832.hff')
+    OUTPUT_FILEPATH = Path('preprocessor/fake_segmentations/fake_emd_1832.hff')
+    # OUTPUT_FILEPATH = Path('preprocessor/fake_segmentations/fake_emd_1832.json')
+
     REAL_MAP_FILEPATH = Path('preprocessor\sample_volumes\emdb_sff\EMD-1832.map')
 
     segm_grid_and_ids = create_fake_segmentation_from_real_volume(REAL_MAP_FILEPATH, 10)
