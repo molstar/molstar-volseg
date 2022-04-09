@@ -18,6 +18,7 @@ from preprocessor._magic_kernel_downsampling_3d import downsample_using_magic_ke
 from skimage.util import view_as_blocks
 import copy
 from sfftkrw import SFFSegmentation
+from scipy import signal
 
 VOLUME_DATA_GROUPNAME = '_volume_data'
 SEGMENTATION_DATA_GROUPNAME = '_segmentation_data'
@@ -391,7 +392,13 @@ class SFFPreprocessor(IDataPreprocessor):
         self.__store_single_volume_downsampling_in_zarr_stucture(current_level_data, downsampled_data_group, 1)
         for i in range(downsampling_steps):
             current_ratio = 2**(i + 1)
-            downsampled_data = downsample_using_magic_kernel(current_level_data, DOWNSAMPLING_KERNEL)
+            
+            # switching to convolve
+            # downsampled_data = downsample_using_magic_kernel(current_level_data, DOWNSAMPLING_KERNEL)
+            kernel = self.generate_kernel_3d_arr(list(DOWNSAMPLING_KERNEL))
+            downsampled_data = signal.convolve(current_level_data, kernel, mode='same', method='fft')
+            downsampled_data = downsampled_data[::2, ::2, ::2]
+            
             self.__store_single_volume_downsampling_in_zarr_stucture(downsampled_data, downsampled_data_group, current_ratio)
             current_level_data = downsampled_data
         # # TODO: figure out compression/filters: b64 encoded zlib-zipped .data is just 8 bytes
@@ -593,3 +600,17 @@ class SFFPreprocessor(IDataPreprocessor):
         normalized_axis_map_object = self.__normalize_axis_order(map_object)
         arr = self.__read_volume_data(normalized_axis_map_object)
         return arr
+
+    def generate_kernel_3d_arr(self, pattern: List[int]) -> np.ndarray:
+        '''
+        Generates conv kernel based on pattern provided (e.g. [1,4,6,4,1]).
+        https://stackoverflow.com/questions/71739757/generate-3d-numpy-array-based-on-provided-pattern/71742892#71742892
+        '''
+        pattern = pattern[0:3]
+        x = np.array(pattern[-1]).reshape([1,1,1])
+        for p in reversed(pattern[:-1]):
+            x = np.pad(x, mode='constant', constant_values=p, pad_width=1)
+        
+        k = (1/x.sum()) * x
+        # print(f'Kernel generated (further divided by sum): {x}')
+        return k
