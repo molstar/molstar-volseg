@@ -587,3 +587,9 @@ class SFFPreprocessor(IDataPreprocessor):
         else:
             # node is a group
             zarr.open_group(self.temp_zarr_structure_path / node_name, mode='w')
+
+    def read_and_normalize_volume_map(self, volume_file_path: Path) -> np.ndarray:
+        map_object = self.__read_volume_map_to_object(volume_file_path)
+        normalized_axis_map_object = self.__normalize_axis_order(map_object)
+        arr = self.__read_volume_data(normalized_axis_map_object)
+        return arr
