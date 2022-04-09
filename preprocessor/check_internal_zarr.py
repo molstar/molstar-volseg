@@ -67,7 +67,7 @@ def plot_volume_data_from_np_arr(arr, arr_name):
     no_negative = normalized_arr.clip(min=0)
     plot_3d_array_color(no_negative, f'{arr_name}_adjust_then_negative_to_zero')
 
-def plot_all_volume_data(volume_data):
+def plot_all_volume_data(volume_data, custom_image_name_tag=''):
     # just remove negative and plot all as absolute values
     # for arr_name, arr in volume_data.arrays():
     #     no_negative = arr[...].clip(min=0)
@@ -79,7 +79,7 @@ def plot_all_volume_data(volume_data):
         std_val =  np.std(arr[...])
         normalized_arr = np.array([normalize_absolute_value(x, mean_val, std_val) for x in arr[...]])
         no_negative = normalized_arr.clip(min=0)
-        plot_3d_array_color(no_negative, f'{arr_name}_adjust_then_negative_to_zero')
+        plot_3d_array_color(no_negative, f'{custom_image_name_tag}-{arr_name}_adjust_then_negative_to_zero')
 
     # set negative values to zero first, then calc mean & std and adjust on it
     # for arr_name, arr in volume_data.arrays():
@@ -160,7 +160,7 @@ if __name__ == '__main__':
     volume_data = root._volume_data
     segm_data = root._segmentation_data
 
-    # plot_all_volume_data(volume_data)
+    plot_all_volume_data(volume_data, custom_image_name_tag='convolve')
 
-    plot_all_segmentation_data(segm_data, root)
+    # plot_all_segmentation_data(segm_data, root)
 
