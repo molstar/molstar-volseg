@@ -37,7 +37,7 @@ def plot_3d_array_grayscale(arr: np.ndarray, arr_name: str):
     plt.savefig(f'{arr_name}.png')
     plt.close()
 
-def plot_3d_array_color(arr: np.ndarray, arr_name: str):
+def plot_3d_array_color(arr: np.ndarray, arr_name: str, save=True):
     # source: https://stackoverflow.com/questions/45969974/what-is-the-most-efficient-way-to-plot-3d-array-in-python
     shape = arr.shape
     fig = plt.figure(figsize=(10,10))
@@ -46,7 +46,10 @@ def plot_3d_array_color(arr: np.ndarray, arr_name: str):
     volume = arr
     ax.scatter(space[:,0], space[:,1], space[:,2], c=space/max(shape), s=volume*3)
     # plt.show()
-    plt.savefig(Path(__file__).resolve().parents[0] / f'sample_arr_plots/{arr_name}.png')
+    if save == True:
+        plt.savefig(Path(__file__).resolve().parents[0] / f'sample_arr_plots/{arr_name}.png')
+    else:
+        plt.show()
     plt.close()
 
 def normalize_absolute_value(original_value, mean_v, std_v):
