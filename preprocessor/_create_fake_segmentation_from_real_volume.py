@@ -5,10 +5,10 @@ from preprocessor.implementations.sff_preprocessor import SFFPreprocessor
 from preprocessor.check_internal_zarr import plot_3d_array_color
 
 # small grid for now
-# TODO:
+# TODO: change to the biggest at EMDB
 MAP_FILEPATH = Path('preprocessor\sample_volumes\emdb_sff\EMD-1832.map')
 
-def create_fake_segmentation_from_real_volume(volume_filepath: Path) -> np.ndarray:
+def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_segments: int) -> np.ndarray:
     prep = SFFPreprocessor()
     volume_grid: np.ndarray = prep.read_and_normalize_volume_map(volume_filepath)
     # empty segm grid
@@ -20,7 +20,7 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path) -> np.ndarr
     # be careful - there may be no point greater than certain sigma level (2, 1 etc.)
     isovalue_mask = volume_grid > 1 * std
 
-    for i in range(1, 11):
+    for i in range(1, number_of_segments + 1):
         # coords of random 'True' from isovalue mask
         random_voxel_coords = get_coords_of_random_true_element(isovalue_mask)
         random_radius = get_random_radius(
@@ -31,17 +31,14 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path) -> np.ndarr
         shape_mask = get_shape_mask(random_voxel_coords, random_radius, segmentation_grid)
         
         shape_within_isoval_mask = shape_mask# & isovalue_mask
-
-        # TODO: how to get segm id? 
         segm_id = i
         segmentation_grid[shape_within_isoval_mask] = segm_id
 
         # update isovalue mask by removing shape we just assigned segm id to, from it
         isovalue_mask = logical_subtract(isovalue_mask, shape_within_isoval_mask)
 
-    # TODO: how to get last segm_id?
-    last_segm_id = 100
-    # TODO: uncomment
+    last_segm_id = number_of_segments + 1
+    # TODO: uncomment or leave it like this
     # Fill remaining part of (all True left in isovalue mask) with one last segm id
     # segmentation_grid[isovalue_mask] = last_segm_id
     return segmentation_grid

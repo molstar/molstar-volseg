@@ -8,8 +8,7 @@ from scipy import ndimage, signal
 # 
 def generate_kernel_3d_arr(pattern: List[int]) -> np.ndarray:
     '''
-    Generates conv kernel based on pattern provided as a half of equivalent symmetric 1D kernel
-    E.g., to generate kernel for 3d using [1,4,6,4,1] kernel, provide it as input
+    Generates conv kernel based on pattern provided (e.g. [1,4,6,4,1]).
     https://stackoverflow.com/questions/71739757/generate-3d-numpy-array-based-on-provided-pattern/71742892#71742892
     '''
     pattern = pattern[0:3]
