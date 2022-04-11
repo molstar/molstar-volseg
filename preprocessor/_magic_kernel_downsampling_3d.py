@@ -76,7 +76,9 @@ def compute_downsampled_voxel_value(arr: np.ndarray,
     # print(outer_layer_voxel_values)
     # print(target_voxel_value)
     values_sum = k[2] * target_voxel_value + k[1] * inner_layer_voxel_values.sum() + k[0] * outer_layer_voxel_values.sum()
-    new_value = values_sum / sum(k)
+    coefficients_sum_3d = k[2] * 1 + k[1] * inner_layer_voxel_values.size + k[0] * outer_layer_voxel_values.size
+    # print(f'coefficients sum is: {coefficients_sum_3d}')
+    new_value = 1/coefficients_sum_3d * values_sum
     # print(values_sum)
     # print(new_value)
     return new_value

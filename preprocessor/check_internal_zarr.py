@@ -37,7 +37,7 @@ def plot_3d_array_grayscale(arr: np.ndarray, arr_name: str):
     plt.savefig(f'{arr_name}.png')
     plt.close()
 
-def plot_3d_array_color(arr: np.ndarray, arr_name: str):
+def plot_3d_array_color(arr: np.ndarray, arr_name: str, save=True):
     # source: https://stackoverflow.com/questions/45969974/what-is-the-most-efficient-way-to-plot-3d-array-in-python
     shape = arr.shape
     fig = plt.figure(figsize=(10,10))
@@ -46,7 +46,10 @@ def plot_3d_array_color(arr: np.ndarray, arr_name: str):
     volume = arr
     ax.scatter(space[:,0], space[:,1], space[:,2], c=space/max(shape), s=volume*3)
     # plt.show()
-    plt.savefig(Path(f'preprocessor/sample_arr_plots/{arr_name}.png'))
+    if save == True:
+        plt.savefig(Path(__file__).resolve().parents[0] / f'sample_arr_plots/{arr_name}.png')
+    else:
+        plt.show()
     plt.close()
 
 def normalize_absolute_value(original_value, mean_v, std_v):
@@ -56,11 +59,19 @@ def normalize_absolute_value(original_value, mean_v, std_v):
     value = (original_value - mean_v) / std_v
     return value
 
-def plot_all_volume_data(volume_data):
+def plot_volume_data_from_np_arr(arr, arr_name):
+    # calc mean & std and adjust on it first, then set negative values to zero
+    mean_val = np.mean(arr)
+    std_val =  np.std(arr)
+    normalized_arr = np.array([normalize_absolute_value(x, mean_val, std_val) for x in arr])
+    no_negative = normalized_arr.clip(min=0)
+    plot_3d_array_color(no_negative, f'{arr_name}_adjust_then_negative_to_zero')
+
+def plot_all_volume_data(volume_data, custom_image_name_tag=''):
     # just remove negative and plot all as absolute values
-    for arr_name, arr in volume_data.arrays():
-        no_negative = arr[...].clip(min=0)
-        plot_3d_array_color(no_negative, f'{arr_name}_abs_val')
+    # for arr_name, arr in volume_data.arrays():
+    #     no_negative = arr[...].clip(min=0)
+    #     plot_3d_array_color(no_negative, f'{arr_name}_abs_val')
 
     # calc mean & std and adjust on it first, then set negative values to zero
     for arr_name, arr in volume_data.arrays():
@@ -68,15 +79,15 @@ def plot_all_volume_data(volume_data):
         std_val =  np.std(arr[...])
         normalized_arr = np.array([normalize_absolute_value(x, mean_val, std_val) for x in arr[...]])
         no_negative = normalized_arr.clip(min=0)
-        plot_3d_array_color(no_negative, f'{arr_name}_adjust_then_negative_to_zero')
+        plot_3d_array_color(no_negative, f'{custom_image_name_tag}-{arr_name}_adjust_then_negative_to_zero')
 
     # set negative values to zero first, then calc mean & std and adjust on it
-    for arr_name, arr in volume_data.arrays():
-        no_negative = arr[...].clip(min=0)
-        mean_val = np.mean(no_negative)
-        std_val =  np.std(no_negative)
-        normalized_arr = np.array([normalize_absolute_value(x, mean_val, std_val) for x in no_negative])
-        plot_3d_array_color(normalized_arr, f'{arr_name}_negative_to_zero_then_adjust')
+    # for arr_name, arr in volume_data.arrays():
+    #     no_negative = arr[...].clip(min=0)
+    #     mean_val = np.mean(no_negative)
+    #     std_val =  np.std(no_negative)
+    #     normalized_arr = np.array([normalize_absolute_value(x, mean_val, std_val) for x in no_negative])
+    #     plot_3d_array_color(normalized_arr, f'{arr_name}_negative_to_zero_then_adjust')
 
 def plot_all_segmentation_data(segmentation_data, zarr_structure):
     # dict of lattices -> downsampling lvls -> segment ids -> masked arrs for that segment ids
@@ -142,14 +153,14 @@ def _get_list_of_seg_ids(zarr_structure):
         l.append(segment_id)
 
     return l
+if __name__ == '__main__':
+    PATH_TO_SAMPLE_SEGMENTATION = Path('db\emdb\emd-1832')
 
-PATH_TO_SAMPLE_SEGMENTATION = Path('db\emdb\emd-1832')
+    root = open_zarr_structure_from_path(PATH_TO_SAMPLE_SEGMENTATION)
+    volume_data = root._volume_data
+    segm_data = root._segmentation_data
 
-root = open_zarr_structure_from_path(PATH_TO_SAMPLE_SEGMENTATION)
-volume_data = root._volume_data
-segm_data = root._segmentation_data
+    plot_all_volume_data(volume_data, custom_image_name_tag='convolve')
 
-# plot_all_volume_data(volume_data)
-
-plot_all_segmentation_data(segm_data, root)
+    # plot_all_segmentation_data(segm_data, root)
 
