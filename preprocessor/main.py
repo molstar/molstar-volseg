@@ -4,7 +4,7 @@ import asyncio
 from pathlib import Path
 from typing import Dict
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
-
+from preprocessor._write_fake_segmentation_to_sff import OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH
 
 from db.interface.i_preprocessed_db import IPreprocessedDb
 from preprocessor.implementations.preprocessor_service import PreprocessorService
@@ -60,6 +60,11 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path) -> Dict:
                 'volume_file_path': Path(__file__) / RAW_INPUT_FILES_DIR / 'emdb' / 'emd-1832' / 'EMD-1832.map',
                 'segmentation_file_path': Path(__file__) / RAW_INPUT_FILES_DIR / 'emdb' / 'emd-1832' / 'emd_1832.hff',
             },
+            {
+                'id': 'fake-emd-1832',
+                'volume_file_path': Path(__file__) / RAW_INPUT_FILES_DIR / 'emdb' / 'emd-1832' / 'EMD-1832.map',
+                'segmentation_file_path': FAKE_SEGMENTATION_FILEPATH,
+            }
             # {
             #     'id': 'empiar_10087_c2_tomo02',
             #     'volume_file_path': Path(__file__) / RAW_INPUT_FILES_DIR / 'emdb' / 'empiar_10087_c2_tomo02' / 'C2_tomo02.mrc',

@@ -89,14 +89,17 @@ def plot_all_volume_data(volume_data, custom_image_name_tag=''):
     #     normalized_arr = np.array([normalize_absolute_value(x, mean_val, std_val) for x in no_negative])
     #     plot_3d_array_color(normalized_arr, f'{arr_name}_negative_to_zero_then_adjust')
 
-def plot_all_segmentation_data(segmentation_data, zarr_structure):
+def plot_all_segmentation_data(segmentation_data, zarr_structure, custom_image_name_tag=''):
     # dict of lattices -> downsampling lvls -> segment ids -> masked arrs for that segment ids
     d = _convert_all_segmentation_data_to_per_segment_masked_arrs(segmentation_data, zarr_structure)
     for lattice_id in d:
         for dwns_lvl in d[lattice_id]:
             for segment_id in d[lattice_id][dwns_lvl]:
                 masked_arr = d[lattice_id][dwns_lvl][segment_id]
-                plot_3d_array_color(masked_arr, f'{lattice_id}_x{dwns_lvl}_segment_{segment_id}.png')
+                plot_3d_array_color(
+                    masked_arr,
+                    f'{custom_image_name_tag}-{lattice_id}_x{dwns_lvl}_segment_{segment_id}.png'
+                    )
 
 def get_arr_values_as_freq_table(arr: np.ndarray):
     # non_zero_ind = arr.nonzero()
@@ -154,13 +157,14 @@ def _get_list_of_seg_ids(zarr_structure):
 
     return l
 if __name__ == '__main__':
-    PATH_TO_SAMPLE_SEGMENTATION = Path('db\emdb\emd-1832')
-
+    # PATH_TO_SAMPLE_SEGMENTATION = Path('db\emdb\emd-1832')
+    PATH_TO_SAMPLE_SEGMENTATION = Path('db/emdb/fake-emd-1832')
+    
     root = open_zarr_structure_from_path(PATH_TO_SAMPLE_SEGMENTATION)
     volume_data = root._volume_data
     segm_data = root._segmentation_data
 
-    plot_all_volume_data(volume_data, custom_image_name_tag='convolve')
+    plot_all_volume_data(volume_data, custom_image_name_tag='fake-1832')
 
-    # plot_all_segmentation_data(segm_data, root)
+    plot_all_segmentation_data(segm_data, root, custom_image_name_tag='fake-1832')
 
