@@ -157,8 +157,9 @@ def _get_list_of_seg_ids(zarr_structure):
 
     return l
 if __name__ == '__main__':
-    PATH_TO_SAMPLE_SEGMENTATION = Path('db\emdb\emd-1832')
+    # PATH_TO_SAMPLE_SEGMENTATION = Path('db\emdb\emd-1832')
     # PATH_TO_SAMPLE_SEGMENTATION = Path('db/emdb/fake-emd-1832')
+    PATH_TO_SAMPLE_SEGMENTATION = Path('db\emdb\emd-18sds32')
     
     root = open_zarr_structure_from_path(PATH_TO_SAMPLE_SEGMENTATION)
     volume_data = root._volume_data
@@ -167,5 +168,5 @@ if __name__ == '__main__':
     # plot_all_volume_data(volume_data, custom_image_name_tag='fake-1832')
     # plot_all_segmentation_data(segm_data, root, custom_image_name_tag='fake-1832')
 
-    plot_all_volume_data(volume_data, custom_image_name_tag='emd-1832')
-    plot_all_segmentation_data(segm_data, root, custom_image_name_tag='emd-1832')
+    plot_all_volume_data(volume_data, custom_image_name_tag='fakeemd-1832')
+    plot_all_segmentation_data(segm_data, root, custom_image_name_tag='fakeemd-1832')

@@ -1,4 +1,5 @@
 ### Custom
+preprocessor/real_volumes_for_converstion_to_fake_sff/*
 db/emdb/
 preprocessor/output_internal_zarr/
 preprocessor/temp/
@@ -11,6 +12,7 @@ preprocessor/sample_segmentations/emdb_sff/empiar_10087_c2_tomo02.hff
 preprocessor/sample_segmentations/emdb_sff/empiar_10087_c2_tomo02.json
 preprocessor/sample_segmentations/emdb_sff/empiar_10087_e64_tomo03.hff
 preprocessor/sample_segmentations/emdb_sff/empiar_10087_e64_tomo03.json
+preprocessor/empiar_segmentations
 iota_yzx.ccp4.gz
 _read_ccp4_fields.py
 preprocessor/sample_arr_plots/
