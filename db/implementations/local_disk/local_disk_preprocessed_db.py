@@ -31,6 +31,19 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         '''
         return self.__path_to_object__(namespace, key).is_dir()
     
+    def remove_all_entries(self, namespace: str = 'emdb'):
+        '''
+        Removes all entries from dir of certain source db (namespace);
+        used before another run of building db to build it from scratch without interfering with
+        previously existing entries
+        '''
+        content = sorted((Path(__file__).resolve().parents[2] / namespace).glob('*'))
+        for path in content:
+            if path.is_file():
+                path.unlink()
+            if path.is_dir():
+                shutil.rmtree(path, ignore_errors=True)
+
     async def store(self, namespace: str, key: str, temp_store_path: Path) -> bool:
         '''
         Takes path to temp zarr structure returned by preprocessor as argument 
