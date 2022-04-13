@@ -31,12 +31,13 @@ def convert_map_filename_to_entry_name(map_filename: str) -> str:
 def create_fake_sff_from_input_volumes(input_volumes_filepaths: List[Path], output_sff_dir: Path, source_db: str):
     for filepath in input_volumes_filepaths:
         entry_name = convert_map_filename_to_entry_name(filepath.stem)
-        # number of segments is random
-        number_of_segments = np.random.randint(5,15) 
+        # number of segments is random. Potentially can be less than this number
+        # if it happen such that e.g. first 4 segments occupy all the space, and there is nothing left
+        number_of_segments = np.random.randint(10,15) 
         segm_grid_and_ids = create_fake_segmentation_from_real_volume(filepath, number_of_segments)
         grid = segm_grid_and_ids['grid']
         segm_ids = segm_grid_and_ids['ids']
-
+        # print(f'segm ids provided to write_fake_segmentation_to_sff: {segm_ids}')
         # create dir for that entry
         (output_sff_dir / source_db / entry_name).mkdir(parents=True, exist_ok=True)
         
