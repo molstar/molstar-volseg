@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 from itertools import product
-
+from typing import Dict
 from preprocessor.implementations.sff_preprocessor import open_zarr_structure_from_path
 
 def plot_3d_array_grayscale(arr: np.ndarray, arr_name: str):
@@ -156,15 +156,26 @@ def _get_list_of_seg_ids(zarr_structure):
         l.append(segment_id)
 
     return l
+
+def check_which_segments_are_not_on_grid(segm_data: np.ndarray):
+    set_table: Dict = segm_data[0][1].set_table[...][0]
+    possible_values = np.array(list(set_table.values())).flatten()
+    orig_resolution_grid = segm_data[0][1].grid[...]
+    unique_values = np.unique(orig_resolution_grid)
+    print(f'possible values: {possible_values}')
+    print(f'existing values: {unique_values}')
+
+    # TODO: compare two arrs above and find which is missing
+
 if __name__ == '__main__':
     # PATH_TO_SAMPLE_SEGMENTATION = Path('db\emdb\emd-1832')
     # PATH_TO_SAMPLE_SEGMENTATION = Path('db/emdb/fake-emd-1832')
-    PATH_TO_SAMPLE_SEGMENTATION = Path('db\emdb\emd-18sds32')
+    PATH_TO_SAMPLE_SEGMENTATION = Path('db\emdb\emd-183dff2')
     
     root = open_zarr_structure_from_path(PATH_TO_SAMPLE_SEGMENTATION)
     volume_data = root._volume_data
     segm_data = root._segmentation_data
-
+    check_which_segments_are_not_on_grid(segm_data)
     # plot_all_volume_data(volume_data, custom_image_name_tag='fake-1832')
     # plot_all_segmentation_data(segm_data, root, custom_image_name_tag='fake-1832')
 
