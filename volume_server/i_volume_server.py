@@ -1,6 +1,5 @@
 import abc
 
-from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 from volume_server.requests.metadata_request.i_metadata_request import IMetadataRequest
 from volume_server.requests.volume_request.i_volume_request import IVolumeRequest
 

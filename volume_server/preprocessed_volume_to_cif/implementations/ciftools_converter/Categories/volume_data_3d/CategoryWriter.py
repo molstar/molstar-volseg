@@ -1,5 +1,4 @@
-from ciftools.Writer.CategoryWriter import CategoryWriter
-from ciftools.Writer.CategoryWriterProvider import CategoryWriterProvider
+from ciftools.writer.base import CategoryWriter, CategoryWriterProvider
 
 from db.interface.i_preprocessed_volume import IPreprocessedVolume
 from volume_server.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories._writer import CategoryDesc

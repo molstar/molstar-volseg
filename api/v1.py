@@ -1,9 +1,6 @@
-import json
 from typing import Optional
 
-import numpy as np
 from fastapi import FastAPI
-from numpy import uint8, dtype
 
 from volume_server.i_volume_server import IVolumeServer
 from volume_server.requests.metadata_request.metadata_request import MetadataRequest

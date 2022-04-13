@@ -1,6 +1,6 @@
 import numpy as np
-from ciftools.Binary.Writer.BinaryCIFWriter import BinaryCIFWriter
-from ciftools.Writer.OutputStream import OutputStream
+from ciftools.binary import BinaryCIFWriter
+from ciftools.writer.base import OutputStream
 
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 from volume_server.preprocessed_volume_to_cif.i_volume_to_cif_converter import IVolumeToCifConverter

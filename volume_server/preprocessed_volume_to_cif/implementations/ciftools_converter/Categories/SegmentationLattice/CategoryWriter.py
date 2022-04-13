@@ -1,5 +1,4 @@
-from ciftools.Writer.CategoryWriter import CategoryWriter
-from ciftools.Writer.CategoryWriterProvider import CategoryWriterProvider
+from ciftools.writer.base import CategoryWriter, CategoryWriterProvider
 
 
 class CategoryWriterProvider_SegmentationLattice(CategoryWriterProvider):
