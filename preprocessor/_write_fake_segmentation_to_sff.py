@@ -3,6 +3,7 @@ from typing import List
 import sfftkrw as sff
 import numpy as np
 import random
+import string
 
 from preprocessor._create_fake_segmentation_from_real_volume import create_fake_segmentation_from_real_volume
 
@@ -19,7 +20,7 @@ REAL_MAP_FILEPATH = Path('preprocessor\sample_volumes\emdb_sff\EMD-1832.map')
 # use seg.details for that
 def write_fake_segmentation_to_sff(output_filepath: Path, lattice_data: np.ndarray, segm_ids: List[int], json_for_debug=False, OTHER_ARGS_TODO=None):
     '''
-    Creates a single lattice
+    Note: creates a single lattice
     '''
     seg = sff.SFFSegmentation(name="my segmentation", primary_descriptor="three_d_volume")
     seg.details = 'SOme fake segmentation'
@@ -80,6 +81,13 @@ def _instantiate_segment(segm_id: int, value, lattice_id=0):
         green=random.random(),
         blue=random.random(),
         alpha=random.random()
+    )
+    
+    random_name = ''.join(random.choices(string.ascii_lowercase, k=15))
+    random_descr = ''.join(random.choices(string.ascii_lowercase, k=30))
+    segment.biological_annotation = sff.SFFBiologicalAnnotation(
+        name=random_name,
+        description=random_descr
     )
     return segment
 
