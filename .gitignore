@@ -1,4 +1,5 @@
 ### Custom
+preprocessor/fake_segmentations/
 preprocessor/real_volumes_for_converstion_to_fake_sff/*
 !preprocessor/real_volumes_for_converstion_to_fake_sff/.gitkeep
 preprocessor/fake_raw_input_files/emdb/*
