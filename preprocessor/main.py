@@ -72,7 +72,7 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
                             if item.is_file():
                                 if item.suffix == '.hff':
                                     segmentation_file_path: Path = item
-                                if item.suffix == '.map':
+                                if item.suffix == '.map' or item.suffix == '.ccp4':
                                     volume_file_path: Path = item
                         d[source_db].append(
                             {
