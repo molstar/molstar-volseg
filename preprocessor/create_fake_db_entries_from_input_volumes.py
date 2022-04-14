@@ -56,8 +56,8 @@ def get_list_of_input_volume_files(input_volumes_dir: Path) -> List[Path]:
     for path in contents:
         if path.is_file():
             ext = (path.suffix).lower()
-            assert ext == '.map' or ext == '.ccp4'
-            list_of_input_volumes.append(path)
+            if ext == '.map' or ext == '.ccp4':
+                list_of_input_volumes.append(path)
 
     return list_of_input_volumes
 
