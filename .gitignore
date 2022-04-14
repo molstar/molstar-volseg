@@ -1,8 +1,8 @@
 ### Custom
 preprocessor/real_volumes_for_converstion_to_fake_sff/*
-preprocessor/real_volumes_for_converstion_to_fake_sff/.gitkeep
+!preprocessor/real_volumes_for_converstion_to_fake_sff/.gitkeep
 preprocessor/fake_raw_input_files/emdb/*
-preprocessor/fake_raw_input_files/emdb/.gitkeep
+!preprocessor/fake_raw_input_files/emdb/.gitkeep
 db/emdb/
 preprocessor/output_internal_zarr/
 preprocessor/temp/
