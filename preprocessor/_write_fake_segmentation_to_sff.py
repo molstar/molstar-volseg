@@ -14,15 +14,14 @@ OUTPUT_FILEPATH = Path('preprocessor/fake_segmentations/fake_emd_1832.hff')
 
 REAL_MAP_FILEPATH = Path('preprocessor\sample_volumes\emdb_sff\EMD-1832.map')
 
-
-# TODO: once the core parts of SFF (lattice & some other things) are ready, add some fake annotations
-# don't bother with software list etc. Just some random strings of text
-# use seg.details for that
-def write_fake_segmentation_to_sff(output_filepath: Path, lattice_data: np.ndarray, segm_ids: List[int], json_for_debug=False, OTHER_ARGS_TODO=None):
+def write_fake_segmentation_to_sff(output_filepath: Path, lattice_data: np.ndarray, segm_ids: List[int], json_for_debug=False):
     '''
     Note: creates a single lattice
     '''
-    seg = sff.SFFSegmentation(name="my segmentation", primary_descriptor="three_d_volume")
+    # based on filepath name
+    seg_name = (output_filepath.stem).lower()
+
+    seg = sff.SFFSegmentation(name=seg_name, primary_descriptor="three_d_volume")
     seg.details = 'SOme fake segmentation'
     # TODO:
     # we need:
