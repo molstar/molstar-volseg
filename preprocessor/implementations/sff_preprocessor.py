@@ -29,6 +29,7 @@ MIN_GRID_SIZE = 100**3
 DOWNSAMPLING_KERNEL = (1, 4, 6, 4, 1)
 
 
+
 def open_zarr_structure_from_path(path: Path) -> zarr.hierarchy.Group:
     store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
     # Re-create zarr hierarchy from opened store
