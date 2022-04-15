@@ -92,7 +92,10 @@ def plot_specific_downsampling_level_segmentation_data(root: zarr.hierarchy.grou
     segmentation_data = root._segmentation_data
     zarr_structure = root
     img_tag = root.details[...][0]
-    d = _convert_all_segmentation_data_to_per_segment_masked_arrs(segmentation_data, zarr_structure)
+    d = _convert_specific_downsampling_segmentation_data_to_per_segment_masked_arrs(
+        segmentation_data,
+        zarr_structure,
+        level)
     for lattice_id in d:
         for segment_id in d[lattice_id][level]:
             masked_arr = d[lattice_id][level][segment_id]
@@ -118,6 +121,36 @@ def get_arr_values_as_freq_table(arr: np.ndarray):
     # non_zero_values = arr[non_zero_ind]
     unique, counts = np.unique(arr, return_counts=True)
     return np.asarray((unique, counts)).T
+
+def _convert_specific_downsampling_segmentation_data_to_per_segment_masked_arrs(
+        segm_data,
+        zarr_structure,
+        level: str):
+    root = zarr_structure
+    segment_ids = _get_list_of_seg_ids(zarr_structure)
+    # new grid dict
+    d = {}
+
+    for gr_name, gr in segm_data.groups():
+        # print(f'Lattice #{gr_name}')
+        d[gr_name] = {}
+        dwns_lvl_gr = gr[str(level)]
+        dwns_lvl_name = str(level)
+        # print(f'Downsampling level x{dwns_lvl_name}')
+        grid = dwns_lvl_gr.grid[...]
+        set_table = dwns_lvl_gr.set_table[...][0]
+        d[gr_name][dwns_lvl_name] = {}
+        # print(dwns_lvl_gr.grid[...])
+        # print_arr_values_as_freq_table(dwns_lvl_gr.grid[...])
+
+        for seg_id in segment_ids:
+            # print(f'Mask applied for segment id = {seg_id}')
+            new_set_table = _transform_sets(set_table, seg_id)
+            new_masked_grid = _transform_array(grid, new_set_table)
+            # print(new_grid)
+            d[gr_name][dwns_lvl_name][seg_id] = new_masked_grid
+
+    return d
 
 def _convert_all_segmentation_data_to_per_segment_masked_arrs(segm_data, zarr_structure):
     root = zarr_structure
