@@ -20,9 +20,10 @@ def write_fake_segmentation_to_sff(output_filepath: Path, lattice_data: np.ndarr
     '''
     # based on filepath name
     seg_name = (output_filepath.stem).lower()
+    seg_details = seg_name
 
     seg = sff.SFFSegmentation(name=seg_name, primary_descriptor="three_d_volume")
-    seg.details = 'SOme fake segmentation'
+    seg.details = seg_details
     # TODO:
     # we need:
     # sfftkrw.SFFSegmentList - for segment items we need to have ids

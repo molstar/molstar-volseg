@@ -78,7 +78,7 @@ def _plot_volume_data(arr_name, arr: zarr.core.Array, custom_image_name_tag=''):
     plot_3d_array_color(no_negative, f'{custom_image_name_tag}-{arr_name}_adjust_then_negative_to_zero')
 
 def plot_specific_downsampling_level_volume_data(root: zarr.hierarchy.group, level: str):
-    img_tag = root.name
+    img_tag = root.details[...][0]
     arr = root._volume_data[level]
     arr_name = str(level)
     _plot_volume_data(arr_name, arr, custom_image_name_tag=img_tag)
@@ -91,7 +91,7 @@ def plot_all_volume_data(volume_data, custom_image_name_tag=''):
 def plot_specific_downsampling_level_segmentation_data(root: zarr.hierarchy.group, level: str):
     segmentation_data = root._segmentation_data
     zarr_structure = root
-    img_tag = root.name
+    img_tag = root.details[...][0]
     d = _convert_all_segmentation_data_to_per_segment_masked_arrs(segmentation_data, zarr_structure)
     for lattice_id in d:
         for segment_id in d[lattice_id][level]:
@@ -201,8 +201,8 @@ if __name__ == '__main__':
         plot_specific_downsampling_level_segmentation_data(root, args.level)
         plot_specific_downsampling_level_volume_data(root, args.level)
     else:
-        plot_all_volume_data(volume_data, custom_image_name_tag=root.name)
-        plot_all_segmentation_data(segm_data, root, custom_image_name_tag=root.name)
+        plot_all_volume_data(volume_data, custom_image_name_tag=root.details[...][0])
+        plot_all_segmentation_data(segm_data, root, custom_image_name_tag=root.details[...][0])
 
 
     
