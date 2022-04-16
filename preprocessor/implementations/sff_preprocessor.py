@@ -351,10 +351,11 @@ class SFFPreprocessor(IDataPreprocessor):
             float(str(d['NSSTART'] * original_voxel_size[2])),
         )
 
-        # compare vs mrcfile origin
-        assert np.isclose(origin[0], map_object.header.origin.x[()], rtol=1e-05, atol=1e-08, equal_nan=False)
-        assert np.isclose(origin[1], map_object.header.origin.y[()], rtol=1e-05, atol=1e-08, equal_nan=False)
-        assert np.isclose(origin[2], map_object.header.origin.z[()], rtol=1e-05, atol=1e-08, equal_nan=False)
+        # TODO: compare vs mrcfile origin, for some reason for emd-1832 they have 0,0,0
+        # we have -182.4 -182.4 -182.4 (in angstroms) which corresponds to emdb webpage origin (-32 in voxels)
+        # assert np.isclose(origin[0], map_object.header.origin.x[()], rtol=1e-05, atol=1e-08, equal_nan=False)
+        # assert np.isclose(origin[1], map_object.header.origin.y[()], rtol=1e-05, atol=1e-08, equal_nan=False)
+        # assert np.isclose(origin[2], map_object.header.origin.z[()], rtol=1e-05, atol=1e-08, equal_nan=False)
 
         # get grid dimensions based on NX/NC, NY/NR, NZ/NS variables (words 1, 2, 3) in CCP4 file
         grid_dimensions: Tuple[int, int, int] = (d['NC'], d['NR'], d['NS'])
