@@ -1,6 +1,5 @@
 import base64
 import json
-import gemmi
 from pathlib import Path
 from typing import Dict, Set, Tuple, Union, List
 import zlib
@@ -19,6 +18,7 @@ from skimage.util import view_as_blocks
 import copy
 from sfftkrw import SFFSegmentation
 from scipy import signal
+import mrcfile
 
 VOLUME_DATA_GROUPNAME = '_volume_data'
 SEGMENTATION_DATA_GROUPNAME = '_segmentation_data'
@@ -27,7 +27,6 @@ ANNOTATION_METADATA_FILENAME = 'annotation_metadata.json'
 # temporarly can be set to 32 to check at least x4 downsampling with 64**3 emd-1832 grid
 MIN_GRID_SIZE = 100**3
 DOWNSAMPLING_KERNEL = (1, 4, 6, 4, 1)
-
 
 
 def open_zarr_structure_from_path(path: Path) -> zarr.hierarchy.Group:
@@ -175,26 +174,39 @@ class SFFPreprocessor(IDataPreprocessor):
         # print(d)
         return d
 
-    def __normalize_axis_order(self, map_object: gemmi.Ccp4Map):
+    def __normalize_axis_order(self, map_object: mrcfile.mrcobject.MrcObject):
         '''
         Normalizes axis order to X, Y, Z (1, 2, 3)
         '''
-        # just reorders axis to X, Y, Z (https://gemmi.readthedocs.io/en/latest/grid.html#setup)
-        map_object.setup(float('nan'), gemmi.MapSetup.ReorderOnly)
-        ccp4_header = self.__read_ccp4_words_to_dict(map_object)
-        new_axis_order = ccp4_header['MAPC'], ccp4_header['MAPR'], ccp4_header['MAPS']
-        assert new_axis_order == (1, 2, 3), f'Axis order is {new_axis_order}, should be (1, 2, 3) or X, Y, Z'
+        # TODO: for now just the same object, implement later
         return map_object
+        # https://mrcfile.readthedocs.io/en/latest/usage_guide.html?highlight=axis#data-dimensionality
+        # Note that the MRC format allows the data axes to be swapped using the header’s mapc, mapr and maps fields. This library does not attempt to swap 
+        # the axes and simply assigns the columns to X, rows to Y and sections to Z. (The data array is indexed in C style, so data values can be accessed using 
+        # mrc.data[z][y][x].) In general, EM data is written using the default axes, but crystallographic data files might use swapped axes in certain space 
+        # groups – if this might matter to you, you should check the mapc, mapr and maps fields after opening the file and consider transposing the data array 
+        # if necessary.
 
-    def __read_volume_map_to_object(self, volume_file_path: Path) -> gemmi.Ccp4Map:
+
+
+        # just reorders axis to X, Y, Z (https://gemmi.readthedocs.io/en/latest/grid.html#setup)
+        
+        # Gemmi code for reference
+        # map_object.setup(float('nan'), gemmi.MapSetup.ReorderOnly)
+        # ccp4_header = self.__read_ccp4_words_to_dict(map_object)
+        # new_axis_order = ccp4_header['MAPC'], ccp4_header['MAPR'], ccp4_header['MAPS']
+        # assert new_axis_order == (1, 2, 3), f'Axis order is {new_axis_order}, should be (1, 2, 3) or X, Y, Z'
+        # return map_object
+
+    def __read_volume_map_to_object(self, volume_file_path: Path) -> mrcfile.mrcobject.MrcObject:
         '''
-        Reads ccp4 map to gemmi.Ccp4Map object 
+        Reads ccp4 map to mrcfile.mrcobject.MrcObject object 
         '''
         # https://www.ccpem.ac.uk/mrc_format/mrc2014.php
         # https://www.ccp4.ac.uk/html/maplib.html
-        return gemmi.read_ccp4_map(str(volume_file_path.resolve()))
-
-    def __process_volume_data(self, zarr_structure: zarr.hierarchy.group, map_object: gemmi.Ccp4Map):
+        return mrcfile.open(str(volume_file_path.resolve()), mode='r')
+        
+    def __process_volume_data(self, zarr_structure: zarr.hierarchy.group, map_object: mrcfile.mrcobject.MrcObject):
         '''
         Takes read map object, extracts volume data, downsamples it, stores to zarr_structure
         '''
@@ -244,10 +256,12 @@ class SFFPreprocessor(IDataPreprocessor):
         num_of_downsampling_steps: int = math.ceil(math.log2(input_grid_size/min_grid_size))
         return num_of_downsampling_steps
 
-    def __read_ccp4_words_to_dict(self, m: gemmi.Ccp4Map) -> Dict:
+    def __read_ccp4_words_to_dict(self, m: mrcfile.mrcobject.MrcObject) -> Dict:
         ctx = decimal.getcontext()
         ctx.rounding = decimal.ROUND_CEILING
         d = {}
+
+        # TODO: rewrite based on mrcfile functionality
         d['NC'], d['NR'], d['NS'] = m.header_i32(1), m.header_i32(2), m.header_i32(3)
         d['NCSTART'], d['NRSTART'], d['NSSTART'] = m.header_i32(5), m.header_i32(6), m.header_i32(7)
         d['xLength'] = round(Decimal(m.header_float(11)), 1)
@@ -281,7 +295,7 @@ class SFFPreprocessor(IDataPreprocessor):
         #         raise Exception('zarr object should be either group or array')
 
 
-    def __extract_grid_metadata(self, zarr_structure: zarr.hierarchy.group, map_object) -> Dict:
+    def __extract_grid_metadata(self, zarr_structure: zarr.hierarchy.group, map_object: mrcfile.mrcobject.MrcObject) -> Dict:
         root = zarr_structure
         volume_downsamplings = sorted(root[VOLUME_DATA_GROUPNAME].array_keys())
         # convert to ints
@@ -352,12 +366,12 @@ class SFFPreprocessor(IDataPreprocessor):
         with (temp_dir_path / metadata_filename).open('w') as fp:
             json.dump(metadata, fp)
 
-    def __read_volume_data(self, m) -> np.ndarray:
+    def __read_volume_data(self, map_object: mrcfile.mrcobject.MrcObject) -> np.ndarray:
         '''
         Takes read map object (axis normalized upfront) and returns numpy arr with volume data
         '''
         # TODO: can be dask array to save memory?
-        return np.array(m.grid)
+        return map_object.data
 
     def __lattice_data_to_np_arr(self, data: str, dtype: str, arr_shape: Tuple[int, int, int]) -> np.ndarray:
         '''
