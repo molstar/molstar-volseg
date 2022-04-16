@@ -155,6 +155,10 @@ class SFFPreprocessor(IDataPreprocessor):
         annotation_metadata = self.__extract_annotation_metadata(segm_file_path)
         self.__temp_save_metadata(annotation_metadata, ANNOTATION_METADATA_FILENAME, self.temp_zarr_structure_path)
 
+        # should be closed
+        normalized_axis_map_object.close()
+        map_object.close()
+
         return self.temp_zarr_structure_path
 
     def __create_value_to_segment_id_mapping(self, zarr_structure):
