@@ -181,13 +181,7 @@ class SFFPreprocessor(IDataPreprocessor):
         # TODO: for now just the same object, implement later
         return map_object
         # https://mrcfile.readthedocs.io/en/latest/usage_guide.html?highlight=axis#data-dimensionality
-        # Note that the MRC format allows the data axes to be swapped using the header’s mapc, mapr and maps fields. This library does not attempt to swap 
-        # the axes and simply assigns the columns to X, rows to Y and sections to Z. (The data array is indexed in C style, so data values can be accessed using 
-        # mrc.data[z][y][x].) In general, EM data is written using the default axes, but crystallographic data files might use swapped axes in certain space 
-        # groups – if this might matter to you, you should check the mapc, mapr and maps fields after opening the file and consider transposing the data array 
-        # if necessary.
-
-
+       
 
         # just reorders axis to X, Y, Z (https://gemmi.readthedocs.io/en/latest/grid.html#setup)
         
@@ -261,13 +255,12 @@ class SFFPreprocessor(IDataPreprocessor):
         ctx.rounding = decimal.ROUND_CEILING
         d = {}
 
-        # TODO: rewrite based on mrcfile functionality
-        d['NC'], d['NR'], d['NS'] = m.header_i32(1), m.header_i32(2), m.header_i32(3)
-        d['NCSTART'], d['NRSTART'], d['NSSTART'] = m.header_i32(5), m.header_i32(6), m.header_i32(7)
-        d['xLength'] = round(Decimal(m.header_float(11)), 1)
-        d['yLength'] = round(Decimal(m.header_float(12)), 1)
-        d['zLength'] = round(Decimal(m.header_float(13)), 1)
-        d['MAPC'], d['MAPR'], d['MAPS'] = m.header_i32(17), m.header_i32(18), m.header_i32(19)
+        d['NC'], d['NR'], d['NS'] = m.header.nx[()].item(), m.header.ny[()].item(), m.header.nz[()].item()
+        d['NCSTART'], d['NRSTART'], d['NSSTART'] = m.header.nxstart[()], m.header.nystart[()], m.header.nzstart[()]
+        d['xLength'] = round(Decimal(m.header.cella[()]['x'].item()), 1)
+        d['yLength'] = round(Decimal(m.header.cella[()]['y'].item()), 1)
+        d['zLength'] = round(Decimal(m.header.cella[()]['z'].item()), 1)
+        d['MAPC'], d['MAPR'], d['MAPS'] = m.header.mapc[()], m.header.mapr[()], m.header.maps[()]
         return d
 
     def __extract_annotation_metadata(self, segm_file_path: Path) -> Dict:
@@ -332,6 +325,18 @@ class SFFPreprocessor(IDataPreprocessor):
             d['zLength'] / d['NS']
         )
 
+        # compare with  mrc.voxel_size.x etc. (assert?)
+        assert np.isclose(
+            float(str(original_voxel_size[0])),
+            map_object.voxel_size.x[()], rtol=1e-05, atol=1e-08, equal_nan=False)
+        assert np.isclose(
+            float(str(original_voxel_size[1])),
+            map_object.voxel_size.y[()], rtol=1e-05, atol=1e-08, equal_nan=False)
+        assert np.isclose(
+            float(str(original_voxel_size[2])),
+            map_object.voxel_size.z[()], rtol=1e-05, atol=1e-08, equal_nan=False)
+
+
         voxel_sizes_in_downsamplings: Dict = {}
         for rate in volume_downsamplings:
             voxel_sizes_in_downsamplings[rate] = tuple(
@@ -345,6 +350,11 @@ class SFFPreprocessor(IDataPreprocessor):
             float(str(d['NRSTART'] * original_voxel_size[1])),
             float(str(d['NSSTART'] * original_voxel_size[2])),
         )
+
+        # compare vs mrcfile origin
+        assert np.isclose(origin[0], map_object.header.origin.x[()], rtol=1e-05, atol=1e-08, equal_nan=False)
+        assert np.isclose(origin[1], map_object.header.origin.y[()], rtol=1e-05, atol=1e-08, equal_nan=False)
+        assert np.isclose(origin[2], map_object.header.origin.z[()], rtol=1e-05, atol=1e-08, equal_nan=False)
 
         # get grid dimensions based on NX/NC, NY/NR, NZ/NS variables (words 1, 2, 3) in CCP4 file
         grid_dimensions: Tuple[int, int, int] = (d['NC'], d['NR'], d['NS'])
