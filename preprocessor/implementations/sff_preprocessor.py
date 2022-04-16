@@ -202,8 +202,11 @@ class SFFPreprocessor(IDataPreprocessor):
         '''
         # https://www.ccpem.ac.uk/mrc_format/mrc2014.php
         # https://www.ccp4.ac.uk/html/maplib.html
-        return mrcfile.open(str(volume_file_path.resolve()), mode='r')
-        
+        # normal mode
+        # return mrcfile.open(str(volume_file_path.resolve()), mode='r')
+        # memorymapped mode for large files
+        return mrcfile.mmap(str(volume_file_path.resolve()), mode='r')
+
     def __process_volume_data(self, zarr_structure: zarr.hierarchy.group, map_object: mrcfile.mrcobject.MrcObject):
         '''
         Takes read map object, extracts volume data, downsamples it, stores to zarr_structure
