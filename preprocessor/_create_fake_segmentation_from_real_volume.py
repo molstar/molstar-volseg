@@ -73,19 +73,45 @@ def logical_subtract(A, B):
     # Source: https://github.com/numpy/numpy/issues/15856
     return A.astype(np.int32) - B.astype(np.int32) == 1
 
+def get_random_arr_position_based_on_condition(arr: np.ndarray, condition=True):
+    '''Deprecated. Too deep recursion'''
+    x, y, z = arr.shape
+    rx = np.random.randint(x)
+    ry = np.random.randint(y)
+    rz = np.random.randint(z)
+    # TODO: if recursion is too deep, google how to make linear iterative recursion
+    # (precise term in scip book)
+    # could be for loop or generator instead (call function until result is satisfactory)
+    if (arr[rx, ry, rz] == condition):
+        return (rx, ry, rz)
+    else:
+        return get_random_arr_position_based_on_condition(arr, condition)
+
+def get_random_arr_position(arr):
+    x, y, z = arr.shape
+    rx = np.random.randint(x)
+    ry = np.random.randint(y)
+    rz = np.random.randint(z)
+    return (rx, ry, rz)
+
 def get_coords_of_random_true_element(mask: np.ndarray) -> Tuple[int, int, int]:
     '''Get coordinates (indices) of random voxel in mask that is equal to True'''
-    x,y,z = np.where(mask == True)
-    i = np.random.randint(len(x))
-    random_position = (x[i], y[i], z[i])
-    return random_position
+    # For 2000*2000*800 grid it results in 82GB RAM tuple (x,y,z)
+    # x,y,z = np.where(mask == True)
+    # i = np.random.randint(len(x))
+    # random_position = (x[i], y[i], z[i])
+    rx, ry, rz = get_random_arr_position(mask)
+    while mask[rx, ry, rz] != True:
+        rx, ry, rz = get_random_arr_position(mask)
+
+    return (rx, ry, rz)
     
 
 def get_random_radius(min_value: int, max_value: int) -> int:
     return np.random.randint(min_value, max_value)
 
 if __name__ == '__main__':
-    fake_segm = create_fake_segmentation_from_real_volume(MAP_FILEPATH)
+    fake_segm = create_fake_segmentation_from_real_volume(MAP_FILEPATH, 10)
     # with np.printoptions(threshold=np.inf):
     #     print(fake_segm[fake_segm.nonzero()])
     plot_3d_array_color(fake_segm, 'fake_segm')
