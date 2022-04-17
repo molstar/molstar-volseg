@@ -628,11 +628,16 @@ class SFFPreprocessor(IDataPreprocessor):
             # node is a group
             zarr.open_group(self.temp_zarr_structure_path / node_name, mode='w')
 
-    def read_and_normalize_volume_map(self, volume_file_path: Path) -> np.ndarray:
+    def read_and_normalize_volume_map_and_get_rmsd(self, volume_file_path: Path) -> Dict:
         map_object = self.__read_volume_map_to_object(volume_file_path)
         normalized_axis_map_object = self.__normalize_axis_order(map_object)
         arr = self.__read_volume_data(normalized_axis_map_object)
-        return arr
+        rmsd = map_object.header.rms
+        map_object.close()
+        return {
+            'map': arr,
+            'rmsd': rmsd
+        }
 
     def generate_kernel_3d_arr(self, pattern: List[int]) -> np.ndarray:
         '''

@@ -10,13 +10,18 @@ MAP_FILEPATH = Path('preprocessor\sample_volumes\emdb_sff\EMD-1832.map')
 
 def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_segments: int) -> Dict:
     prep = SFFPreprocessor()
-    volume_grid: np.ndarray = prep.read_and_normalize_volume_map(volume_filepath)
+    map_and_rmsd = prep.read_and_normalize_volume_map_and_get_rmsd(volume_filepath)
+    volume_grid: np.ndarray = map_and_rmsd['map']
+    # not std but rmsd
+    std = map_and_rmsd['rmsd']
     # empty segm grid
     segmentation_grid: np.ndarray = np.full(list(volume_grid.shape), fill_value=0, dtype=np.int32)
     assert segmentation_grid.dtype == np.int32
     assert segmentation_grid.shape == volume_grid.shape
 
-    std = np.std(volume_grid)
+    # we can use std that they have in map file, as calc this potentially creates memory issues
+    # or we can calc std in other way
+    # std = np.std(volume_grid)
     # be careful - there may be no point greater than certain sigma level (2, 1 etc.)
     isovalue_mask = volume_grid > 1 * std
 
