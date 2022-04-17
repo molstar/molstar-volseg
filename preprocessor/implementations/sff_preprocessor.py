@@ -202,10 +202,10 @@ class SFFPreprocessor(IDataPreprocessor):
         '''
         # https://www.ccpem.ac.uk/mrc_format/mrc2014.php
         # https://www.ccp4.ac.uk/html/maplib.html
-        # normal mode
-        # return mrcfile.open(str(volume_file_path.resolve()), mode='r')
-        # memorymapped mode for large files
-        return mrcfile.mmap(str(volume_file_path.resolve()), mode='r')
+        # normal mode, still memory error with 52GB file
+        return mrcfile.open(str(volume_file_path.resolve()), mode='r')
+        # memorymapped mode for large files - but issues while trying to create mask (> isovalue)
+        # return mrcfile.mmap(str(volume_file_path.resolve()), mode='r')
 
     def __process_volume_data(self, zarr_structure: zarr.hierarchy.group, map_object: mrcfile.mrcobject.MrcObject):
         '''
