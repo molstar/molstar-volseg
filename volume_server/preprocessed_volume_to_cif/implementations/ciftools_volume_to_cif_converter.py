@@ -1,11 +1,13 @@
+import json
+
 import numpy as np
 from ciftools.binary import BinaryCIFWriter
 from ciftools.writer.base import OutputStream
 
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 from volume_server.preprocessed_volume_to_cif.i_volume_to_cif_converter import IVolumeToCifConverter
-from volume_server.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.Metadata.CategoryWriter import \
-    CategoryWriterProvider_Metadata
+from volume_server.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.volume_data_3d.CategoryWriter import \
+    CategoryWriterProvider_VolumeData3d
 
 
 class ConverterOutputStream(OutputStream):
@@ -23,19 +25,17 @@ class ConverterOutputStream(OutputStream):
 
 class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
     def __init__(self):
-        pass
+        self._writer = BinaryCIFWriter("volume_server")
 
     def convert(self, preprocessed_volume: np.ndarray) -> object:  # TODO: add binary cif to the project
+        print("convert preprocessed_volume with size " + str(preprocessed_volume.size))
+        category_writer_provider = CategoryWriterProvider_VolumeData3d()
+        self._writer.start_data_block("volume_data_3d")
+        self._writer.write_category(category_writer_provider, [preprocessed_volume])
+        self._writer.encode()
+        output_stream = ConverterOutputStream()
+        self._writer.flush(output_stream)
         return preprocessed_volume
 
     def convert_metadata(self, metadata: IPreprocessedMetadata) -> object:  # TODO: add binary cif to the project
-        writer = BinaryCIFWriter("volume_server")
-
-        # write lattice ids
-        category_writer_provider = CategoryWriterProvider_Metadata()
-        writer.start_data_block("metadata")
-        writer.write_category(category_writer_provider, [metadata])
-        writer.encode()
-        output_stream = ConverterOutputStream()
-        writer.flush(output_stream)
-        return output_stream.result_binary
+        return json.dumps(metadata.__dict__)
