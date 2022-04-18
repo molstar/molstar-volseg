@@ -15,39 +15,51 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_s
     # not std but rmsd
     std = map_and_rmsd['rmsd']
     # empty segm grid
-    segmentation_grid: np.ndarray = np.full(list(volume_grid.shape), fill_value=0, dtype=np.int32)
-    assert segmentation_grid.dtype == np.int32
+    # trying uint8 to reduce the memory consumption
+    # todo: make it mmap ndarray? 
+    segmentation_grid: np.ndarray = np.full(list(volume_grid.shape), fill_value=0, dtype=np.uint8)
+    assert segmentation_grid.dtype == np.uint8
     assert segmentation_grid.shape == volume_grid.shape
 
     # we can use std that they have in map file, as calc this potentially creates memory issues
     # or we can calc std in other way
     # std = np.std(volume_grid)
     # be careful - there may be no point greater than certain sigma level (2, 1 etc.)
+    print('isovalue mask creation started')
     isovalue_mask = volume_grid > 1 * std
-
+    print('isovalue mask created')
+    
     segm_ids = []
+    print('segments creation started in for loop')
     for i in range(1, number_of_segments + 1):
+        print(f'segment {i} creation started')
         segm_ids.append(i)
         # coords of random 'True' from isovalue mask
         random_voxel_coords = get_coords_of_random_true_element(isovalue_mask)
+        print('random voxel coords generated')
         random_radius = get_random_radius(
             int(np.min(volume_grid.shape)/20),
             int(np.min(volume_grid.shape)/3)
             )
+
+        print('random radius generated')
         
         shape_mask = get_shape_mask(random_voxel_coords, random_radius, segmentation_grid)
-        
+        print('shape mask generated')
         # check if shape within isoval mask has some True in it
         # it should, otherwise segment id will be in list, but no such value will be on grid 
         shape_within_isoval_mask = shape_mask & isovalue_mask
+        print('shape mask within isovalue generated')
 
         assert shape_within_isoval_mask.any()
         # print(f'Segm id: {i}, voxel values to be assigned: {segmentation_grid[shape_within_isoval_mask]}')
         segm_id = i
         segmentation_grid[shape_within_isoval_mask] = segm_id
+        print('segment drawn in segmentation grid')
 
         # update isovalue mask by removing shape we just assigned segm id to, from it
         isovalue_mask = logical_subtract(isovalue_mask, shape_within_isoval_mask)
+        print('isovalue mask updated (subtract recently created segment)')
         if isovalue_mask.any() == False:
             print(f'Last segment id is: {segm_id}. No space left for other segments')
 
@@ -59,11 +71,13 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_s
 
     # checks if all segm ids are present in grid
     assert np.isin(np.array(segm_ids), segmentation_grid).all()
+    print('check performed if all segm ids are present in grid')
 
     grid_and_segm_ids = {
         'grid': segmentation_grid,
         'ids': segm_ids
     }
+    print('gird_and_segm_ids dict assigned, next is return')
     return grid_and_segm_ids
 
 def get_shape_mask(center_coords: Tuple[int, int, int], radius: int, arr: np.ndarray):
