@@ -1,4 +1,5 @@
 from math import ceil
+from typing import Union
 
 from db.interface.i_preprocessed_db import IReadOnlyPreprocessedDb
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
@@ -9,7 +10,7 @@ from .requests.metadata_request.i_metadata_request import IMetadataRequest
 
 
 class VolumeServerV1(IVolumeServer):
-    async def get_metadata(self, req: IMetadataRequest) -> object:
+    async def get_metadata(self, req: IMetadataRequest) -> Union[bytes, str]:
         metadata = await self.db.read_grid_metadata(req.source(), req.structure_id())
         converted = self.volume_to_cif.convert_metadata(metadata)
         return converted
@@ -18,7 +19,7 @@ class VolumeServerV1(IVolumeServer):
         self.db = db
         self.volume_to_cif = volume_to_cif
 
-    async def get_volume(self, req: IVolumeRequest) -> object:  # TODO: add binary cif to the project
+    async def get_volume(self, req: IVolumeRequest) -> tuple[bytes, IPreprocessedMetadata]:  # TODO: add binary cif to the project
         metadata = await self.db.read_grid_metadata(req.source(), req.structure_id())
         lattice = self.decide_lattice(req, metadata)
         grid = self.decide_grid(req, metadata)
@@ -44,8 +45,8 @@ class VolumeServerV1(IVolumeServer):
             down_sampling,
             grid)
 
-        cif = self.volume_to_cif.convert(db_slice, metadata)
-        return cif
+        cif = self.volume_to_cif.convert(db_slice, metadata, down_sampling,  self.grid_size(grid))
+        return cif, metadata
 
     def decide_lattice(self, req: IVolumeRequest, metadata: IPreprocessedMetadata) -> int:
         if req.segmentation_id() not in metadata.segmentation_lattice_ids():
@@ -63,16 +64,12 @@ class VolumeServerV1(IVolumeServer):
         if not req.max_points():
             return 1 if '1' in down_samplings else int(down_samplings[0])
 
-        print("[Downsampling] Computing grid")
-        grid_x = original_grid[1][0] - original_grid[0][0]
-        grid_y = original_grid[1][1] - original_grid[0][1]
-        grid_z = original_grid[1][2] - original_grid[0][2]
+        size = 1
+        for i in self.grid_size(original_grid):
+            size *= i
 
-        print("[Downsampling] Computing grid (x,y,z): (" + str(grid_x) + "," + str(grid_y) + "," + str(grid_z) + ")")
-        grid_size = grid_x * grid_y * grid_z
-        print("[Downsampling] Computed grid size: " + str(grid_size))
         # TODO: improve rounding depending on conservative, strict, etc approach
-        desired_down_sampling = ceil(grid_size/req.max_points())
+        desired_down_sampling = ceil(size/req.max_points())
         print("[Downsampling] Computed desired downsampling: " + str(desired_down_sampling))
 
         for ds in down_samplings:
@@ -82,6 +79,15 @@ class VolumeServerV1(IVolumeServer):
 
         print("[Downsampling] Decided (B): " + str(down_samplings[-1]))
         return int(down_samplings[-1])  # TODO: check assumption that last is highest
+
+    def grid_size(self, grid: tuple[tuple[int, int, int], tuple[int, int, int]]) -> list[int]:
+        print("[Downsampling] Computing grid")
+        grid_x = grid[1][0] - grid[0][0]
+        grid_y = grid[1][1] - grid[0][1]
+        grid_z = grid[1][2] - grid[0][2]
+
+        print("[Downsampling] Computing grid (x,y,z): (" + str(grid_x) + "," + str(grid_y) + "," + str(grid_z) + ")")
+        return [grid_x, grid_y, grid_z]
 
     def decide_grid(self, req: IVolumeRequest, meta: IPreprocessedMetadata) \
             -> tuple[tuple[int,int,int], tuple[int,int,int]]:
@@ -95,14 +101,14 @@ class VolumeServerV1(IVolumeServer):
 
     def down_sampled_grid(self, down_sampling: int, original_grid: tuple[tuple[int, int, int], tuple[int, int, int]]) \
             -> tuple[tuple[int,int,int], tuple[int,int,int]]:
+        if down_sampling == 1:
+            return original_grid
 
         result: list[list] = []
-
-        if down_sampling > 1:
-            for i in range(2):
-                result.append([])
-                for j in range(3):
-                    result[i].append(round(original_grid[i][j]/down_sampling))
+        for i in range(2):
+            result.append([])
+            for j in range(3):
+                result[i].append(round(original_grid[i][j]/down_sampling))
 
         return result
 

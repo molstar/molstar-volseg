@@ -16,6 +16,8 @@ from volume_server.preprocessed_volume_to_cif.implementations.ciftools_converter
     CategoryWriterProvider_VolumeData3d
 from volume_server.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.volume_data_3d_info.CategoryWriter import \
     CategoryWriterProvider_VolumeData3dInfo
+from volume_server.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.volume_data_3d_info.volume_info import \
+    VolumeInfo
 
 
 class ConverterOutputStream(OutputStream):
@@ -37,12 +39,21 @@ class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
         category_writer_provider = CategoryWriterProvider_VolumeData3d()
         writer.write_category(category_writer_provider, [volume])
 
-    def _add_slice_volume_info(self, writer: BinaryCIFWriter, metadata: IPreprocessedMetadata):
+    def _add_slice_volume_info(self, writer: BinaryCIFWriter, volume: np.ndarray, metadata: IPreprocessedMetadata, downsampling: int, grid_size: list[int]):
         writer.start_data_block("volume_data_info")
         category_writer_provider = CategoryWriterProvider_VolumeData3dInfo()
 
-        # TODO: create a request metadata entity based on request, result, and entry metadata
-        writer.write_category(category_writer_provider, [metadata])
+        # TODO: optimize, volume was already flatenned in another piece of code
+        flattened = np.ravel(volume)
+        min_downsampling = flattened.min(initial=flattened[0])
+        max_downsampling = flattened.max(initial=flattened[0])
+        # TODO: missing min_source and max_source
+        min_source = min_downsampling
+        max_source = max_downsampling
+
+        volume_info = VolumeInfo("volume_data_3d_info", metadata, downsampling, min_downsampling, max_downsampling, min_source, max_source, grid_size)
+
+        writer.write_category(category_writer_provider, [volume_info])
 
     def _add_slice_segmentation(self, writer: BinaryCIFWriter, segmentation: SegmentationSliceData):
         writer.start_data_block("segmentation_data")
@@ -66,18 +77,13 @@ class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
         ids_writer_provider = CategoryWriterProvider_SegmentationData3d()
         writer.write_category(ids_writer_provider, [set_ids])
 
-        print("Segmentation ids: " + str(set_ids.size) + " -> " + str(set_ids.tolist()))
-        print("Segmentation dict: " + str(set_dict))
-        print("Segmentation table: " + str(segmentation_table))
-
-
     def _finalize(self, writer: BinaryCIFWriter, binary: bool = True):
         writer.encode()
         output_stream = ConverterOutputStream()
         writer.flush(output_stream)
         return output_stream.result_binary if binary else output_stream.result_text
 
-    def convert(self, slice: ProcessedVolumeSliceData, metadata: IPreprocessedMetadata) -> Union[bytes, str]:  # TODO: add binary cif to the project
+    def convert(self, slice: ProcessedVolumeSliceData, metadata: IPreprocessedMetadata, downsampling: int, grid_size: list[int]) -> Union[bytes, str]:  # TODO: add binary cif to the project
         volume: np.ndarray = slice["volume_slice"]
         segmentation: SegmentationSliceData = slice["segmentation_slice"]
 
@@ -87,7 +93,7 @@ class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
         self._add_slice_volume(writer, volume)
 
         # volume info
-        self._add_slice_volume_info(writer, metadata)
+        self._add_slice_volume_info(writer, volume, metadata, downsampling, grid_size)
 
         # segmentation
         self._add_slice_segmentation(writer, segmentation)

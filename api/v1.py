@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 
 from fastapi import FastAPI
@@ -22,11 +23,14 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
             max_points: Optional[int] = 0
     ):
         request = VolumeRequest(source, id, segmentation, a1, a2, a3, b1, b2, b3, max_points)
-        requested_slice = await volume_server.get_volume(request)
+        response = await volume_server.get_volume(request)
 
         # TODO: serialize
         #serialized = str(requested_slice.astype(dtype=dtype(uint8)).dumps())
-        return str(requested_slice)
+        return {
+            "binary": str(response[0]),
+            "metadata": response[1].json_metadata()
+        }
 
     @app.get("/v1/{source}/{id}/metadata")
     async def get_metadata(
