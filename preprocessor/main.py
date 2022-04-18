@@ -115,8 +115,11 @@ if __name__ == '__main__':
     db.remove_all_entries(namespace='emdb')
     preprocess_everything(db, RAW_INPUT_FILES_DIR)
     # uncomment to check read slice method
-    # slice = asyncio.run(check_read_slice(db))
-    # print(slice)
+    d = asyncio.run(check_read_slice(db))
+    s = d['volume_slice']
+    print(s)
+    print(s.shape)
+    print(s.dtype)
     
     # event loop works, while async to sync returns Metadata class
     # https://stackoverflow.com/questions/44048536/python3-get-result-from-async-method
