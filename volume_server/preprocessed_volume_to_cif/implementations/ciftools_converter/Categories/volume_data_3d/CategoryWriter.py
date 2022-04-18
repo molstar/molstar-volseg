@@ -36,4 +36,4 @@ class CategoryWriterProvider_VolumeData3d(CategoryWriterProvider):
 
     def category_writer(self, ctx: np.ndarray) -> CategoryWriter:
         field_desc: list[FieldDesc] = Fields_VolumeData3d(*self._decide_encoder(ctx)).fields
-        return CategoryWriter_VolumeData3d(ctx, 1, CategoryDescImpl("volume_data_3d", field_desc))
+        return CategoryWriter_VolumeData3d(ctx, ctx.size, CategoryDescImpl("volume_data_3d", field_desc))

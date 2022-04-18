@@ -26,8 +26,7 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
 
         # TODO: serialize
         #serialized = str(requested_slice.astype(dtype=dtype(uint8)).dumps())
-        serialized = str(requested_slice)
-        return serialized
+        return str(requested_slice)
 
     @app.get("/v1/{source}/{id}/metadata")
     async def get_metadata(
