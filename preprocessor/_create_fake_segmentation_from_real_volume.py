@@ -86,7 +86,12 @@ def get_shape_mask(center_coords: Tuple[int, int, int], radius: int, arr: np.nda
     print('ogrid is being created')
     x, y, z = np.ogrid[:sx, :sy, :sz]
     print('ogrid is created')
-    mask = (x - cx)**2 + (y - cy)**2 + (z - cz)**2 <= radius**2
+    mask_x = (x - cx)**2
+    mask_y = (y - cy)**2
+    mask_z = (z - cz)**2
+    radius_squared = radius**2
+    print('components of sphere equation are calculated')
+    mask = mask_x + mask_y + mask_z <= radius_squared
     print(f'mask is created, mask shape: {mask.shape}')
     return mask
 
