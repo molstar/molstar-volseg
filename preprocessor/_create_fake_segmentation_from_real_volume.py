@@ -36,16 +36,16 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_s
         segm_ids.append(i)
         # coords of random 'True' from isovalue mask
         random_voxel_coords = get_coords_of_random_true_element(isovalue_mask)
-        print('random voxel coords generated')
+        print(f'random voxel coords generated {random_voxel_coords}')
         random_radius = get_random_radius(
             int(np.min(volume_grid.shape)/20),
             int(np.min(volume_grid.shape)/3)
             )
 
-        print('random radius generated')
+        print(f'random radius generated: {random_radius}')
         
         shape_mask = get_shape_mask(random_voxel_coords, random_radius, segmentation_grid)
-        print('shape mask generated')
+        print(f'shape mask generated {shape_mask.shape}')
         # check if shape within isoval mask has some True in it
         # it should, otherwise segment id will be in list, but no such value will be on grid 
         shape_within_isoval_mask = shape_mask & isovalue_mask
@@ -83,8 +83,11 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_s
 def get_shape_mask(center_coords: Tuple[int, int, int], radius: int, arr: np.ndarray):
     cx, cy, cz = center_coords
     sx, sy, sz = arr.shape
+    print('ogrid is being created')
     x, y, z = np.ogrid[:sx, :sy, :sz]
+    print('ogrid is created')
     mask = (x - cx)**2 + (y - cy)**2 + (z - cz)**2 <= radius**2
+    print(f'mask is created, mask shape: {mask.shape}')
     return mask
 
 def logical_subtract(A, B):
