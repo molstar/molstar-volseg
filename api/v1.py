@@ -34,4 +34,4 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
         request = MetadataRequest(source, id)
         metadata = await volume_server.get_metadata(request)
 
-        return Response(metadata)
+        return metadata
