@@ -24,9 +24,7 @@ def number_field_volume3d_info(
 def string_field_volume3d_info(
     *,
     name: str,
-    value: Callable[[VolumeInfo, int], Optional[int | float]],
-    dtype: np.dtype,
-    encoder: Callable[[VolumeInfo], BinaryCIFEncoder],
+    value: Callable[[VolumeInfo, int], Optional[str]],
     presence: Optional[Callable[[VolumeInfo, int], Optional[ValuePresenceEnum]]] = None,
 ) -> FieldDesc:
     return string_field(name=name, value=value, presence=presence)

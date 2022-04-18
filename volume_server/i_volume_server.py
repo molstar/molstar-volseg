@@ -10,5 +10,5 @@ class IVolumeServer(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def get_metadata(self, req: IMetadataRequest) -> object:
+    async def get_metadata(self, req: IMetadataRequest) -> str:
         pass

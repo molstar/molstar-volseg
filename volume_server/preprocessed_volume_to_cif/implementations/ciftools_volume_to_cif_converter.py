@@ -101,4 +101,4 @@ class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
         return self._finalize(writer)
 
     def convert_metadata(self, metadata: IPreprocessedMetadata) -> object:  # TODO: add binary cif to the project
-        return json.dumps(metadata.__dict__)
+        return metadata.json_metadata()
