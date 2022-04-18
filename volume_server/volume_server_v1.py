@@ -19,7 +19,7 @@ class VolumeServerV1(IVolumeServer):
         self.db = db
         self.volume_to_cif = volume_to_cif
 
-    async def get_volume(self, req: IVolumeRequest) -> tuple[bytes, IPreprocessedMetadata]:  # TODO: add binary cif to the project
+    async def get_volume(self, req: IVolumeRequest) -> bytes:  # TODO: add binary cif to the project
         metadata = await self.db.read_grid_metadata(req.source(), req.structure_id())
         lattice = self.decide_lattice(req, metadata)
         grid = self.decide_grid(req, metadata)
@@ -46,7 +46,7 @@ class VolumeServerV1(IVolumeServer):
             grid)
 
         cif = self.volume_to_cif.convert(db_slice, metadata, down_sampling,  self.grid_size(grid))
-        return cif, metadata
+        return cif
 
     def decide_lattice(self, req: IVolumeRequest, metadata: IPreprocessedMetadata) -> int:
         if req.segmentation_id() not in metadata.segmentation_lattice_ids():
