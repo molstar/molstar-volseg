@@ -86,13 +86,27 @@ def get_shape_mask(center_coords: Tuple[int, int, int], radius: int, arr: np.nda
     print('ogrid is being created')
     x, y, z = np.ogrid[:sx, :sy, :sz]
     print('ogrid is created')
+    # TODO: switch all three to numpy memmap?
+    # TODO: delete vars after they are used?
+    # (818, 1, 1) arr
     mask_x = (x - cx)**2
+    # (1, 2134, 1) arr
     mask_y = (y - cy)**2
     mask_z = (z - cz)**2
     radius_squared = radius**2
+    # CAREFUL: the following line eats all 32GB RAM
+    # when executed second time in interpreter, process get killed. first time - ok
+    # possibly because mask sum contains values like 897203? idk
     print('components of sphere equation are calculated')
-    mask = mask_x + mask_y + mask_z <= radius_squared
+    del x, y, z
+    print('ogrid components deleted from RAM')
+    mask_sum = mask_x + mask_y + mask_z
+    print('mask sum is calculated')
+    
+    mask = mask_sum <= radius_squared
     print(f'mask is created, mask shape: {mask.shape}')
+    del mask_sum
+    print('mask_sum is deleted from RAM')
     return mask
 
 def logical_subtract(A, B):
