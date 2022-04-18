@@ -44,7 +44,7 @@ class VolumeServerV1(IVolumeServer):
             down_sampling,
             grid)
 
-        cif = self.volume_to_cif.convert(db_slice)
+        cif = self.volume_to_cif.convert(db_slice, metadata)
         return cif
 
     def decide_lattice(self, req: IVolumeRequest, metadata: IPreprocessedMetadata) -> int:

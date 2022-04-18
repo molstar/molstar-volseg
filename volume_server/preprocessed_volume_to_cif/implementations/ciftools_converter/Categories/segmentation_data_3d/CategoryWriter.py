@@ -7,17 +7,18 @@ from ciftools.writer.base import CategoryWriter, CategoryWriterProvider, FieldDe
 
 from volume_server.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories._writer import CategoryDesc, \
     CategoryDescImpl
-from volume_server.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.volume_data_3d.Fields import Fields_VolumeData3d
+from volume_server.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.segmentation_data_3d.Fields import \
+    Fields_SegmentationData3d
 
 
-class CategoryWriter_VolumeData3d(CategoryWriter):
+class CategoryWriter_SegmentationData3d(CategoryWriter):
     def __init__(self, ctx: np.ndarray, count: int, category_desc: CategoryDesc):
         self.data = ctx
         self.count = count
         self.desc = category_desc
 
 
-class CategoryWriterProvider_VolumeData3d(CategoryWriterProvider):
+class CategoryWriterProvider_SegmentationData3d(CategoryWriterProvider):
     def _decide_encoder(self, ctx: np.ndarray) -> tuple[BinaryCIFEncoder, np.dtype]:
         data_type = DataType.from_dtype(ctx.dtype)
 
@@ -36,5 +37,5 @@ class CategoryWriterProvider_VolumeData3d(CategoryWriterProvider):
 
     def category_writer(self, ctx: np.ndarray) -> CategoryWriter:
         ctx = np.ravel(ctx)
-        field_desc: list[FieldDesc] = Fields_VolumeData3d(*self._decide_encoder(ctx)).fields
-        return CategoryWriter_VolumeData3d(ctx, ctx.size, CategoryDescImpl("volume_data_3d", field_desc))
+        field_desc: list[FieldDesc] = Fields_SegmentationData3d(*self._decide_encoder(ctx)).fields
+        return CategoryWriter_SegmentationData3d(ctx, ctx.size, CategoryDescImpl("segmentation_data_3d", field_desc))

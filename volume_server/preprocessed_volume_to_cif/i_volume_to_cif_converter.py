@@ -8,7 +8,7 @@ from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 
 class IVolumeToCifConverter(abc.ABC):
     @abc.abstractmethod
-    def convert(self, preprocessed_volume: ProcessedVolumeSliceData) -> np.ndarray:
+    def convert(self, preprocessed_volume: ProcessedVolumeSliceData, metadata: IPreprocessedMetadata) -> np.ndarray:
         pass
 
     @abc.abstractmethod
