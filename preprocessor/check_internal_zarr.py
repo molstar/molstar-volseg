@@ -4,8 +4,10 @@ import numpy as np
 import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 from itertools import product
-
+from typing import Dict
+import zarr
 from preprocessor.implementations.sff_preprocessor import open_zarr_structure_from_path
+
 
 def plot_3d_array_grayscale(arr: np.ndarray, arr_name: str):
     # source: https://stackoverflow.com/questions/45969974/what-is-the-most-efficient-way-to-plot-3d-array-in-python
@@ -67,42 +69,88 @@ def plot_volume_data_from_np_arr(arr, arr_name):
     no_negative = normalized_arr.clip(min=0)
     plot_3d_array_color(no_negative, f'{arr_name}_adjust_then_negative_to_zero')
 
-def plot_all_volume_data(volume_data, custom_image_name_tag=''):
-    # just remove negative and plot all as absolute values
-    # for arr_name, arr in volume_data.arrays():
-    #     no_negative = arr[...].clip(min=0)
-    #     plot_3d_array_color(no_negative, f'{arr_name}_abs_val')
+def _plot_volume_data(arr_name, arr: zarr.core.Array, custom_image_name_tag=''):
+    # calc mean & std and adjust on it first, then set negative values to zero
+    mean_val = np.mean(arr[...])
+    std_val =  np.std(arr[...])
+    normalized_arr = np.array([normalize_absolute_value(x, mean_val, std_val) for x in arr[...]])
+    no_negative = normalized_arr.clip(min=0)
+    plot_3d_array_color(no_negative, f'{custom_image_name_tag}-{arr_name}_adjust_then_negative_to_zero')
 
+def plot_specific_downsampling_level_volume_data(root: zarr.hierarchy.group, level: str):
+    img_tag = root.details[...][0]
+    arr = root._volume_data[level]
+    arr_name = str(level)
+    _plot_volume_data(arr_name, arr, custom_image_name_tag=img_tag)
+
+def plot_all_volume_data(volume_data, custom_image_name_tag=''):
     # calc mean & std and adjust on it first, then set negative values to zero
     for arr_name, arr in volume_data.arrays():
-        mean_val = np.mean(arr[...])
-        std_val =  np.std(arr[...])
-        normalized_arr = np.array([normalize_absolute_value(x, mean_val, std_val) for x in arr[...]])
-        no_negative = normalized_arr.clip(min=0)
-        plot_3d_array_color(no_negative, f'{custom_image_name_tag}-{arr_name}_adjust_then_negative_to_zero')
+        _plot_volume_data(arr_name, arr, custom_image_name_tag)
 
-    # set negative values to zero first, then calc mean & std and adjust on it
-    # for arr_name, arr in volume_data.arrays():
-    #     no_negative = arr[...].clip(min=0)
-    #     mean_val = np.mean(no_negative)
-    #     std_val =  np.std(no_negative)
-    #     normalized_arr = np.array([normalize_absolute_value(x, mean_val, std_val) for x in no_negative])
-    #     plot_3d_array_color(normalized_arr, f'{arr_name}_negative_to_zero_then_adjust')
+def plot_specific_downsampling_level_segmentation_data(root: zarr.hierarchy.group, level: str):
+    segmentation_data = root._segmentation_data
+    zarr_structure = root
+    img_tag = root.details[...][0]
+    d = _convert_specific_downsampling_segmentation_data_to_per_segment_masked_arrs(
+        segmentation_data,
+        zarr_structure,
+        level)
+    for lattice_id in d:
+        for segment_id in d[lattice_id][level]:
+            masked_arr = d[lattice_id][level][segment_id]
+            plot_3d_array_color(
+                masked_arr,
+                f'{img_tag}-{lattice_id}_x{level}_segment_{segment_id}.png'
+                )
 
-def plot_all_segmentation_data(segmentation_data, zarr_structure):
+def plot_all_segmentation_data(segmentation_data, zarr_structure, custom_image_name_tag=''):
     # dict of lattices -> downsampling lvls -> segment ids -> masked arrs for that segment ids
     d = _convert_all_segmentation_data_to_per_segment_masked_arrs(segmentation_data, zarr_structure)
     for lattice_id in d:
         for dwns_lvl in d[lattice_id]:
             for segment_id in d[lattice_id][dwns_lvl]:
                 masked_arr = d[lattice_id][dwns_lvl][segment_id]
-                plot_3d_array_color(masked_arr, f'{lattice_id}_x{dwns_lvl}_segment_{segment_id}.png')
+                plot_3d_array_color(
+                    masked_arr,
+                    f'{custom_image_name_tag}-{lattice_id}_x{dwns_lvl}_segment_{segment_id}.png'
+                    )
 
 def get_arr_values_as_freq_table(arr: np.ndarray):
     # non_zero_ind = arr.nonzero()
     # non_zero_values = arr[non_zero_ind]
     unique, counts = np.unique(arr, return_counts=True)
     return np.asarray((unique, counts)).T
+
+def _convert_specific_downsampling_segmentation_data_to_per_segment_masked_arrs(
+        segm_data,
+        zarr_structure,
+        level: str):
+    root = zarr_structure
+    segment_ids = _get_list_of_seg_ids(zarr_structure)
+    # new grid dict
+    d = {}
+
+    for gr_name, gr in segm_data.groups():
+        # print(f'Lattice #{gr_name}')
+        d[gr_name] = {}
+        dwns_lvl_gr = gr[str(level)]
+        dwns_lvl_name = str(level)
+        # print(f'Downsampling level x{dwns_lvl_name}')
+        grid = dwns_lvl_gr.grid[...]
+        set_table = dwns_lvl_gr.set_table[...][0]
+        d[gr_name][dwns_lvl_name] = {}
+        # print(dwns_lvl_gr.grid[...])
+        # print_arr_values_as_freq_table(dwns_lvl_gr.grid[...])
+
+        for seg_id in segment_ids:
+            # print(f'Mask applied for segment id = {seg_id}')
+            new_set_table = _transform_sets(set_table, seg_id)
+            new_masked_grid = _transform_array(grid, new_set_table)
+            # print(new_grid)
+            d[gr_name][dwns_lvl_name][seg_id] = new_masked_grid
+
+    return d
 
 def _convert_all_segmentation_data_to_per_segment_masked_arrs(segm_data, zarr_structure):
     root = zarr_structure
@@ -153,14 +201,41 @@ def _get_list_of_seg_ids(zarr_structure):
         l.append(segment_id)
 
     return l
-if __name__ == '__main__':
-    PATH_TO_SAMPLE_SEGMENTATION = Path('db\emdb\emd-1832')
 
-    root = open_zarr_structure_from_path(PATH_TO_SAMPLE_SEGMENTATION)
+def check_which_segments_are_not_on_grid(segm_data: np.ndarray):
+    set_table: Dict = segm_data[0][1].set_table[...][0]
+    possible_values = np.array(list(set_table.values())).flatten()
+    orig_resolution_grid = segm_data[0][1].grid[...]
+    unique_values = np.unique(orig_resolution_grid)
+    print(f'Segment ids on the grid:')
+    print(f'possible values (from set table): {possible_values}')
+    print(f'existing values (actually on the grid): {unique_values}')
+
+    # TODO: compare two arrs above and find which is missing
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--path", help="path to segmentation")
+    parser.add_argument("-l", "--level", help="downsampling level", type=str)
+    args = parser.parse_args()
+    
+    PATH_TO_DB_ENTRY = args.path
+    print(f'Plotting data from {PATH_TO_DB_ENTRY}')
+
+    root = open_zarr_structure_from_path(PATH_TO_DB_ENTRY)
     volume_data = root._volume_data
     segm_data = root._segmentation_data
+    
+    check_which_segments_are_not_on_grid(segm_data)
 
-    plot_all_volume_data(volume_data, custom_image_name_tag='convolve')
+    if args.level:
+        print(f'Downsampling level: {args.level}')
+        plot_specific_downsampling_level_segmentation_data(root, args.level)
+        plot_specific_downsampling_level_volume_data(root, args.level)
+    else:
+        plot_all_volume_data(volume_data, custom_image_name_tag=root.details[...][0])
+        plot_all_segmentation_data(segm_data, root, custom_image_name_tag=root.details[...][0])
 
-    # plot_all_segmentation_data(segm_data, root)
 
+    

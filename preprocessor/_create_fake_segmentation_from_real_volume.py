@@ -29,27 +29,37 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_s
             int(np.min(volume_grid.shape)/20),
             int(np.min(volume_grid.shape)/3)
             )
-
+        
         shape_mask = get_shape_mask(random_voxel_coords, random_radius, segmentation_grid)
         
-        shape_within_isoval_mask = shape_mask# & isovalue_mask
+        # check if shape within isoval mask has some True in it
+        # it should, otherwise segment id will be in list, but no such value will be on grid 
+        shape_within_isoval_mask = shape_mask & isovalue_mask
+
+        assert shape_within_isoval_mask.any()
+        # print(f'Segm id: {i}, voxel values to be assigned: {segmentation_grid[shape_within_isoval_mask]}')
         segm_id = i
         segmentation_grid[shape_within_isoval_mask] = segm_id
 
         # update isovalue mask by removing shape we just assigned segm id to, from it
         isovalue_mask = logical_subtract(isovalue_mask, shape_within_isoval_mask)
+        if isovalue_mask.any() == False:
+            print(f'Last segment id is: {segm_id}. No space left for other segments')
 
     last_segm_id = number_of_segments + 1
     # TODO: uncomment or leave it like this
     # Fill remaining part of (all True left in isovalue mask) with one last segm id
     # segm_ids.append(last_segm_id)
     # segmentation_grid[isovalue_mask] = last_segm_id
+
+    # checks if all segm ids are present in grid
+    assert np.isin(np.array(segm_ids), segmentation_grid).all()
+
     grid_and_segm_ids = {
         'grid': segmentation_grid,
         'ids': segm_ids
     }
     return grid_and_segm_ids
-
 
 def get_shape_mask(center_coords: Tuple[int, int, int], radius: int, arr: np.ndarray):
     cx, cy, cz = center_coords

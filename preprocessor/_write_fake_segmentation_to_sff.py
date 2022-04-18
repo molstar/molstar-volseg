@@ -3,18 +3,27 @@ from typing import List
 import sfftkrw as sff
 import numpy as np
 import random
+import string
 
 from preprocessor._create_fake_segmentation_from_real_volume import create_fake_segmentation_from_real_volume
 
-# TODO: once the core parts of SFF (lattice & some other things) are ready, add some fake annotations
-# don't bother with software list etc. Just some random strings of text
-# use seg.details for that
-def write_fake_segmentation_to_sff(output_filepath: Path, lattice_data: np.ndarray, segm_ids: List[int], OTHER_ARGS_TODO=None):
-    '''
-    Creates a single lattice
-    '''
-    seg = sff.SFFSegmentation(name="my segmentation", primary_descriptor="three_d_volume")
+# TODO: change to big EMDB entry name once ready
+OUTPUT_FILEPATH = Path('preprocessor/fake_segmentations/fake_emd_1832.hff')
+# Just for testing
+# FILEPATH_JSON = Path('preprocessor/fake_segmentations/fake_emd_1832.json')
 
+REAL_MAP_FILEPATH = Path('preprocessor\sample_volumes\emdb_sff\EMD-1832.map')
+
+def write_fake_segmentation_to_sff(output_filepath: Path, lattice_data: np.ndarray, segm_ids: List[int], json_for_debug=False):
+    '''
+    Note: creates a single lattice
+    '''
+    # based on filepath name
+    seg_name = (output_filepath.stem).lower()
+    seg_details = seg_name
+
+    seg = sff.SFFSegmentation(name=seg_name, primary_descriptor="three_d_volume")
+    seg.details = seg_details
     # TODO:
     # we need:
     # sfftkrw.SFFSegmentList - for segment items we need to have ids
@@ -53,11 +62,18 @@ def write_fake_segmentation_to_sff(output_filepath: Path, lattice_data: np.ndarr
     except AttributeError:
         pass
 
+    if json_for_debug == True:
+        try:
+            output_json_filepath = output_filepath.with_suffix('.json')
+            seg.to_file(str(output_json_filepath.resolve()))
+        except AttributeError:
+            pass
+
 
 def _instantiate_segment(segm_id: int, value, lattice_id=0):
     segment = sff.SFFSegment(id=segm_id)
-    segment.volume = sff.SFFThreeDVolume(
-        latticeId=lattice_id,
+    segment.three_d_volume = sff.SFFThreeDVolume(
+        lattice_id=lattice_id,
         value=value,
     )
     segment.colour = sff.SFFRGBA(
@@ -66,21 +82,23 @@ def _instantiate_segment(segm_id: int, value, lattice_id=0):
         blue=random.random(),
         alpha=random.random()
     )
+    
+    random_name = ''.join(random.choices(string.ascii_lowercase, k=15))
+    random_descr = ''.join(random.choices(string.ascii_lowercase, k=30))
+    segment.biological_annotation = sff.SFFBiologicalAnnotation(
+        name=random_name,
+        description=random_descr
+    )
     return segment
 
 
 if __name__ == '__main__':
-    # TODO: change to big EMDB entry name once ready
-    OUTPUT_FILEPATH = Path('preprocessor/fake_segmentations/fake_emd_1832.hff')
-    # OUTPUT_FILEPATH = Path('preprocessor/fake_segmentations/fake_emd_1832.json')
-
-    REAL_MAP_FILEPATH = Path('preprocessor\sample_volumes\emdb_sff\EMD-1832.map')
-
     segm_grid_and_ids = create_fake_segmentation_from_real_volume(REAL_MAP_FILEPATH, 10)
     grid = segm_grid_and_ids['grid']
     segm_ids = segm_grid_and_ids['ids']
     write_fake_segmentation_to_sff(
         OUTPUT_FILEPATH,
         lattice_data=grid,
-        segm_ids=segm_ids
+        segm_ids=segm_ids,
+        json_for_debug=True
         )
