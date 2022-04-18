@@ -232,4 +232,3 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         '''
         path: Path = Path(zarr_obj.store.path).resolve() / zarr_obj.path
         return path
-

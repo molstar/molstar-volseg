@@ -11,6 +11,10 @@ class IVolumeRequest(abc.ABC):
         pass
 
     @abc.abstractmethod
+    def segmentation_id(self) -> int:
+        pass
+
+    @abc.abstractmethod
     def x_min(self) -> float:
         pass
 
@@ -35,6 +39,6 @@ class IVolumeRequest(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def max_size_kb(self) -> int:
+    def max_points(self) -> int:
         pass
 
