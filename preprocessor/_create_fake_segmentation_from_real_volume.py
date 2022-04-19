@@ -8,12 +8,23 @@ from preprocessor.check_internal_zarr import plot_3d_array_color
 # TODO: change to the biggest at EMDB
 MAP_FILEPATH = Path('preprocessor\sample_volumes\emdb_sff\EMD-1832.map')
 
+def _if_position_satisfy_sphere_equation(
+        r: int, center_coords: Tuple[int, int, int],
+        position: Tuple[int, int, int]
+        ) -> bool:
+    cx, cy, cz = center_coords
+    x, y, z = position
+    if (x - cx)**2 + (y - cy)**2 + (z - cz)**2 <= r**2:
+        return True
+    return False
+
 def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_segments: int) -> Dict:
     prep = SFFPreprocessor()
     map_and_rmsd = prep.read_and_normalize_volume_map_and_get_rmsd(volume_filepath)
     volume_grid: np.ndarray = map_and_rmsd['map']
     # not std but rmsd
     std = map_and_rmsd['rmsd']
+    isosurface_threshold = 1 * std
     # empty segm grid
     # trying uint8 to reduce the memory consumption
     # todo: make it mmap ndarray? 
@@ -25,9 +36,6 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_s
     # or we can calc std in other way
     # std = np.std(volume_grid)
     # be careful - there may be no point greater than certain sigma level (2, 1 etc.)
-    print('isovalue mask creation started')
-    isovalue_mask = volume_grid > 1 * std
-    print('isovalue mask created')
     
     segm_ids = []
     print('segments creation started in for loop')
@@ -35,33 +43,30 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_s
         print(f'segment {i} creation started')
         segm_ids.append(i)
         # coords of random 'True' from isovalue mask
-        random_voxel_coords = get_coords_of_random_true_element(isovalue_mask)
+        random_voxel_coords = get_coords_of_random_position_inside_isosurface(volume_grid, isosurface_threshold)
         print(f'random voxel coords generated {random_voxel_coords}')
         random_radius = get_random_radius(
             int(np.min(volume_grid.shape)/20),
             int(np.min(volume_grid.shape)/3)
             )
-
         print(f'random radius generated: {random_radius}')
         
-        shape_mask = get_shape_mask(random_voxel_coords, random_radius, segmentation_grid)
-        print(f'shape mask generated {shape_mask.shape}')
-        # check if shape within isoval mask has some True in it
-        # it should, otherwise segment id will be in list, but no such value will be on grid 
-        shape_within_isoval_mask = shape_mask & isovalue_mask
-        print('shape mask within isovalue generated')
-
-        assert shape_within_isoval_mask.any()
-        # print(f'Segm id: {i}, voxel values to be assigned: {segmentation_grid[shape_within_isoval_mask]}')
         segm_id = i
-        segmentation_grid[shape_within_isoval_mask] = segm_id
-        print('segment drawn in segmentation grid')
 
-        # update isovalue mask by removing shape we just assigned segm id to, from it
-        isovalue_mask = logical_subtract(isovalue_mask, shape_within_isoval_mask)
-        print('isovalue mask updated (subtract recently created segment)')
-        if isovalue_mask.any() == False:
-            print(f'Last segment id is: {segm_id}. No space left for other segments')
+        for index in np.ndindex(volume_grid.shape):
+            # returns tuple of indices
+            # TODO: multiple conditions (nested ifs) can be optimized?
+            if volume_grid[index] > isosurface_threshold:
+                # if not assigned to other segm id
+                if volume_grid[index] != 0:
+                    if _if_position_satisfy_sphere_equation(random_radius, random_voxel_coords, index) == True:
+                        segmentation_grid[index] = segm_id
+        print(f'segment {segm_id} written on segm grid')
+        # TODO: check if previous issuew with segment id will be in list,
+        # but with no such value on grid can pop with iterative implementation
+        
+        # TODO: implement some warning in case there is no space left for the remaining segments
+        # if first several segments occupied all space alread
 
     last_segm_id = number_of_segments + 1
     # TODO: uncomment or leave it like this
@@ -77,7 +82,7 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_s
         'grid': segmentation_grid,
         'ids': segm_ids
     }
-    print('gird_and_segm_ids dict assigned, next is return')
+    print('gird_and_segm_ids dict assigned, next is return statement')
     return grid_and_segm_ids
 
 def get_shape_mask(center_coords: Tuple[int, int, int], radius: int, arr: np.ndarray):
@@ -114,20 +119,6 @@ def logical_subtract(A, B):
     # Source: https://github.com/numpy/numpy/issues/15856
     return A.astype(np.int32) - B.astype(np.int32) == 1
 
-def get_random_arr_position_based_on_condition(arr: np.ndarray, condition=True):
-    '''Deprecated. Too deep recursion'''
-    x, y, z = arr.shape
-    rx = np.random.randint(x)
-    ry = np.random.randint(y)
-    rz = np.random.randint(z)
-    # TODO: if recursion is too deep, google how to make linear iterative recursion
-    # (precise term in scip book)
-    # could be for loop or generator instead (call function until result is satisfactory)
-    if (arr[rx, ry, rz] == condition):
-        return (rx, ry, rz)
-    else:
-        return get_random_arr_position_based_on_condition(arr, condition)
-
 def get_random_arr_position(arr):
     x, y, z = arr.shape
     rx = np.random.randint(x)
@@ -135,15 +126,11 @@ def get_random_arr_position(arr):
     rz = np.random.randint(z)
     return (rx, ry, rz)
 
-def get_coords_of_random_true_element(mask: np.ndarray) -> Tuple[int, int, int]:
-    '''Get coordinates (indices) of random voxel in mask that is equal to True'''
-    # For 2000*2000*800 grid it results in 82GB RAM tuple (x,y,z)
-    # x,y,z = np.where(mask == True)
-    # i = np.random.randint(len(x))
-    # random_position = (x[i], y[i], z[i])
-    rx, ry, rz = get_random_arr_position(mask)
-    while mask[rx, ry, rz] != True:
-        rx, ry, rz = get_random_arr_position(mask)
+def get_coords_of_random_position_inside_isosurface(arr: np.ndarray, threshold) -> Tuple[int, int, int]:
+    '''Get coordinates (indices) of random voxel in grid that is inside isosurface'''
+    rx, ry, rz = get_random_arr_position(arr)
+    while arr[rx, ry, rz] <= threshold:
+        rx, ry, rz = get_random_arr_position(arr)
 
     return (rx, ry, rz)
     
