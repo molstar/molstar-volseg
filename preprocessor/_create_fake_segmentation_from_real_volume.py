@@ -42,8 +42,11 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_s
     for i in range(1, number_of_segments + 1):
         print(f'segment {i} creation started')
         segm_ids.append(i)
-        # coords of random 'True' from isovalue mask
-        random_voxel_coords = get_coords_of_random_position_inside_isosurface(volume_grid, isosurface_threshold)
+        # coords of random voxel
+        random_voxel_coords = get_coords_of_random_position_inside_isosurface(
+            volume_grid,
+            segmentation_grid,
+            isosurface_threshold)
         print(f'random voxel coords generated {random_voxel_coords}')
         random_radius = get_random_radius(
             int(np.min(volume_grid.shape)/20),
@@ -58,10 +61,11 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_s
             # TODO: multiple conditions (nested ifs) can be optimized?
             if volume_grid[index] > isosurface_threshold:
                 # if not assigned to other segm id
-                if volume_grid[index] != 0:
+                if segmentation_grid[index] == 0:
                     if _if_position_satisfy_sphere_equation(random_radius, random_voxel_coords, index) == True:
                         segmentation_grid[index] = segm_id
         print(f'segment {segm_id} written on segm grid')
+        print(f'there are {segmentation_grid[segmentation_grid == segm_id].shape} instances of that segment on segm grid')
         # TODO: check if previous issuew with segment id will be in list,
         # but with no such value on grid can pop with iterative implementation
         
@@ -126,11 +130,14 @@ def get_random_arr_position(arr):
     rz = np.random.randint(z)
     return (rx, ry, rz)
 
-def get_coords_of_random_position_inside_isosurface(arr: np.ndarray, threshold) -> Tuple[int, int, int]:
+def get_coords_of_random_position_inside_isosurface(
+    volume_arr: np.ndarray,
+    segm_arr: np.ndarray,
+    threshold) -> Tuple[int, int, int]:
     '''Get coordinates (indices) of random voxel in grid that is inside isosurface'''
-    rx, ry, rz = get_random_arr_position(arr)
-    while arr[rx, ry, rz] <= threshold:
-        rx, ry, rz = get_random_arr_position(arr)
+    rx, ry, rz = get_random_arr_position(volume_arr)
+    while volume_arr[rx, ry, rz] <= threshold or segm_arr[rx, ry, rz] != 0:
+        rx, ry, rz = get_random_arr_position(volume_arr)
 
     return (rx, ry, rz)
     
