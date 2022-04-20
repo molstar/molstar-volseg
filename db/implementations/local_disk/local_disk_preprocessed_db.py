@@ -62,7 +62,10 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
 
         # TODO: shutil should work with Path objects, but just in case
         shutil.copy2(temp_store_path / GRID_METADATA_FILENAME, self.__path_to_object__(namespace, key) / GRID_METADATA_FILENAME)
-        shutil.copy2(temp_store_path / ANNOTATION_METADATA_FILENAME, self.__path_to_object__(namespace, key) / ANNOTATION_METADATA_FILENAME)
+        if (temp_store_path / ANNOTATION_METADATA_FILENAME).exists():
+            shutil.copy2(temp_store_path / ANNOTATION_METADATA_FILENAME, self.__path_to_object__(namespace, key) / ANNOTATION_METADATA_FILENAME)
+        else:
+            print('no annotation metadata file found, continuing without copying it')
         # TODO: check if temp dir will be correctly removed and read at the beginning, given that there is a JSON file inside
         # temp_store.close()
         # perm_store.close()
@@ -103,8 +106,11 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         root: zarr.hierarchy.group = open_zarr_structure_from_path(path)
         # TODO: segm arr will change address as there going to be a group for each ratio instead of zarr arr
         # TODO: in that group there should be arr of "values" and dict object
-        segm_arr: zarr.core.Array = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].grid
-        segm_dict: Dict = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].set_table[0]
+        segm_arr = None
+        segm_dict = None
+        if SEGMENTATION_DATA_GROUPNAME in root:
+            segm_arr = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].grid
+            segm_dict = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].set_table[0]
         volume_arr: zarr.core.Array = root[VOLUME_DATA_GROUPNAME][down_sampling_ratio]
         
         # TODO: segm slice would be TypedDict (arr + dict with sets)
@@ -115,35 +121,44 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             # 2: zarr slicing via : notation
             # TODO: here and in each mode: change impl of segm slice: get_slice from segm_arr separately
             # and then get the corresponding dict (json obj from that group) which explain the meaning of "values" in segm_arr (pointers to sets in dict)
-            segm_slice = self.__get_slice_from_zarr_three_d_arr(arr=segm_arr, box=box)
+            if segm_arr: segm_slice = self.__get_slice_from_zarr_three_d_arr(arr=segm_arr, box=box)
             volume_slice = self.__get_slice_from_zarr_three_d_arr(arr=volume_arr, box=box)
         elif mode == 'zarr_gbs':
             # 3: zarr slicing via get_basic_selection and python slices
-            segm_slice = self.__get_slice_from_zarr_three_d_arr_gbs(arr=segm_arr, box=box)
+            if segm_arr: segm_slice = self.__get_slice_from_zarr_three_d_arr_gbs(arr=segm_arr, box=box)
             volume_slice = self.__get_slice_from_zarr_three_d_arr_gbs(arr=volume_arr, box=box)
         elif mode == 'dask':
             # 4: dask slicing: https://github.com/zarr-developers/zarr-python/issues/478#issuecomment-531148674
-            segm_slice = self.__get_slice_from_zarr_three_d_arr_dask(arr=segm_arr, box=box)
+            if segm_arr: segm_slice = self.__get_slice_from_zarr_three_d_arr_dask(arr=segm_arr, box=box)
             volume_slice = self.__get_slice_from_zarr_three_d_arr_dask(arr=volume_arr, box=box)
         elif mode == 'dask_from_zarr':
-            segm_slice = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=segm_arr, box=box)
+            if segm_arr: segm_slice = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=segm_arr, box=box)
             volume_slice = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=volume_arr, box=box)
         elif mode == 'tensorstore':
             # TODO: figure out variable types https://stackoverflow.com/questions/64924224/getting-a-view-of-a-zarr-array-slice
             # it can be 'view' or np array etc.
-            segm_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=segm_arr, box=box)
+            if segm_arr: segm_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=segm_arr, box=box)
             volume_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=volume_arr, box=box)
         
         end = timer()
         print(f'read_slice with mode {mode}: {end - start}')
-
-        return {
-            "segmentation_slice": {
-                "category_set_ids": segm_slice,
-                "category_set_dict": segm_dict
-            },
-            "volume_slice": volume_slice
-        }
+        if segm_arr:
+            d = {
+                "segmentation_slice": {
+                    "category_set_ids": segm_slice,
+                    "category_set_dict": segm_dict
+                },
+                "volume_slice": volume_slice
+            }
+        else:
+            d = {
+                "segmentation_slice": {
+                    "category_set_ids": None,
+                    "category_set_dict": None
+                },
+                "volume_slice": volume_slice
+            }
+        return d
 
     async def read_grid_metadata(self, namespace: str, key: str) -> IPreprocessedMetadata:
         path: Path = self.__path_to_object__(namespace=namespace, key=key) / GRID_METADATA_FILENAME

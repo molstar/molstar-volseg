@@ -12,8 +12,8 @@ class PreprocessorService(IPreprocessorService):
 
     def get_raw_file_type(self, file_path: Path) -> str:
         # temp implementation
-        if file_path.suffix == '.hff':
-            return 'SFF'
+        # if file_path.suffix == '.hff':
+        return 'SFF'
 
     def get_preprocessor(self, file_type: str) -> IDataPreprocessor:
         # temp implementation

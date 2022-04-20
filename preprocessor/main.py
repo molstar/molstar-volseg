@@ -59,6 +59,7 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
         }
         d = dummy_dict
     else:
+        segmentation_file_path: Path = None
         # all ids should be lowercase!
         # TODO: later this dict can be compiled during batch raw file download, it should be easier than doing it like this
         for dir_path in raw_input_files_dir.iterdir():
@@ -71,7 +72,7 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
                         for item in content:
                             if item.is_file():
                                 if item.suffix == '.hff':
-                                    segmentation_file_path: Path = item
+                                    segmentation_file_path = item
                                 if item.suffix == '.map' or item.suffix == '.ccp4':
                                     volume_file_path: Path = item
                         d[source_db].append(
@@ -115,11 +116,11 @@ if __name__ == '__main__':
     db.remove_all_entries(namespace='emdb')
     preprocess_everything(db, RAW_INPUT_FILES_DIR)
     # uncomment to check read slice method
-    # d = asyncio.run(check_read_slice(db))
-    # s = d['volume_slice']
-    # print(s)
-    # print(s.shape)
-    # print(s.dtype)
+    d = asyncio.run(check_read_slice(db))
+    s = d['volume_slice']
+    print(s)
+    print(s.shape)
+    print(s.dtype)
     
     # event loop works, while async to sync returns Metadata class
     # https://stackoverflow.com/questions/44048536/python3-get-result-from-async-method
