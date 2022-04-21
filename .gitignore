@@ -15,6 +15,11 @@ iota_yzx.ccp4.gz
 _read_ccp4_fields.py
 preprocessor/sample_arr_plots/
 
+### venv
+Scripts
+share
+pyvenv.cfg
+
 ### VisualStudioCode template
 .vscode/*
 !.vscode/settings.json
