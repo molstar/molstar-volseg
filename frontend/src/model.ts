@@ -12,6 +12,7 @@ import { ParamDefinition as PD } from 'molstar/lib/mol-util/param-definition';
 import { CustomProperties } from 'molstar/lib/mol-model/custom-property';
 import { arrayMean, arrayRms } from 'molstar/lib/mol-util/array';
 import { Vec2 } from 'molstar/lib/mol-math/linear-algebra';
+import { BehaviorSubject } from 'rxjs';
 
 export class AppModel {
     plugin: PluginUIContext = void 0 as any;
@@ -45,7 +46,7 @@ export class AppModel {
         setTimeout(() => this.load(), 50);
     }
 
-    createSegment(volume: Volume, level: number): Volume {
+    createFakeSegment(volume: Volume, level: number): Volume {
         const { mean, sigma } = volume.grid.stats;
         const { data, space } = volume.grid.cells;
         const newData = new Float32Array(data.length);
@@ -78,11 +79,38 @@ export class AppModel {
         };
     }
 
+
+    createSegment(volume: Volume, segmentation: number[], segId: number): Volume {
+        const { mean, sigma } = volume.grid.stats;
+        const { data, space } = volume.grid.cells;
+        const newData = new Float32Array(data.length);
+
+        for (let i = 0; i < data.length; i++) {
+            newData[i] = segmentation[i] === segId ? 1 : 0;
+        }
+
+        return {
+            sourceData: { kind: 'custom', name: 'test', data: newData as any },
+            customProperties: new CustomProperties(),
+            _propertyData: {},
+            grid: {
+                ...volume.grid,
+                //stats: { min: 0, max: 1, mean: newMean, sigma: arrayRms(newData) },
+                stats: { min: 0, max: 1, mean: 0, sigma: 1 },
+                cells: {
+                    ...volume.grid.cells,
+                    data: newData as any,
+                }
+            }
+        };
+    }
+
     private volume: Volume = undefined as any;
     private currentLevel: any = undefined;
 
-    async showLevel(level: number) {
-        const volume = this.createSegment(this.volume, level);
+    async showSegmentLevel(segmentId: number) {
+        const volume = this.createSegment(this.volume, this.segmentation, segmentId);
+        this.currentSegment.next(segmentId);
 
         const update = this.plugin.build();
 
@@ -129,10 +157,15 @@ export class AppModel {
         await update.commit();
     }
 
+    private segmentation: number[] = [];
+    segments = new BehaviorSubject<number[]>([]);
+    currentSegment = new BehaviorSubject<number>(0);
+
     async load() {
         const entryId = 'emd-1832';
         const isoLevel = 2.73;
-        const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
+        // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
+        const url = 'http://localhost:9000/v1/emdb/emd-1832/box/0/-1000/-1000/-1000/1000/1000/1000/100000000';
         const { plugin } = this;
 
         const data = await plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: true } });
@@ -140,6 +173,17 @@ export class AppModel {
         const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
         const volumeData = volume.cell!.obj!.data;
         this.volume = volumeData;
+
+        const cif = await plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
+        const segmentation = cif.data!.blocks[2];
+
+        const values = segmentation.categories['segmentation_data_3d'].getField('values')?.toIntArray();
+        const uniqueSegmentations = Array.from(new Set(values)).filter(s => s !== 0);
+
+        this.segments.next(uniqueSegmentations);
+        this.segmentation = values as any;
+
+        console.log(uniqueSegmentations);
 
         const repr = plugin.build();
 

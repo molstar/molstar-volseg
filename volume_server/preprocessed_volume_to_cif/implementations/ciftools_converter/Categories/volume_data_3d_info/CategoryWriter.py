@@ -28,5 +28,5 @@ class CategoryWriterProvider_VolumeData3dInfo(CategoryWriterProvider):
 
     def category_writer(self, ctx: VolumeInfo) -> CategoryWriter:
         encoder = self._decide_encoder(ctx)
-        field_desc: list[FieldDesc] = Fields_VolumeData3dInfo(ctx, encoder[0], encoder[1]).fields
+        field_desc: list[FieldDesc] = Fields_VolumeData3dInfo(ctx).fields
         return CategoryWriter_VolumeData3dInfo(ctx, 1, CategoryDescImpl("volume_data_3d_info", field_desc))

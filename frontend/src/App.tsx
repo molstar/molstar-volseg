@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { createPluginUI } from 'molstar/lib/mol-plugin-ui/react18';
+import { useBehavior } from 'molstar/lib/mol-plugin-ui/hooks/use-behavior';
 
 import './App.css';
 import 'molstar/lib/mol-plugin-ui/skin/light.scss';
@@ -20,13 +20,17 @@ export default App;
 function Main() {
     const _model = useRef<AppModel>();
     if (!_model.current) _model.current = new AppModel();
-
     const model = _model.current;
+    const segments = useBehavior(model.segments);
+    const current = useBehavior(model.currentSegment);
+
 
     return <>
         <MolStar model={model} />
         {/* <Button onClick={() => model.load()}>Load</Button> */}
-        {new Array(10).fill(0).map((_, v) => <Button key={v} onClick={() => model.showLevel(v)}>Segment {v}</Button>)}
+        <div style={{ display: 'flex', flexDirection: 'column', width: 140, position: 'absolute', right: 8, top: 8 }}>
+            {segments.map((id) => <Button key={id} variant={current === id ? 'contained' : 'text'} onClick={() => model.showSegmentLevel(id)}>Segment {id}</Button>)}
+        </div>
     </>;
 }
 
@@ -38,5 +42,5 @@ function MolStar({ model }: { model: AppModel }) {
         model.init(target.current!);
     }, [model]);
 
-    return <div ref={target} style={{ position: 'relative', width: 640, height: 480 }} />;
+    return <div ref={target} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 156 }} />;
 }

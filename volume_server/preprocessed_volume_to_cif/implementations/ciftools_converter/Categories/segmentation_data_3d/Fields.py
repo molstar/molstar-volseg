@@ -24,5 +24,5 @@ class Fields_SegmentationData3d:
 
     def __init__(self, encoder: BinaryCIFEncoder, dtype: np.dtype):
         self.fields: list[FieldDesc] = [
-            number_field_segmentation3d(name="name", value=self._value, encoder=lambda d: encoder, dtype=dtype)
+            number_field_segmentation3d(name="values", value=self._value, encoder=lambda d: encoder, dtype=dtype)
         ]
