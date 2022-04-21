@@ -289,12 +289,19 @@ class SFFPreprocessor(IDataPreprocessor):
         # TODO:
         mean_dict = {}
         std_dict = {}
+        max_dict = {}
+        min_dict = {}
 
         for arr_name, arr in root[VOLUME_DATA_GROUPNAME].arrays():
             mean_val = str(np.mean(arr[...]))
             std_val =  str(np.std(arr[...]))
+            max_val = str(arr[...].max())
+            min_val = str(arr[...].min())
+
             mean_dict[str(arr_name)] = mean_val
             std_dict[str(arr_name)] = std_val
+            max_dict[str(arr_name)] = max_val
+            min_dict[str(arr_name)] = min_val
 
         lattice_dict = {}
         lattice_ids = []
@@ -344,7 +351,9 @@ class SFFPreprocessor(IDataPreprocessor):
             'origin': origin,
             'grid_dimensions': grid_dimensions,
             'mean': mean_dict,
-            'std': std_dict
+            'std': std_dict,
+            'max': max_dict,
+            'min': min_dict
         }
 
     def __temp_save_metadata(self, metadata: Dict, metadata_filename: Path, temp_dir_path: Path) -> None:
