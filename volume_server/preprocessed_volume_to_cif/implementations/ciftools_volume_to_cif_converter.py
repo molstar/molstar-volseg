@@ -34,26 +34,35 @@ class ConverterOutputStream(OutputStream):
 
 
 class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
-    def _add_slice_volume(self, writer: BinaryCIFWriter, volume: np.ndarray):
-        writer.start_data_block("volume_data")
-        category_writer_provider = CategoryWriterProvider_VolumeData3d()
-        writer.write_category(category_writer_provider, [volume])
-
     def _add_slice_volume_info(self, writer: BinaryCIFWriter, volume: np.ndarray, metadata: IPreprocessedMetadata, downsampling: int, grid_size: list[int]):
-        writer.start_data_block("volume_data_info")
-        category_writer_provider = CategoryWriterProvider_VolumeData3dInfo()
+        
+        volume_info_category = CategoryWriterProvider_VolumeData3dInfo()
 
         # TODO: optimize, volume was already flatenned in another piece of code
         flattened = np.ravel(volume)
         min_downsampling = flattened.min(initial=flattened[0])
         max_downsampling = flattened.max(initial=flattened[0])
+
         # TODO: missing min_source and max_source
         min_source = min_downsampling
         max_source = max_downsampling
 
-        volume_info = VolumeInfo("volume_data_3d_info", metadata, downsampling, min_downsampling, max_downsampling, min_source, max_source, grid_size)
+        volume_info = VolumeInfo("em", metadata, downsampling, min_downsampling, max_downsampling, min_source, max_source, grid_size)
 
-        writer.write_category(category_writer_provider, [volume_info])
+        # TODO: this should have it's own data and required here as Mol* uses it to determine CIF variant
+        # wont be needed in the final version
+        writer.start_data_block("SERVER") 
+        writer.write_category(volume_info_category, [volume_info])
+
+        writer.start_data_block("EM")
+        writer.write_category(volume_info_category, [volume_info])
+
+        data_category = CategoryWriterProvider_VolumeData3d()
+
+        # TODO: transpose is a temp hack until proper ordering is figured
+        to_export = volume.transpose().flatten()
+
+        writer.write_category(data_category, [to_export])
 
     def _add_slice_segmentation(self, writer: BinaryCIFWriter, segmentation: SegmentationSliceData):
         writer.start_data_block("segmentation_data")
@@ -90,9 +99,6 @@ class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
         writer = BinaryCIFWriter("volume_server")
 
         # volume
-        self._add_slice_volume(writer, volume)
-
-        # volume info
         self._add_slice_volume_info(writer, volume, metadata, downsampling, grid_size)
 
         # segmentation

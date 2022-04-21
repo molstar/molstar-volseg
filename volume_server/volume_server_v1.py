@@ -21,6 +21,9 @@ class VolumeServerV1(IVolumeServer):
 
     async def get_volume(self, req: IVolumeRequest) -> bytes:  # TODO: add binary cif to the project
         metadata = await self.db.read_grid_metadata(req.source(), req.structure_id())
+
+        print(metadata)
+
         lattice = self.decide_lattice(req, metadata)
         grid = self.decide_grid(req, metadata)
         print("Converted grid to: " + str(grid))
