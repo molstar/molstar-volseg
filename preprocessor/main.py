@@ -10,6 +10,8 @@ from db.interface.i_preprocessed_db import IPreprocessedDb
 from preprocessor.implementations.preprocessor_service import PreprocessorService
 from preprocessor.implementations.sff_preprocessor import SFFPreprocessor
 
+from pprint import pprint
+
 RAW_INPUT_FILES_DIR = Path(__file__).parent / 'raw_input_files'
 
 def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict:
@@ -73,7 +75,7 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
                             if item.is_file():
                                 if item.suffix == '.hff':
                                     segmentation_file_path = item
-                                if item.suffix == '.map' or item.suffix == '.ccp4':
+                                if item.suffix == '.map' or item.suffix == '.ccp4' or item.suffix == '.mrc':
                                     volume_file_path: Path = item
                         d[source_db].append(
                             {
@@ -82,7 +84,8 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
                                 'segmentation_file_path': segmentation_file_path,
                             }
                         )
-        # print(d)
+        print('entries to be parsed:')
+        pprint(d)
     return d
 
 def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path) -> None:
