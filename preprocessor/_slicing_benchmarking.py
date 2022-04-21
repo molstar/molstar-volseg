@@ -3,7 +3,7 @@ from typing import Tuple
 import zarr
 import numpy as np
 import dask.array as da
-from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb, __open_zarr_structure_from_path
+from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb, open_zarr_structure_from_path
 from timeit import default_timer as timer
 import tensorstore as ts
 import shutil
@@ -21,7 +21,7 @@ CHUNK_SIZES = [25, 50, 100, 400]
 
 TEMP_STORE_PATH = Path(__file__).parents[0] / 'temp' / 'benchmarking_zarr_structure'
 
-def __generate_dummy_arr(shape: Tuple[int, int, int]) -> np.ndarray:
+def generate_dummy_arr(shape: Tuple[int, int, int]) -> np.ndarray:
     np_arr = np.arange(shape[0] * shape[1] * shape[2]).reshape((shape[0], shape[1], shape[2]))
     return np_arr
 
@@ -64,11 +64,11 @@ def __create_dummy_zarr_structure(path: Path, np_arr: np.ndarray) -> zarr.hierar
 
 
 def dummy_arr_benchmarking(shape: Tuple[int, int, int]):
-    np_arr = __generate_dummy_arr(shape)
+    np_arr = generate_dummy_arr(shape)
     __create_dummy_zarr_structure(TEMP_STORE_PATH, np_arr)
     
     zarr_structure_opening_start = timer()
-    zarr_structure = __open_zarr_structure_from_path(TEMP_STORE_PATH)
+    zarr_structure = open_zarr_structure_from_path(TEMP_STORE_PATH)
     zarr_structure_opening_end = timer()
     print(f'OPENING ZARR STRUCTURE: {zarr_structure_opening_end - zarr_structure_opening_start}')
 

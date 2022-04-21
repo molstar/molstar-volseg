@@ -31,6 +31,19 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         '''
         return self.__path_to_object__(namespace, key).is_dir()
     
+    def remove_all_entries(self, namespace: str = 'emdb'):
+        '''
+        Removes all entries from dir of certain source db (namespace);
+        used before another run of building db to build it from scratch without interfering with
+        previously existing entries
+        '''
+        content = sorted((Path(__file__).resolve().parents[2] / namespace).glob('*'))
+        for path in content:
+            if path.is_file():
+                path.unlink()
+            if path.is_dir():
+                shutil.rmtree(path, ignore_errors=True)
+
     async def store(self, namespace: str, key: str, temp_store_path: Path) -> bool:
         '''
         Takes path to temp zarr structure returned by preprocessor as argument 
@@ -73,7 +86,6 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         
         read_segm_arr: np.ndarray = root[SEGMENTATION_DATA_GROUPNAME][lattice_id]
         read_volume_arr: np.ndarray = root[VOLUME_DATA_GROUPNAME]
-        # TODO: rewrite return when LocalDiskPreprocessedVolume is changed to Pydantic/built-in data model
         # both volume and segm data
         return {
             'segmentation': read_segm_arr,
@@ -121,9 +133,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             # it can be 'view' or np array etc.
             segm_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=segm_arr, box=box)
             volume_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=volume_arr, box=box)
-        else:
-            raise ValueError("Invalid mode for reading slice: " + mode)
-
+        
         end = timer()
         print(f'read_slice with mode {mode}: {end - start}')
 
@@ -222,4 +232,3 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         '''
         path: Path = Path(zarr_obj.store.path).resolve() / zarr_obj.path
         return path
-

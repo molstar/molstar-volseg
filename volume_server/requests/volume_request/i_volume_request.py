@@ -39,6 +39,6 @@ class IVolumeRequest(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def max_size_kb(self) -> int:
+    def max_points(self) -> int:
         pass
 

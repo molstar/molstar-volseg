@@ -6,7 +6,11 @@ from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 
 class LocalDiskPreprocessedMetadata(IPreprocessedMetadata):
     def __init__(self, raw_metadata: Dict):
+        print("Metadata " + str(raw_metadata))
         self.raw_metadata = raw_metadata
+
+    def json_metadata(self) -> str:
+        return self.raw_metadata
 
     def segmentation_lattice_ids(self) -> List[int]:
         return self.raw_metadata['segmentation_lattice_ids']
@@ -16,7 +20,6 @@ class LocalDiskPreprocessedMetadata(IPreprocessedMetadata):
 
     def volume_downsamplings(self) -> List[int]:
         return self.raw_metadata['volume_downsamplings']
-
 
     def origin(self) -> List[float]:
         '''
