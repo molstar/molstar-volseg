@@ -61,15 +61,16 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
             ]
         }
         d = dummy_dict
-    else:
-        segmentation_file_path: Path = None
+    else:        
         # all ids should be lowercase!
         # TODO: later this dict can be compiled during batch raw file download, it should be easier than doing it like this
         for dir_path in raw_input_files_dir.iterdir():
-            if dir_path.is_dir():
+            if dir_path.is_dir():               
                 source_db = (dir_path.stem).lower()
                 d[source_db] = []
                 for subdir_path in dir_path.iterdir():
+                    segmentation_file_path: Path = None
+
                     if subdir_path.is_dir():
                         content = sorted(subdir_path.glob('*'))
                         for item in content:
@@ -85,8 +86,6 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
                                 'segmentation_file_path': segmentation_file_path,
                             }
                         )
-        print('entries to be parsed:')
-        pprint(d)
     return d
 
 def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path) -> None:
