@@ -6,9 +6,9 @@ from volume_server.requests.volume_request.i_volume_request import IVolumeReques
 
 class IVolumeServer(abc.ABC):
     @abc.abstractmethod
-    async def get_volume(self, req: IVolumeRequest) -> object:  # TODO: add binary cif to the project
+    async def get_volume(self, req: IVolumeRequest) -> tuple:  # TODO: add binary cif to the project
         pass
 
     @abc.abstractmethod
-    async def get_metadata(self, req: IMetadataRequest) -> object:
+    async def get_metadata(self, req: IMetadataRequest) -> str:
         pass

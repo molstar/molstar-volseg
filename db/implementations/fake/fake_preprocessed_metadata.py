@@ -1,9 +1,20 @@
 from typing import List
 
+import numpy as np
+
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 
 
 class FakePreprocessedMetadata(IPreprocessedMetadata):
+    def json_metadata(self) -> str:
+        return ""
+
+    def mean(self, level: int) -> np.float64:
+        return np.float64(0)
+
+    def std(self, level: int) -> np.float64:
+        return np.float64(0)
+
     def segmentation_lattice_ids(self) -> List[int]:
         return [0, 0, 0]
 

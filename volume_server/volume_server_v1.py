@@ -1,4 +1,6 @@
 from math import ceil
+from typing import Union
+import json
 
 from db.interface.i_preprocessed_db import IReadOnlyPreprocessedDb
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
@@ -9,17 +11,24 @@ from .requests.metadata_request.i_metadata_request import IMetadataRequest
 
 
 class VolumeServerV1(IVolumeServer):
-    async def get_metadata(self, req: IMetadataRequest) -> object:
-        metadata = await self.db.read_grid_metadata(req.source(), req.structure_id())
-        converted = self.volume_to_cif.convert_metadata(metadata)
-        return converted
+    async def get_metadata(self, req: IMetadataRequest) -> Union[bytes, str]:
+        grid = await self.db.read_grid_metadata(req.source(), req.structure_id())
+        annotation = await self.db.read_annotation_metadata(req.source(), req.structure_id())
+
+        print(grid)
+        print(annotation)
+        # converted = self.volume_to_cif.convert_metadata(grid_metadata)
+        return { "grid":grid.json_metadata(), "annotation":annotation }
 
     def __init__(self, db: IReadOnlyPreprocessedDb, volume_to_cif: IVolumeToCifConverter):
         self.db = db
         self.volume_to_cif = volume_to_cif
 
-    async def get_volume(self, req: IVolumeRequest) -> object:  # TODO: add binary cif to the project
+    async def get_volume(self, req: IVolumeRequest) -> bytes:  # TODO: add binary cif to the project
         metadata = await self.db.read_grid_metadata(req.source(), req.structure_id())
+
+        print(metadata)
+
         lattice = self.decide_lattice(req, metadata)
         grid = self.decide_grid(req, metadata)
         print("Converted grid to: " + str(grid))
@@ -30,18 +39,21 @@ class VolumeServerV1(IVolumeServer):
         grid = self.down_sampled_grid(down_sampling, grid)
 
         print("Converted grid (down sampled) to: " + str(grid))
+
+        print("Making request to read slice:\n" \
+              "  source: " + str(req.source()) + "\n" +
+              "  id: " + str(req.structure_id()) + "\n" +
+              "  lattice: " + str(lattice) + "\n" +
+              "  down_sampling: " + str(down_sampling) + "\n" +
+              "  grid: " + str(grid))
         db_slice = await self.db.read_slice(
             req.source(),
             req.structure_id(),
             lattice,
             down_sampling,
-            grid,
-            mode="zarr_colon")
+            grid)
 
-        volume = db_slice["volume_slice"]
-        # TODO: do something with preprocessed?
-        cif = self.volume_to_cif.convert(volume)
-        # TODO: do something with cif?
+        cif = self.volume_to_cif.convert(db_slice, metadata, down_sampling,  self.grid_size(grid))
         return cif
 
     def decide_lattice(self, req: IVolumeRequest, metadata: IPreprocessedMetadata) -> int:
@@ -55,23 +67,35 @@ class VolumeServerV1(IVolumeServer):
         # TODO: it seems that downsamplings are strings -> check and fix
 
         down_samplings = metadata.volume_downsamplings()
+        print("[Downsampling] Available downsamplings: " + str(down_samplings))
+        print("[Downsampling] Max points: " + str(req.max_points()))
         if not req.max_points():
             return 1 if '1' in down_samplings else int(down_samplings[0])
 
-        grid_x = original_grid[1][0] - original_grid[0][0]
-        grid_y = original_grid[1][1] - original_grid[0][1]
-        grid_z = original_grid[1][2] - original_grid[0][2]
+        size = 1
+        for i in self.grid_size(original_grid):
+            size *= i
 
-        grid_size = grid_x * grid_y * grid_z
         # TODO: improve rounding depending on conservative, strict, etc approach
-        desired_down_sampling = ceil(grid_size/req.max_points())
+        desired_down_sampling = ceil(size/req.max_points())
+        print("[Downsampling] Computed desired downsampling: " + str(desired_down_sampling))
 
         for ds in down_samplings:
             if int(ds) >= desired_down_sampling:
+                print("[Downsampling] Decided (A): " + str(ds))
                 return int(ds)
 
+        print("[Downsampling] Decided (B): " + str(down_samplings[-1]))
         return int(down_samplings[-1])  # TODO: check assumption that last is highest
 
+    def grid_size(self, grid: tuple[tuple[int, int, int], tuple[int, int, int]]) -> list[int]:
+        print("[Downsampling] Computing grid")
+        grid_x = grid[1][0] - grid[0][0]
+        grid_y = grid[1][1] - grid[0][1]
+        grid_z = grid[1][2] - grid[0][2]
+
+        print("[Downsampling] Computing grid (x,y,z): (" + str(grid_x) + "," + str(grid_y) + "," + str(grid_z) + ")")
+        return [grid_x, grid_y, grid_z]
 
     def decide_grid(self, req: IVolumeRequest, meta: IPreprocessedMetadata) \
             -> tuple[tuple[int,int,int], tuple[int,int,int]]:
@@ -84,15 +108,15 @@ class VolumeServerV1(IVolumeServer):
              self._float_to_grid(meta.origin()[2], meta.voxel_size(1)[2], meta.grid_dimensions()[2], req.z_max())))
 
     def down_sampled_grid(self, down_sampling: int, original_grid: tuple[tuple[int, int, int], tuple[int, int, int]]) \
-            -> list[list]:
+            -> tuple[tuple[int,int,int], tuple[int,int,int]]:
+        if down_sampling == 1:
+            return original_grid
 
         result: list[list] = []
-
-        if down_sampling > 1:
-            for i in range(2):
-                result.append([])
-                for j in range(3):
-                    result[i].append(round(original_grid[i][j]/2))
+        for i in range(2):
+            result.append([])
+            for j in range(3):
+                result[i].append(round(original_grid[i][j]/down_sampling))
 
         return result
 

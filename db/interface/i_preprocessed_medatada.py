@@ -6,6 +6,10 @@ import numpy as np
 
 class IPreprocessedMetadata(abc.ABC):
     @abc.abstractmethod
+    def json_metadata(self) -> str:
+        pass
+
+    @abc.abstractmethod
     def segmentation_lattice_ids(self) -> List[int]:
         pass
 
