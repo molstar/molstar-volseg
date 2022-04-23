@@ -14,6 +14,30 @@ import { arrayMean, arrayRms } from 'molstar/lib/mol-util/array';
 import { Vec2 } from 'molstar/lib/mol-math/linear-algebra';
 import { BehaviorSubject } from 'rxjs';
 
+
+interface Segment {
+    id: number,
+    colour: number[],
+    biological_annotation: BiologicalAnnotation,
+}
+
+interface BiologicalAnnotation {
+    name: string,
+    external_references: { id: number, resource: string, accession: string, label: string, description: string }[]
+}
+
+interface Annotation  {
+    name: string,
+    details: string,
+    segment_list: Segment[],
+}
+
+// partial model
+interface Metadata {
+    grid: any,
+    annotation:Annotation,
+}
+
 export class AppModel {
     plugin: PluginUIContext = void 0 as any;
 
@@ -106,27 +130,32 @@ export class AppModel {
     }
 
     private volume: Volume = undefined as any;
-    private currentLevel: any = undefined;
+    private currentLevel: any[] = [];
 
-    async showSegmentLevel(segmentId: number) {
-        const volume = this.createSegment(this.volume, this.segmentation, segmentId);
-        this.currentSegment.next(segmentId);
+    async showSegments(segments: Segment[]) {        
+        if (segments.length === 1) {
+            this.currentSegment.next(segments[0]);
+        } else {
+            this.currentSegment.next(undefined);
+        }
 
         const update = this.plugin.build();
 
-        if (this.currentLevel) {
-            update.delete(this.currentLevel);
+        for (const l of this.currentLevel) update.delete(l);
+        this.currentLevel = [];
+
+        for (const s of segments) {
+            const volume = this.createSegment(this.volume, this.segmentation, s.id);
+            const root = update.toRoot().apply(CreateVolume, { volume });
+            this.currentLevel.push(root.selector);
+
+            root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
+                type: 'isosurface',
+                typeParams: { alpha: 1, isoValue: Volume.IsoValue.absolute(0.95) },
+                color: 'uniform',
+                colorParams: { value: Color.fromNormalizedArray(s.colour, 0) }
+            }));
         }
-
-        const root = update.toRoot().apply(CreateVolume, { volume });
-        this.currentLevel = root.selector;
-
-        root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
-            type: 'isosurface',
-            typeParams: { alpha: 1, isoValue: Volume.IsoValue.absolute(0.95) },
-            color: 'uniform',
-            colorParams: { value: Color(Math.round(Math.random() * 0xffffff)) }
-        }));
 
         // const controlPoints: Vec2[] = [
         //     Vec2.create(0, 0),
@@ -158,14 +187,15 @@ export class AppModel {
     }
 
     private segmentation: number[] = [];
-    segments = new BehaviorSubject<number[]>([]);
-    currentSegment = new BehaviorSubject<number>(0);
+    entryId = new BehaviorSubject<string>('');
+    annotation = new BehaviorSubject<Annotation | undefined>(undefined);
+    currentSegment = new BehaviorSubject<Segment | undefined>(undefined);
 
     async load() {
         const entryId = 'emd-1832';
         const isoLevel = 2.73;
         // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
-        const url = 'http://localhost:9000/v1/emdb/emd-1832/box/0/-1000/-1000/-1000/1000/1000/1000/100000000';
+        const url = `http://localhost:9000/v1/emdb/${entryId}/box/0/-1000/-1000/-1000/1000/1000/1000/100000000`;
         const { plugin } = this;
 
         const data = await plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: true } });
@@ -178,12 +208,13 @@ export class AppModel {
         const segmentation = cif.data!.blocks[2];
 
         const values = segmentation.categories['segmentation_data_3d'].getField('values')?.toIntArray();
-        const uniqueSegmentations = Array.from(new Set(values)).filter(s => s !== 0);
+        // const uniqueSegmentations = Array.from(new Set(values)).filter(s => s !== 0);
 
-        this.segments.next(uniqueSegmentations);
+        const metadata: Metadata = await (await fetch(`http://localhost:9000/v1/emdb/${entryId}/metadata`)).json();
+
+        this.entryId.next(entryId);
+        this.annotation.next(metadata.annotation);
         this.segmentation = values as any;
-
-        console.log(uniqueSegmentations);
 
         const repr = plugin.build();
 
@@ -197,6 +228,8 @@ export class AppModel {
             }));
 
         await repr.commit();
+
+        await this.showSegments(metadata.annotation.segment_list);
     }
 }
 

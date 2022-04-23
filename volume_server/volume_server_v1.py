@@ -1,5 +1,6 @@
 from math import ceil
 from typing import Union
+import json
 
 from db.interface.i_preprocessed_db import IReadOnlyPreprocessedDb
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
@@ -11,9 +12,13 @@ from .requests.metadata_request.i_metadata_request import IMetadataRequest
 
 class VolumeServerV1(IVolumeServer):
     async def get_metadata(self, req: IMetadataRequest) -> Union[bytes, str]:
-        metadata = await self.db.read_grid_metadata(req.source(), req.structure_id())
-        converted = self.volume_to_cif.convert_metadata(metadata)
-        return converted
+        grid = await self.db.read_grid_metadata(req.source(), req.structure_id())
+        annotation = await self.db.read_annotation_metadata(req.source(), req.structure_id())
+
+        print(grid)
+        print(annotation)
+        # converted = self.volume_to_cif.convert_metadata(grid_metadata)
+        return { "grid":grid.json_metadata(), "annotation":annotation }
 
     def __init__(self, db: IReadOnlyPreprocessedDb, volume_to_cif: IVolumeToCifConverter):
         self.db = db
