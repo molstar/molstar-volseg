@@ -73,6 +73,7 @@ function UI99999({ model }: { model: AppModel }) {
 
     return <>
         <Typography variant='h6'>Benchmark Airyscan data matching FIB SEM data deposited on EMPIAR</Typography>
+        <a href='https://www.ebi.ac.uk/biostudies/studies/S-BSST707' target='_blank' rel='noreferrer'>Archive Link</a>
         <Divider style={{ margin: '8px 0' }} />
         <Slider min={-1} max={0.7} step={0.05} value={iso} valueLabelDisplay='auto' marks onChange={(_, v) => setIso(v as number)}  onChangeCommitted={(_, v) => model.setIsoValue(v as number)} />
     </>;
