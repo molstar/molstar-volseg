@@ -352,7 +352,8 @@ class SFFPreprocessor(IDataPreprocessor):
             # downsamplings have different voxel size so it is a dict
             'voxel_size': voxel_sizes_in_downsamplings,
             'origin': origin,
-            'grid_dimensions': grid_dimensions_dict,
+            'grid_dimensions': (d['NC'], d['NR'], d['NS']),
+            'sampled_grid_dimensions': grid_dimensions_dict,
             'mean': mean_dict,
             'std': std_dict,
             'max': max_dict,
