@@ -12,6 +12,7 @@ preprocessor/temp/
 preprocessor/temp_zarr_hierarchy_storage/
 preprocessor/raw_input_files/emdb/empiar_10087_c2_tomo02/
 preprocessor/raw_input_files/emdb/empiar_10087_e64_tomo03/
+preprocessor/raw_input_files/emdb/emd-99999
 preprocessor/sample_segmentations/emdb_sff/empiar_10087_c2_tomo02.hff
 preprocessor/sample_segmentations/emdb_sff/empiar_10087_c2_tomo02.json
 preprocessor/sample_segmentations/emdb_sff/empiar_10087_e64_tomo03.hff
