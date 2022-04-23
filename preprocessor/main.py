@@ -123,7 +123,7 @@ async def check_read_slice(db: LocalDiskPreprocessedDb):
         box
     )
     emd_1832_volume_slice = slice_emd_1832['volume_slice']
-    emd_1832_segm_slice = slice_emd_1832['segmentation_slice']
+    emd_1832_segm_slice = slice_emd_1832['segmentation_slice']['category_set_ids']
     
     emd_99999_volume_slice = slice_emd_99999['volume_slice']
 
