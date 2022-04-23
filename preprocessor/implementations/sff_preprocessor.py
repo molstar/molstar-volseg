@@ -289,12 +289,22 @@ class SFFPreprocessor(IDataPreprocessor):
         # TODO:
         mean_dict = {}
         std_dict = {}
+        max_dict = {}
+        min_dict = {}
+        grid_dimensions_dict = {}
 
         for arr_name, arr in root[VOLUME_DATA_GROUPNAME].arrays():
             mean_val = str(np.mean(arr[...]))
             std_val =  str(np.std(arr[...]))
+            max_val = str(arr[...].max())
+            min_val = str(arr[...].min())
+            grid_dimensions_val: Tuple[int, int, int] = arr.shape
+
             mean_dict[str(arr_name)] = mean_val
             std_dict[str(arr_name)] = std_val
+            max_dict[str(arr_name)] = max_val
+            min_dict[str(arr_name)] = min_val
+            grid_dimensions_dict[str(arr_name)] = grid_dimensions_val
 
         lattice_dict = {}
         lattice_ids = []
@@ -332,7 +342,7 @@ class SFFPreprocessor(IDataPreprocessor):
         )
 
         # get grid dimensions based on NX/NC, NY/NR, NZ/NS variables (words 1, 2, 3) in CCP4 file
-        grid_dimensions: Tuple[int, int, int] = (d['NC'], d['NR'], d['NS'])
+        # original_grid_dimensions: Tuple[int, int, int] = (d['NC'], d['NR'], d['NS'])
 
         return {
             'details': root.details[...][0].decode('utf-8'),
@@ -342,9 +352,12 @@ class SFFPreprocessor(IDataPreprocessor):
             # downsamplings have different voxel size so it is a dict
             'voxel_size': voxel_sizes_in_downsamplings,
             'origin': origin,
-            'grid_dimensions': grid_dimensions,
+            'grid_dimensions': (d['NC'], d['NR'], d['NS']),
+            'sampled_grid_dimensions': grid_dimensions_dict,
             'mean': mean_dict,
-            'std': std_dict
+            'std': std_dict,
+            'max': max_dict,
+            'min': min_dict
         }
 
     def __temp_save_metadata(self, metadata: Dict, metadata_filename: Path, temp_dir_path: Path) -> None:
