@@ -122,11 +122,18 @@ async def check_read_slice(db: LocalDiskPreprocessedDb):
         2,
         box
     )
+    emd_1832_volume_slice = slice_emd_1832['volume_slice']
+    emd_1832_segm_slice = slice_emd_1832['segmentation_slice']
     
-    print(f'slice_emd_1832 shape: {slice_emd_1832.shape}, dtype: {slice_emd_1832.dtype}')
-    print(slice_emd_1832)
-    print(f'slice_emd_99999 shape: {slice_emd_99999.shape}, dtype: {slice_emd_99999.dtype}')
-    print(slice_emd_99999)
+    emd_99999_volume_slice = slice_emd_99999['volume_slice']
+
+    print(f'volume slice_emd_1832 shape: {emd_1832_volume_slice.shape}, dtype: {emd_1832_volume_slice.dtype}')
+    print(emd_1832_volume_slice)
+    print(f'segmentation slice_emd_1832 shape: {emd_1832_segm_slice.shape}, dtype: {emd_1832_segm_slice.dtype}')
+    print(emd_1832_segm_slice)
+    print()
+    print(f'volume slice_emd_99999 shape: {emd_99999_volume_slice.shape}, dtype: {emd_99999_volume_slice.dtype}')
+    print(emd_99999_volume_slice)
     # print(slice)
     return {
         'slice_emd_1832': slice_emd_1832,
