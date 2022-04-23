@@ -112,14 +112,14 @@ async def check_read_slice(db: LocalDiskPreprocessedDb):
         'emdb',
         'emd-1832',
         0,
-        2,
+        1,
         box
     )
     slice_emd_99999 = await db.read_slice(
         'emdb',
         'emd-99999',
         0,
-        2,
+        1,
         box
     )
     emd_1832_volume_slice = slice_emd_1832['volume_slice']
