@@ -8,5 +8,5 @@
 3. Make sure there are no directories in ` preprocessor\temp_zarr_hierarchy_storage\` (e.g. temporary files could  be there if previous db build procedure was interrupted or finished unsuccessfully, but they needs to be deleted for building db cleanly from scratch to avoid potential issues)
 4. Run `python preprocessor\main.py`
 5. Confirm that dict with file pathes printed out by the script is correct
-6. Check if there is now some subdir in `db\emdb` (the only one should  be `emd-1832` currently)
+6. Check if there is now some subdir in `db\emdb`
 
