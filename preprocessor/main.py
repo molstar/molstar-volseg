@@ -1,5 +1,6 @@
 from asgiref.sync import async_to_sync
 import asyncio
+import numpy as np
 
 from pathlib import Path
 from typing import Dict
@@ -89,15 +90,19 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
     return d
 
 def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path) -> None:
+    volume_force_dtype = np.float32
     preprocessor_service = PreprocessorService([SFFPreprocessor()])
     files_dict = obtain_paths_to_all_files(raw_input_files_dir, hardcoded=False)
     for source_name, source_entries in files_dict.items():
         for entry in source_entries:
             segm_file_type = preprocessor_service.get_raw_file_type(entry['segmentation_file_path'])
             file_preprocessor = preprocessor_service.get_preprocessor(segm_file_type)
+            if entry['segmentation_file_path'] == None:
+                volume_force_dtype = np.uint8
             processed_data_temp_path = file_preprocessor.preprocess(
                 segm_file_path = entry['segmentation_file_path'],
-                volume_file_path = entry['volume_file_path']
+                volume_file_path = entry['volume_file_path'],
+                volume_force_dtype = volume_force_dtype
             )
             async_to_sync(db.store)(namespace=source_name, key=entry['id'], temp_store_path=processed_data_temp_path)
 
