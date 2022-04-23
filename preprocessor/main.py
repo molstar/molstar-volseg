@@ -90,7 +90,6 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
     return d
 
 def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path) -> None:
-    volume_force_dtype = np.float32
     preprocessor_service = PreprocessorService([SFFPreprocessor()])
     files_dict = obtain_paths_to_all_files(raw_input_files_dir, hardcoded=False)
     for source_name, source_entries in files_dict.items():
@@ -99,6 +98,8 @@ def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path) -> Non
             file_preprocessor = preprocessor_service.get_preprocessor(segm_file_type)
             if entry['segmentation_file_path'] == None:
                 volume_force_dtype = np.uint8
+            else:
+                volume_force_dtype = np.float32
             processed_data_temp_path = file_preprocessor.preprocess(
                 segm_file_path = entry['segmentation_file_path'],
                 volume_file_path = entry['volume_file_path'],
@@ -146,7 +147,7 @@ if __name__ == '__main__':
     db.remove_all_entries(namespace='emdb')
     preprocess_everything(db, RAW_INPUT_FILES_DIR)
     # uncomment to check read slice method
-    asyncio.run(check_read_slice(db))
+    # asyncio.run(check_read_slice(db))
     
     # event loop works, while async to sync returns Metadata class
     # https://stackoverflow.com/questions/44048536/python3-get-result-from-async-method
