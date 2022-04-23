@@ -108,15 +108,30 @@ def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path) -> Non
 
 async def check_read_slice(db: LocalDiskPreprocessedDb):
     box = ((0, 0, 0), (10, 10, 10), (10, 10, 10))
-    slice = await db.read_slice(
+    slice_emd_1832 = await db.read_slice(
         'emdb',
         'emd-1832',
         0,
         2,
         box
     )
+    slice_emd_99999 = await db.read_slice(
+        'emdb',
+        'emd-99999',
+        0,
+        2,
+        box
+    )
+    
+    print(f'slice_emd_1832 shape: {slice_emd_1832.shape}, dtype: {slice_emd_1832.dtype}')
+    print(slice_emd_1832)
+    print(f'slice_emd_99999 shape: {slice_emd_99999.shape}, dtype: {slice_emd_99999.dtype}')
+    print(slice_emd_99999)
     # print(slice)
-    return slice
+    return {
+        'slice_emd_1832': slice_emd_1832,
+        'slice_emd_99999': slice_emd_99999
+    }
 
 
 if __name__ == '__main__':
@@ -124,11 +139,7 @@ if __name__ == '__main__':
     db.remove_all_entries(namespace='emdb')
     preprocess_everything(db, RAW_INPUT_FILES_DIR)
     # uncomment to check read slice method
-    d = asyncio.run(check_read_slice(db))
-    s = d['volume_slice']
-    print(s)
-    print(s.shape)
-    print(s.dtype)
+    asyncio.run(check_read_slice(db))
     
     # event loop works, while async to sync returns Metadata class
     # https://stackoverflow.com/questions/44048536/python3-get-result-from-async-method
