@@ -94,15 +94,17 @@ class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
 
     def convert(self, slice: ProcessedVolumeSliceData, metadata: IPreprocessedMetadata, downsampling: int, grid_size: list[int]) -> Union[bytes, str]:  # TODO: add binary cif to the project
         volume: np.ndarray = slice["volume_slice"]
-        segmentation: SegmentationSliceData = slice["segmentation_slice"]
-
+        
         writer = BinaryCIFWriter("volume_server")
 
         # volume
         self._add_slice_volume_info(writer, volume, metadata, downsampling, grid_size)
 
         # segmentation
-        self._add_slice_segmentation(writer, segmentation)
+        # TODO: hack...
+        if slice["segmentation_slice"]["category_set_ids"] is not None:
+            segmentation: SegmentationSliceData = slice["segmentation_slice"]
+            self._add_slice_segmentation(writer, segmentation)
 
         return self._finalize(writer)
 

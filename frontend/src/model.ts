@@ -67,7 +67,7 @@ export class AppModel {
             ],
         });
 
-        setTimeout(() => this.load(), 50);
+        setTimeout(() => this.load1832(), 50);
     }
 
     createFakeSegment(volume: Volume, level: number): Volume {
@@ -191,12 +191,14 @@ export class AppModel {
     annotation = new BehaviorSubject<Annotation | undefined>(undefined);
     currentSegment = new BehaviorSubject<Segment | undefined>(undefined);
 
-    async load() {
+    async load1832() {
         const entryId = 'emd-1832';
         const isoLevel = 2.73;
         // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
         const url = `http://localhost:9000/v1/emdb/${entryId}/box/0/-1000/-1000/-1000/1000/1000/1000/100000000`;
         const { plugin } = this;
+
+        await plugin.clear();
 
         const data = await plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: true } });
         const parsed = await plugin.dataFormats.get('dscif')!.parse(plugin, data, { entryId });
@@ -230,6 +232,53 @@ export class AppModel {
         await repr.commit();
 
         await this.showSegments(metadata.annotation.segment_list);
+
+        this.dataSource.next('1832');
+    }
+
+
+    dataSource = new BehaviorSubject<string>('');
+
+    async setIsoValue(newValue: number) {
+        if (!this.repr) return;
+
+        const { plugin } = this;
+        await plugin.build().to(this.repr).update(createVolumeRepresentationParams(this.plugin, this.volume, {
+            type: 'isosurface',
+            typeParams: { alpha: 1, isoValue: Volume.IsoValue.relative(newValue) },
+            color: 'uniform',
+            colorParams: { value: Color(0x224899) }
+        })).commit();
+    }
+
+    private repr: any = undefined;
+    async load99999() {
+        const entryId = 'emd-99999';
+        const url = `http://localhost:9000/v1/emdb/${entryId}/box/0/-10000/-10000/-10000/10000/10000/10000/10000000`;
+        // http://localhost:9000/v1/emdb/emd-99999/box/0/-10000/-10000/-10000/10000/10000/10000/10000000
+        const { plugin } = this;
+
+        await plugin.clear();
+
+        const data = await plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: true } });
+        const parsed = await plugin.dataFormats.get('dscif')!.parse(plugin, data);
+        const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
+        const volumeData = volume.cell!.obj!.data;
+        this.volume = volumeData;
+        const repr = plugin.build();
+
+        this.repr = repr
+            .to(volume)
+            .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
+                type: 'isosurface',
+                typeParams: { alpha: 1, isoValue: Volume.IsoValue.relative(-0.55) },
+                color: 'uniform',
+                colorParams: { value: Color(0x224899) }
+            }));
+
+        await repr.commit();
+
+        this.dataSource.next('99999');
     }
 }
 

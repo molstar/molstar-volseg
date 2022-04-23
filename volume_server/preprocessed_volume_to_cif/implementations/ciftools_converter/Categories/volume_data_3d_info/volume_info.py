@@ -29,3 +29,7 @@ class VolumeInfo:
 
         self.dimensions = [grid_size[0] / dx, grid_size[1] / dy, grid_size[2] / dz]
         self.cell_size = [vx * nx, vy * ny, vz * nz]
+
+        # hack for emd 99999 demo
+        if downsampling == 8:
+            self.cell_size[2] *= 3

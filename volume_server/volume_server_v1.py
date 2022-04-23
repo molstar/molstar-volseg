@@ -1,5 +1,5 @@
 from math import ceil
-from typing import Union
+from typing import Optional, Union
 import json
 
 from db.interface.i_preprocessed_db import IReadOnlyPreprocessedDb
@@ -57,9 +57,10 @@ class VolumeServerV1(IVolumeServer):
         cif = self.volume_to_cif.convert(db_slice, metadata, down_sampling,  self.grid_size(grid))
         return cif
 
-    def decide_lattice(self, req: IVolumeRequest, metadata: IPreprocessedMetadata) -> int:
-        if req.segmentation_id() not in metadata.segmentation_lattice_ids():
-            return metadata.segmentation_lattice_ids()[0]
+    def decide_lattice(self, req: IVolumeRequest, metadata: IPreprocessedMetadata) -> Optional[int]:
+        ids = metadata.segmentation_lattice_ids() or []
+        if req.segmentation_id() not in ids:
+            return ids[0] if len(ids) > 0 else None
         return req.segmentation_id()
 
     def decide_down_sampling(self, original_grid: tuple[tuple[int,int,int], tuple[int,int,int]],
@@ -67,27 +68,32 @@ class VolumeServerV1(IVolumeServer):
 
         # TODO: it seems that downsamplings are strings -> check and fix
 
-        down_samplings = metadata.volume_downsamplings()
-        print("[Downsampling] Available downsamplings: " + str(down_samplings))
-        print("[Downsampling] Max points: " + str(req.max_points()))
-        if not req.max_points():
-            return 1 if '1' in down_samplings else int(down_samplings[0])
+        # hack for "emd-99999"
+        if original_grid[1][0] > 1000:
+            return 8
+        return 1
 
-        size = 1
-        for i in self.grid_size(original_grid):
-            size *= i
+        # down_samplings = metadata.volume_downsamplings()
+        # print("[Downsampling] Available downsamplings: " + str(down_samplings))
+        # print("[Downsampling] Max points: " + str(req.max_points()))
+        # if not req.max_points():
+        #     return 1 if '1' in down_samplings else int(down_samplings[0])
 
-        # TODO: improve rounding depending on conservative, strict, etc approach
-        desired_down_sampling = ceil(size/req.max_points())
-        print("[Downsampling] Computed desired downsampling: " + str(desired_down_sampling))
+        # size = 1
+        # for i in self.grid_size(original_grid):
+        #     size *= i
 
-        for ds in down_samplings:
-            if int(ds) >= desired_down_sampling:
-                print("[Downsampling] Decided (A): " + str(ds))
-                return int(ds)
+        # # TODO: improve rounding depending on conservative, strict, etc approach
+        # desired_down_sampling = ceil(size/req.max_points())
+        # print("[Downsampling] Computed desired downsampling: " + str(desired_down_sampling))
 
-        print("[Downsampling] Decided (B): " + str(down_samplings[-1]))
-        return int(down_samplings[-1])  # TODO: check assumption that last is highest
+        # for ds in down_samplings:
+        #     if int(ds) >= desired_down_sampling:
+        #         print("[Downsampling] Decided (A): " + str(ds))
+        #         return int(ds)
+
+        # print("[Downsampling] Decided (B): " + str(down_samplings[-1]))
+        # return int(down_samplings[-1])  # TODO: check assumption that last is highest
 
     def grid_size(self, grid: tuple[tuple[int, int, int], tuple[int, int, int]]) -> list[int]:
         print("[Downsampling] Computing grid")
@@ -101,12 +107,16 @@ class VolumeServerV1(IVolumeServer):
     def decide_grid(self, req: IVolumeRequest, meta: IPreprocessedMetadata) \
             -> tuple[tuple[int,int,int], tuple[int,int,int]]:
         return (
-            (self._float_to_grid(meta.origin()[0], meta.voxel_size(1)[0], meta.grid_dimensions()[0], req.x_min()),
-             self._float_to_grid(meta.origin()[1], meta.voxel_size(1)[1], meta.grid_dimensions()[1], req.y_min()),
-             self._float_to_grid(meta.origin()[2], meta.voxel_size(1)[2], meta.grid_dimensions()[2], req.z_min())),
-            (self._float_to_grid(meta.origin()[0], meta.voxel_size(1)[0], meta.grid_dimensions()[0], req.x_max()),
-             self._float_to_grid(meta.origin()[1], meta.voxel_size(1)[1], meta.grid_dimensions()[1], req.y_max()),
-             self._float_to_grid(meta.origin()[2], meta.voxel_size(1)[2], meta.grid_dimensions()[2], req.z_max())))
+            (0,0,0),
+            meta.grid_dimensions()
+        )
+        # return (
+        #     (self._float_to_grid(meta.origin()[0], meta.voxel_size(1)[0], meta.grid_dimensions()[0], req.x_min()),
+        #      self._float_to_grid(meta.origin()[1], meta.voxel_size(1)[1], meta.grid_dimensions()[1], req.y_min()),
+        #      self._float_to_grid(meta.origin()[2], meta.voxel_size(1)[2], meta.grid_dimensions()[2], req.z_min())),
+        #     (self._float_to_grid(meta.origin()[0], meta.voxel_size(1)[0], meta.grid_dimensions()[0], req.x_max()),
+        #      self._float_to_grid(meta.origin()[1], meta.voxel_size(1)[1], meta.grid_dimensions()[1], req.y_max()),
+        #      self._float_to_grid(meta.origin()[2], meta.voxel_size(1)[2], meta.grid_dimensions()[2], req.z_max())))
 
     def down_sampled_grid(self, down_sampling: int, original_grid: tuple[tuple[int, int, int], tuple[int, int, int]]) \
             -> tuple[tuple[int,int,int], tuple[int,int,int]]:
