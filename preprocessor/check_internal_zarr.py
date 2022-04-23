@@ -77,8 +77,9 @@ def _plot_volume_data(arr_name, arr: zarr.core.Array, custom_image_name_tag=''):
     no_negative = normalized_arr.clip(min=0)
     plot_3d_array_color(no_negative, f'{custom_image_name_tag}-{arr_name}_adjust_then_negative_to_zero')
 
-def plot_specific_downsampling_level_volume_data(root: zarr.hierarchy.group, level: str):
-    img_tag = root.details[...][0]
+def plot_specific_downsampling_level_volume_data(root: zarr.hierarchy.group, level: str, img_tag=''):
+    if img_tag == '':
+        img_tag = root.details[...][0]
     arr = root._volume_data[level]
     arr_name = str(level)
     _plot_volume_data(arr_name, arr, custom_image_name_tag=img_tag)
@@ -220,22 +221,29 @@ if __name__ == '__main__':
     parser.add_argument("-l", "--level", help="downsampling level", type=str)
     args = parser.parse_args()
     
-    PATH_TO_DB_ENTRY = args.path
-    print(f'Plotting data from {PATH_TO_DB_ENTRY}')
+    PATH_TO_DB_ENTRY = Path(args.path)
+    print(f'Plotting data from {PATH_TO_DB_ENTRY.resolve()}')
 
     root = open_zarr_structure_from_path(PATH_TO_DB_ENTRY)
     volume_data = root._volume_data
-    segm_data = root._segmentation_data
-    
-    check_which_segments_are_not_on_grid(segm_data)
+    if '_segmentation_data' in root:
+        segm_data = root._segmentation_data
+        check_which_segments_are_not_on_grid(segm_data)
 
     if args.level:
         print(f'Downsampling level: {args.level}')
-        plot_specific_downsampling_level_segmentation_data(root, args.level)
-        plot_specific_downsampling_level_volume_data(root, args.level)
+        if '_segmentation_data' in root:
+            plot_specific_downsampling_level_segmentation_data(root, args.level)
+            plot_specific_downsampling_level_volume_data(root, args.level)
+        else:
+            no_segm_entry_img_tag = PATH_TO_DB_ENTRY.name
+            plot_specific_downsampling_level_volume_data(root, args.level, img_tag=no_segm_entry_img_tag)
     else:
-        plot_all_volume_data(volume_data, custom_image_name_tag=root.details[...][0])
-        plot_all_segmentation_data(segm_data, root, custom_image_name_tag=root.details[...][0])
-
+        if '_segmentation_data' in root:
+            plot_all_segmentation_data(segm_data, root, custom_image_name_tag=root.details[...][0])
+            plot_all_volume_data(volume_data, custom_image_name_tag=root.details[...][0])
+        else:
+            no_segm_entry_img_tag = PATH_TO_DB_ENTRY.name
+            plot_all_volume_data(volume_data, custom_image_name_tag=no_segm_entry_img_tag)
 
     

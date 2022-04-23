@@ -1,5 +1,6 @@
 from asgiref.sync import async_to_sync
 import asyncio
+import numpy as np
 
 from pathlib import Path
 from typing import Dict
@@ -9,6 +10,8 @@ from preprocessor._write_fake_segmentation_to_sff import OUTPUT_FILEPATH as FAKE
 from db.interface.i_preprocessed_db import IPreprocessedDb
 from preprocessor.implementations.preprocessor_service import PreprocessorService
 from preprocessor.implementations.sff_preprocessor import SFFPreprocessor
+
+from pprint import pprint
 
 RAW_INPUT_FILES_DIR = Path(__file__).parent / 'raw_input_files'
 
@@ -58,21 +61,23 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
             ]
         }
         d = dummy_dict
-    else:
+    else:        
         # all ids should be lowercase!
         # TODO: later this dict can be compiled during batch raw file download, it should be easier than doing it like this
         for dir_path in raw_input_files_dir.iterdir():
-            if dir_path.is_dir():
+            if dir_path.is_dir():               
                 source_db = (dir_path.stem).lower()
                 d[source_db] = []
                 for subdir_path in dir_path.iterdir():
+                    segmentation_file_path: Path = None
+
                     if subdir_path.is_dir():
                         content = sorted(subdir_path.glob('*'))
                         for item in content:
                             if item.is_file():
                                 if item.suffix == '.hff':
-                                    segmentation_file_path: Path = item
-                                if item.suffix == '.map' or item.suffix == '.ccp4':
+                                    segmentation_file_path = item
+                                if item.suffix == '.map' or item.suffix == '.ccp4' or item.suffix == '.mrc':
                                     volume_file_path: Path = item
                         d[source_db].append(
                             {
@@ -81,7 +86,6 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
                                 'segmentation_file_path': segmentation_file_path,
                             }
                         )
-        # print(d)
     return d
 
 def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path) -> None:
@@ -91,23 +95,50 @@ def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path) -> Non
         for entry in source_entries:
             segm_file_type = preprocessor_service.get_raw_file_type(entry['segmentation_file_path'])
             file_preprocessor = preprocessor_service.get_preprocessor(segm_file_type)
+            if entry['segmentation_file_path'] == None:
+                volume_force_dtype = np.uint8
+            else:
+                volume_force_dtype = np.float32
             processed_data_temp_path = file_preprocessor.preprocess(
                 segm_file_path = entry['segmentation_file_path'],
-                volume_file_path = entry['volume_file_path']
+                volume_file_path = entry['volume_file_path'],
+                volume_force_dtype = volume_force_dtype
             )
             async_to_sync(db.store)(namespace=source_name, key=entry['id'], temp_store_path=processed_data_temp_path)
 
 async def check_read_slice(db: LocalDiskPreprocessedDb):
     box = ((0, 0, 0), (10, 10, 10), (10, 10, 10))
-    slice = await db.read_slice(
+    slice_emd_1832 = await db.read_slice(
         'emdb',
         'emd-1832',
         0,
-        2,
+        1,
         box
     )
+    slice_emd_99999 = await db.read_slice(
+        'emdb',
+        'emd-99999',
+        0,
+        1,
+        box
+    )
+    emd_1832_volume_slice = slice_emd_1832['volume_slice']
+    emd_1832_segm_slice = slice_emd_1832['segmentation_slice']['category_set_ids']
+    
+    emd_99999_volume_slice = slice_emd_99999['volume_slice']
+
+    print(f'volume slice_emd_1832 shape: {emd_1832_volume_slice.shape}, dtype: {emd_1832_volume_slice.dtype}')
+    print(emd_1832_volume_slice)
+    print(f'segmentation slice_emd_1832 shape: {emd_1832_segm_slice.shape}, dtype: {emd_1832_segm_slice.dtype}')
+    print(emd_1832_segm_slice)
+    print()
+    print(f'volume slice_emd_99999 shape: {emd_99999_volume_slice.shape}, dtype: {emd_99999_volume_slice.dtype}')
+    print(emd_99999_volume_slice)
     # print(slice)
-    return slice
+    return {
+        'slice_emd_1832': slice_emd_1832,
+        'slice_emd_99999': slice_emd_99999
+    }
 
 
 if __name__ == '__main__':
@@ -115,11 +146,7 @@ if __name__ == '__main__':
     db.remove_all_entries(namespace='emdb')
     preprocess_everything(db, RAW_INPUT_FILES_DIR)
     # uncomment to check read slice method
-    # d = asyncio.run(check_read_slice(db))
-    # s = d['volume_slice']
-    # print(s)
-    # print(s.shape)
-    # print(s.dtype)
+    # asyncio.run(check_read_slice(db))
     
     # event loop works, while async to sync returns Metadata class
     # https://stackoverflow.com/questions/44048536/python3-get-result-from-async-method

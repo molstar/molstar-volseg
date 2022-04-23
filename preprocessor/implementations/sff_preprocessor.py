@@ -133,11 +133,14 @@ class SFFPreprocessor(IDataPreprocessor):
         # path to temp storage for that entry (segmentation)
         self.temp_zarr_structure_path = None
 
-    def preprocess(self, segm_file_path: Path, volume_file_path: Path):
+    def preprocess(self, segm_file_path: Path, volume_file_path: Path, volume_force_dtype=np.float32):
         '''
         Returns path to temporary zarr structure that will be stored permanently using db.store
         '''
-        self.__hdf5_to_zarr(segm_file_path)
+        if segm_file_path != None:
+            self.__hdf5_to_zarr(segm_file_path)
+        else:
+            self.__initialize_empty_zarr_structure(volume_file_path)
         # Re-create zarr hierarchy
         zarr_structure: zarr.hierarchy.group = open_zarr_structure_from_path(
             self.temp_zarr_structure_path)
@@ -146,14 +149,17 @@ class SFFPreprocessor(IDataPreprocessor):
         map_object = self.__read_volume_map_to_object(volume_file_path)
         normalized_axis_map_object = self.__normalize_axis_order(map_object)
         
-        self.__process_segmentation_data(zarr_structure)
-        self.__process_volume_data(zarr_structure, normalized_axis_map_object)
+        if segm_file_path != None:
+            self.__process_segmentation_data(zarr_structure)
+        
+        self.__process_volume_data(zarr_structure, normalized_axis_map_object, volume_force_dtype)
         
         grid_metadata = self.__extract_grid_metadata(zarr_structure, normalized_axis_map_object)
         self.__temp_save_metadata(grid_metadata, GRID_METADATA_FILENAME, self.temp_zarr_structure_path)
 
-        annotation_metadata = self.__extract_annotation_metadata(segm_file_path)
-        self.__temp_save_metadata(annotation_metadata, ANNOTATION_METADATA_FILENAME, self.temp_zarr_structure_path)
+        if segm_file_path != None:
+            annotation_metadata = self.__extract_annotation_metadata(segm_file_path)
+            self.__temp_save_metadata(annotation_metadata, ANNOTATION_METADATA_FILENAME, self.temp_zarr_structure_path)
 
         return self.temp_zarr_structure_path
 
@@ -193,12 +199,12 @@ class SFFPreprocessor(IDataPreprocessor):
         # https://www.ccp4.ac.uk/html/maplib.html
         return gemmi.read_ccp4_map(str(volume_file_path.resolve()))
 
-    def __process_volume_data(self, zarr_structure: zarr.hierarchy.group, map_object: gemmi.Ccp4Map):
+    def __process_volume_data(self, zarr_structure: zarr.hierarchy.group, map_object: gemmi.Ccp4Map, force_dtype=np.float32):
         '''
         Takes read map object, extracts volume data, downsamples it, stores to zarr_structure
         '''
         volume_data_gr: zarr.hierarchy.group = zarr_structure.create_group(VOLUME_DATA_GROUPNAME)        
-        volume_arr = self.__read_volume_data(map_object)
+        volume_arr = self.__read_volume_data(map_object, force_dtype)
         volume_downsampling_steps = self.__compute_number_of_downsampling_steps(
             MIN_GRID_SIZE,
             input_grid_size=math.prod(volume_arr.shape)
@@ -282,6 +288,9 @@ class SFFPreprocessor(IDataPreprocessor):
 
     def __extract_grid_metadata(self, zarr_structure: zarr.hierarchy.group, map_object) -> Dict:
         root = zarr_structure
+        details = ''
+        if 'details' in root:
+            details = root.details[...][0].decode('utf-8')
         volume_downsamplings = sorted(root[VOLUME_DATA_GROUPNAME].array_keys())
         # convert to ints
         volume_downsamplings = [int(x) for x in volume_downsamplings] 
@@ -308,16 +317,17 @@ class SFFPreprocessor(IDataPreprocessor):
 
         lattice_dict = {}
         lattice_ids = []
-        for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
-            # each key is lattice id
-            lattice_id = int(gr_name)
+        if SEGMENTATION_DATA_GROUPNAME in root:
+            for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
+                # each key is lattice id
+                lattice_id = int(gr_name)
 
-            segm_downsamplings = sorted(gr.group_keys())
-            # convert to ints
-            segm_downsamplings = [int(x) for x in segm_downsamplings]
+                segm_downsamplings = sorted(gr.group_keys())
+                # convert to ints
+                segm_downsamplings = [int(x) for x in segm_downsamplings]
 
-            lattice_dict[lattice_id] = segm_downsamplings
-            lattice_ids.append(lattice_id)
+                lattice_dict[lattice_id] = segm_downsamplings
+                lattice_ids.append(lattice_id)
 
         d = self.__read_ccp4_words_to_dict(map_object)
 
@@ -345,7 +355,7 @@ class SFFPreprocessor(IDataPreprocessor):
         # original_grid_dimensions: Tuple[int, int, int] = (d['NC'], d['NR'], d['NS'])
 
         return {
-            'details': root.details[...][0].decode('utf-8'),
+            'details': details,
             'volume_downsamplings': volume_downsamplings,
             'segmentation_lattice_ids': lattice_ids,
             'segmentation_downsamplings': lattice_dict,
@@ -364,12 +374,12 @@ class SFFPreprocessor(IDataPreprocessor):
         with (temp_dir_path / metadata_filename).open('w') as fp:
             json.dump(metadata, fp)
 
-    def __read_volume_data(self, m) -> np.ndarray:
+    def __read_volume_data(self, m, force_dtype=np.float32) -> np.ndarray:
         '''
         Takes read map object (axis normalized upfront) and returns numpy arr with volume data
         '''
         # TODO: can be dask array to save memory?
-        return np.array(m.grid)
+        return np.array(m.grid, dtype=force_dtype)
 
     def __lattice_data_to_np_arr(self, data: str, dtype: str, arr_shape: Tuple[int, int, int]) -> np.ndarray:
         '''
@@ -584,6 +594,13 @@ class SFFPreprocessor(IDataPreprocessor):
         hdf5_file.visititems(self.__visitor_function)
         hdf5_file.close()
     
+    def __initialize_empty_zarr_structure(self, volume_file_path: Path):
+        '''
+        Creates EMPTY temp zarr structure for the case when just volume file is provided
+        '''
+        self.temp_zarr_structure_path = self.temp_root_path / volume_file_path.stem
+        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(self.temp_zarr_structure_path))
+
     def __open_hdf5_as_segmentation_object(self, file_path: Path) -> SFFSegmentation:
         return SFFSegmentation.from_file(str(file_path.resolve()))
 
