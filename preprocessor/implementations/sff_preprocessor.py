@@ -293,7 +293,7 @@ class SFFPreprocessor(IDataPreprocessor):
             details = root.details[...][0].decode('utf-8')
         volume_downsamplings = sorted(root[VOLUME_DATA_GROUPNAME].array_keys())
         # convert to ints
-        volume_downsamplings = [int(x) for x in volume_downsamplings] 
+        volume_downsamplings = sorted([int(x) for x in volume_downsamplings]) 
 
         # TODO:
         mean_dict = {}
@@ -324,7 +324,7 @@ class SFFPreprocessor(IDataPreprocessor):
 
                 segm_downsamplings = sorted(gr.group_keys())
                 # convert to ints
-                segm_downsamplings = [int(x) for x in segm_downsamplings]
+                segm_downsamplings = sorted([int(x) for x in segm_downsamplings])
 
                 lattice_dict[lattice_id] = segm_downsamplings
                 lattice_ids.append(lattice_id)
