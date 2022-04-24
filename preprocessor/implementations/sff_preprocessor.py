@@ -379,7 +379,11 @@ class SFFPreprocessor(IDataPreprocessor):
         Takes read map object (axis normalized upfront) and returns numpy arr with volume data
         '''
         # TODO: can be dask array to save memory?
-        return np.array(m.grid, dtype=force_dtype)
+        arr: np.ndarray = np.array(m.grid, dtype=force_dtype)
+        # swap axes as gemmi assigns columns to 1st numpy dimension, and sections to 3rd
+        # should be vise versa
+        arr = arr.swapapaxes(0, 2)
+        return arr
 
     def __lattice_data_to_np_arr(self, data: str, dtype: str, arr_shape: Tuple[int, int, int]) -> np.ndarray:
         '''
