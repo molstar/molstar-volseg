@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from api import v1 as api
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 from volume_server.preprocessed_volume_to_cif.implementations.ciftools_volume_to_cif_converter import \
@@ -24,6 +25,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # initialize dependencies
 db = LocalDiskPreprocessedDb()

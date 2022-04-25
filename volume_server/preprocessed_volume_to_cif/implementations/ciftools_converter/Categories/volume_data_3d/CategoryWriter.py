@@ -23,14 +23,25 @@ class CategoryWriterProvider_VolumeData3d(CategoryWriterProvider):
 
         encoders: list[CIFEncoderBase] = [ByteArrayCIFEncoder()]
 
-        if data_type == DataTypeEnum.Float32 or data_type == DataTypeEnum.Int16:
-            data_min: int = ctx.min(initial=ctx[0])
-            data_max: int = ctx.max(initial=ctx[0])
-            interval_quantization = IntervalQuantizationCIFEncoder(data_min, data_max, 255, DataTypeEnum.Uint8)
-            encoders.insert(0, interval_quantization)
-            typed_array = DataType.to_dtype(DataTypeEnum.Float32)
+        # if data_type == DataTypeEnum.Float32 or data_type == DataTypeEnum.Int16:
+        #     # data_min: int = ctx.min(initial=ctx[0])
+        #     # data_max: int = ctx.max(initial=ctx[0])
+        #     # interval_quantization = IntervalQuantizationCIFEncoder(data_min, data_max, 255, DataTypeEnum.Uint8)
+        #     # encoders.insert(0, interval_quantization)
+        #     typed_array = DataType.to_dtype(data_type)
+        # else:
+        #     typed_array = DataType.to_dtype(DataTypeEnum.Uint8)
+
+
+        # Hack away to make demo work
+        if data_type == DataTypeEnum.Float64:
+            typed_array = DataType.to_dtype(DataTypeEnum.Uint8) # back for "emd-99999" since the downsamling is stored as 64bit floats
+            # data_min: int = ctx.min(initial=ctx[0])
+            # data_max: int = ctx.max(initial=ctx[0])
+            # interval_quantization = IntervalQuantizationCIFEncoder(data_min, data_max, 255, DataTypeEnum.Uint8)
+            # encoders.insert(0, interval_quantization)
         else:
-            typed_array = DataType.to_dtype(DataTypeEnum.Int8)
+            typed_array = DataType.to_dtype(data_type)
 
         return BinaryCIFEncoder(encoders), typed_array
 
