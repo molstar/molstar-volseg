@@ -103,6 +103,68 @@ export class AppModel {
         };
     }
 
+    createSegment99999Plus(volume: Volume, threshold: number): Volume {
+        const { mean, sigma } = volume.grid.stats;
+        const { data, space } = volume.grid.cells;
+        const newData = new Float32Array(data.length);
+
+        for (let i = 0; i < space.dimensions[0]; i++) {
+            for (let j = 0; j < space.dimensions[1]; j++) {
+                for (let k = 0; k < space.dimensions[2]; k++) {
+                    const o = space.dataOffset(i, j, k);
+                    const v = (data[o] - mean) / sigma;
+                    if (v > threshold) newData[o] = 1;
+                }
+            }   
+        }
+
+        return {
+            sourceData: { kind: 'custom', name: 'test', data: newData as any },
+            customProperties: new CustomProperties(),
+            _propertyData: {},
+            grid: {
+                ...volume.grid,
+                //stats: { min: 0, max: 1, mean: newMean, sigma: arrayRms(newData) },
+                stats: { min: 0, max: 1, mean: 0, sigma: 1 },
+                cells: {
+                    ...volume.grid.cells,
+                    data: newData as any,
+                }
+            }
+        };
+    }
+
+    createSegment99999Minus(volume: Volume, threshold: number): Volume {
+        const { mean, sigma } = volume.grid.stats;
+        const { data, space } = volume.grid.cells;
+        const newData = new Float32Array(data.length);
+
+        for (let i = 0; i < space.dimensions[0]; i++) {
+            for (let j = 0; j < space.dimensions[1]; j++) {
+                for (let k = 0; k < space.dimensions[2]; k++) {
+                    const o = space.dataOffset(i, j, k);
+                    const v = (data[o] - mean) / sigma;
+                    if (v > threshold && v < -0.35) newData[o] = 1;
+                }
+            }   
+        }
+
+        return {
+            sourceData: { kind: 'custom', name: 'test', data: newData as any },
+            customProperties: new CustomProperties(),
+            _propertyData: {},
+            grid: {
+                ...volume.grid,
+                //stats: { min: 0, max: 1, mean: newMean, sigma: arrayRms(newData) },
+                stats: { min: 0, max: 1, mean: 0, sigma: 1 },
+                cells: {
+                    ...volume.grid.cells,
+                    data: newData as any,
+                }
+            }
+        };
+    }
+
 
     createSegment(volume: Volume, segmentation: number[], segId: number): Volume {
         const { mean, sigma } = volume.grid.stats;
@@ -186,6 +248,26 @@ export class AppModel {
         await update.commit();
     }
 
+    private currentSegments: any[] = [];
+
+    async showSegment(volume: Volume, color: number[], opacity = 1) {        
+      
+        const update = this.plugin.build();
+        const root = update.toRoot().apply(CreateVolume, { volume });
+        this.currentLevel.push(root.selector);
+
+        const seg = root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
+            type: 'isosurface',
+            typeParams: { alpha: opacity, isoValue: Volume.IsoValue.absolute(0.95), transparentBackfaces: 'off', doubleSided: false, flatShaded: true },
+            color: 'uniform',
+            colorParams: { value: Color.fromNormalizedArray(color, 0) }
+        }));
+
+        this.currentSegments.push(seg.selector);
+
+        await update.commit();
+    }
+
     private segmentation: number[] = [];
     entryId = new BehaviorSubject<string>('');
     annotation = new BehaviorSubject<Annotation | undefined>(undefined);
@@ -239,16 +321,30 @@ export class AppModel {
 
     dataSource = new BehaviorSubject<string>('');
 
-    async setIsoValue(newValue: number) {
+    async setIsoValue(newValue: number, showSegmentation: boolean) {
         if (!this.repr) return;
 
         const { plugin } = this;
         await plugin.build().to(this.repr).update(createVolumeRepresentationParams(this.plugin, this.volume, {
             type: 'isosurface',
-            typeParams: { alpha: 1, isoValue: Volume.IsoValue.relative(newValue) },
+            typeParams: { alpha: showSegmentation ? 0.0 : 1, isoValue: Volume.IsoValue.relative(newValue) },
             color: 'uniform',
-            colorParams: { value: Color(0x224899) }
+            colorParams: { value: showSegmentation ? Color(0x777777) : Color(0x224899) }
         })).commit();
+
+        const update = this.plugin.build();
+
+        for (const l of this.currentSegments) update.delete(l);
+        this.currentSegments = [];
+        await update.commit();
+
+        if (showSegmentation) {
+            const segP = this.createSegment99999Plus(this.volume, -0.35);
+            const segM = this.createSegment99999Minus(this.volume, newValue);
+            await this.showSegment(segP, [0.3, 0.7, 0.6], 0.5);
+            await this.showSegment(segM, [0.1, 0.3, 0.7]);
+        }
+
     }
 
     private repr: any = undefined;
@@ -271,12 +367,18 @@ export class AppModel {
             .to(volume)
             .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
                 type: 'isosurface',
-                typeParams: { alpha: 1, isoValue: Volume.IsoValue.relative(-0.55) },
+                typeParams: { alpha: 1.0, isoValue: Volume.IsoValue.relative(-0.55) },
                 color: 'uniform',
                 colorParams: { value: Color(0x224899) }
             }));
 
         await repr.commit();
+
+        this.currentSegments = [];
+        // const segP = this.createSegment99999Plus(volumeData, 0);
+        // const segM = this.createSegment99999Minus(volumeData, -0.55);
+        // await this.showSegment(segP, [0.3, 0.7, 0.1]);
+        // await this.showSegment(segM, [0.1, 0.3, 0.7]);
 
         this.dataSource.next('99999');
     }

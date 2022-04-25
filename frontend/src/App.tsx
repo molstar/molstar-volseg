@@ -4,7 +4,7 @@ import { useBehavior } from 'molstar/lib/mol-plugin-ui/hooks/use-behavior';
 import './App.css';
 import 'molstar/lib/mol-plugin-ui/skin/light.scss';
 import { AppModel } from './model';
-import { Button, ButtonGroup, CssBaseline, Divider, Slider, Typography } from '@mui/material';
+import { Button, ButtonGroup, Checkbox, CssBaseline, Divider, FormControlLabel, Slider, Typography } from '@mui/material';
 
 
 function App() {
@@ -40,6 +40,7 @@ function Main() {
             {src === '1832' && <UI1832 model={model} />}
             {src === '99999' && <UI99999 model={model} />}
         </div>
+        {src === '99999' && <img src='/emd-99999.png' alt='' style={{ width: '33%', position: 'absolute', right: 8, bottom: 8, border: '1px solid #777' }} />}
     </>;
 }
 
@@ -70,12 +71,17 @@ function UI1832({ model }: { model: AppModel }) {
 
 function UI99999({ model }: { model: AppModel }) {
     const [iso, setIso] = useState(-0.55);
+    const [segm, setSegm] = useState(false);
 
     return <>
         <Typography variant='h6'>Benchmark Airyscan data matching FIB SEM data deposited on EMPIAR</Typography>
         <a href='https://www.ebi.ac.uk/biostudies/studies/S-BSST707' target='_blank' rel='noreferrer'>Archive Link</a>
         <Divider style={{ margin: '8px 0' }} />
-        <Slider min={-1} max={0.7} step={0.05} value={iso} valueLabelDisplay='auto' marks onChange={(_, v) => setIso(v as number)}  onChangeCommitted={(_, v) => model.setIsoValue(v as number)} />
+        <Slider min={-1} max={-0.35} step={0.025} value={iso} valueLabelDisplay='auto' marks onChange={(_, v) => setIso(v as number)}  onChangeCommitted={(_, v) => model.setIsoValue(v as number, segm)} />
+        <FormControlLabel control={<Checkbox value={segm} onChange={e => { setSegm(!!e.target.checked); model.setIsoValue(iso, !segm);  } } />} label='Auto-segmentation' />
+        <Typography variant='body1' style={{ textAlign: 'center', marginTop: 16 }}>
+            <b>~500kB of volumetric data</b> to create this rendering.<br />Obtained by converting 600MB of downsampled TIFFs from EMPIAR to MAP (using imod), original dataset size 1.7TB.
+        </Typography>
     </>;
 }
 
