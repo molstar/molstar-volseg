@@ -21,7 +21,7 @@ def _if_position_satisfy_sphere_equation(
 
 def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_segments: int) -> Dict:
     print(f'creating fake segm from real volume started')
-    timer_init = ()
+    timer_init = timer()
     prep = SFFPreprocessor()
     map_and_rmsd = prep.read_and_normalize_volume_map_and_get_rmsd(volume_filepath)
     volume_grid: np.ndarray = map_and_rmsd['map']
