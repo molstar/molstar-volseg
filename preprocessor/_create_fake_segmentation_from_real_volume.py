@@ -3,6 +3,7 @@ from typing import Tuple, Dict
 import numpy as np
 from preprocessor.implementations.sff_preprocessor import SFFPreprocessor
 from preprocessor.check_internal_zarr import plot_3d_array_color
+from timeit import default_timer as timer
 
 # small grid for now
 # TODO: change to the biggest at EMDB
@@ -19,6 +20,8 @@ def _if_position_satisfy_sphere_equation(
     return False
 
 def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_segments: int) -> Dict:
+    print(f'creating fake segm from real volume started')
+    timer_init = ()
     prep = SFFPreprocessor()
     map_and_rmsd = prep.read_and_normalize_volume_map_and_get_rmsd(volume_filepath)
     volume_grid: np.ndarray = map_and_rmsd['map']
@@ -38,8 +41,11 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_s
     # be careful - there may be no point greater than certain sigma level (2, 1 etc.)
     
     segm_ids = []
+    timer_start = timer()
+    print(f'Preparation step took {timer_start - timer_init}')
     print('segments creation started in for loop')
     for i in range(1, number_of_segments + 1):
+        timer_segment_creation_started = timer()
         print(f'segment {i} creation started')
         segm_ids.append(i)
         # coords of random voxel
@@ -47,12 +53,14 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_s
             volume_grid,
             segmentation_grid,
             isosurface_threshold)
-        print(f'random voxel coords generated {random_voxel_coords}')
+        timer_random_voxel_coords_ready = timer()
+        print(f'random voxel coords generated {random_voxel_coords}, took: {timer_random_voxel_coords_ready - timer_segment_creation_started}')
         random_radius = get_random_radius(
             int(np.min(volume_grid.shape)/20),
             int(np.min(volume_grid.shape)/3)
             )
-        print(f'random radius generated: {random_radius}')
+        timer_random_radius_generated = timer()
+        print(f'random radius generated: {random_radius}, took: {timer_random_radius_generated - timer_random_voxel_coords_ready}')
         
         segm_id = i
 
@@ -64,7 +72,8 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_s
                 if segmentation_grid[index] == 0:
                     if _if_position_satisfy_sphere_equation(random_radius, random_voxel_coords, index) == True:
                         segmentation_grid[index] = segm_id
-        print(f'segment {segm_id} written on segm grid')
+        timer_segment_written_on_grid = timer()
+        print(f'segment {segm_id} written on segm grid, took: {timer_segment_written_on_grid - timer_random_radius_generated}')
         print(f'there are {segmentation_grid[segmentation_grid == segm_id].shape} instances of that segment on segm grid')
         # TODO: check if previous issuew with segment id will be in list,
         # but with no such value on grid can pop with iterative implementation
@@ -80,13 +89,15 @@ def create_fake_segmentation_from_real_volume(volume_filepath: Path, number_of_s
 
     # checks if all segm ids are present in grid
     assert np.isin(np.array(segm_ids), segmentation_grid).all()
-    print('check performed if all segm ids are present in grid')
+    timer_check_performed = timer()
+    print(f'check performed if all segm ids are present in grid, took: {timer_check_performed - timer_segment_written_on_grid}')
 
     grid_and_segm_ids = {
         'grid': segmentation_grid,
         'ids': segm_ids
     }
-    print('gird_and_segm_ids dict assigned, next is return statement')
+    timer_ids_assigned = timer()
+    print(f'gird_and_segm_ids dict assigned, next is return statement, took: {timer_ids_assigned - timer_segment_written_on_grid}')
     return grid_and_segm_ids
 
 def get_shape_mask(center_coords: Tuple[int, int, int], radius: int, arr: np.ndarray):

@@ -185,7 +185,7 @@ class SFFPreprocessor(IDataPreprocessor):
         # TODO: for now just the same object, implement later
         return map_object
         # https://mrcfile.readthedocs.io/en/latest/usage_guide.html?highlight=axis#data-dimensionality
-       
+        # https://stackoverflow.com/questions/57438392/rearranging-axes-in-numpy
 
         # just reorders axis to X, Y, Z (https://gemmi.readthedocs.io/en/latest/grid.html#setup)
         
