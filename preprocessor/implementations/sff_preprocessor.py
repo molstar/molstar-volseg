@@ -26,6 +26,7 @@ GRID_METADATA_FILENAME = 'grid_metadata.json'
 ANNOTATION_METADATA_FILENAME = 'annotation_metadata.json'
 # temporarly can be set to 32 to check at least x4 downsampling with 64**3 emd-1832 grid
 MIN_GRID_SIZE = 100**3
+MIN_DOWNSAMPLING_VOLUME_FILESIZE = 5000000
 DOWNSAMPLING_KERNEL = (1, 4, 6, 4, 1)
 
 
@@ -212,7 +213,8 @@ class SFFPreprocessor(IDataPreprocessor):
         self.__create_volume_downsamplings(
             original_data=volume_arr,
             downsampled_data_group=volume_data_gr,
-            downsampling_steps = volume_downsampling_steps
+            downsampling_steps = volume_downsampling_steps,
+            force_dtype = force_dtype
         )
 
     def __process_segmentation_data(self, zarr_structure: zarr.hierarchy.group) -> None:
@@ -243,10 +245,14 @@ class SFFPreprocessor(IDataPreprocessor):
                 value_to_segment_id_dict_for_specific_lattice_id = value_to_segment_id_dict[lattice_id]
             )
 
-    def __compute_number_of_downsampling_steps(self, min_grid_size: int, input_grid_size: int) -> int:
+    def __compute_number_of_downsampling_steps(self, min_grid_size: int, input_grid_size: int, force_dtype=np.float32) -> int:
         if input_grid_size <= min_grid_size:
             return 1
-        num_of_downsampling_steps: int = math.ceil(math.log2(input_grid_size/min_grid_size))
+        # num_of_downsampling_steps: int = math.ceil(math.log2(input_grid_size/min_grid_size))
+        x1_filesize_bytes: int = input_grid_size * force_dtype().itemsize
+        ratio: int = int(x1_filesize_bytes / MIN_DOWNSAMPLING_VOLUME_FILESIZE)
+        # TODO: round ratio to the closest power of two and return
+        num_of_downsampling_steps = 0 #TODO:
         return num_of_downsampling_steps
 
     def __read_ccp4_words_to_dict(self, m: gemmi.Ccp4Map) -> Dict:
@@ -409,7 +415,7 @@ class SFFPreprocessor(IDataPreprocessor):
         # return block_reduce(arr, block_size=(rate, rate, rate), func=np.mean)
         # return downsample_using_magic_kernel(arr, DOWNSAMPLING_KERNEL)
 
-    def __create_volume_downsamplings(self, original_data: np.ndarray, downsampling_steps: int, downsampled_data_group: zarr.hierarchy.Group):
+    def __create_volume_downsamplings(self, original_data: np.ndarray, downsampling_steps: int, downsampled_data_group: zarr.hierarchy.Group, force_dtype=np.float32):
         '''
         Take original volume data, do all downsampling levels and store in zarr struct one by one
         '''
@@ -432,12 +438,13 @@ class SFFPreprocessor(IDataPreprocessor):
         # downsamplings sizes in raw uncompressed state are much bigger 
         # TODO: figure out what to do with chunks - currently their size is not optimized
 
-    def __store_single_volume_downsampling_in_zarr_stucture(self, downsampled_data: np.ndarray, downsampled_data_group: zarr.hierarchy.Group, ratio: int):
+    def __store_single_volume_downsampling_in_zarr_stucture(self, downsampled_data: np.ndarray, downsampled_data_group: zarr.hierarchy.Group, ratio: int, force_dtype=np.float32):
         downsampled_data_group.create_dataset(
-            data=downsampled_data,
+            data=downsampled_data.astype(force_dtype),
             name=str(ratio),
             shape=downsampled_data.shape,
-            dtype=downsampled_data.dtype,
+            # just change dtype for storing 
+            dtype=force_dtype,
             # # TODO: figure out how to determine optimal chunk size depending on the data
             chunks=(50, 50, 50)
         )
