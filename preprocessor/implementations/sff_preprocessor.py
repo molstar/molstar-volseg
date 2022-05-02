@@ -293,7 +293,7 @@ class SFFPreprocessor(IDataPreprocessor):
             details = root.details[...][0].decode('utf-8')
         volume_downsamplings = sorted(root[VOLUME_DATA_GROUPNAME].array_keys())
         # convert to ints
-        volume_downsamplings = [int(x) for x in volume_downsamplings] 
+        volume_downsamplings = sorted([int(x) for x in volume_downsamplings]) 
 
         # TODO:
         mean_dict = {}
@@ -324,7 +324,7 @@ class SFFPreprocessor(IDataPreprocessor):
 
                 segm_downsamplings = sorted(gr.group_keys())
                 # convert to ints
-                segm_downsamplings = [int(x) for x in segm_downsamplings]
+                segm_downsamplings = sorted([int(x) for x in segm_downsamplings])
 
                 lattice_dict[lattice_id] = segm_downsamplings
                 lattice_ids.append(lattice_id)
@@ -379,7 +379,11 @@ class SFFPreprocessor(IDataPreprocessor):
         Takes read map object (axis normalized upfront) and returns numpy arr with volume data
         '''
         # TODO: can be dask array to save memory?
-        return np.array(m.grid, dtype=force_dtype)
+        arr: np.ndarray = np.array(m.grid, dtype=force_dtype)
+        # swap axes as gemmi assigns columns to 1st numpy dimension, and sections to 3rd
+        # should be vise versa
+        arr = arr.swapaxes(0, 2)
+        return arr
 
     def __lattice_data_to_np_arr(self, data: str, dtype: str, arr_shape: Tuple[int, int, int]) -> np.ndarray:
         '''
