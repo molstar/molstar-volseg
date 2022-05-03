@@ -386,9 +386,10 @@ class SFFPreprocessor(IDataPreprocessor):
         '''
         # TODO: can be dask array to save memory?
         arr: np.ndarray = np.array(m.grid, dtype=force_dtype)
-        # swap axes as gemmi assigns columns to 1st numpy dimension, and sections to 3rd
-        # should be vise versa
-        arr = arr.swapaxes(0, 2)
+        # gemmi assigns columns to 1st numpy dimension, and sections to 3rd
+        # but we don't need swapaxes, as slices are requested from
+        # frontend in X, Y, Z order (columns 1st)
+        # arr = arr.swapaxes(0, 2)
         return arr
 
     def __lattice_data_to_np_arr(self, data: str, dtype: str, arr_shape: Tuple[int, int, int]) -> np.ndarray:
