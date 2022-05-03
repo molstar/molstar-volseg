@@ -399,7 +399,9 @@ class SFFPreprocessor(IDataPreprocessor):
         '''
         decoded_data = base64.b64decode(data)
         byteseq = zlib.decompress(decoded_data)
-        return np.frombuffer(byteseq, dtype=dtype).reshape(arr_shape)
+        # order should be F as frontend requests in X,Y,Z order,
+        # while numpy by default has Z,Y,X (C order)
+        return np.frombuffer(byteseq, dtype=dtype).reshape(arr_shape, order='F')
 
     def __downsample_categorical_data(self, arr: np.ndarray, rate: int) -> np.ndarray:
         '''Returns downsampled (every other value) np array'''
