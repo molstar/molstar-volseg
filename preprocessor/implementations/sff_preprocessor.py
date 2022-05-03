@@ -250,9 +250,10 @@ class SFFPreprocessor(IDataPreprocessor):
             return 1
         # num_of_downsampling_steps: int = math.ceil(math.log2(input_grid_size/min_grid_size))
         x1_filesize_bytes: int = input_grid_size * force_dtype().itemsize
-        ratio: int = int(x1_filesize_bytes / MIN_DOWNSAMPLING_VOLUME_FILESIZE)
-        # TODO: round ratio to the closest power of two and return
-        num_of_downsampling_steps = 0 #TODO:
+        downsampling_factor = 2**3
+        ratio: int = int(int(x1_filesize_bytes / MIN_DOWNSAMPLING_VOLUME_FILESIZE) / downsampling_factor)
+        # round ratio to the next power of two
+        num_of_downsampling_steps = 1<<(ratio - 1).bit_length()
         return num_of_downsampling_steps
 
     def __read_ccp4_words_to_dict(self, m: gemmi.Ccp4Map) -> Dict:
