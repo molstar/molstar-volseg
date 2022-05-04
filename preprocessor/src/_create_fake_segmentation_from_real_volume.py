@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import Tuple, Dict
 import numpy as np
-from preprocessor.implementations.sff_preprocessor import SFFPreprocessor
-from preprocessor.check_internal_zarr import plot_3d_array_color
+from preprocessor.src.implementations.sff_preprocessor import SFFPreprocessor
+from preprocessor.src.check_internal_zarr import plot_3d_array_color
 
 # small grid for now
 # TODO: change to the biggest at EMDB

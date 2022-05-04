@@ -1,12 +1,10 @@
 from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
-import matplotlib as mpl
-from mpl_toolkits.mplot3d import Axes3D
 from itertools import product
 from typing import Dict
 import zarr
-from preprocessor.implementations.sff_preprocessor import open_zarr_structure_from_path
+from preprocessor.src.implementations.sff_preprocessor import open_zarr_structure_from_path
 
 
 def plot_3d_array_grayscale(arr: np.ndarray, arr_name: str):

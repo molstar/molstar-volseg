@@ -1,17 +1,14 @@
 from asgiref.sync import async_to_sync
-import asyncio
 import numpy as np
 
 from pathlib import Path
 from typing import Dict
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
-from preprocessor._write_fake_segmentation_to_sff import OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH
+from preprocessor.src._write_fake_segmentation_to_sff import OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH
 
 from db.interface.i_preprocessed_db import IPreprocessedDb
-from preprocessor.implementations.preprocessor_service import PreprocessorService
-from preprocessor.implementations.sff_preprocessor import SFFPreprocessor
-
-from pprint import pprint
+from preprocessor.src.implementations.preprocessor_service import PreprocessorService
+from preprocessor.src.implementations.sff_preprocessor import SFFPreprocessor
 
 RAW_INPUT_FILES_DIR = Path(__file__).parent / 'raw_input_files'
 

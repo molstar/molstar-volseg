@@ -2,7 +2,7 @@ import abc
 from pathlib import Path
 from typing import List
 
-from preprocessor.interface.i_data_preprocessor import IDataPreprocessor
+from preprocessor.src.interface.i_data_preprocessor import IDataPreprocessor
 
 
 class IPreprocessorService(abc.ABC):

@@ -5,8 +5,8 @@ from typing import List
 
 import numpy as np
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
-from preprocessor._create_fake_segmentation_from_real_volume import create_fake_segmentation_from_real_volume
-from preprocessor._write_fake_segmentation_to_sff import write_fake_segmentation_to_sff
+from preprocessor.src._create_fake_segmentation_from_real_volume import create_fake_segmentation_from_real_volume
+from preprocessor.src._write_fake_segmentation_to_sff import write_fake_segmentation_to_sff
 from preprocessor.main import preprocess_everything
 
 # both volumes and segmentations

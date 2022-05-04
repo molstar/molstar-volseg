@@ -3,12 +3,11 @@ from pathlib import Path
 from timeit import default_timer as timer
 from itertools import combinations
 import numpy as np
-from preprocessor._slicing_benchmarking import generate_dummy_arr
 from typing import Dict
-from preprocessor.check_internal_zarr import plot_volume_data_from_np_arr
-from preprocessor._convolve_magic_kernel_experimental import generate_kernel_3d_arr
+from preprocessor.src.check_internal_zarr import plot_volume_data_from_np_arr
+from preprocessor.src._convolve_magic_kernel_experimental import generate_kernel_3d_arr
 from scipy import ndimage, signal
-from preprocessor.implementations.sff_preprocessor import downsample_using_magic_kernel, SFFPreprocessor
+from preprocessor.src.implementations.sff_preprocessor import downsample_using_magic_kernel, SFFPreprocessor
 from skimage.measure import block_reduce
 from pprint import pprint
 
