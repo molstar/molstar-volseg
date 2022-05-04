@@ -1,9 +1,9 @@
 from pathlib import Path
 from typing import List
-from preprocessor.src.implementations.sff_preprocessor import SFFPreprocessor
+from preprocessor.src.preprocessors.implementations.sff_preprocessor import SFFPreprocessor
 
-from preprocessor.src.interface.i_data_preprocessor import IDataPreprocessor
-from preprocessor.src.interface.i_preprocessor_service import IPreprocessorService
+from preprocessor.src.preprocessors.i_data_preprocessor import IDataPreprocessor
+from preprocessor.src.service.i_preprocessor_service import IPreprocessorService
 
 class PreprocessorService(IPreprocessorService):
     def __init__(self, preprocessors: List[IDataPreprocessor]):

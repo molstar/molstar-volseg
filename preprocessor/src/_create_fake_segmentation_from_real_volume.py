@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Tuple, Dict
 import numpy as np
-from preprocessor.src.implementations.sff_preprocessor import SFFPreprocessor
+from preprocessor.src.preprocessors.implementations.sff_preprocessor import SFFPreprocessor
 from preprocessor.src.check_internal_zarr import plot_3d_array_color
 
 # small grid for now

@@ -7,7 +7,7 @@ from typing import Dict
 from preprocessor.src.check_internal_zarr import plot_volume_data_from_np_arr
 from preprocessor.src._convolve_magic_kernel_experimental import generate_kernel_3d_arr
 from scipy import ndimage, signal
-from preprocessor.src.implementations.sff_preprocessor import downsample_using_magic_kernel, SFFPreprocessor
+from preprocessor.src.preprocessors.implementations.sff_preprocessor import downsample_using_magic_kernel, SFFPreprocessor
 from skimage.measure import block_reduce
 from pprint import pprint
 

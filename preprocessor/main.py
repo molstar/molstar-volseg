@@ -7,8 +7,8 @@ from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPr
 from preprocessor.src._write_fake_segmentation_to_sff import OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH
 
 from db.interface.i_preprocessed_db import IPreprocessedDb
-from preprocessor.src.implementations.preprocessor_service import PreprocessorService
-from preprocessor.src.implementations.sff_preprocessor import SFFPreprocessor
+from preprocessor.src.service.implementations import PreprocessorService
+from preprocessor.src.preprocessors.implementations.sff_preprocessor import SFFPreprocessor
 
 RAW_INPUT_FILES_DIR = Path(__file__).parent / 'raw_input_files'
 

@@ -10,7 +10,7 @@ import h5py
 import numpy as np
 import decimal
 from decimal import Decimal
-from preprocessor.src.interface.i_data_preprocessor import IDataPreprocessor
+from preprocessor.src.preprocessors.i_data_preprocessor import IDataPreprocessor
 # TODO: figure out how to specify N of downsamplings (x2, x4, etc.) in a better way
 import math
 from preprocessor.src._magic_kernel_downsampling_3d import extract_target_voxels_coords, create_x2_downsampled_grid
