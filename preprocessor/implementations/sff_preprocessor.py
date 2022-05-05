@@ -251,6 +251,7 @@ class SFFPreprocessor(IDataPreprocessor):
         # num_of_downsampling_steps: int = math.ceil(math.log2(input_grid_size/min_grid_size))
         x1_filesize_bytes: int = input_grid_size * force_dtype().itemsize
         downsampling_factor = 2**3
+        # if x1_filesize_bytes / MIN_DOWNSAMPLING_VOLUME_FILESIZE < 1? TODO: fix
         ratio: int = int(int(x1_filesize_bytes / MIN_DOWNSAMPLING_VOLUME_FILESIZE) / downsampling_factor)
         # round ratio to the next power of two
         num_of_downsampling_steps = 1<<(ratio - 1).bit_length()
