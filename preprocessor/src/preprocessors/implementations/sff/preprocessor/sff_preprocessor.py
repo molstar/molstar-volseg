@@ -24,6 +24,7 @@ ANNOTATION_METADATA_FILENAME = 'annotation_metadata.json'
 # temporarly can be set to 32 to check at least x4 downsampling with 64**3 emd-1832 grid
 MIN_GRID_SIZE = 100**3
 DOWNSAMPLING_KERNEL = (1, 4, 6, 4, 1)
+MIN_DOWNSAMPLING_VOLUME_FILESIZE = 5000000
 
 
 '''
@@ -111,10 +112,11 @@ class SFFPreprocessor(IDataPreprocessor):
             MIN_GRID_SIZE,
             input_grid_size=math.prod(volume_arr.shape)
         )
-        self.create_volume_downsamplings(
+        self.__create_volume_downsamplings(
             original_data=volume_arr,
             downsampled_data_group=volume_data_gr,
-            downsampling_steps = volume_downsampling_steps
+            downsampling_steps = volume_downsampling_steps,
+            force_dtype = force_dtype
         )
 
     def __process_segmentation_data(self, zarr_structure: zarr.hierarchy.group) -> None:
@@ -145,10 +147,16 @@ class SFFPreprocessor(IDataPreprocessor):
                 value_to_segment_id_dict_for_specific_lattice_id = value_to_segment_id_dict[lattice_id]
             )
 
-    def __compute_number_of_downsampling_steps(self, min_grid_size: int, input_grid_size: int) -> int:
+    def __compute_number_of_downsampling_steps(self, min_grid_size: int, input_grid_size: int, force_dtype=np.float32) -> int:
         if input_grid_size <= min_grid_size:
             return 1
-        num_of_downsampling_steps: int = math.ceil(math.log2(input_grid_size/min_grid_size))
+        # num_of_downsampling_steps: int = math.ceil(math.log2(input_grid_size/min_grid_size))
+        x1_filesize_bytes: int = input_grid_size * force_dtype().itemsize
+        downsampling_factor = 2**3
+        # if x1_filesize_bytes / MIN_DOWNSAMPLING_VOLUME_FILESIZE < 1? TODO: fix
+        ratio: int = int(int(x1_filesize_bytes / MIN_DOWNSAMPLING_VOLUME_FILESIZE) / downsampling_factor)
+        # round ratio to the next power of two
+        num_of_downsampling_steps = 1<<(ratio - 1).bit_length()
         return num_of_downsampling_steps
 
     def __read_ccp4_words_to_dict(self, m: gemmi.Ccp4Map) -> Dict:
@@ -282,9 +290,10 @@ class SFFPreprocessor(IDataPreprocessor):
         '''
         # TODO: can be dask array to save memory?
         arr: np.ndarray = np.array(m.grid, dtype=force_dtype)
-        # swap axes as gemmi assigns columns to 1st numpy dimension, and sections to 3rd
-        # should be vise versa
-        arr = arr.swapaxes(0, 2)
+        # gemmi assigns columns to 1st numpy dimension, and sections to 3rd
+        # but we don't need swapaxes, as slices are requested from
+        # frontend in X, Y, Z order (columns 1st)
+        # arr = arr.swapaxes(0, 2)
         return arr
 
     def __lattice_data_to_np_arr(self, data: str, dtype: str, arr_shape: Tuple[int, int, int]) -> np.ndarray:
@@ -295,7 +304,9 @@ class SFFPreprocessor(IDataPreprocessor):
         '''
         decoded_data = base64.b64decode(data)
         byteseq = zlib.decompress(decoded_data)
-        return np.frombuffer(byteseq, dtype=dtype).reshape(arr_shape)
+        # order should be F as frontend requests in X,Y,Z order,
+        # while numpy by default has Z,Y,X (C order)
+        return np.frombuffer(byteseq, dtype=dtype).reshape(arr_shape, order='F')
 
     def __downsample_categorical_data(self, arr: np.ndarray, rate: int) -> np.ndarray:
         '''Returns downsampled (every other value) np array'''
@@ -311,7 +322,7 @@ class SFFPreprocessor(IDataPreprocessor):
         # return block_reduce(arr, block_size=(rate, rate, rate), func=np.mean)
         # return downsample_using_magic_kernel(arr, DOWNSAMPLING_KERNEL)
 
-    def __create_volume_downsamplings(self, original_data: np.ndarray, downsampling_steps: int, downsampled_data_group: zarr.hierarchy.Group):
+    def __create_volume_downsamplings(self, original_data: np.ndarray, downsampling_steps: int, downsampled_data_group: zarr.hierarchy.Group, force_dtype=np.float32):
         '''
         Take original volume data, do all downsampling levels and store in zarr struct one by one
         '''
@@ -328,18 +339,19 @@ class SFFPreprocessor(IDataPreprocessor):
             downsampled_data = signal.convolve(current_level_data, kernel, mode='same', method='fft')
             downsampled_data = downsampled_data[::2, ::2, ::2]
             
-            self.__store_single_volume_downsampling_in_zarr_stucture(downsampled_data, downsampled_data_group, current_ratio)
+            self.__store_single_volume_downsampling_in_zarr_stucture(downsampled_data, downsampled_data_group, current_ratio, force_dtype)
             current_level_data = downsampled_data
         # # TODO: figure out compression/filters: b64 encoded zlib-zipped .data is just 8 bytes
         # downsamplings sizes in raw uncompressed state are much bigger 
         # TODO: figure out what to do with chunks - currently their size is not optimized
 
-    def __store_single_volume_downsampling_in_zarr_stucture(self, downsampled_data: np.ndarray, downsampled_data_group: zarr.hierarchy.Group, ratio: int):
+    def __store_single_volume_downsampling_in_zarr_stucture(self, downsampled_data: np.ndarray, downsampled_data_group: zarr.hierarchy.Group, ratio: int, force_dtype=np.float32):
         downsampled_data_group.create_dataset(
-            data=downsampled_data,
+            data=downsampled_data.astype(force_dtype),
             name=str(ratio),
             shape=downsampled_data.shape,
-            dtype=downsampled_data.dtype,
+            # just change dtype for storing 
+            dtype=force_dtype,
             # # TODO: figure out how to determine optimal chunk size depending on the data
             chunks=(50, 50, 50)
         )
