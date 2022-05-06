@@ -4,7 +4,7 @@ import numpy as np
 from itertools import product
 from typing import Dict
 import zarr
-from preprocessor.src.preprocessors.implementations.sff_preprocessor import open_zarr_structure_from_path
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import open_zarr_structure_from_path
 
 
 def plot_3d_array_grayscale(arr: np.ndarray, arr_name: str):

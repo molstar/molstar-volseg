@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import List
-from preprocessor.src.preprocessors.implementations.sff_preprocessor import SFFPreprocessor
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import SFFPreprocessor
 
 from preprocessor.src.preprocessors.i_data_preprocessor import IDataPreprocessor
 from preprocessor.src.service.i_preprocessor_service import IPreprocessorService

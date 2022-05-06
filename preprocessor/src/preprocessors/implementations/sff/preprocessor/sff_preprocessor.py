@@ -2,7 +2,7 @@ import base64
 import json
 import gemmi
 from pathlib import Path
-from typing import Dict, Set, Tuple, Union, List
+from typing import Dict, Set, Tuple, List
 import zlib
 import zarr
 import numcodecs
@@ -13,8 +13,7 @@ from decimal import Decimal
 from preprocessor.src.preprocessors.i_data_preprocessor import IDataPreprocessor
 # TODO: figure out how to specify N of downsamplings (x2, x4, etc.) in a better way
 import math
-from preprocessor.src._magic_kernel_downsampling_3d import extract_target_voxels_coords, create_x2_downsampled_grid
-import copy
+from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import extract_target_voxels_coords, create_x2_downsampled_grid
 from sfftkrw import SFFSegmentation
 from scipy import signal
 
@@ -27,101 +26,21 @@ MIN_GRID_SIZE = 100**3
 DOWNSAMPLING_KERNEL = (1, 4, 6, 4, 1)
 
 
+'''
+class Bigclass(object):
+
+    from classdef1 import foo, bar, baz, quux
+    from classdef2 import thing1, thing2
+    from classdef3 import magic, moremagic
+    # unfortunately, "from classdefn import *" is an error or warning
+'''
+
+
 def open_zarr_structure_from_path(path: Path) -> zarr.hierarchy.Group:
     store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
     # Re-create zarr hierarchy from opened store
     root: zarr.hierarchy.group = zarr.group(store=store)
     return root
-
-class DownsamplingLevelDict:
-    def __init__(self, level_dict):
-        '''
-        Dict for categorical set downsampling level
-        '''
-        self.downsampling_ratio: int = level_dict['ratio']
-        self.grid: np.ndarray = level_dict['grid']
-        self.set_table: SegmentationSetTable = level_dict['set_table']
-
-    def get_grid(self):
-        return self.grid
-    
-    def get_set_table(self):
-        return self.set_table
-
-    def get_ratio(self):
-        return self.downsampling_ratio
-
-class SegmentationSetTable:
-    def __init__(self, lattice, value_to_segment_id_dict_for_specific_lattice_id):
-        self.value_to_segment_id_dict = value_to_segment_id_dict_for_specific_lattice_id
-        self.entries: Dict = self.__convert_lattice_to_dict_of_sets(lattice)
-        
-    def get_serializable_repr(self) -> Dict:
-        '''
-        Converts sets in self.entries to lists, and returns the whole table as a dict
-        '''
-        d: Dict = copy.deepcopy(self.entries)
-        for i in d:
-            d[i] = list(d[i])
-
-        return d
-    
-    def __convert_lattice_to_dict_of_sets(self, lattice: np.ndarray) -> Dict:
-        '''
-        Converts original latice to dict of singletons.
-        Each singleton should contain segment ID rather than value
-         used to represent that segment in grid
-        '''
-
-        unique_values: list = np.unique(lattice).tolist()
-        # value 0 is not assigned to any segment, it is just nothing
-        d = {}
-        for grid_value_of_segment in unique_values:
-            if grid_value_of_segment == 0:
-                d[grid_value_of_segment] = {0}
-            else:
-                d[grid_value_of_segment] = {self.value_to_segment_id_dict[grid_value_of_segment]}
-            # here we need a way to access zarr data (segment_list)
-            # and find segment id for each value (traverse dict backwards)
-            # and set d[segment_value] = to the found segment id
-        
-        return d
-
-    def get_categories(self, ids: Tuple) -> Tuple:
-        '''
-        Returns sets from the dict of sets (entries) based on provided IDs
-        '''
-        return tuple([self.entries[i] for i in ids])
-
-    def __find_category(self, target_category: Set) -> Union[int, None]:
-        '''
-        Looks up a category (set) in entries dict, returns its id or None if not found
-        '''
-        # TODO: check if dict has unique categories indeed!
-        for category_id, category in self.entries.items():
-            if category == target_category:
-                return category_id
-        return None
-
-    def __add_category(self, target_category: Set) -> int:
-        '''
-        Adds new category to entries and returns its id
-        '''
-        new_id: int = max(self.entries.keys()) + 1
-        self.entries[new_id] = target_category
-        return new_id
-
-    def resolve_category(self, target_category: Set):
-        '''
-        Looks up a category (set) in entries dict, returns its id
-        If not found, adds new category to entries and returns its id
-        '''
-        category_id = self.__find_category(target_category)
-        if category_id != None:
-            return category_id
-        else:
-            return self.__add_category(target_category)
-
 
 
 class SFFPreprocessor(IDataPreprocessor):
@@ -161,22 +80,7 @@ class SFFPreprocessor(IDataPreprocessor):
 
         return self.temp_zarr_structure_path
 
-    def __create_value_to_segment_id_mapping(self, zarr_structure):
-        '''
-        Iterates over zarr structure and returns dict with 
-        keys=lattice_id, and for each lattice id => keys=grid values, values=segm ids
-        '''
-        root = zarr_structure
-        d = {}
-        for segment_name, segment in root.segment_list.groups():
-            lat_id = int(segment.three_d_volume.lattice_id[...])
-            value = int(segment.three_d_volume.value[...])
-            segment_id = int(segment.id[...])
-            if lat_id not in d:
-                d[lat_id] = {}
-            d[lat_id][value] = segment_id
-        # print(d)
-        return d
+
 
     def __normalize_axis_order(self, map_object: gemmi.Ccp4Map):
         '''
@@ -207,7 +111,7 @@ class SFFPreprocessor(IDataPreprocessor):
             MIN_GRID_SIZE,
             input_grid_size=math.prod(volume_arr.shape)
         )
-        self.__create_volume_downsamplings(
+        self.create_volume_downsamplings(
             original_data=volume_arr,
             downsampled_data_group=volume_data_gr,
             downsampling_steps = volume_downsampling_steps

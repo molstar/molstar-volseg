@@ -4,23 +4,27 @@ from timeit import default_timer as timer
 from itertools import combinations
 import numpy as np
 from typing import Dict
-from preprocessor.src.check_internal_zarr import plot_volume_data_from_np_arr
-from preprocessor.src._convolve_magic_kernel_experimental import generate_kernel_3d_arr
+
+from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import downsample_using_magic_kernel
+from preprocessor.tests.check_internal_zarr import plot_volume_data_from_np_arr
+from preprocessor.src.tools._convolve_magic_kernel_experimental import generate_kernel_3d_arr
 from scipy import ndimage, signal
-from preprocessor.src.preprocessors.implementations.sff_preprocessor import downsample_using_magic_kernel, SFFPreprocessor
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import SFFPreprocessor
 from skimage.measure import block_reduce
 from pprint import pprint
 
 # TODO: put that on sabre
+DATA_PATH = Path("../data/raw_input_files")
+EMDB_DATA_PATH = DATA_PATH.joinpath("emdb")
 # DUMMY_ARR_SHAPE = (500, 500, 500)
 # DUMMY_ARR_SHAPE = (20,20,20)
 # hardcoded for sabre
 # 2000 * 2000 * 800 grid 
 # REAL_MAP_FILEPATH = Path('emd_9199_.map')
 # 64**3 grid
-# REAL_MAP_FILEPATH = Path('emd-1832.map')
+REAL_MAP_FILEPATH = EMDB_DATA_PATH.joinpath('emd-1832/emd-1832.map')
 # 640**3 grid
-REAL_MAP_FILEPATH = Path('emd_13793.map')
+#REAL_MAP_FILEPATH = Path('emd_13793.map')
 
 ONE_D_KERNEL = [1, 4, 6, 4, 1]
 LIST_OF_METHODS = [
@@ -112,7 +116,7 @@ def run_benchmarking_without_dict_plotting_one_by_one():
     kernel = generate_kernel_3d_arr(ONE_D_KERNEL)
 
     # dummy_arr = generate_dummy_arr(DUMMY_ARR_SHAPE).astype(np.float64)
-    real_arr = read_real_volume_data(REAL_MAP_FILEPATH) 
+    real_arr = read_real_volume_data(REAL_MAP_FILEPATH)
     dummy_arr = real_arr
     print(f'shape of volume is {dummy_arr.shape}')
     # print(f'ORIGINAL DATA')

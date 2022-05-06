@@ -4,11 +4,11 @@ import numpy as np
 from pathlib import Path
 from typing import Dict
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
-from preprocessor.src._write_fake_segmentation_to_sff import OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH
+from preprocessor.src.tools._write_fake_segmentation_to_sff import OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH
 
 from db.interface.i_preprocessed_db import IPreprocessedDb
 from preprocessor.src.service.implementations import PreprocessorService
-from preprocessor.src.preprocessors.implementations.sff_preprocessor import SFFPreprocessor
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import SFFPreprocessor
 
 RAW_INPUT_FILES_DIR = Path(__file__).parent / 'raw_input_files'
 
