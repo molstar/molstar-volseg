@@ -1,31 +1,3 @@
-def create_category_set_downsamplings(
-    self,
-    original_data: np.ndarray,
-    downsampling_steps: int,
-    downsampled_data_group: zarr.hierarchy.Group,
-    value_to_segment_id_dict_for_specific_lattice_id: Dict
-    ):
-    '''
-    Take original segmentation data, do all downsampling levels, create zarr datasets for each
-    '''
-    # table with just singletons, e.g. "104": {104}, "94" :{94}
-    initial_set_table = SegmentationSetTable(original_data, value_to_segment_id_dict_for_specific_lattice_id)
-    
-    # to make it uniform int32 with other level grids
-    original_data = original_data.astype(np.int32)
-
-    # for now contains just x1 downsampling lvl dict, in loop new dicts for new levels are appended
-    levels = [
-        DownsamplingLevelDict({'ratio': 1, 'grid': original_data, 'set_table': initial_set_table})
-        ]
-    for i in range(downsampling_steps):
-        current_set_table = SegmentationSetTable(original_data, value_to_segment_id_dict_for_specific_lattice_id)
-        # on first iteration (i.e. when doing x2 downsampling), it takes original_data and initial_set_table with set of singletons 
-        levels.append(self.__downsample_categorical_data_using_category_sets(levels[i], current_set_table))
-
-    # store levels list in zarr structure (can be separate function)
-    self.__store_downsampling_levels_in_zarr_structure(levels, downsampled_data_group)
-
 def __store_downsampling_levels_in_zarr_structure(self, levels_list: List[DownsamplingLevelDict], downsampled_data_group: zarr.hierarchy.Group):
     for level_dict in levels_list:
         grid = level_dict.get_grid()

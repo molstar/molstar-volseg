@@ -62,9 +62,3 @@ def __testing_with_dummy_arr():
     print(f'DOWNSAMPLED ARR, SHAPE {downsampled_arr.shape}')
     print(downsampled_arr)
     
-    
-
-
-if __name__ == '__main__':
-    # __testing()
-    __testing_with_dummy_arr()

@@ -3,7 +3,8 @@ from typing import Tuple
 import numpy as np
 from math import ceil
 
-class MagicKernel():
+class MagicKernel3dDownsampler():
+    '''Deprecated. Own inefficient implementation of magic kernel downsampling. Current pipeline uses scipy convovle'''
 
     def downsample_using_magic_kernel(arr: np.ndarray, kernel: Tuple[int, int, int, int, int]) -> np.ndarray:
         '''
@@ -122,105 +123,7 @@ class MagicKernel():
         # print(values_sum)
         # print(new_value)
         return new_value
-
-
-def _compute_offset_indices_from_radius(radius: int):
-    '''
-    Computes offset indices array based on radius, so that only the voxels of specific depth layer
-    (e.g. nearest (1st layer), or next to nearest (2nd layer)) voxels can be selected downstream in the code
-    '''
-    return list(range(-radius, radius + 1))
-
-def _setdiff2d_set(bigger_arr, smaller_arr):
-    '''
-    Difference between two 2D arrays
-    https://stackoverflow.com/a/66674679
-    '''
-    set1 = set(map(tuple, bigger_arr))
-    set2 = set(map(tuple, smaller_arr))
-    return np.array(list(set1 - set2))
-
-def __generate_dummy_arr(shape: Tuple[int, int, int]) -> np.ndarray:
-    np_arr = np.arange(shape[0] * shape[1] * shape[2]).reshape((shape[0], shape[1], shape[2]))
-    return np_arr
-
-def __testing():
-    radius = 2
-    max_dims = (10, 12, 14)
-
-    lst_of_coords = [
-        (0, 0, 0),
-        (10, 12, 14),
-        (0, 12, 0),
-        (10, 0, 0)
-    ]
-
-    for coords in lst_of_coords:
-        r = get_voxel_coords_at_radius(coords, radius, max_dims)
-        print(r)
-        print(len(r))
-
-    lst_of_max_coords = [
-        (4, 5, 4),
-        (10, 12, 14),
-        (2, 11, 2),
-        (10, 4, 8)
-    ]
-
-    for coords in lst_of_max_coords:
-        result = extract_target_voxels_coords(coords)
-        print(f'For {coords} there are {len(result)} target voxels')
-        print()
-
-def __testing_with_dummy_arr():
-    SHAPE = (10, 12, 14)
-    KERNEL = (1, 4, 6, 4, 1)
-    arr =__generate_dummy_arr(SHAPE)
-    downsampled_arr = downsample_using_magic_kernel(arr, KERNEL)
-    print(f'ORIGINAL ARR, SHAPE {arr.shape}')
-    print(arr)
-    print(f'DOWNSAMPLED ARR, SHAPE {downsampled_arr.shape}')
-    print(downsampled_arr)
     
-    
-def downsample_using_magic_kernel(arr: np.ndarray, kernel: Tuple[int, int, int, int, int]) -> np.ndarray:
-    '''
-    Returns x2 downsampled data using provided kernel
-    '''
-    # empty 3D arr with /2 dimensions compared to original 3D arr
-    downsampled_arr = create_x2_downsampled_grid(arr.shape, np.nan)
-    target_voxels_coords = extract_target_voxels_coords(arr.shape)
-
-    #TODO: optimize using https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.convolve.html instead of for loop (for 1000**3 it consumes 12GB RAM)
-    # Or use generator (expression or generator function
-    # https://www.lachlaneagling.com/reducing-memory-consumption-python/
-    # https://stackoverflow.com/questions/37156574/why-does-a-generator-expression-need-a-lot-of-memory
-
-    for voxel_coords in target_voxels_coords:
-        inner_layer_voxel_coords = get_voxel_coords_at_radius(voxel_coords, 1, arr.shape)
-        outer_layer_voxel_coords = get_voxel_coords_at_radius(voxel_coords, 2, arr.shape)
-        downsampled_voxel_value = compute_downsampled_voxel_value(
-            arr,
-            kernel,
-            voxel_coords,
-            inner_layer_voxel_coords,
-            outer_layer_voxel_coords
-        )
-        new_x = int(voxel_coords[0] / 2)
-        new_y = int(voxel_coords[1] / 2)
-        new_z = int(voxel_coords[2] / 2)
-        downsampled_arr[new_x][new_y][new_z] = downsampled_voxel_value
-
-    return downsampled_arr
-
-def create_x2_downsampled_grid(original_grid_shape: Tuple[int, int, int], fill_value) -> np.ndarray:
-    empty_downsampled_grid = np.full([
-        ceil(original_grid_shape[0] / 2),
-        ceil(original_grid_shape[1] / 2),
-        ceil(original_grid_shape[2] / 2)
-    ], fill_value)
-    return empty_downsampled_grid
-
 if __name__ == '__main__':
     # __testing()
     __testing_with_dummy_arr()

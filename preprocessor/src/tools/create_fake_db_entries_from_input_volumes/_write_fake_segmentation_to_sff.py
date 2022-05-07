@@ -5,7 +5,7 @@ import numpy as np
 import random
 import string
 
-from preprocessor.src.tools._create_fake_segmentation_from_real_volume import create_fake_segmentation_from_real_volume
+from preprocessor.src.tools.create_fake_db_entries_from_input_volumes._create_fake_segmentation_from_real_volume import create_fake_segmentation_from_real_volume
 
 # TODO: change to big EMDB entry name once ready
 OUTPUT_FILEPATH = Path('preprocessor/fake_segmentations/fake_emd_1832.hff')

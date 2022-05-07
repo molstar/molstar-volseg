@@ -4,7 +4,7 @@ import numpy as np
 from pathlib import Path
 from typing import Dict
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
-from preprocessor.src.tools._write_fake_segmentation_to_sff import OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH
+from preprocessor.src.tools.create_fake_db_entries_from_input_volumes._write_fake_segmentation_to_sff import OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH
 
 from db.interface.i_preprocessed_db import IPreprocessedDb
 from preprocessor.src.service.implementations import PreprocessorService
