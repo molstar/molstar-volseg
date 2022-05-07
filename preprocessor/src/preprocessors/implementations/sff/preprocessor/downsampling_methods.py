@@ -1,18 +1,25 @@
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import MIN_DOWNSAMPLING_VOLUME_FILESIZE
+import math
+from typing import Dict, List
+import zarr
+import numpy as np
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import DOWNSAMPLING_KERNEL, MIN_DOWNSAMPLING_VOLUME_FILESIZE
+from volume_server.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories import segmentation_table
+from scipy import signal
 
-
-def compute_number_of_downsampling_steps(min_grid_size: int, input_grid_size: int, force_dtype: type) -> int:
+def compute_number_of_downsampling_steps(min_grid_size: int, input_grid_size: int, force_dtype: type, factor: int) -> int:
     if input_grid_size <= min_grid_size:
         return 1
     # num_of_downsampling_steps: int = math.ceil(math.log2(input_grid_size/min_grid_size))
     x1_filesize_bytes: int = input_grid_size * force_dtype().itemsize
-    downsampling_factor = 2**3
+    downsampling_factor = factor
     # if x1_filesize_bytes / MIN_DOWNSAMPLING_VOLUME_FILESIZE < 1? TODO: fix
-    ratio: int = int(int(x1_filesize_bytes / MIN_DOWNSAMPLING_VOLUME_FILESIZE) / downsampling_factor)
-    if ratio <= 1:
+    # ratio: int = int(int(x1_filesize_bytes / MIN_DOWNSAMPLING_VOLUME_FILESIZE) / downsampling_factor)
+    num_of_downsampling_steps: int = int(math.log(
+        x1_filesize_bytes / MIN_DOWNSAMPLING_VOLUME_FILESIZE,
+        factor
+    ))
+    if num_of_downsampling_steps <= 1:
         return 1
-    # round ratio to the next power of two
-    num_of_downsampling_steps = 1<<(ratio - 1).bit_length()
     return num_of_downsampling_steps
 
 def create_volume_downsamplings(original_data: np.ndarray, downsampling_steps: int, downsampled_data_group: zarr.hierarchy.Group, force_dtype=np.float32):
@@ -48,7 +55,7 @@ def create_category_set_downsamplings(
     Take original segmentation data, do all downsampling levels, create zarr datasets for each
     '''
     # table with just singletons, e.g. "104": {104}, "94" :{94}
-    initial_set_table = SegmentationSetTable(original_data, value_to_segment_id_dict_for_specific_lattice_id)
+    initial_set_table = segmentation_table(original_data, value_to_segment_id_dict_for_specific_lattice_id)
     
     # to make it uniform int32 with other level grids
     original_data = original_data.astype(np.int32)
