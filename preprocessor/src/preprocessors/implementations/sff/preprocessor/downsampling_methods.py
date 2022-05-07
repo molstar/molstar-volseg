@@ -1,3 +1,6 @@
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import MIN_DOWNSAMPLING_VOLUME_FILESIZE
+
+
 def compute_number_of_downsampling_steps(self, min_grid_size: int, input_grid_size: int, force_dtype=np.float32) -> int:
     if input_grid_size <= min_grid_size:
         return 1
@@ -6,6 +9,8 @@ def compute_number_of_downsampling_steps(self, min_grid_size: int, input_grid_si
     downsampling_factor = 2**3
     # if x1_filesize_bytes / MIN_DOWNSAMPLING_VOLUME_FILESIZE < 1? TODO: fix
     ratio: int = int(int(x1_filesize_bytes / MIN_DOWNSAMPLING_VOLUME_FILESIZE) / downsampling_factor)
+    if ratio <= 1:
+        return 1
     # round ratio to the next power of two
     num_of_downsampling_steps = 1<<(ratio - 1).bit_length()
     return num_of_downsampling_steps
