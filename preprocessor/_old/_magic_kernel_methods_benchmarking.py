@@ -7,7 +7,7 @@ from typing import Dict
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.downsampling_methods import generate_kernel_3d_arr
 
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import downsample_using_magic_kernel
-from preprocessor.tests.check_internal_zarr import plot_volume_data_from_np_arr
+from preprocessor._old.check_internal_zarr import plot_volume_data_from_np_arr
 from scipy import ndimage, signal
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import SFFPreprocessor
 from skimage.measure import block_reduce

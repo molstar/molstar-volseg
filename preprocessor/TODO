@@ -1,7 +1,7 @@
 DONE 1) reorganizing files/folders -> almost done -> splitting sff preprocessor
 DONE 2) tools -> make class for each tool, sort out what is actually tool
 DONE 3) tools -> pass as dependency in the constructor of sff preprocessor
-4) tests -> rewrite those that make sense (not plotting) as unittests
+IN PROGRESS 4) tests -> rewrite those that make sense (not plotting) as unittests
 5) in general, several files (tools, tests) contain many public/private methods
     -> this is a bit hard to find the purpose of the file
     -> making it as a class with public methods + private methods coming from auxiliary files (example sff preprocessor)
