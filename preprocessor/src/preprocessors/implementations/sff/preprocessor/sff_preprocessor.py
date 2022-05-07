@@ -12,7 +12,6 @@ import decimal
 from decimal import Decimal
 from preprocessor.src.preprocessors.i_data_preprocessor import IDataPreprocessor
 import math
-from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import extract_target_voxels_coords, create_x2_downsampled_grid
 from sfftkrw import SFFSegmentation
 from scipy import signal
 

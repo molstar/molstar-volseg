@@ -1,14 +1,19 @@
 # methods for processing volume and segmentation data
 
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.downsampling_methods import compute_number_of_downsampling_steps
+
+
 def process_volume_data(self, zarr_structure: zarr.hierarchy.group, map_object: gemmi.Ccp4Map, force_dtype=np.float32):
     '''
     Takes read map object, extracts volume data, downsamples it, stores to zarr_structure
     '''
     volume_data_gr: zarr.hierarchy.group = zarr_structure.create_group(VOLUME_DATA_GROUPNAME)        
     volume_arr = self.__read_volume_data(map_object, force_dtype)
-    volume_downsampling_steps = self.__compute_number_of_downsampling_steps(
+    volume_downsampling_steps = compute_number_of_downsampling_steps(
         MIN_GRID_SIZE,
-        input_grid_size=math.prod(volume_arr.shape)
+        input_grid_size=math.prod(volume_arr.shape),
+        force_dtype=volume_arr.dtype,
+        factor=2**3
     )
     self.__create_volume_downsamplings(
         original_data=volume_arr,
@@ -32,9 +37,11 @@ def process_segmentation_data(self, zarr_structure: zarr.hierarchy.group) -> Non
             gr.mode[0],
             (gr.size.cols[...], gr.size.rows[...], gr.size.sections[...])
         )
-        segmentation_downsampling_steps = self.__compute_number_of_downsampling_steps(
+        segmentation_downsampling_steps = compute_number_of_downsampling_steps(
             MIN_GRID_SIZE,
-            input_grid_size=math.prod(segm_arr.shape)
+            input_grid_size=math.prod(segm_arr.shape),
+            force_dtype=segm_arr.dtype,
+            factor=2**3
         )
         # specific lattice with specific id
         lattice_gr = segm_data_gr.create_group(gr_name)

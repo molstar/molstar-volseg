@@ -10,5 +10,5 @@ DONE 6) tools -> one folder per tool so that it is easy to organize the tool in 
     -> for example we can have a bool in the test run method that makes it write the new json file overwriting the previous one
     -> bool is always committed as false, once we run tests on new code and it is better, and we decide to commit new code
     -> then we change the bool to true temporarily, run to overwrite json, change back to false, then commit json + code
-8) remove files that were experiments and no longer needed (or move to _old folder)
-9) some files contains no method that match the naming of the file -> review naming of files
+IN PROGRESS 8) remove files that were experiments and no longer needed (or move to _old folder)
+IN PROGRESS 9) some files contains no method that match the naming of the file -> review naming of files
