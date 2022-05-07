@@ -1,7 +1,7 @@
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import MIN_DOWNSAMPLING_VOLUME_FILESIZE
 
 
-def compute_number_of_downsampling_steps(self, min_grid_size: int, input_grid_size: int, force_dtype=np.float32) -> int:
+def compute_number_of_downsampling_steps(min_grid_size: int, input_grid_size: int, force_dtype: type) -> int:
     if input_grid_size <= min_grid_size:
         return 1
     # num_of_downsampling_steps: int = math.ceil(math.log2(input_grid_size/min_grid_size))
@@ -15,7 +15,7 @@ def compute_number_of_downsampling_steps(self, min_grid_size: int, input_grid_si
     num_of_downsampling_steps = 1<<(ratio - 1).bit_length()
     return num_of_downsampling_steps
 
-def create_volume_downsamplings(self, original_data: np.ndarray, downsampling_steps: int, downsampled_data_group: zarr.hierarchy.Group, force_dtype=np.float32):
+def create_volume_downsamplings(original_data: np.ndarray, downsampling_steps: int, downsampled_data_group: zarr.hierarchy.Group, force_dtype=np.float32):
     '''
     Take original volume data, do all downsampling levels and store in zarr struct one by one
     '''
@@ -39,7 +39,6 @@ def create_volume_downsamplings(self, original_data: np.ndarray, downsampling_st
     # TODO: figure out what to do with chunks - currently their size is not optimized
 
 def create_category_set_downsamplings(
-    self,
     original_data: np.ndarray,
     downsampling_steps: int,
     downsampled_data_group: zarr.hierarchy.Group,
@@ -66,7 +65,7 @@ def create_category_set_downsamplings(
     # store levels list in zarr structure (can be separate function)
     self.__store_downsampling_levels_in_zarr_structure(levels, downsampled_data_group)
 
-def __store_single_volume_downsampling_in_zarr_stucture(self, downsampled_data: np.ndarray, downsampled_data_group: zarr.hierarchy.Group, ratio: int, force_dtype=np.float32):
+def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: np.ndarray, downsampled_data_group: zarr.hierarchy.Group, ratio: int, force_dtype=np.float32):
     downsampled_data_group.create_dataset(
         data=downsampled_data.astype(force_dtype),
         name=str(ratio),
@@ -77,7 +76,7 @@ def __store_single_volume_downsampling_in_zarr_stucture(self, downsampled_data: 
         chunks=(50, 50, 50)
     )
 
-def generate_kernel_3d_arr(self, pattern: List[int]) -> np.ndarray:
+def generate_kernel_3d_arr(pattern: List[int]) -> np.ndarray:
     '''
     Generates conv kernel based on pattern provided (e.g. [1,4,6,4,1]).
     https://stackoverflow.com/questions/71739757/generate-3d-numpy-array-based-on-provided-pattern/71742892#71742892
