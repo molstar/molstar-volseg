@@ -22,7 +22,8 @@ class TestComputeNumberOfDownsamplingSteps(unittest.TestCase):
                 MIN_GRID_SIZE,
                 input_grid_size,
                 force_dtype=grid_dtype,
-                factor=downsampling_factor
+                factor=downsampling_factor,
+                min_downsampled_file_size_bytes=5*10**6
                 )
 
             self.assertEqual(number_of_downsampling_steps, expected_nsteps, f'Test suite: {input_grid_size}, {grid_dtype}, {expected_nsteps}')

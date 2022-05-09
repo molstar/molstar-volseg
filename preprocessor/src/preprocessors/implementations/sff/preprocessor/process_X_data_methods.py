@@ -13,7 +13,8 @@ def process_volume_data(self, zarr_structure: zarr.hierarchy.group, map_object: 
         MIN_GRID_SIZE,
         input_grid_size=math.prod(volume_arr.shape),
         force_dtype=volume_arr.dtype,
-        factor=2**3
+        factor=2**3,
+        min_downsampled_file_size_bytes=5*10**6
     )
     self.__create_volume_downsamplings(
         original_data=volume_arr,
@@ -41,7 +42,8 @@ def process_segmentation_data(self, zarr_structure: zarr.hierarchy.group) -> Non
             MIN_GRID_SIZE,
             input_grid_size=math.prod(segm_arr.shape),
             force_dtype=segm_arr.dtype,
-            factor=2**3
+            factor=2**3,
+            min_downsampled_file_size_bytes=5*10**6
         )
         # specific lattice with specific id
         lattice_gr = segm_data_gr.create_group(gr_name)

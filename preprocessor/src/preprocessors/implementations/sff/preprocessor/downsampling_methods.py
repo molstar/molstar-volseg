@@ -2,20 +2,17 @@ import math
 from typing import Dict, List
 import zarr
 import numpy as np
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import DOWNSAMPLING_KERNEL, MIN_DOWNSAMPLING_VOLUME_FILESIZE
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import DOWNSAMPLING_KERNEL
 from volume_server.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories import segmentation_table
 from scipy import signal
 
-def compute_number_of_downsampling_steps(min_grid_size: int, input_grid_size: int, force_dtype: type, factor: int) -> int:
+def compute_number_of_downsampling_steps(min_grid_size: int, input_grid_size: int, force_dtype: type, factor: int, min_downsampled_file_size_bytes: int = 5*10**6) -> int:
     if input_grid_size <= min_grid_size:
         return 1
     # num_of_downsampling_steps: int = math.ceil(math.log2(input_grid_size/min_grid_size))
     x1_filesize_bytes: int = input_grid_size * force_dtype().itemsize
-    downsampling_factor = factor
-    # if x1_filesize_bytes / MIN_DOWNSAMPLING_VOLUME_FILESIZE < 1? TODO: fix
-    # ratio: int = int(int(x1_filesize_bytes / MIN_DOWNSAMPLING_VOLUME_FILESIZE) / downsampling_factor)
     num_of_downsampling_steps: int = int(math.log(
-        x1_filesize_bytes / MIN_DOWNSAMPLING_VOLUME_FILESIZE,
+        x1_filesize_bytes / min_downsampled_file_size_bytes,
         factor
     ))
     if num_of_downsampling_steps <= 1:

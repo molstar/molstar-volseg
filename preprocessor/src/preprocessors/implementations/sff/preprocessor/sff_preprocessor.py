@@ -22,7 +22,6 @@ ANNOTATION_METADATA_FILENAME = 'annotation_metadata.json'
 # temporarly can be set to 32 to check at least x4 downsampling with 64**3 emd-1832 grid
 MIN_GRID_SIZE = 100**3
 DOWNSAMPLING_KERNEL = (1, 4, 6, 4, 1)
-MIN_DOWNSAMPLING_VOLUME_FILESIZE = 5000000
 
 
 '''
