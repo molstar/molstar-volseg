@@ -30,12 +30,19 @@ def get_value_from_two_arrs(arr1, arr2, index: Tuple[int,int,int]):
     return val_1, val_2
 
 if __name__ == '__main__':
-    MAP_FILEPATH = Path('preprocessor\sample_volumes\emdb_sff\EMD-1832.map')
+    MAP_FILEPATH = Path('preprocessor/sample_volumes/emdb_sff/EMD-1832.map')
     arr1 = get_np_arr_from_gemmi(MAP_FILEPATH)
     arr2 = get_np_arr_from_mrcfile(MAP_FILEPATH)
     compare_two_arrays(arr1, arr2)
-    # try to get value of (1, 31, 32) voxel
+    # try to get value of (62, 31, 31) voxel
+    indices = (62, 31, 31)
+    gemmi_val, mrcfile_val = get_value_from_two_arrs(arr1, arr2, indices)
+    print(f'indices: {indices}')
+    print(f'gemmi_val {gemmi_val}')
+    print(f'mrcfile_val {mrcfile_val}')
+
     indices = (1, 31, 32)
     gemmi_val, mrcfile_val = get_value_from_two_arrs(arr1, arr2, indices)
+    print(f'indices: {indices}')
     print(f'gemmi_val {gemmi_val}')
     print(f'mrcfile_val {mrcfile_val}')
