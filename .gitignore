@@ -1,5 +1,4 @@
 ### Custom
-preprocessor/tests/test_slicing_methods_benchmarking.py
 PYTHONPATH.sh
 README_ON_HOW_TO_RUN_STUFF_FROM_SABRE.md
 check_dirs_before_building.sh
