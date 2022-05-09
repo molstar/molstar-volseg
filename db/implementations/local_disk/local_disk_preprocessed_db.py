@@ -95,7 +95,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             'volume': read_volume_arr
         }
 
-    async def read_slice(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask') -> ProcessedVolumeSliceData:
+    async def read_slice(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask', timer_printout=False) -> ProcessedVolumeSliceData:
         '''
         Reads a slice from a specific (down)sampling of segmentation and volume data
         from specific entry from DB based on key (e.g. EMD-1111), lattice_id (e.g. 0),
@@ -141,7 +141,8 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             volume_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=volume_arr, box=box)
         
         end = timer()
-        print(f'read_slice with mode {mode}: {end - start}')
+        if timer_printout == True:
+            print(f'read_slice with mode {mode}: {end - start}')
         if segm_arr:
             d = {
                 "segmentation_slice": {
