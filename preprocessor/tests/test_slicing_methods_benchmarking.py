@@ -3,12 +3,17 @@ from tracemalloc import stop
 from typing import Tuple
 import unittest
 
+from pathlib import Path
+
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
+from preprocessor.src.tools.write_dict_to_file.write_dict_to_json import write_dict_to_json
 
 
 class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
-
     async def test(self):
+        OVERWRITE_GOLD_STANDARD = False
+        GOLD_STANDARD_FILENAME = Path('preprocessor/tests/performance_measurements/gold_standard.json')
+
         async def _compute_boxes_for_entry(db: LocalDiskPreprocessedDb, namespace, key):
             metadata = await db.read_grid_metadata(namespace, key)
             dims: Tuple = metadata.grid_dimensions()
@@ -39,10 +44,14 @@ class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
 
         db = LocalDiskPreprocessedDb()
 
+        d = {}
         for namespace, entry_id in test_suite_entries:
             print(f'ENTRY: {entry_id}')
+            d[entry_id] = {}
             boxes = await _compute_boxes_for_entry(db, namespace, entry_id)
             for box in boxes:
+                str_repr_of_box = f'{str(box[0])}, {str(box[1])}'
+                d[entry_id][str_repr_of_box] = {}
                 print(f'   BOX: {box}')
                 for method in test_suite_methods:
                     start = timer()
@@ -55,4 +64,10 @@ class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
                         mode=method
                     )
                     stop = timer()
-                    print(f'      METHOD: {method} took {stop - start} seconds')
+                    measurement = stop - start
+                    d[entry_id][str_repr_of_box][method] = {
+                        'measurement': measurement
+                    }
+                    print(f'      METHOD: {method} took {measurement} seconds')
+                    if OVERWRITE_GOLD_STANDARD == True:
+                        write_dict_to_json(d=d, filename=GOLD_STANDARD_FILENAME)
