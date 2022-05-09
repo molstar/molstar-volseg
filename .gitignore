@@ -1,4 +1,25 @@
 ### Custom
+preprocessor/tests/test_slicing_methods_benchmarking.py
+PYTHONPATH.sh
+README_ON_HOW_TO_RUN_STUFF_FROM_SABRE.md
+check_dirs_before_building.sh
+check_dirs_before_creating_fake_entries.sh
+ciftools-python/
+create_fake_db_entries.sh
+log.txt
+node_modules/
+package-lock.json
+package.json
+preprocessor/emd_13793.map
+preprocessor/emd_13856.map.gz
+preprocessor/emd_1832.map
+preprocessor/emd_9199_.map
+preprocessor/log.txt
+preprocessor/raw_input_files/
+preprocessor/real_volumes_for_converstion_to_fake_sff/
+preprocessor/sample_volumes/
+requirements.txt_COPY
+
 preprocessor/fake_segmentations/
 preprocessor/data/real_volumes_for_converstion_to_fake_sff/*
 !preprocessor/data/real_volumes_for_converstion_to_fake_sff/.gitkeep
