@@ -1,7 +1,6 @@
 from typing import Optional
 
 from fastapi import FastAPI, Response
-from fastapi.responses import FileResponse
 
 from volume_server.i_volume_server import IVolumeServer
 from volume_server.requests.metadata_request.metadata_request import MetadataRequest

@@ -69,5 +69,5 @@ class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
                         'measurement': measurement
                     }
                     print(f'      METHOD: {method} took {measurement} seconds')
-                    if OVERWRITE_GOLD_STANDARD == True:
+                    if OVERWRITE_GOLD_STANDARD:
                         write_dict_to_json(d=d, filename=GOLD_STANDARD_FILENAME)

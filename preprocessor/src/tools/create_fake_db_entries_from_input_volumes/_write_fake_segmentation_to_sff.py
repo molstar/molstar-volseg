@@ -5,16 +5,13 @@ import numpy as np
 import random
 import string
 
-from preprocessor.src.tools.create_fake_db_entries_from_input_volumes._create_fake_segmentation_from_real_volume import create_fake_segmentation_from_real_volume
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import REAL_MAP_FILEPATH, OUTPUT_FILEPATH
+from preprocessor.src.tools.create_fake_db_entries_from_input_volumes._create_fake_segmentation_from_real_volume import \
+    create_fake_segmentation_from_real_volume
 
-# TODO: change to big EMDB entry name once ready
-OUTPUT_FILEPATH = Path('preprocessor/fake_segmentations/fake_emd_1832.hff')
-# Just for testing
-# FILEPATH_JSON = Path('preprocessor/fake_segmentations/fake_emd_1832.json')
 
-REAL_MAP_FILEPATH = Path('preprocessor\sample_volumes\emdb_sff\EMD-1832.map')
-
-def write_fake_segmentation_to_sff(output_filepath: Path, lattice_data: np.ndarray, segm_ids: List[int], json_for_debug=False):
+def write_fake_segmentation_to_sff(output_filepath: Path, lattice_data: np.ndarray, segm_ids: List[int],
+                                   json_for_debug=False):
     '''
     Note: creates a single lattice
     '''
@@ -82,7 +79,7 @@ def _instantiate_segment(segm_id: int, value, lattice_id=0):
         blue=random.random(),
         alpha=random.random()
     )
-    
+
     random_name = ''.join(random.choices(string.ascii_lowercase, k=15))
     random_descr = ''.join(random.choices(string.ascii_lowercase, k=30))
     segment.biological_annotation = sff.SFFBiologicalAnnotation(
@@ -101,4 +98,4 @@ if __name__ == '__main__':
         lattice_data=grid,
         segm_ids=segm_ids,
         json_for_debug=True
-        )
+    )

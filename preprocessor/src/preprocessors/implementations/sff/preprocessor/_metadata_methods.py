@@ -1,20 +1,35 @@
-def __extract_annotation_metadata(self, segm_file_path: Path) -> Dict:
+import json
+from decimal import Decimal
+from pathlib import Path
+
+import numpy as np
+import zarr
+
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import VOLUME_DATA_GROUPNAME, \
+    SEGMENTATION_DATA_GROUPNAME
+from preprocessor.src.preprocessors.implementations.sff.preprocessor._sfftk_methods import \
+    open_hdf5_as_segmentation_object
+from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import read_ccp4_words_to_dict
+
+
+def extract_annotation_metadata(segm_file_path: Path) -> dict:
     '''Returns processed dict of annotation metadata (some fields are removed)'''
-    segm_obj = self.__open_hdf5_as_segmentation_object(segm_file_path)
+    segm_obj = open_hdf5_as_segmentation_object(segm_file_path)
     segm_dict = segm_obj.as_json()
     for lattice in segm_dict['lattice_list']:
         del lattice['data']
 
     return segm_dict
 
-def __extract_grid_metadata(self, zarr_structure: zarr.hierarchy.group, map_object) -> Dict:
+
+def extract_grid_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> dict:
     root = zarr_structure
     details = ''
     if 'details' in root:
         details = root.details[...][0].decode('utf-8')
     volume_downsamplings = sorted(root[VOLUME_DATA_GROUPNAME].array_keys())
     # convert to ints
-    volume_downsamplings = sorted([int(x) for x in volume_downsamplings]) 
+    volume_downsamplings = sorted([int(x) for x in volume_downsamplings])
 
     # TODO:
     mean_dict = {}
@@ -25,10 +40,10 @@ def __extract_grid_metadata(self, zarr_structure: zarr.hierarchy.group, map_obje
 
     for arr_name, arr in root[VOLUME_DATA_GROUPNAME].arrays():
         mean_val = str(np.mean(arr[...]))
-        std_val =  str(np.std(arr[...]))
+        std_val = str(np.std(arr[...]))
         max_val = str(arr[...].max())
         min_val = str(arr[...].min())
-        grid_dimensions_val: Tuple[int, int, int] = arr.shape
+        grid_dimensions_val: tuple[int, int, int] = arr.shape
 
         mean_dict[str(arr_name)] = mean_val
         std_dict[str(arr_name)] = std_val
@@ -50,15 +65,15 @@ def __extract_grid_metadata(self, zarr_structure: zarr.hierarchy.group, map_obje
             lattice_dict[lattice_id] = segm_downsamplings
             lattice_ids.append(lattice_id)
 
-    d = self.__read_ccp4_words_to_dict(map_object)
+    d = read_ccp4_words_to_dict(map_object)
 
-    original_voxel_size: Tuple[float, float, float] = (
+    original_voxel_size: tuple[float, float, float] = (
         d['xLength'] / d['NC'],
         d['yLength'] / d['NR'],
         d['zLength'] / d['NS']
     )
 
-    voxel_sizes_in_downsamplings: Dict = {}
+    voxel_sizes_in_downsamplings: dict = {}
     for rate in volume_downsamplings:
         voxel_sizes_in_downsamplings[rate] = tuple(
             [float(Decimal(i) * Decimal(rate)) for i in original_voxel_size]
@@ -66,7 +81,7 @@ def __extract_grid_metadata(self, zarr_structure: zarr.hierarchy.group, map_obje
 
     # get origin of grid based on NC/NR/NSSTART variables (5, 6, 7) and original voxel size
     # Converting to strings, then to floats to make it JSON serializable (decimals are not) -> ??
-    origin: Tuple[float, float, float] = (
+    origin: tuple[float, float, float] = (
         float(str(d['NCSTART'] * original_voxel_size[0])),
         float(str(d['NRSTART'] * original_voxel_size[1])),
         float(str(d['NSSTART'] * original_voxel_size[2])),
@@ -91,6 +106,7 @@ def __extract_grid_metadata(self, zarr_structure: zarr.hierarchy.group, map_obje
         'min': min_dict
     }
 
-def __temp_save_metadata(self, metadata: Dict, metadata_filename: Path, temp_dir_path: Path) -> None:
+
+def temp_save_metadata(self, metadata: dict, metadata_filename: Path, temp_dir_path: Path) -> None:
     with (temp_dir_path / metadata_filename).open('w') as fp:
         json.dump(metadata, fp)

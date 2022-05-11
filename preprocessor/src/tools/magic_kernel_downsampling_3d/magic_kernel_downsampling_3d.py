@@ -6,13 +6,15 @@ from math import ceil
 class MagicKernel3dDownsampler():
     '''Deprecated. Own inefficient implementation of magic kernel downsampling. Current pipeline uses scipy convovle'''
 
-    def downsample_using_magic_kernel(arr: np.ndarray, kernel: Tuple[int, int, int, int, int]) -> np.ndarray:
+    from _helper_methods import compute_offset_indices_from_radius, setdiff2d_set, generate_dummy_arr
+
+    def downsample_using_magic_kernel(self, arr: np.ndarray, kernel: Tuple[int, int, int, int, int]) -> np.ndarray:
         '''
         Returns x2 downsampled data using provided kernel
         '''
         # empty 3D arr with /2 dimensions compared to original 3D arr
-        downsampled_arr = create_x2_downsampled_grid(arr.shape, np.nan)
-        target_voxels_coords = extract_target_voxels_coords(arr.shape)
+        downsampled_arr = self.create_x2_downsampled_grid(arr.shape, np.nan)
+        target_voxels_coords = self.extract_target_voxels_coords(arr.shape)
 
         #TODO: optimize using https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.convolve.html instead of for loop (for 1000**3 it consumes 12GB RAM)
         # Or use generator (expression or generator function
@@ -20,9 +22,9 @@ class MagicKernel3dDownsampler():
         # https://stackoverflow.com/questions/37156574/why-does-a-generator-expression-need-a-lot-of-memory
 
         for voxel_coords in target_voxels_coords:
-            inner_layer_voxel_coords = get_voxel_coords_at_radius(voxel_coords, 1, arr.shape)
-            outer_layer_voxel_coords = get_voxel_coords_at_radius(voxel_coords, 2, arr.shape)
-            downsampled_voxel_value = compute_downsampled_voxel_value(
+            inner_layer_voxel_coords = self.get_voxel_coords_at_radius(voxel_coords, 1, arr.shape)
+            outer_layer_voxel_coords = self.get_voxel_coords_at_radius(voxel_coords, 2, arr.shape)
+            downsampled_voxel_value = self.compute_downsampled_voxel_value(
                 arr,
                 kernel,
                 voxel_coords,
@@ -36,7 +38,7 @@ class MagicKernel3dDownsampler():
 
         return downsampled_arr
 
-    def create_x2_downsampled_grid(original_grid_shape: Tuple[int, int, int], fill_value) -> np.ndarray:
+    def create_x2_downsampled_grid(self, original_grid_shape: tuple[int, int, int], fill_value) -> np.ndarray:
         empty_downsampled_grid = np.full([
             ceil(original_grid_shape[0] / 2),
             ceil(original_grid_shape[1] / 2),
@@ -44,7 +46,7 @@ class MagicKernel3dDownsampler():
         ], fill_value)
         return empty_downsampled_grid
 
-    def extract_target_voxels_coords(arr_shape: Tuple[int, int, int]):
+    def extract_target_voxels_coords(self, arr_shape: tuple[int, int, int]):
         '''
         Takes 3D arr shape (X, Y, Z;), calculates max_grid_coords (-1 from each dimension)
         and returns coords of target voxels (every other in all three dimensions)
@@ -61,7 +63,7 @@ class MagicKernel3dDownsampler():
         # TODO: assert permutations == grid x/2 y/2 z/2
         return tuple(permutations)
 
-    def get_voxel_coords_at_radius(target_voxel_coords: Tuple[int, int, int], radius: int, arr_shape: Tuple[int, int, int]):
+    def get_voxel_coords_at_radius(self, target_voxel_coords: Tuple[int, int, int], radius: int, arr_shape: tuple[int, int, int]) -> tuple[int, int ,int]:
         '''
         Takes coords of a single target voxel and radius (e.g. 1 for inner, 2 for outer layer)
         and returns a list/arr of coords of voxels in surrounding depth layer according to radius
@@ -70,16 +72,16 @@ class MagicKernel3dDownsampler():
         p = np.array(target_voxel_coords)
         ndim = len(p)
         # indices range for offsets for all layers (e.g. [-2, -1, 0, 1, 2])
-        offset_idx_range_all_layers = _compute_offset_indices_from_radius(radius)
+        offset_idx_range_all_layers = self.compute_offset_indices_from_radius(radius)
         # indices range for offsets for just inner layers (e.g. [-1, 0, 1])
-        offset_idx_range_inner_layers = _compute_offset_indices_from_radius(radius - 1)
+        offset_idx_range_inner_layers = self.compute_offset_indices_from_radius(radius - 1)
 
         # arr of all possible offsets if we select all layers (not just surface)
         offsets_all_layers = np.array(tuple(product(offset_idx_range_all_layers, repeat=ndim)))
         # arr of all possible offsets if we select just inner layers (except surface)
         offsets_inner_layers = np.array(tuple(product(offset_idx_range_inner_layers, repeat=ndim)))
         # arr of offsets corresponding to just surface layer (what is actually required)
-        offsets_surface_layer = _setdiff2d_set(offsets_all_layers, offsets_inner_layers)
+        offsets_surface_layer = self.setdiff2d_set(offsets_all_layers, offsets_inner_layers)
 
         # TODO: assert if length of offsets_surface is equal to len offsets minus len offsets_inside
 
@@ -93,6 +95,8 @@ class MagicKernel3dDownsampler():
         # checking for possible out-of-bound indeces
         if (voxels_at_radius < origin).any():
             voxels_at_radius = np.fmax(voxels_at_radius, origin)
+
+        # TODO: Type check
         if (voxels_at_radius > max_grid_coords).any():
             voxels_at_radius = np.fmin(voxels_at_radius, max_grid_coords)
 
@@ -100,7 +104,7 @@ class MagicKernel3dDownsampler():
         voxels_at_radius = list(map(tuple, voxels_at_radius))
         return voxels_at_radius
 
-    def compute_downsampled_voxel_value(arr: np.ndarray,
+    def compute_downsampled_voxel_value(self, arr: np.ndarray,
                 kernel: Tuple[int, int, int, int, int],
                 voxel_coords: Tuple[int, int, int],
                 inner_layer_voxel_coords: Tuple[int, int, int],
@@ -124,6 +128,3 @@ class MagicKernel3dDownsampler():
         # print(new_value)
         return new_value
     
-if __name__ == '__main__':
-    # __testing()
-    __testing_with_dummy_arr()

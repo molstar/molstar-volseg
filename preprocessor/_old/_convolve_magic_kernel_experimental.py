@@ -1,12 +1,14 @@
-from typing import List
 import numpy as np
 from scipy import ndimage, signal
+
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.downsampling.downsampling import \
+    generate_kernel_3d_arr
 
 if __name__ == '__main__':
 
     k = generate_kernel_3d_arr([1, 4, 6])
 
-    a = np.arange(125).reshape(5,5,5).astype(np.float64)
+    a = np.arange(125).reshape(shape=(5, 5, 5)).astype(np.float64)
     # a = np.random.normal(0, 10, (5, 5, 5))#.astype(np.int)
 
     print('ORIGINAL ARR')

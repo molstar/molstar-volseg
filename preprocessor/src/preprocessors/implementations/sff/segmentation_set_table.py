@@ -1,6 +1,8 @@
 import copy
 from typing import Dict, Tuple, Set, Union
 
+import numpy as np
+
 
 class SegmentationSetTable:
     def __init__(self, lattice, value_to_segment_id_dict_for_specific_lattice_id):

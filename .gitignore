@@ -20,8 +20,8 @@ preprocessor/sample_volumes/
 requirements.txt_COPY
 
 preprocessor/fake_segmentations/
-preprocessor/data/real_volumes_for_converstion_to_fake_sff/*
-!preprocessor/data/real_volumes_for_converstion_to_fake_sff/.gitkeep
+preprocessor/data/real_volumes_for_conversion_to_fake_sff/*
+!preprocessor/data/real_volumes_for_conversion_to_fake_sff/.gitkeep
 preprocessor/data/fake_raw_input_files/*
 !preprocessor/data/fake_raw_input_files/.gitkeep
 db/emdb/

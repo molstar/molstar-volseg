@@ -5,6 +5,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preproc
 from preprocessor.src.preprocessors.i_data_preprocessor import IDataPreprocessor
 from preprocessor.src.service.i_preprocessor_service import IPreprocessorService
 
+
 class PreprocessorService(IPreprocessorService):
     def __init__(self, preprocessors: List[IDataPreprocessor]):
         # temp implementation, TODO: dict with keys 'SFF', 'OME-Zarr' etc., enum etc. or something else
