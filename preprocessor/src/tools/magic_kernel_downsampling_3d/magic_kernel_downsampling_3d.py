@@ -63,7 +63,7 @@ class MagicKernel3dDownsampler():
         # TODO: assert permutations == grid x/2 y/2 z/2
         return tuple(permutations)
 
-    def get_voxel_coords_at_radius(self, target_voxel_coords: Tuple[int, int, int], radius: int, arr_shape: tuple[int, int, int]) -> tuple[int, int ,int]:
+    def get_voxel_coords_at_radius(self, target_voxel_coords: Tuple[int, int, int], radius: int, arr_shape: tuple[int, int, int]) -> list[int, int ,int]:
         '''
         Takes coords of a single target voxel and radius (e.g. 1 for inner, 2 for outer layer)
         and returns a list/arr of coords of voxels in surrounding depth layer according to radius
