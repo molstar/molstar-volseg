@@ -11,7 +11,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants i
 from db.interface.i_preprocessed_db import IPreprocessedDb
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import SFFPreprocessor
 
-RAW_INPUT_FILES_DIR = Path(__file__).parent / 'raw_input_files'
+RAW_INPUT_FILES_DIR = Path(__file__).parent / 'data/raw_input_files'
 
 
 def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict:

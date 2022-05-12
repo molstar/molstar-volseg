@@ -18,15 +18,15 @@ def open_zarr_structure_from_path(path: Path) -> zarr.hierarchy.Group:
 class SFFPreprocessor(IDataPreprocessor):
     # TODO: import from e.g. axis methods etc.
 
-    from _hdf5_to_zarr import hdf5_to_zarr
-    from _volume_map_methods import read_volume_map_to_object, normalize_axis_order
-    from _process_X_data_methods import process_volume_data, process_segmentation_data
-    from _metadata_methods import temp_save_metadata, extract_annotation_metadata, extract_grid_metadata
-    from _volume_map_methods import read_and_normalize_volume_map, read_volume_data
+    from ._hdf5_to_zarr import hdf5_to_zarr
+    from ._volume_map_methods import read_volume_map_to_object, normalize_axis_order
+    from ._process_X_data_methods import process_volume_data, process_segmentation_data
+    from ._metadata_methods import temp_save_metadata, extract_annotation_metadata, extract_grid_metadata
+    from ._volume_map_methods import read_and_normalize_volume_map, read_volume_data
 
     def __init__(self):
         # path to root of temporary storage for zarr hierarchy
-        self.temp_root_path = Path(__file__).parents[1] / 'temp_zarr_hierarchy_storage'
+        self.temp_root_path = Path(__file__).parents[1] / 'data/temp_zarr_hierarchy_storage'
         self.magic_kernel = MagicKernel3dDownsampler()
         self.temp_zarr_structure_path = None
 

@@ -1,7 +1,7 @@
 import math
 from typing import Dict, List
 
-from _category_set_downsampling_methods import *
+from ._category_set_downsampling_methods import *
 from preprocessor.src.preprocessors.implementations.sff.downsampling_level_dict import DownsamplingLevelDict
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DOWNSAMPLING_KERNEL
 from preprocessor.src.preprocessors.implementations.sff.segmentation_set_table import SegmentationSetTable

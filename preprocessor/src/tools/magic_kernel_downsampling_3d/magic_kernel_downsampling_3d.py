@@ -6,7 +6,7 @@ from math import ceil
 class MagicKernel3dDownsampler():
     '''Deprecated. Own inefficient implementation of magic kernel downsampling. Current pipeline uses scipy convovle'''
 
-    from _helper_methods import compute_offset_indices_from_radius, setdiff2d_set, generate_dummy_arr
+    from ._helper_methods import compute_offset_indices_from_radius, setdiff2d_set, generate_dummy_arr
 
     def downsample_using_magic_kernel(self, arr: np.ndarray, kernel: Tuple[int, int, int, int, int]) -> np.ndarray:
         '''
