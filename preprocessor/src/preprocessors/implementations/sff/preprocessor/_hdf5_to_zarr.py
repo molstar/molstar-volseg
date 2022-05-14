@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import h5py
@@ -13,12 +14,16 @@ def hdf5_to_zarr(temp_root_path: Path, file_path: Path) -> Path:
     '''
     global temp_zarr_structure_path
     temp_zarr_structure_path = temp_root_path / file_path.stem
-    store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(temp_zarr_structure_path))
-    # directory store does not need to be closed, zip does
-
-    hdf5_file: h5py.File = h5py.File(file_path, mode='r')
-    hdf5_file.visititems(__visitor_function)
-    hdf5_file.close()
+    try:
+        assert temp_zarr_structure_path.exists() == False, \
+            f'temp_zarr_structure_path: {temp_zarr_structure_path} already exists'
+        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(temp_zarr_structure_path))
+        # directory store does not need to be closed, zip does
+        hdf5_file: h5py.File = h5py.File(file_path, mode='r')
+        hdf5_file.visititems(__visitor_function)
+        hdf5_file.close()
+    except Exception as e:
+        logging.error(e, stack_info=True, exc_info=True)
     return temp_zarr_structure_path
 
 
@@ -41,6 +46,7 @@ def __visitor_function(name: str, node: h5py.Dataset) -> None:
             arr = zarr.open_array(temp_zarr_structure_path / node_name, mode='w', shape=node.shape,
                                   dtype=node.dtype)
             arr[...] = node[()]
-    else:
-        # node is a group
+    elif isinstance(node, h5py.Group):
         zarr.open_group(temp_zarr_structure_path / node_name, mode='w')
+    else:
+        raise Exception('h5py node is neither dataset nor group')
