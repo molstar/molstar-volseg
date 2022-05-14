@@ -54,7 +54,6 @@ def normalize_axis_order(map_object: gemmi.Ccp4Map):
         logging.error(e, stack_info=True, exc_info=True)
         # logger instead of logging
         # logging.findCaller(stack_info=True)
-        raise
     return map_object
 
 

@@ -16,8 +16,6 @@ def open_zarr_structure_from_path(path: Path) -> zarr.hierarchy.Group:
 
 
 class SFFPreprocessor(IDataPreprocessor):
-    # TODO: import from e.g. axis methods etc.
-
     from ._hdf5_to_zarr import hdf5_to_zarr
     from ._volume_map_methods import read_volume_map_to_object, normalize_axis_order
     from ._process_X_data_methods import process_volume_data, process_segmentation_data
