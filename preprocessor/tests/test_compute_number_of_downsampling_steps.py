@@ -13,10 +13,13 @@ class TestComputeNumberOfDownsamplingSteps(unittest.TestCase):
         downsampling_factor = 2 ** 3
         test_suite = [
             (120 ** 3, np.uint8, 1),
+            (120 ** 3, np.float32, 1),
             (1000 ** 3, np.uint8, 2),
             (1000 ** 3, np.float32, 3),
-            (20 ** 3, np.float32, 1),
-            (120 ** 3, np.float32, 1)
+            (1 ** 3, np.float32, 1),
+            (1 ** 3, np.uint8, 1),
+            (5000 ** 3, np.float32, 5),
+            (5000 ** 3, np.uint8, 4)          
         ]
 
         for input_grid_size, grid_dtype, expected_nsteps in test_suite:
