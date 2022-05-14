@@ -72,10 +72,10 @@ def create_category_set_downsamplings(
     for i in range(downsampling_steps):
         current_set_table = SegmentationSetTable(original_data, value_to_segment_id_dict_for_specific_lattice_id)
         # on first iteration (i.e. when doing x2 downsampling), it takes original_data and initial_set_table with set of singletons 
-        levels.append(downsample_categorical_data_using_category_sets(magic_kernel, levels[i], current_set_table))
+        levels.append(downsample_categorical_data(magic_kernel, levels[i], current_set_table))
 
     # store levels list in zarr structure (can be separate function)
-    store_downsampling_levels_in_zarr_structure(levels, downsampled_data_group)
+    store_downsampling_levels_in_zarr(levels, downsampled_data_group)
 
 
 def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: np.ndarray,

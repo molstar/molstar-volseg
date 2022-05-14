@@ -7,7 +7,7 @@ from preprocessor.src.preprocessors.implementations.sff.segmentation_set_table i
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
 
 
-def store_downsampling_levels_in_zarr_structure(levels_list: list[DownsamplingLevelDict],
+def store_downsampling_levels_in_zarr(levels_list: list[DownsamplingLevelDict],
                                                 downsampled_data_group: zarr.hierarchy.Group):
     for level_dict in levels_list:
         grid = level_dict.get_grid()
@@ -36,7 +36,7 @@ def store_downsampling_levels_in_zarr_structure(levels_list: list[DownsamplingLe
         table_obj_arr[...] = [table.get_serializable_repr()]
 
 
-def downsample_categorical_data_using_category_sets(magic_kernel: MagicKernel3dDownsampler,
+def downsample_categorical_data(magic_kernel: MagicKernel3dDownsampler,
                                                     previous_level_dict: DownsamplingLevelDict,
                                                     current_set_table: SegmentationSetTable) -> DownsamplingLevelDict:
     '''
@@ -69,7 +69,7 @@ def downsample_categorical_data_using_category_sets(magic_kernel: MagicKernel3dD
                             start_coords[2]: end_coords[2]
                             ]
 
-        new_id: int = downsample_2x2x2_categorical_block(block, current_set_table, previous_level_set_table)
+        new_id: int = downsample_2x2x2_block(block, current_set_table, previous_level_set_table)
         # putting that id in the location of new grid corresponding to that block
         current_level_grid[
             round(start_coords[0] / 2),
@@ -92,7 +92,7 @@ def downsample_categorical_data_using_category_sets(magic_kernel: MagicKernel3dD
     return new_dict
 
 
-def downsample_2x2x2_categorical_block(block: np.ndarray, current_table: SegmentationSetTable,
+def downsample_2x2x2_block(block: np.ndarray, current_table: SegmentationSetTable,
                                        previous_table: SegmentationSetTable) -> int:
     potentially_new_category: set = compute_union(block, previous_table)
     category_id: int = current_table.resolve_category(potentially_new_category)

@@ -7,7 +7,7 @@ import numpy as np
 class SegmentationSetTable:
     def __init__(self, lattice, value_to_segment_id_dict_for_specific_lattice_id):
         self.value_to_segment_id_dict = value_to_segment_id_dict_for_specific_lattice_id
-        self.entries: Dict = self.__convert_lattice_to_dict_of_sets(lattice)
+        self.entries: Dict = self.__lattice_to_dict_of_sets(lattice)
         
     def get_serializable_repr(self) -> Dict:
         '''
@@ -19,7 +19,7 @@ class SegmentationSetTable:
 
         return d
     
-    def __convert_lattice_to_dict_of_sets(self, lattice: np.ndarray) -> Dict:
+    def __lattice_to_dict_of_sets(self, lattice: np.ndarray) -> Dict:
         '''
         Converts original latice to dict of singletons.
         Each singleton should contain segment ID rather than value

@@ -1,3 +1,4 @@
+import asyncio
 from timeit import default_timer as timer
 from tracemalloc import stop
 from typing import Tuple
@@ -71,3 +72,7 @@ class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
                     print(f'      METHOD: {method} took {measurement} seconds')
                     if OVERWRITE_GOLD_STANDARD:
                         write_dict_to_json(d=d, filename=GOLD_STANDARD_FILENAME)
+
+if __name__ == '__main__':
+    t = TestSlicingMethodsBenchmarking()
+    asyncio.run(t.test())

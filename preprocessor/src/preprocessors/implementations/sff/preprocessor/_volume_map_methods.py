@@ -1,11 +1,12 @@
 from decimal import getcontext, ROUND_CEILING, Decimal
+import logging
 from pathlib import Path
 
 import gemmi
 import numpy as np
 
 
-def read_ccp4_words_to_dict(m: gemmi.Ccp4Map) -> dict:
+def ccp4_words_to_dict(m: gemmi.Ccp4Map) -> dict:
     ctx = getcontext()
     ctx.rounding = ROUND_CEILING
     d = {}
@@ -31,7 +32,7 @@ def read_volume_data(m: gemmi.Ccp4Map, force_dtype=np.float32) -> np.ndarray:
     return arr
 
 
-def read_and_normalize_volume_map(volume_file_path: Path) -> np.ndarray:
+def read_and_normalize_map(volume_file_path: Path) -> np.ndarray:
     map_object = read_volume_map_to_object(volume_file_path)
     normalized_axis_map_object = normalize_axis_order(map_object)
     arr = read_volume_data(normalized_axis_map_object)
@@ -44,9 +45,16 @@ def normalize_axis_order(map_object: gemmi.Ccp4Map):
     '''
     # just reorders axis to X, Y, Z (https://gemmi.readthedocs.io/en/latest/grid.html#setup)
     map_object.setup(float('nan'), gemmi.MapSetup.ReorderOnly)
-    ccp4_header = read_ccp4_words_to_dict(map_object)
+    ccp4_header = ccp4_words_to_dict(map_object)
     new_axis_order = ccp4_header['MAPC'], ccp4_header['MAPR'], ccp4_header['MAPS']
-    assert new_axis_order == (1, 2, 3), f'Axis order is {new_axis_order}, should be (1, 2, 3) or X, Y, Z'
+    try:
+        assert new_axis_order == (1, 2, 3), f'Axis order is {new_axis_order}, should be (1, 2, 3) or X, Y, Z'
+    except AssertionError as e:
+        # TODO: check if it should be logger instead LATER ON
+        logging.error(e, stack_info=True, exc_info=True)
+        # logger instead of logging
+        # logging.findCaller(stack_info=True)
+        raise
     return map_object
 
 

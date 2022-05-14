@@ -22,7 +22,7 @@ class SFFPreprocessor(IDataPreprocessor):
     from ._volume_map_methods import read_volume_map_to_object, normalize_axis_order
     from ._process_X_data_methods import process_volume_data, process_segmentation_data
     from ._metadata_methods import temp_save_metadata, extract_annotation_metadata, extract_grid_metadata
-    from ._volume_map_methods import read_and_normalize_volume_map, read_volume_data
+    from ._volume_map_methods import read_and_normalize_map, read_volume_data
 
     def __init__(self):
         # path to root of temporary storage for zarr hierarchy
@@ -37,7 +37,7 @@ class SFFPreprocessor(IDataPreprocessor):
         if segm_file_path is not None:
             self.temp_zarr_structure_path = self.hdf5_to_zarr(self.temp_root_path, segm_file_path)
         else:
-            self.__initialize_empty_zarr_structure(volume_file_path)
+            self.__init_empty_zarr_structure(volume_file_path)
         # Re-create zarr hierarchy
         zarr_structure: zarr.hierarchy.group = open_zarr_structure_from_path(
             self.temp_zarr_structure_path)
@@ -60,7 +60,7 @@ class SFFPreprocessor(IDataPreprocessor):
 
         return self.temp_zarr_structure_path
 
-    def __initialize_empty_zarr_structure(self, volume_file_path: Path):
+    def __init_empty_zarr_structure(self, volume_file_path: Path):
         '''
         Creates EMPTY temp zarr structure for the case when just volume file is provided
         '''

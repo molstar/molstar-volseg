@@ -9,7 +9,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants i
     SEGMENTATION_DATA_GROUPNAME
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._sfftk_methods import \
     open_hdf5_as_segmentation_object
-from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import read_ccp4_words_to_dict
+from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import ccp4_words_to_dict
 
 
 def extract_annotation_metadata(segm_file_path: Path) -> dict:
@@ -65,7 +65,7 @@ def extract_grid_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> d
             lattice_dict[lattice_id] = segm_downsamplings
             lattice_ids.append(lattice_id)
 
-    d = read_ccp4_words_to_dict(map_object)
+    d = ccp4_words_to_dict(map_object)
 
     original_voxel_size: tuple[float, float, float] = (
         d['xLength'] / d['NC'],

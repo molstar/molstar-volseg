@@ -17,7 +17,7 @@ def lattice_data_to_np_arr(data: str, dtype: str, arr_shape: tuple[int, int, int
     return np.frombuffer(byteseq, dtype=dtype).reshape(arr_shape, order='F')
 
 
-def create_value_to_segment_id_mapping(zarr_structure):
+def map_value_to_segment_id(zarr_structure):
     '''
     Iterates over zarr structure and returns dict with
     keys=lattice_id, and for each lattice id => keys=grid values, values=segm ids

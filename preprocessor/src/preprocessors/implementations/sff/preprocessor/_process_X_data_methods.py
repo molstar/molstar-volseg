@@ -8,7 +8,7 @@ import zarr
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import SEGMENTATION_DATA_GROUPNAME, \
     VOLUME_DATA_GROUPNAME, MIN_GRID_SIZE
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._segmentation_methods import \
-    create_value_to_segment_id_mapping, lattice_data_to_np_arr
+    map_value_to_segment_id, lattice_data_to_np_arr
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import read_volume_data
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.downsampling.downsampling import \
     compute_number_of_downsampling_steps, create_volume_downsamplings, create_category_set_downsamplings
@@ -41,7 +41,7 @@ def process_segmentation_data(magic_kernel: MagicKernel3dDownsampler, zarr_struc
     Extracts segmentation data from lattice, downsamples it, stores to zarr structure
     '''
     segm_data_gr: zarr.hierarchy.group = zarr_structure.create_group(SEGMENTATION_DATA_GROUPNAME)
-    value_to_segment_id_dict = create_value_to_segment_id_mapping(zarr_structure)
+    value_to_segment_id_dict = map_value_to_segment_id(zarr_structure)
 
     for gr_name, gr in zarr_structure.lattice_list.groups():
         # gr is a 'lattice' obj in lattice list
