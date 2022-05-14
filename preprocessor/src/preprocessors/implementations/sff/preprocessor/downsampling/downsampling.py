@@ -1,3 +1,4 @@
+import logging
 import math
 from typing import Dict, List
 
@@ -28,17 +29,12 @@ def create_volume_downsamplings(original_data: np.ndarray, downsampling_steps: i
     '''
     Take original volume data, do all downsampling levels and store in zarr struct one by one
     '''
-    # TODO: do we need to make it uniform float64 as other other level grids? x1 is float32
-    # original_data = original_data.astype(np.float)
     current_level_data = original_data
     __store_single_volume_downsampling_in_zarr_stucture(current_level_data, downsampled_data_group, 1)
     for i in range(downsampling_steps):
         current_ratio = 2 ** (i + 1)
-
-        # switching to convolve
-        # downsampled_data = downsample_using_magic_kernel(current_level_data, DOWNSAMPLING_KERNEL)
         kernel = generate_kernel_3d_arr(list(DOWNSAMPLING_KERNEL))
-        downsampled_data = signal.convolve(current_level_data, kernel, mode='same', method='fft')
+        downsampled_data: np.ndarray = signal.convolve(current_level_data, kernel, mode='same', method='fft')
         downsampled_data = downsampled_data[::2, ::2, ::2]
 
         __store_single_volume_downsampling_in_zarr_stucture(downsampled_data, downsampled_data_group, current_ratio,
@@ -97,11 +93,15 @@ def generate_kernel_3d_arr(pattern: List[int]) -> np.ndarray:
     Generates conv kernel based on pattern provided (e.g. [1,4,6,4,1]).
     https://stackoverflow.com/questions/71739757/generate-3d-numpy-array-based-on-provided-pattern/71742892#71742892
     '''
-    pattern = pattern[0:3]
-    x = np.array(pattern[-1]).reshape([1, 1, 1])
-    for p in reversed(pattern[:-1]):
-        x = np.pad(x, mode='constant', constant_values=p, pad_width=1)
+    try:
+        assert len(pattern) == 5, 'pattern should have length 5'
+        pattern = pattern[0:3]
+        x = np.array(pattern[-1]).reshape([1, 1, 1])
+        for p in reversed(pattern[:-1]):
+            x = np.pad(x, mode='constant', constant_values=p, pad_width=1)
 
-    k = (1 / x.sum()) * x
-    # print(f'Kernel generated (further divided by sum): {x}')
+        k = (1 / x.sum()) * x
+        assert k.shape == (5, 5, 5)
+    except AssertionError as e:
+        logging.error(e, stack_info=True, exc_info=True)
     return k

@@ -52,8 +52,6 @@ def normalize_axis_order(map_object: gemmi.Ccp4Map):
     except AssertionError as e:
         # TODO: check if it should be logger instead LATER ON
         logging.error(e, stack_info=True, exc_info=True)
-        # logger instead of logging
-        # logging.findCaller(stack_info=True)
     return map_object
 
 

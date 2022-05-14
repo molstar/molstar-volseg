@@ -1,4 +1,5 @@
 import base64
+import logging
 import zlib
 
 import numpy as np
@@ -10,11 +11,15 @@ def lattice_data_to_np_arr(data: str, dtype: str, arr_shape: tuple[int, int, int
     Under the hood, decodes lattice data into zlib-zipped data, decompress it to bytes,
     and converts to np arr based on dtype (sff mode) and shape (sff size)
     '''
-    decoded_data = base64.b64decode(data)
-    byteseq = zlib.decompress(decoded_data)
-    # order should be F as frontend requests in X,Y,Z order,
-    # while numpy by default has Z,Y,X (C order)
-    return np.frombuffer(byteseq, dtype=dtype).reshape(arr_shape, order='F')
+    try:
+        decoded_data = base64.b64decode(data)
+        byteseq = zlib.decompress(decoded_data)
+        # order should be F as frontend requests in X,Y,Z order,
+        # while numpy by default has Z,Y,X (C order)
+        arr = np.frombuffer(byteseq, dtype=dtype).reshape(arr_shape, order='F')
+    except Exception as e:
+        logging.error(e, stack_info=True, exc_info=True)
+    return arr
 
 
 def map_value_to_segment_id(zarr_structure):

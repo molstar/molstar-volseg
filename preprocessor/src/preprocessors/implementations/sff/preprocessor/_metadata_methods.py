@@ -31,7 +31,6 @@ def extract_grid_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> d
     # convert to ints
     volume_downsamplings = sorted([int(x) for x in volume_downsamplings])
 
-    # TODO:
     mean_dict = {}
     std_dict = {}
     max_dict = {}

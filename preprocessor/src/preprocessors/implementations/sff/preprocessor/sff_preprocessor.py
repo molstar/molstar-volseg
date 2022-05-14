@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 import zarr
 import numpy as np
@@ -63,4 +64,9 @@ class SFFPreprocessor(IDataPreprocessor):
         Creates EMPTY temp zarr structure for the case when just volume file is provided
         '''
         self.temp_zarr_structure_path = self.temp_root_path / volume_file_path.stem
-        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(self.temp_zarr_structure_path))
+        try:
+            assert self.temp_zarr_structure_path.exists() == False, \
+                f'temp_zarr_structure_path: {self.temp_zarr_structure_path} already exists'
+            store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(self.temp_zarr_structure_path))
+        except Exception as e:
+            logging.error(e, stack_info=True, exc_info=True)
