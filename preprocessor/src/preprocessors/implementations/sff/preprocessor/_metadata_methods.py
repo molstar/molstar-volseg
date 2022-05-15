@@ -108,4 +108,4 @@ def extract_grid_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> d
 
 def temp_save_metadata(metadata: dict, metadata_filename: Path, temp_dir_path: Path) -> None:
     with (temp_dir_path / metadata_filename).open('w') as fp:
-        json.dump(metadata, fp)
+        json.dump(metadata, fp, indent=4)
