@@ -22,11 +22,10 @@ class SFFPreprocessor(IDataPreprocessor):
     from ._volume_map_methods import read_volume_map_to_object, normalize_axis_order
     from ._process_X_data_methods import process_volume_data, process_segmentation_data
     from ._metadata_methods import temp_save_metadata, extract_annotation_metadata, extract_grid_metadata
-    from ._volume_map_methods import read_and_normalize_map, read_volume_data
 
     def __init__(self):
         # path to root of temporary storage for zarr hierarchy
-        self.temp_root_path = Path(__file__).parents[1] / 'data/temp_zarr_hierarchy_storage'
+        self.temp_root_path = Path(__file__).parents[5] / 'data/temp_zarr_hierarchy_storage'
         self.magic_kernel = MagicKernel3dDownsampler()
         self.temp_zarr_structure_path = None
 
@@ -36,7 +35,7 @@ class SFFPreprocessor(IDataPreprocessor):
         '''
         try:
             if segm_file_path is not None:
-                self.temp_zarr_structure_path = self.hdf5_to_zarr(self.temp_root_path, segm_file_path)
+                self.temp_zarr_structure_path = SFFPreprocessor.hdf5_to_zarr(self.temp_root_path, segm_file_path)
             else:
                 self.__init_empty_zarr_structure(volume_file_path)
             # Re-create zarr hierarchy
@@ -44,15 +43,15 @@ class SFFPreprocessor(IDataPreprocessor):
                 self.temp_zarr_structure_path)
 
             # read map
-            map_object = self.read_volume_map_to_object(volume_file_path)
-            normalized_axis_map_object = self.normalize_axis_order(map_object)
+            map_object = SFFPreprocessor.read_volume_map_to_object(volume_file_path)
+            normalized_axis_map_object = SFFPreprocessor.normalize_axis_order(map_object)
 
             if segm_file_path is not None:
-                self.process_segmentation_data(self.magic_kernel, zarr_structure)
+                SFFPreprocessor.process_segmentation_data(self.magic_kernel, zarr_structure)
 
-            self.process_volume_data(zarr_structure, normalized_axis_map_object, volume_force_dtype)
+            SFFPreprocessor.process_volume_data(zarr_structure, normalized_axis_map_object, volume_force_dtype)
 
-            grid_metadata = self.extract_grid_metadata(zarr_structure, normalized_axis_map_object)
+            grid_metadata = SFFPreprocessor.extract_grid_metadata(zarr_structure, normalized_axis_map_object)
             
             grid_dimensions: list = LocalDiskPreprocessedMetadata(grid_metadata).grid_dimensions()
             zarr_volume_arr_shape: list = list(get_volume_downsampling_from_zarr(1, zarr_structure).shape)
@@ -62,13 +61,15 @@ class SFFPreprocessor(IDataPreprocessor):
             assert grid_dimensions == zarr_segm_arr_shape, \
                 f'grid dimensions from metadata {grid_dimensions} are not equal to segmentation arr shape {zarr_segm_arr_shape}'
 
-            self.temp_save_metadata(grid_metadata, GRID_METADATA_FILENAME, self.temp_zarr_structure_path)
+            SFFPreprocessor.temp_save_metadata(grid_metadata, GRID_METADATA_FILENAME, self.temp_zarr_structure_path)
 
             if segm_file_path is not None:
-                annotation_metadata = self.extract_annotation_metadata(segm_file_path)
-                self.temp_save_metadata(annotation_metadata, ANNOTATION_METADATA_FILENAME, self.temp_zarr_structure_path)
+                annotation_metadata = SFFPreprocessor.extract_annotation_metadata(segm_file_path)
+                SFFPreprocessor.temp_save_metadata(annotation_metadata, ANNOTATION_METADATA_FILENAME, self.temp_zarr_structure_path)
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)
+            raise e
+
         return self.temp_zarr_structure_path
 
     def __init_empty_zarr_structure(self, volume_file_path: Path):
@@ -82,3 +83,4 @@ class SFFPreprocessor(IDataPreprocessor):
             store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(self.temp_zarr_structure_path))
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)
+            raise e

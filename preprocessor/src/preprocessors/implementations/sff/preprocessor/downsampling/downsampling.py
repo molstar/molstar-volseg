@@ -104,4 +104,5 @@ def generate_kernel_3d_arr(pattern: List[int]) -> np.ndarray:
         assert k.shape == (5, 5, 5)
     except AssertionError as e:
         logging.error(e, stack_info=True, exc_info=True)
+        raise e
     return k

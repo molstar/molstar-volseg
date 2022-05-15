@@ -3,7 +3,9 @@ from typing import Tuple
 import numpy as np
 from math import ceil
 
-class MagicKernel3dDownsampler():
+
+class MagicKernel3dDownsampler:
+
     '''Deprecated. Own inefficient implementation of magic kernel downsampling. Current pipeline uses scipy convovle'''
 
     from ._helper_methods import compute_offset_indices_from_radius, setdiff2d_set, generate_dummy_arr
@@ -72,16 +74,16 @@ class MagicKernel3dDownsampler():
         p = np.array(target_voxel_coords)
         ndim = len(p)
         # indices range for offsets for all layers (e.g. [-2, -1, 0, 1, 2])
-        offset_idx_range_all_layers = self.compute_offset_indices_from_radius(radius)
+        offset_idx_range_all_layers = MagicKernel3dDownsampler.compute_offset_indices_from_radius(radius)
         # indices range for offsets for just inner layers (e.g. [-1, 0, 1])
-        offset_idx_range_inner_layers = self.compute_offset_indices_from_radius(radius - 1)
+        offset_idx_range_inner_layers = MagicKernel3dDownsampler.compute_offset_indices_from_radius(radius - 1)
 
         # arr of all possible offsets if we select all layers (not just surface)
         offsets_all_layers = np.array(tuple(product(offset_idx_range_all_layers, repeat=ndim)))
         # arr of all possible offsets if we select just inner layers (except surface)
         offsets_inner_layers = np.array(tuple(product(offset_idx_range_inner_layers, repeat=ndim)))
         # arr of offsets corresponding to just surface layer (what is actually required)
-        offsets_surface_layer = self.setdiff2d_set(offsets_all_layers, offsets_inner_layers)
+        offsets_surface_layer = MagicKernel3dDownsampler.setdiff2d_set(offsets_all_layers, offsets_inner_layers)
 
         # TODO: assert if length of offsets_surface is equal to len offsets minus len offsets_inside
 

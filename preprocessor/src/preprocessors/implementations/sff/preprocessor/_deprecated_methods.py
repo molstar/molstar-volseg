@@ -9,7 +9,7 @@ def downsample_categorical_data(self, arr: np.ndarray, rate: int) -> np.ndarray:
     return arr[::rate, ::rate, ::rate]
 
 
-def create_downsampling(original_data, rate, downsampled_data_group, isCategorical=False):
+def create_downsampling(self, original_data, rate, downsampled_data_group, isCategorical=False):
     '''Deprecated. Creates zarr array (dataset) filled with downsampled data'''
     # now this function is just for volume data dwnsmpling
 

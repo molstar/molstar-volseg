@@ -63,6 +63,9 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         perm_store = zarr.DirectoryStore(str(self.__path_to_object__(namespace, key)))
         zarr.copy_store(temp_store, perm_store, log=stdout)
 
+        print("A: " + str(temp_store_path))
+        print("B: " + GRID_METADATA_FILENAME)
+
         shutil.copy2(temp_store_path / GRID_METADATA_FILENAME, self.__path_to_object__(namespace, key) / GRID_METADATA_FILENAME)
         if (temp_store_path / ANNOTATION_METADATA_FILENAME).exists():
             shutil.copy2(temp_store_path / ANNOTATION_METADATA_FILENAME, self.__path_to_object__(namespace, key) / ANNOTATION_METADATA_FILENAME)
@@ -113,6 +116,8 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
 
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)
+            raise e
+
         return d
 
     async def read_slice(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask', timer_printout=False) -> ProcessedVolumeSliceData:
@@ -184,6 +189,8 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
                 }
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)
+            raise e
+
         return d
 
     async def read_grid_metadata(self, namespace: str, key: str) -> IPreprocessedMetadata:

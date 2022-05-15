@@ -19,6 +19,7 @@ def lattice_data_to_np_arr(data: str, dtype: str, arr_shape: tuple[int, int, int
         arr = np.frombuffer(byteseq, dtype=dtype).reshape(arr_shape, order='F')
     except Exception as e:
         logging.error(e, stack_info=True, exc_info=True)
+        raise e
     return arr
 
 
