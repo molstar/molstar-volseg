@@ -77,24 +77,43 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
 
     async def read(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int) -> Dict:
         '''
-        Deprecated and will not work.
+        Deprecated.
         Reads specific (down)sampling of segmentation data from specific entry from DB
         based on key (e.g. EMD-1111), lattice_id (e.g. 0), and downsampling ratio
         (1 => original data, 2 => downsampled by factor of 2 etc.)
         '''
         print('This method is deprecated, please use read_slice method instead')
-        path: Path = self.__path_to_object__(namespace=namespace, key=key)
-        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
-        # Re-create zarr hierarchy from opened store
-        root: zarr.hierarchy.group = zarr.group(store=store)
-        
-        read_segm_arr: np.ndarray = root[SEGMENTATION_DATA_GROUPNAME][lattice_id]
-        read_volume_arr: np.ndarray = root[VOLUME_DATA_GROUPNAME]
-        # both volume and segm data
-        return {
-            'segmentation': read_segm_arr,
-            'volume': read_volume_arr
-        }
+        try:
+            path: Path = self.__path_to_object__(namespace=namespace, key=key)
+            assert path.exists(), f'Path {path} does not exist'
+            root: zarr.hierarchy.group = open_zarr_structure_from_path(path)
+            segm_arr = None
+            segm_dict = None
+            if SEGMENTATION_DATA_GROUPNAME in root:
+                segm_arr = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].grid
+                segm_dict = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].set_table[0]
+            volume_arr: zarr.core.Array = root[VOLUME_DATA_GROUPNAME][down_sampling_ratio]
+            
+            if segm_arr:
+                d = {
+                    "segmentation_arr": {
+                        "category_set_ids": segm_arr,
+                        "category_set_dict": segm_dict
+                    },
+                    "volume_arr": volume_arr
+                }
+            else:
+                d = {
+                    "segmentation_arr": {
+                        "category_set_ids": None,
+                        "category_set_dict": None
+                    },
+                    "volume_arr": volume_arr
+                }
+
+        except Exception as e:
+            logging.error(e, stack_info=True, exc_info=True)
+        return d
 
     async def read_slice(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask', timer_printout=False) -> ProcessedVolumeSliceData:
         '''
