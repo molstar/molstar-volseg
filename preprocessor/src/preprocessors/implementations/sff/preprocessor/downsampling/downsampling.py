@@ -14,7 +14,7 @@ def compute_number_of_downsampling_steps(min_grid_size: int, input_grid_size: in
     if input_grid_size <= min_grid_size:
         return 1
     # num_of_downsampling_steps: int = math.ceil(math.log2(input_grid_size/min_grid_size))
-    x1_filesize_bytes: int = input_grid_size * force_dtype().itemsize
+    x1_filesize_bytes: int = input_grid_size * force_dtype.itemsize
     num_of_downsampling_steps: int = int(math.log(
         x1_filesize_bytes / min_downsampled_file_size_bytes,
         factor
