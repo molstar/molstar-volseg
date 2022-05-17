@@ -58,10 +58,11 @@ class SFFPreprocessor(IDataPreprocessor):
             
             if segm_file_path is not None:
                 zarr_segm_arr_shape: list = list(get_segmentation_downsampling_from_zarr(1, zarr_structure, 0).shape)
-                assert grid_dimensions == zarr_volume_arr_shape, \
-                    f'grid dimensions from metadata {grid_dimensions} are not equal to volume arr shape {zarr_volume_arr_shape}'
-            assert grid_dimensions == zarr_segm_arr_shape, \
+                assert grid_dimensions == zarr_segm_arr_shape, \
                 f'grid dimensions from metadata {grid_dimensions} are not equal to segmentation arr shape {zarr_segm_arr_shape}'
+            
+            assert grid_dimensions == zarr_volume_arr_shape, \
+                    f'grid dimensions from metadata {grid_dimensions} are not equal to volume arr shape {zarr_volume_arr_shape}'
 
             SFFPreprocessor.temp_save_metadata(grid_metadata, GRID_METADATA_FILENAME, self.temp_zarr_structure_path)
 
