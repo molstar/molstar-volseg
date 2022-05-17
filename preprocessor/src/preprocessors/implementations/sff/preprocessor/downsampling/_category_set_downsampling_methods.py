@@ -78,7 +78,7 @@ def downsample_categorical_data(magic_kernel: MagicKernel3dDownsampler,
         ] = new_id
 
     # need to check before conversion to int as in int grid nans => some guge number
-    assert np.isnan(current_level_grid).any() is False, f'Segmentation grid contain NAN values'
+    assert np.isnan(current_level_grid).any() == False, f'Segmentation grid contain NAN values'
 
     current_level_grid = current_level_grid.astype(np.int32)
     # write grid into 'grid' key of new level dict

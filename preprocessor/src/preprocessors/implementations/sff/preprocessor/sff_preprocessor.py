@@ -53,9 +53,9 @@ class SFFPreprocessor(IDataPreprocessor):
 
             grid_metadata = SFFPreprocessor.extract_grid_metadata(zarr_structure, normalized_axis_map_object)
             
-            grid_dimensions: list = LocalDiskPreprocessedMetadata(grid_metadata).grid_dimensions()
+            grid_dimensions: list = list(LocalDiskPreprocessedMetadata(grid_metadata).grid_dimensions())
             zarr_volume_arr_shape: list = list(get_volume_downsampling_from_zarr(1, zarr_structure).shape)
-            zarr_segm_arr_shape: list = list(get_segmentation_downsampling_from_zarr(1, zarr_structure, 1).shape)
+            zarr_segm_arr_shape: list = list(get_segmentation_downsampling_from_zarr(1, zarr_structure, 0).shape)
             assert grid_dimensions == zarr_volume_arr_shape, \
                 f'grid dimensions from metadata {grid_dimensions} are not equal to volume arr shape {zarr_volume_arr_shape}'
             assert grid_dimensions == zarr_segm_arr_shape, \
