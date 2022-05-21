@@ -11,11 +11,12 @@ from scipy import ndimage, signal
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import SFFPreprocessor
 from skimage.measure import block_reduce
 from pprint import pprint
+from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import read_volume_data
 
 # TODO: put that on sabre
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
 
-DATA_PATH = Path("../data/raw_input_files")
+DATA_PATH = Path("preprocessor/data/raw_input_files")
 EMDB_DATA_PATH = DATA_PATH.joinpath("emdb")
 # DUMMY_ARR_SHAPE = (500, 500, 500)
 # DUMMY_ARR_SHAPE = (20,20,20)
@@ -23,7 +24,7 @@ EMDB_DATA_PATH = DATA_PATH.joinpath("emdb")
 # 2000 * 2000 * 800 grid 
 # REAL_MAP_FILEPATH = Path('emd_9199_.map')
 # 64**3 grid
-REAL_MAP_FILEPATH = EMDB_DATA_PATH.joinpath('emd-1832/emd-1832.map')
+REAL_MAP_FILEPATH = EMDB_DATA_PATH.joinpath('emd-1832/EMD-1832.map')
 # 640**3 grid
 # REAL_MAP_FILEPATH = Path('emd_13793.map')
 
@@ -81,7 +82,7 @@ def read_real_volume_data(volume_file_path: Path) -> np.ndarray:
     # from some big map e.g. emd_9199_.map (2000*2000*800)
     map_object = SFFPreprocessor.read_volume_map_to_object(volume_file_path)
     normalized_axis_map_object = SFFPreprocessor.normalize_axis_order(map_object)
-    real_arr = SFFPreprocessor.read_volume_data(normalized_axis_map_object)
+    real_arr = read_volume_data(normalized_axis_map_object)
 
     return real_arr
 
@@ -103,7 +104,7 @@ def run_benchmarking() -> Dict:
     print(f'shape of volume is {dummy_arr.shape}')
     # print(f'ORIGINAL DATA')
     # print((dummy_arr))
-    plot_volume_data_from_np_arr(dummy_arr, f'original_{dummy_arr.shape}-grid')
+    # plot_volume_data_from_np_arr(dummy_arr, f'original_{dummy_arr.shape}-grid')
     for method in LIST_OF_METHODS:
         d[method] = {}
         for mode in LIST_OF_MODES:
@@ -192,7 +193,7 @@ def approximate_equality_check(dict_with_arrs):
 def run_regular_benchmarking():
     '''Results are collected into dict (requires more memory)'''
     d = run_benchmarking()
-    plot_everything(d)
+    # plot_everything(d)
 
 
 def run_one_by_one_benchmarking():
@@ -201,5 +202,5 @@ def run_one_by_one_benchmarking():
 
 
 if __name__ == '__main__':
-    # run_regular_benchmarking()
-    run_one_by_one_benchmarking()
+    run_regular_benchmarking()
+    # run_one_by_one_benchmarking()
