@@ -135,7 +135,8 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             segm_dict = None
             if SEGMENTATION_DATA_GROUPNAME in root:
                 segm_arr = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].grid
-                assert np.array(box[1]) < np.array(segm_arr.shape)
+                assert (np.array(box[1]) <= np.array(segm_arr.shape)).all(), \
+                    f'requested box {box} does not correspond to arr dimensions'
                 segm_dict = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].set_table[0]
             volume_arr: zarr.core.Array = root[VOLUME_DATA_GROUPNAME][down_sampling_ratio]
             
