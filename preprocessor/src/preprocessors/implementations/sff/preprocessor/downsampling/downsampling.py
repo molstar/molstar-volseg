@@ -6,7 +6,7 @@ from ._category_set_downsampling_methods import *
 from preprocessor.src.preprocessors.implementations.sff.downsampling_level_dict import DownsamplingLevelDict
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DOWNSAMPLING_KERNEL
 from preprocessor.src.preprocessors.implementations.sff.segmentation_set_table import SegmentationSetTable
-from scipy import signal
+from scipy import signal, ndimage
 
 
 def compute_number_of_downsampling_steps(min_grid_size: int, input_grid_size: int, force_dtype: type, factor: int,
@@ -34,7 +34,8 @@ def create_volume_downsamplings(original_data: np.ndarray, downsampling_steps: i
     for i in range(downsampling_steps):
         current_ratio = 2 ** (i + 1)
         kernel = generate_kernel_3d_arr(list(DOWNSAMPLING_KERNEL))
-        downsampled_data: np.ndarray = signal.convolve(current_level_data, kernel, mode='same', method='fft')
+        # downsampled_data: np.ndarray = signal.convolve(current_level_data, kernel, mode='same', method='fft')
+        downsampled_data: np.ndarray = ndimage.convolve(current_level_data, kernel, mode='mirror', cval=0.0)
         downsampled_data = downsampled_data[::2, ::2, ::2]
 
         __store_single_volume_downsampling_in_zarr_stucture(downsampled_data, downsampled_data_group, current_ratio,
