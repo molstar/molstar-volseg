@@ -2,7 +2,6 @@ import numpy as np
 from ciftools.binary.encoding import BinaryCIFEncoder, DataType, DataTypeEnum
 from ciftools.binary.encoding.base.cif_encoder_base import CIFEncoderBase
 from ciftools.binary.encoding.impl.encoders.byte_array import ByteArrayCIFEncoder
-from ciftools.binary.encoding.impl.encoders.interval_quantization import IntervalQuantizationCIFEncoder
 from ciftools.writer.base import CategoryWriter, CategoryWriterProvider, FieldDesc
 
 from volume_server.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories._writer import CategoryDesc, \

@@ -41,6 +41,13 @@ class IPreprocessedMetadata(abc.ABC):
         Returns the number of points along each axis (X, Y, Z)
         '''
         pass
+    
+    @abc.abstractmethod
+    def sampled_grid_dimensions(self, level: int) -> List[int]:
+        '''
+        Returns the number of points along each axis (X, Y, Z) for specific downsampling level
+        '''
+        pass
 
     @abc.abstractmethod
     def mean(self, level: int)  -> np.float64:

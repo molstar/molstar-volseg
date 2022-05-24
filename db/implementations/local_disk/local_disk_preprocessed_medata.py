@@ -1,3 +1,4 @@
+import logging
 from typing import List, Dict
 
 import numpy as np
@@ -16,7 +17,13 @@ class LocalDiskPreprocessedMetadata(IPreprocessedMetadata):
         return self.raw_metadata['segmentation_lattice_ids']
 
     def segmentation_downsamplings(self, lattice_id: int) -> List[int]:
-        return self.raw_metadata['segmentation_downsamplings'][str(lattice_id)]
+        s = []
+        try:
+            s = self.raw_metadata['segmentation_downsamplings'][str(lattice_id)]
+        except Exception as e:
+            logging.error(e, stack_info=True, exc_info=True)
+        return s
+            
 
     def volume_downsamplings(self) -> List[int]:
         return self.raw_metadata['volume_downsamplings']
@@ -44,6 +51,12 @@ class LocalDiskPreprocessedMetadata(IPreprocessedMetadata):
         Returns the number of points along each axis (X, Y, Z)
         '''
         return self.raw_metadata['grid_dimensions']
+
+    def sampled_grid_dimensions(self, level: int) -> List[int]:
+        '''
+        Returns the number of points along each axis (X, Y, Z) for specific downsampling level
+        '''
+        return self.raw_metadata['sampled_grid_dimensions'][str(level)]
 
     def mean(self, level: int)  -> np.float64:
         '''Return mean for data at given downsampling level'''

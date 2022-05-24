@@ -1,0 +1,53 @@
+
+
+import unittest
+from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
+
+class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
+    async def test(self):
+        db = LocalDiskPreprocessedDb()
+
+        test_suite_entries = [
+            ('emdb', 'emd-1832'),
+            ('emdb', 'emd-99999')
+        ]
+
+        for namespace, entry_id in test_suite_entries:
+            metadata = await db.read_grid_metadata(namespace, entry_id)
+            volume_downsamplings = metadata.volume_downsamplings()
+
+            if entry_id != 'emd-99999':
+                segmentation_downsamplings = metadata.segmentation_downsamplings(0)
+                assert volume_downsamplings == segmentation_downsamplings, \
+                    f'downsamplings are not equal for volume and segmentation: \
+                        {volume_downsamplings} != {segmentation_downsamplings} \
+                            for {namespace, entry_id}'
+            
+            for downsampling_ratio in volume_downsamplings:
+                arr_dict: dict = await db.read(namespace, entry_id, 0, downsampling_ratio)
+                volume_arr = arr_dict['volume_arr']
+                
+                if downsampling_ratio == 1:
+                    orig_grid_dimensions: list = metadata.grid_dimensions()    
+                
+                grid_dimensions: list = metadata.sampled_grid_dimensions(downsampling_ratio)
+
+                if entry_id != 'emd-99999':
+                    segmentation_arr = arr_dict['segmentation_arr']['category_set_ids']
+                    self.assertEqual(volume_arr.shape, segmentation_arr.shape,
+                        f'Not equal {volume_arr.shape, segmentation_arr.shape}'
+                    )
+
+                self.assertEqual(volume_arr.shape, tuple(grid_dimensions),
+                    f'Not equal {volume_arr.shape, tuple(grid_dimensions)}'
+                )
+                
+                if downsampling_ratio == 1:
+                    self.assertEqual(volume_arr.shape, tuple(orig_grid_dimensions),
+                        f'Not equal {volume_arr.shape, tuple(orig_grid_dimensions)}'
+                    )
+
+            
+
+
+

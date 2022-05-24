@@ -1,31 +1,36 @@
-
 from pathlib import Path
 from timeit import default_timer as timer
 from itertools import combinations
 import numpy as np
-from preprocessor._slicing_benchmarking import generate_dummy_arr
 from typing import Dict
-from preprocessor.check_internal_zarr import plot_volume_data_from_np_arr
-from preprocessor._convolve_magic_kernel_experimental import generate_kernel_3d_arr
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.downsampling.downsampling import \
+    generate_kernel_3d_arr
+
+from preprocessor._old.check_internal_zarr import plot_volume_data_from_np_arr
 from scipy import ndimage, signal
-from preprocessor.implementations.sff_preprocessor import downsample_using_magic_kernel, SFFPreprocessor
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import SFFPreprocessor
 from skimage.measure import block_reduce
 from pprint import pprint
+from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import read_volume_data
 
 # TODO: put that on sabre
+from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
+
+DATA_PATH = Path("preprocessor/data/raw_input_files")
+EMDB_DATA_PATH = DATA_PATH.joinpath("emdb")
 # DUMMY_ARR_SHAPE = (500, 500, 500)
 # DUMMY_ARR_SHAPE = (20,20,20)
 # hardcoded for sabre
 # 2000 * 2000 * 800 grid 
 # REAL_MAP_FILEPATH = Path('emd_9199_.map')
 # 64**3 grid
-# REAL_MAP_FILEPATH = Path('emd-1832.map')
+REAL_MAP_FILEPATH = EMDB_DATA_PATH.joinpath('emd-1832/EMD-1832.map')
 # 640**3 grid
-REAL_MAP_FILEPATH = Path('emd_13793.map')
+# REAL_MAP_FILEPATH = Path('emd_13793.map')
 
 ONE_D_KERNEL = [1, 4, 6, 4, 1]
 LIST_OF_METHODS = [
-    #'for_loop',
+    # 'for_loop',
     'scipy.ndimage.convolve_constant',
     'scipy.ndimage.convolve_reflect',
     'scipy.ndimage.convolve_mirror',
@@ -38,7 +43,9 @@ LIST_OF_MODES = [
     'average_2x2x2_blocks'
 ]
 
-def downsample_using_magic_kernel_wrapper(method, mode, kernel, input_arr):
+
+# TODO: typing unclear
+def downsample_using_magic_kernel_wrapper(magic_kernel: MagicKernel3dDownsampler, method, mode, kernel, input_arr):
     '''
     Internally calls different implementations of convolve or previous magic kernel downsampling
     using for loop
@@ -49,7 +56,7 @@ def downsample_using_magic_kernel_wrapper(method, mode, kernel, input_arr):
     # for now just method, add mode (avg over 2x2x2 blocks or simple) afterwards
     if method == 'for_loop':
         # it takes 1d kernel as tuple
-        r = downsample_using_magic_kernel(a, tuple(ONE_D_KERNEL))
+        r = magic_kernel.downsample_using_magic_kernel(a, tuple(ONE_D_KERNEL))
     elif method == 'scipy.ndimage.convolve_constant':
         r = ndimage.convolve(a, k, mode='constant', cval=0.0)
     elif method == 'scipy.ndimage.convolve_reflect':
@@ -61,7 +68,6 @@ def downsample_using_magic_kernel_wrapper(method, mode, kernel, input_arr):
     elif method == 'scipy.signal.convolve_fft':
         r = signal.convolve(a, k, mode='same', method='fft')
 
-    
     if mode == 'regular' and method != 'for_loop':
         r = r[::2, ::2, ::2]
     elif mode == 'average_2x2x2_blocks' and method != 'for_loop':
@@ -71,30 +77,34 @@ def downsample_using_magic_kernel_wrapper(method, mode, kernel, input_arr):
     # print(r)
     return r
 
+
 def read_real_volume_data(volume_file_path: Path) -> np.ndarray:
     # from some big map e.g. emd_9199_.map (2000*2000*800)
-    prep = SFFPreprocessor()
-    map_object = prep._SFFPreprocessor__read_volume_map_to_object(volume_file_path)
-    normalized_axis_map_object = prep._SFFPreprocessor__normalize_axis_order(map_object)
-    real_arr = prep._SFFPreprocessor__read_volume_data(normalized_axis_map_object)
+    map_object = SFFPreprocessor.read_volume_map_to_object(volume_file_path)
+    normalized_axis_map_object = SFFPreprocessor.normalize_axis_order(map_object)
+    real_arr = read_volume_data(normalized_axis_map_object)
+
     return real_arr
+
 
 def run_benchmarking() -> Dict:
     '''
     Returns dict with benchmarking results
     '''
+    magic_kernel = MagicKernel3dDownsampler()
+
     dict_of_results_by_approach: Dict = {}
     d = dict_of_results_by_approach
 
     kernel = generate_kernel_3d_arr(ONE_D_KERNEL)
 
     # dummy_arr = generate_dummy_arr(DUMMY_ARR_SHAPE).astype(np.float64)
-    real_arr = read_real_volume_data(REAL_MAP_FILEPATH) 
+    real_arr = read_real_volume_data(REAL_MAP_FILEPATH)
     dummy_arr = real_arr
     print(f'shape of volume is {dummy_arr.shape}')
     # print(f'ORIGINAL DATA')
     # print((dummy_arr))
-    plot_volume_data_from_np_arr(dummy_arr, f'original_{dummy_arr.shape}-grid')
+    # plot_volume_data_from_np_arr(dummy_arr, f'original_{dummy_arr.shape}-grid')
     for method in LIST_OF_METHODS:
         d[method] = {}
         for mode in LIST_OF_MODES:
@@ -103,17 +113,20 @@ def run_benchmarking() -> Dict:
                 continue
             d[method][mode] = {}
             start = timer()
-            d[method][mode] = downsample_using_magic_kernel_wrapper(method, mode, kernel, dummy_arr)
+            d[method][mode] = downsample_using_magic_kernel_wrapper(magic_kernel, method, mode, kernel, dummy_arr)
             end = timer()
             print(f'{method}, {mode} took {end - start}')
 
     return d
 
+
 def run_benchmarking_without_dict_plotting_one_by_one():
+    magic_kernel = MagicKernel3dDownsampler()
+
     kernel = generate_kernel_3d_arr(ONE_D_KERNEL)
 
     # dummy_arr = generate_dummy_arr(DUMMY_ARR_SHAPE).astype(np.float64)
-    real_arr = read_real_volume_data(REAL_MAP_FILEPATH) 
+    real_arr = read_real_volume_data(REAL_MAP_FILEPATH)
     dummy_arr = real_arr
     print(f'shape of volume is {dummy_arr.shape}')
     # print(f'ORIGINAL DATA')
@@ -125,7 +138,7 @@ def run_benchmarking_without_dict_plotting_one_by_one():
             if method == 'for_loop' and mode == 'average_2x2x2_blocks':
                 continue
             start = timer()
-            downsampled_arr = downsample_using_magic_kernel_wrapper(method, mode, kernel, dummy_arr)
+            downsampled_arr = downsample_using_magic_kernel_wrapper(magic_kernel, method, mode, kernel, dummy_arr)
             end = timer()
             print(f'{method}, {mode} took {end - start}')
             plot_volume_data_from_np_arr(downsampled_arr, f'{mode}_{method}_{downsampled_arr.shape}-grid')
@@ -140,6 +153,7 @@ def plot_everything(dict_with_arrs):
             arr = d[method][mode]
             arr_name = f'{mode}_{method}_{arr.shape}-grid'
             plot_volume_data_from_np_arr(arr, arr_name)
+
 
 def approximate_equality_check(dict_with_arrs):
     '''
@@ -166,25 +180,27 @@ def approximate_equality_check(dict_with_arrs):
         pairwise_approach_dict[mode] = {}
         for pair in combinations(per_mode_d[mode], 2):
             equal = np.all(np.isclose(per_mode_d[mode][pair[0]], per_mode_d[mode][pair[1]],
-                rtol=1e-10, 
-                atol=1e-10,
-                equal_nan=False))
-            
+                                      rtol=1e-10,
+                                      atol=1e-10,
+                                      equal_nan=False))
+
             # dict with results of pairwise comparison of outcomes of each method
             pairwise_approach_dict[mode][f'{pair[0]}-vs-{pair[1]}'] = equal
 
     pprint(pairwise_approach_dict)
 
+
 def run_regular_benchmarking():
     '''Results are collected into dict (requires more memory)'''
     d = run_benchmarking()
-    plot_everything(d)
+    # plot_everything(d)
+
 
 def run_one_by_one_benchmarking():
     '''Results are collected into dict (requires more memory). No equality check'''
     run_benchmarking_without_dict_plotting_one_by_one()
 
+
 if __name__ == '__main__':
-    # run_regular_benchmarking()
-    run_one_by_one_benchmarking()
-    
+    run_regular_benchmarking()
+    # run_one_by_one_benchmarking()
