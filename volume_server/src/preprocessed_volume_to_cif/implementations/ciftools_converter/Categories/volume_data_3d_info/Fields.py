@@ -2,13 +2,11 @@ from typing import Callable, Optional
 
 import numpy as np
 from ciftools.binary.encoding import BinaryCIFEncoder
-from ciftools.binary.encoding.impl import encoders
 from ciftools.cif_format import ValuePresenceEnum
 from ciftools.writer.base import FieldDesc
 from ciftools.writer.fields import number_field, string_field
 
-from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
-from volume_server.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.volume_data_3d_info.volume_info import \
+from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.volume_data_3d_info.volume_info import \
     VolumeInfo
 
 from ciftools.binary.encoding.impl.encoders.byte_array import BYTE_ARRAY_CIF_ENCODER

@@ -4,9 +4,9 @@ from ciftools.binary.encoding.base.cif_encoder_base import CIFEncoderBase
 from ciftools.binary.encoding.impl.encoders.byte_array import ByteArrayCIFEncoder
 from ciftools.writer.base import CategoryWriter, CategoryWriterProvider, FieldDesc
 
-from volume_server.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories._writer import CategoryDesc, \
+from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories._writer import CategoryDesc, \
     CategoryDescImpl
-from volume_server.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.volume_data_3d.Fields import Fields_VolumeData3d
+from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.volume_data_3d.Fields import Fields_VolumeData3d
 
 
 class CategoryWriter_VolumeData3d(CategoryWriter):

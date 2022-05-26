@@ -1,7 +1,7 @@
 import numpy as np
 
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
-from volume_server.preprocessed_volume_to_cif.i_volume_to_cif_converter import IVolumeToCifConverter
+from volume_server.src.preprocessed_volume_to_cif.i_volume_to_cif_converter import IVolumeToCifConverter
 
 
 class FakeVolumeToCifConverter(IVolumeToCifConverter):

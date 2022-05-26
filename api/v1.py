@@ -2,9 +2,9 @@ from typing import Optional
 
 from fastapi import FastAPI, Response
 
-from volume_server.i_volume_server import IVolumeServer
-from volume_server.requests.metadata_request.metadata_request import MetadataRequest
-from volume_server.requests.volume_request.volume_request import VolumeRequest
+from volume_server.src.i_volume_server import IVolumeServer
+from volume_server.src.requests.metadata_request.metadata_request import MetadataRequest
+from volume_server.src.requests.volume_request.volume_request import VolumeRequest
 
 
 def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):

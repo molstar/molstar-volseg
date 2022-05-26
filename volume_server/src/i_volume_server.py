@@ -1,7 +1,7 @@
 import abc
 
-from volume_server.requests.metadata_request.i_metadata_request import IMetadataRequest
-from volume_server.requests.volume_request.i_volume_request import IVolumeRequest
+from volume_server.src.requests.metadata_request.i_metadata_request import IMetadataRequest
+from volume_server.src.requests.volume_request.i_volume_request import IVolumeRequest
 
 
 class IVolumeServer(abc.ABC):

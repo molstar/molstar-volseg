@@ -1,4 +1,4 @@
-from volume_server.requests.volume_request.i_volume_request import IVolumeRequest
+from volume_server.src.requests.volume_request.i_volume_request import IVolumeRequest
 
 
 class VolumeRequest(IVolumeRequest):

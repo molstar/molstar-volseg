@@ -5,9 +5,9 @@ from ciftools.binary.encoding.impl.encoders.byte_array import ByteArrayCIFEncode
 from ciftools.binary.encoding.impl.encoders.interval_quantization import IntervalQuantizationCIFEncoder
 from ciftools.writer.base import CategoryWriter, CategoryWriterProvider, FieldDesc
 
-from volume_server.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories._writer import CategoryDesc, \
+from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories._writer import CategoryDesc, \
     CategoryDescImpl
-from volume_server.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.segmentation_data_3d.Fields import \
+from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.segmentation_data_3d.Fields import \
     Fields_SegmentationData3d
 
 

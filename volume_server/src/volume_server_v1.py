@@ -4,7 +4,7 @@ from db.interface.i_preprocessed_db import IReadOnlyPreprocessedDb
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 from .i_volume_server import IVolumeServer
 from .preprocessed_volume_to_cif.i_volume_to_cif_converter import IVolumeToCifConverter
-from volume_server.requests.volume_request.i_volume_request import IVolumeRequest
+from volume_server.src.requests.volume_request.i_volume_request import IVolumeRequest
 from .requests.metadata_request.i_metadata_request import IMetadataRequest
 
 
@@ -13,11 +13,11 @@ class VolumeServerV1(IVolumeServer):
         grid = await self.db.read_grid_metadata(req.source(), req.structure_id())
         try:
             annotation = await self.db.read_annotation_metadata(req.source(), req.structure_id())
-        except:
+        except Exception as e:
             annotation = None
 
         # converted = self.volume_to_cif.convert_metadata(grid_metadata)
-        return { "grid":grid.json_metadata(), "annotation":annotation }
+        return {"grid": grid.json_metadata(), "annotation": annotation}
 
     def __init__(self, db: IReadOnlyPreprocessedDb, volume_to_cif: IVolumeToCifConverter):
         self.db = db
@@ -52,7 +52,7 @@ class VolumeServerV1(IVolumeServer):
             down_sampling,
             grid)
 
-        cif = self.volume_to_cif.convert(db_slice, metadata, down_sampling,  self.grid_size(grid))
+        cif = self.volume_to_cif.convert(db_slice, metadata, down_sampling, self.grid_size(grid))
         return cif
 
     def decide_lattice(self, req: IVolumeRequest, metadata: IPreprocessedMetadata) -> Optional[int]:
@@ -61,7 +61,7 @@ class VolumeServerV1(IVolumeServer):
             return ids[0] if len(ids) > 0 else None
         return req.segmentation_id()
 
-    def decide_down_sampling(self, original_grid: tuple[tuple[int,int,int], tuple[int,int,int]],
+    def decide_down_sampling(self, original_grid: tuple[tuple[int, int, int], tuple[int, int, int]],
                              req: IVolumeRequest, metadata: IPreprocessedMetadata) -> int:
 
         # TODO: it seems that downsamplings are strings -> check and fix
@@ -103,9 +103,9 @@ class VolumeServerV1(IVolumeServer):
         return [grid_x, grid_y, grid_z]
 
     def decide_grid(self, req: IVolumeRequest, meta: IPreprocessedMetadata) \
-            -> tuple[tuple[int,int,int], tuple[int,int,int]]:
+            -> tuple[tuple[int, int, int], tuple[int, int, int]]:
         return (
-            (0,0,0),
+            (0, 0, 0),
             meta.grid_dimensions()
         )
         # return (
@@ -117,7 +117,7 @@ class VolumeServerV1(IVolumeServer):
         #      self._float_to_grid(meta.origin()[2], meta.voxel_size(1)[2], meta.grid_dimensions()[2], req.z_max())))
 
     def down_sampled_grid(self, down_sampling: int, original_grid: tuple[tuple[int, int, int], tuple[int, int, int]]) \
-            -> tuple[tuple[int,int,int], tuple[int,int,int]]:
+            -> tuple[tuple[int, int, int], tuple[int, int, int]]:
         if down_sampling == 1:
             return original_grid
 
@@ -125,7 +125,7 @@ class VolumeServerV1(IVolumeServer):
         for i in range(2):
             result.append([])
             for j in range(3):
-                result[i].append(round(original_grid[i][j]/down_sampling))
+                result[i].append(round(original_grid[i][j] / down_sampling))
 
         return result
 
@@ -136,4 +136,4 @@ class VolumeServerV1(IVolumeServer):
         if to_convert > origin + step * (grid_size - 1):
             return grid_size
 
-        return round((to_convert - origin)/step)
+        return round((to_convert - origin) / step)
