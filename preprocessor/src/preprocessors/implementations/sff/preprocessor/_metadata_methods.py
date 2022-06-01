@@ -18,6 +18,8 @@ def extract_annotation_metadata(segm_file_path: Path) -> dict:
     segm_dict = segm_obj.as_json()
     for lattice in segm_dict['lattice_list']:
         del lattice['data']
+    for segment in segm_dict['segment_list']:
+        del segment['mesh_list']
 
     return segm_dict
 
