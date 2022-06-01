@@ -41,6 +41,12 @@ def process_segmentation_data(magic_kernel: MagicKernel3dDownsampler, zarr_struc
     Extracts segmentation data from lattice, downsamples it, stores to zarr structure
     '''
     segm_data_gr: zarr.hierarchy.group = zarr_structure.create_group(SEGMENTATION_DATA_GROUPNAME)
+    if zarr_structure.primary_descriptor[0] == 'three_d_volume':
+        process_three_d_volume_segmentation_data(segm_data_gr, magic_kernel, zarr_structure)
+    elif zarr_structure.primary_descriptor[0] == 'mesh_list':
+        process_mesh_segmentation_data(segm_data_gr, magic_kernel, zarr_structure)
+
+def process_three_d_volume_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_kernel: MagicKernel3dDownsampler, zarr_structure: zarr.hierarchy.group):
     value_to_segment_id_dict = map_value_to_segment_id(zarr_structure)
 
     for gr_name, gr in zarr_structure.lattice_list.groups():
@@ -67,3 +73,6 @@ def process_segmentation_data(magic_kernel: MagicKernel3dDownsampler, zarr_struc
             lattice_gr,
             value_to_segment_id_dict[lattice_id]
         )
+
+def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_kernel: MagicKernel3dDownsampler, zarr_structure: zarr.hierarchy.group):
+    pass
