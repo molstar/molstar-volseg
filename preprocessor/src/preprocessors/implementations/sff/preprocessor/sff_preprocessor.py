@@ -56,7 +56,7 @@ class SFFPreprocessor(IDataPreprocessor):
             grid_dimensions: list = list(LocalDiskPreprocessedMetadata(grid_metadata).grid_dimensions())
             zarr_volume_arr_shape: list = list(get_volume_downsampling_from_zarr(1, zarr_structure).shape)
             
-            if segm_file_path is not None:
+            if segm_file_path is not None and zarr_structure.primary_descriptor[0] == b'three_d_volume':
                 zarr_segm_arr_shape: list = list(get_segmentation_downsampling_from_zarr(1, zarr_structure, 0).shape)
                 assert grid_dimensions == zarr_segm_arr_shape, \
                 f'grid dimensions from metadata {grid_dimensions} are not equal to segmentation arr shape {zarr_segm_arr_shape}'

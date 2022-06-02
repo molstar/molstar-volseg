@@ -54,7 +54,7 @@ def extract_grid_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> d
 
     lattice_dict = {}
     lattice_ids = []
-    if SEGMENTATION_DATA_GROUPNAME in root:
+    if SEGMENTATION_DATA_GROUPNAME in root and root.primary_descriptor[0] == b'three_d_volume':
         for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
             # each key is lattice id
             lattice_id = int(gr_name)
