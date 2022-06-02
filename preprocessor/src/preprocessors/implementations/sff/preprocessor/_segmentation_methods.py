@@ -22,6 +22,16 @@ def lattice_data_to_np_arr(data: str, dtype: str, arr_shape: tuple[int, int, int
         raise e
     return arr
 
+def decode_zlib_base64_data(data: str, dtype: str):
+    try:
+        # TODO: decode any data, take into account endiannes
+        decoded_data = base64.b64decode(data)
+        byteseq = zlib.decompress(decoded_data)
+        arr = np.frombuffer(byteseq, dtype=dtype)
+    except Exception as e:
+        logging.error(e, stack_info=True, exc_info=True)
+        raise e
+    return arr
 
 def map_value_to_segment_id(zarr_structure):
     '''

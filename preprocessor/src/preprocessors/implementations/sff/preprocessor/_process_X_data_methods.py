@@ -1,6 +1,6 @@
 # methods for processing volume and segmentation data
 import math
-
+import numcodecs
 import gemmi
 import numpy as np
 import zarr
@@ -75,4 +75,29 @@ def process_three_d_volume_segmentation_data(segm_data_gr: zarr.hierarchy.group,
         )
 
 def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_kernel: MagicKernel3dDownsampler, zarr_structure: zarr.hierarchy.group):
-    pass
+    d = {}
+    for segment_name, segment in zarr_structure.segment_list.groups():
+        # TODO: store triangle count in metadata
+        # TODO: decode data of .vertices, .triangles, etc.
+        d[segment.id] = []
+        for mesh_name, mesh in segment.mesh_list.groups():
+            # indeces of vertices
+            triangles = decode_zlib_base64_data(mesh.triangles.data, mesh.triangles.mode)
+            vertices = decode_zlib_base64_data(mesh.vertices.data, mesh.vertices.mode)
+            mesh_obj  = {
+                triangles: triangles,
+                vertices: vertices,
+            }
+            d[segment.id].append(mesh_obj)
+            
+
+    arr = segm_data_gr.create_dataset(
+            # TODO: think about name (downsampling lvl e.g.)
+            name='mesh_segmentation',
+            dtype=object,
+            object_codec=numcodecs.JSON(),
+            shape=1
+        )
+    
+    arr[...] = [d]
+    # TODO: create simplified meshes as downsamplings
