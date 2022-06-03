@@ -19,7 +19,7 @@ def extract_annotations(segm_file_path: Path) -> dict:
     for lattice in segm_dict['lattice_list']:
         del lattice['data']
     for segment in segm_dict['segment_list']:
-        del segment['mesh_list']
+        segment['mesh_list'] = [x['id'] for x in segment['mesh_list']]
 
     return segm_dict
 
@@ -54,17 +54,23 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> dict:
 
     lattice_dict = {}
     lattice_ids = []
-    if SEGMENTATION_DATA_GROUPNAME in root and root.primary_descriptor[0] == b'three_d_volume':
-        for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
-            # each key is lattice id
-            lattice_id = int(gr_name)
+    if SEGMENTATION_DATA_GROUPNAME in root:
+        if root.primary_descriptor[0] == b'three_d_volume':
+            for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
+                # each key is lattice id
+                lattice_id = int(gr_name)
 
-            segm_downsamplings = sorted(gr.group_keys())
-            # convert to ints
-            segm_downsamplings = sorted([int(x) for x in segm_downsamplings])
+                segm_downsamplings = sorted(gr.group_keys())
+                # convert to ints
+                segm_downsamplings = sorted([int(x) for x in segm_downsamplings])
 
-            lattice_dict[lattice_id] = segm_downsamplings
-            lattice_ids.append(lattice_id)
+                lattice_dict[lattice_id] = segm_downsamplings
+                lattice_ids.append(lattice_id)
+        elif root.primary_descriptor[0] == b'mesh_list':
+            # TODO: extract mesh metadata from zarr: number of triangles, number of simplified meshes
+            # then write them to return statement
+            pass
+
 
     d = ccp4_words_to_dict(map_object)
 
