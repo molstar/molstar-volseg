@@ -13,7 +13,7 @@ class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
         ]
 
         for namespace, entry_id in test_suite_entries:
-            metadata = await db.read_grid_metadata(namespace, entry_id)
+            metadata = await db.read_metadata(namespace, entry_id)
             volume_downsamplings = metadata.volume_downsamplings()
 
             if entry_id != 'emd-99999':

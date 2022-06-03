@@ -194,7 +194,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
 
         return d
 
-    async def read_grid_metadata(self, namespace: str, key: str) -> IPreprocessedMetadata:
+    async def read_metadata(self, namespace: str, key: str) -> IPreprocessedMetadata:
         path: Path = self.__path_to_object__(namespace=namespace, key=key) / GRID_METADATA_FILENAME
         with open(path.resolve(), 'r', encoding='utf-8') as f:
             # reads into dict

@@ -10,7 +10,7 @@ from .requests.metadata_request.i_metadata_request import IMetadataRequest
 
 class VolumeServerV1(IVolumeServer):
     async def get_metadata(self, req: IMetadataRequest) -> Union[bytes, str]:
-        grid = await self.db.read_grid_metadata(req.source(), req.structure_id())
+        grid = await self.db.read_metadata(req.source(), req.structure_id())
         try:
             annotation = await self.db.read_annotations(req.source(), req.structure_id())
         except Exception as e:
@@ -24,7 +24,7 @@ class VolumeServerV1(IVolumeServer):
         self.volume_to_cif = volume_to_cif
 
     async def get_volume(self, req: IVolumeRequest) -> bytes:  # TODO: add binary cif to the project
-        metadata = await self.db.read_grid_metadata(req.source(), req.structure_id())
+        metadata = await self.db.read_metadata(req.source(), req.structure_id())
 
         print(metadata)
 

@@ -16,7 +16,7 @@ class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
         GOLD_STANDARD_FILENAME = Path('preprocessor/tests/performance_measurements/gold_standard.json')
 
         async def _compute_boxes_for_entry(db: LocalDiskPreprocessedDb, namespace, key):
-            metadata = await db.read_grid_metadata(namespace, key)
+            metadata = await db.read_metadata(namespace, key)
             dims: Tuple = metadata.grid_dimensions()
             origin = (0, 0, 0)
             small_box = tuple([int(0.1 * x) for x in dims])
