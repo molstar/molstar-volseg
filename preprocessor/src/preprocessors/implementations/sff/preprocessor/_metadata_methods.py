@@ -92,19 +92,28 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> dict:
     # original_grid_dimensions: Tuple[int, int, int] = (d['NC'], d['NR'], d['NS'])
 
     return {
-        'details': details,
-        'volume_downsamplings': volume_downsamplings,
-        'segmentation_lattice_ids': lattice_ids,
-        'segmentation_downsamplings': lattice_dict,
-        # downsamplings have different voxel size so it is a dict
-        'voxel_size': voxel_sizes_in_downsamplings,
-        'origin': origin,
-        'grid_dimensions': (d['NC'], d['NR'], d['NS']),
-        'sampled_grid_dimensions': grid_dimensions_dict,
-        'mean': mean_dict,
-        'std': std_dict,
-        'max': max_dict,
-        'min': min_dict
+        'general': {
+            'details': details
+        },
+        'volumes': {
+            'volume_downsamplings': volume_downsamplings,
+            # downsamplings have different voxel size so it is a dict
+            'voxel_size': voxel_sizes_in_downsamplings,
+            'origin': origin,
+            'grid_dimensions': (d['NC'], d['NR'], d['NS']),
+            'sampled_grid_dimensions': grid_dimensions_dict,
+            'mean': mean_dict,
+            'std': std_dict,
+            'max': max_dict,
+            'min': min_dict
+        },
+        'segmentation_lattices': {
+            'segmentation_lattice_ids': lattice_ids,
+            'segmentation_downsamplings': lattice_dict
+        },
+        'segmentation_meshes': {
+            
+        }
     }
 
 
