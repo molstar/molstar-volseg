@@ -19,6 +19,7 @@ def extract_annotations(segm_file_path: Path) -> dict:
     for lattice in segm_dict['lattice_list']:
         del lattice['data']
     for segment in segm_dict['segment_list']:
+        # mesh list with list of ids
         segment['mesh_list'] = [x['id'] for x in segment['mesh_list']]
 
     return segm_dict
