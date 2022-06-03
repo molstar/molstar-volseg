@@ -35,7 +35,7 @@ class IReadOnlyPreprocessedDb(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def read_annotation_metadata(self, namespace: str, key: str) -> Dict:
+    async def read_annotations(self, namespace: str, key: str) -> Dict:
         pass
 
 

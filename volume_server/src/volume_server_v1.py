@@ -12,7 +12,7 @@ class VolumeServerV1(IVolumeServer):
     async def get_metadata(self, req: IMetadataRequest) -> Union[bytes, str]:
         grid = await self.db.read_grid_metadata(req.source(), req.structure_id())
         try:
-            annotation = await self.db.read_annotation_metadata(req.source(), req.structure_id())
+            annotation = await self.db.read_annotations(req.source(), req.structure_id())
         except Exception as e:
             annotation = None
 

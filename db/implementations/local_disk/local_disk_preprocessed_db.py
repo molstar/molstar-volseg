@@ -201,7 +201,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             read_json_of_metadata: Dict = json.load(f)
         return LocalDiskPreprocessedMetadata(read_json_of_metadata)
     
-    async def read_annotation_metadata(self, namespace: str, key: str) -> Dict:
+    async def read_annotations(self, namespace: str, key: str) -> Dict:
         path: Path = self.__path_to_object__(namespace=namespace, key=key) / ANNOTATION_METADATA_FILENAME
         with open(path.resolve(), 'r', encoding='utf-8') as f:
             # reads into dict
