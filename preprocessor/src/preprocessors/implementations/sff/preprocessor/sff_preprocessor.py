@@ -21,7 +21,7 @@ class SFFPreprocessor(IDataPreprocessor):
     from ._hdf5_to_zarr import hdf5_to_zarr
     from ._volume_map_methods import read_volume_map_to_object, normalize_axis_order
     from ._process_X_data_methods import process_volume_data, process_segmentation_data
-    from ._metadata_methods import temp_save_metadata, extract_annotation_metadata, extract_grid_metadata
+    from ._metadata_methods import temp_save_metadata, extract_annotations, extract_metadata
 
     def __init__(self):
         # path to root of temporary storage for zarr hierarchy
@@ -51,7 +51,7 @@ class SFFPreprocessor(IDataPreprocessor):
 
             SFFPreprocessor.process_volume_data(zarr_structure, normalized_axis_map_object, volume_force_dtype)
 
-            grid_metadata = SFFPreprocessor.extract_grid_metadata(zarr_structure, normalized_axis_map_object)
+            grid_metadata = SFFPreprocessor.extract_metadata(zarr_structure, normalized_axis_map_object)
             
             grid_dimensions: list = list(LocalDiskPreprocessedMetadata(grid_metadata).grid_dimensions())
             zarr_volume_arr_shape: list = list(get_volume_downsampling_from_zarr(1, zarr_structure).shape)
@@ -67,7 +67,7 @@ class SFFPreprocessor(IDataPreprocessor):
             SFFPreprocessor.temp_save_metadata(grid_metadata, GRID_METADATA_FILENAME, self.temp_zarr_structure_path)
 
             if segm_file_path is not None:
-                annotation_metadata = SFFPreprocessor.extract_annotation_metadata(segm_file_path)
+                annotation_metadata = SFFPreprocessor.extract_annotations(segm_file_path)
                 SFFPreprocessor.temp_save_metadata(annotation_metadata, ANNOTATION_METADATA_FILENAME, self.temp_zarr_structure_path)
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)

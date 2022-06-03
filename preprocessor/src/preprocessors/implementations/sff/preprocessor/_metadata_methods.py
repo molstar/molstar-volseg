@@ -12,7 +12,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor._sfftk_meth
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import ccp4_words_to_dict
 
 
-def extract_annotation_metadata(segm_file_path: Path) -> dict:
+def extract_annotations(segm_file_path: Path) -> dict:
     '''Returns processed dict of annotation metadata (some fields are removed)'''
     segm_obj = open_hdf5_as_segmentation_object(segm_file_path)
     segm_dict = segm_obj.as_json()
@@ -24,7 +24,7 @@ def extract_annotation_metadata(segm_file_path: Path) -> dict:
     return segm_dict
 
 
-def extract_grid_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> dict:
+def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> dict:
     root = zarr_structure
     details = ''
     if 'details' in root:
