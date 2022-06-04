@@ -14,19 +14,19 @@ class LocalDiskPreprocessedMetadata(IPreprocessedMetadata):
         return self.raw_metadata
 
     def segmentation_lattice_ids(self) -> List[int]:
-        return self.raw_metadata['segmentation_lattice_ids']
+        return self.raw_metadata['segmentation_lattices']['segmentation_lattice_ids']
 
     def segmentation_downsamplings(self, lattice_id: int) -> List[int]:
         s = []
         try:
-            s = self.raw_metadata['segmentation_downsamplings'][str(lattice_id)]
+            s = self.raw_metadata['segmentation_lattices']['segmentation_downsamplings'][str(lattice_id)]
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)
         return s
             
 
     def volume_downsamplings(self) -> List[int]:
-        return self.raw_metadata['volume_downsamplings']
+        return self.raw_metadata['volumes']['volume_downsamplings']
 
     def origin(self) -> List[float]:
         '''
@@ -34,7 +34,7 @@ class LocalDiskPreprocessedMetadata(IPreprocessedMetadata):
         '''
         # origin_str = self.raw_metadata['origin']
         # origin_float = List([float(i) for i in origin_str])
-        return self.raw_metadata['origin']
+        return self.raw_metadata['volumes']['origin']
         
     def voxel_size(self, downsampling_rate: int) -> List[float]:
         '''
@@ -44,7 +44,7 @@ class LocalDiskPreprocessedMetadata(IPreprocessedMetadata):
 
         # voxel_float = List([float(i) for i in voxel_str])
         # return voxel_float
-        return self.raw_metadata['voxel_size'][str(downsampling_rate)]
+        return self.raw_metadata['volumes']['voxel_size'][str(downsampling_rate)]
 
     def grid_dimensions(self)  -> List[int]:
         '''
@@ -56,13 +56,27 @@ class LocalDiskPreprocessedMetadata(IPreprocessedMetadata):
         '''
         Returns the number of points along each axis (X, Y, Z) for specific downsampling level
         '''
-        return self.raw_metadata['sampled_grid_dimensions'][str(level)]
+        return self.raw_metadata['volumes']['sampled_grid_dimensions'][str(level)]
 
     def mean(self, level: int)  -> np.float64:
         '''Return mean for data at given downsampling level'''
-        return np.float32(self.raw_metadata['mean'][str(level)])
+        return np.float32(self.raw_metadata['volumes']['mean'][str(level)])
 
     def std(self, level: int)  -> np.float64:
         '''Return standard deviation for data at given downsampling level'''
-        return np.float32(self.raw_metadata['std'][str(level)])
+        return np.float32(self.raw_metadata['volumes']['std'][str(level)])
+
+    def max(self, level: int)  -> np.float64:
+        '''Return max for data at given downsampling level'''
+        return np.float32(self.raw_metadata['volumes']['max'][str(level)])
+    
+    def min(self, level: int)  -> np.float64:
+        '''Return min for data at given downsampling level'''
+        return np.float32(self.raw_metadata['volumes']['min'][str(level)])
+
+    def mesh_component_numbers(self, level: int) -> Dict:
+        '''Return dict with numbers of mesh components (triangles, vertices etc.)
+        at given mesh simplification level for mesh in mesh list of each segment'''
+        return self.raw_metadata['segmentation_meshes']['mesh_component_numbers'][str(level)]
+
 

@@ -1,5 +1,5 @@
 import abc
-from typing import List
+from typing import Dict, List
 
 import numpy as np
 
@@ -57,4 +57,20 @@ class IPreprocessedMetadata(abc.ABC):
     @abc.abstractmethod
     def std(self, level: int)  -> np.float64:
         '''Return standard deviation for data at given downsampling level'''
+        pass
+    
+    @abc.abstractmethod
+    def max(self, level: int)  -> np.float64:
+        '''Return max for data at given downsampling level'''
+        pass
+    
+    @abc.abstractmethod
+    def min(self, level: int)  -> np.float64:
+        '''Return min for data at given downsampling level'''
+        pass
+
+    @abc.abstractmethod
+    def mesh_component_numbers(self, level: int) -> Dict:
+        '''Return dict with numbers of mesh components (triangles, vertices etc.)
+        at given mesh simplification level for mesh in mesh list of each segment'''
         pass
