@@ -55,6 +55,7 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> dict:
 
     lattice_dict = {}
     lattice_ids = []
+    mesh_component_numbers_dict = {}
     if SEGMENTATION_DATA_GROUPNAME in root:
         if root.primary_descriptor[0] == b'three_d_volume':
             for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
@@ -68,10 +69,18 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> dict:
                 lattice_dict[lattice_id] = segm_downsamplings
                 lattice_ids.append(lattice_id)
         elif root.primary_descriptor[0] == b'mesh_list':
-            # TODO: extract mesh metadata from zarr: number of triangles, vertices, normals,
-            # and number of simplified meshes
+            # TODO: extract number of simplified meshes
             # then write them to return statement
-            pass
+            for downsampling_name, downsampling_gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
+                mesh_component_numbers_dict[downsampling_name] = {}
+                for segment_id, segment in downsampling_gr.groups():
+                    mesh_component_numbers_dict[downsampling_name][segment_id] = {}
+                    for mesh_id, mesh in segment.groups():
+                        mesh_component_numbers_dict[downsampling_name][segment_id][mesh_id] = {}
+                        for mesh_component_name, mesh_component in mesh.arrays():
+                            d_ref = mesh_component_numbers_dict[downsampling_name][segment_id][mesh_id]
+                            d_ref[f'num_{mesh_component_name}'] = mesh_component.attrs[f'num_{mesh_component_name}']
+                            
 
 
     d = ccp4_words_to_dict(map_object)
@@ -120,7 +129,7 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> dict:
             'segmentation_downsamplings': lattice_dict
         },
         'segmentation_meshes': {
-            
+            'mesh_component_numbers': mesh_component_numbers_dict
         }
     }
 
