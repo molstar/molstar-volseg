@@ -44,7 +44,10 @@ def downsample_categorical_data(magic_kernel: MagicKernel3dDownsampler,
     '''
     previous_level_grid: np.ndarray = previous_level_dict.get_grid()
     previous_level_set_table: SegmentationSetTable = previous_level_dict.get_set_table()
-    current_level_grid: np.ndarray = magic_kernel.create_x2_downsampled_grid(previous_level_grid.shape, np.nan)
+    current_level_grid: np.ndarray = magic_kernel.create_x2_downsampled_grid(
+        previous_level_grid.shape,
+        np.nan,
+        dtype=previous_level_grid.dtype)
 
     # Select block
     # The following will not work for e.g. 5**3 grid, as block size = 2,2,2
@@ -80,7 +83,6 @@ def downsample_categorical_data(magic_kernel: MagicKernel3dDownsampler,
     # need to check before conversion to int as in int grid nans => some guge number
     assert np.isnan(current_level_grid).any() == False, f'Segmentation grid contain NAN values'
 
-    current_level_grid = current_level_grid.astype(np.int32)
     # write grid into 'grid' key of new level dict
     # add current level set table to new level dict
     new_dict = DownsamplingLevelDict({

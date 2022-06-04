@@ -15,7 +15,7 @@ class MagicKernel3dDownsampler:
         Returns x2 downsampled data using provided kernel
         '''
         # empty 3D arr with /2 dimensions compared to original 3D arr
-        downsampled_arr = self.create_x2_downsampled_grid(arr.shape, np.nan)
+        downsampled_arr = self.create_x2_downsampled_grid(arr.shape, np.nan, arr.dtype)
         target_voxels_coords = self.extract_target_voxels_coords(arr.shape)
 
         #TODO: optimize using https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.convolve.html instead of for loop (for 1000**3 it consumes 12GB RAM)
@@ -40,12 +40,16 @@ class MagicKernel3dDownsampler:
 
         return downsampled_arr
 
-    def create_x2_downsampled_grid(self, original_grid_shape: tuple[int, int, int], fill_value) -> np.ndarray:
-        empty_downsampled_grid = np.full([
-            ceil(original_grid_shape[0] / 2),
-            ceil(original_grid_shape[1] / 2),
-            ceil(original_grid_shape[2] / 2)
-        ], fill_value)
+    def create_x2_downsampled_grid(self, original_grid_shape: tuple[int, int, int], fill_value, dtype) -> np.ndarray:
+        empty_downsampled_grid = np.full(
+            [
+                ceil(original_grid_shape[0] / 2),
+                ceil(original_grid_shape[1] / 2),
+                ceil(original_grid_shape[2] / 2)
+            ],
+            fill_value,
+            dtype=dtype
+            )
         return empty_downsampled_grid
 
     def extract_target_voxels_coords(self, arr_shape: tuple[int, int, int]):

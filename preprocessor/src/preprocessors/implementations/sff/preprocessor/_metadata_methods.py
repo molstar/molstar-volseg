@@ -68,7 +68,8 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> dict:
                 lattice_dict[lattice_id] = segm_downsamplings
                 lattice_ids.append(lattice_id)
         elif root.primary_descriptor[0] == b'mesh_list':
-            # TODO: extract mesh metadata from zarr: number of triangles, number of simplified meshes
+            # TODO: extract mesh metadata from zarr: number of triangles, vertices, normals,
+            # and number of simplified meshes
             # then write them to return statement
             pass
 

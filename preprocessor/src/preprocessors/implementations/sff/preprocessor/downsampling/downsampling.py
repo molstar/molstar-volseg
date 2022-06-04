@@ -8,6 +8,9 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants i
 from preprocessor.src.preprocessors.implementations.sff.segmentation_set_table import SegmentationSetTable
 from scipy import signal, ndimage
 
+def compute_number_of_mesh_simplification_steps():
+    # TODO: implement
+    return 2
 
 def compute_number_of_downsampling_steps(min_grid_size: int, input_grid_size: int, force_dtype: type, factor: int,
                                          min_downsampled_file_size_bytes: int = 5 * 10 ** 6) -> int:
@@ -58,9 +61,6 @@ def create_category_set_downsamplings(
     '''
     # table with just singletons, e.g. "104": {104}, "94" :{94}
     initial_set_table = SegmentationSetTable(original_data, value_to_segment_id_dict_for_specific_lattice_id)
-
-    # to make it uniform int32 with other level grids
-    original_data = original_data.astype(np.int32)
 
     # for now contains just x1 downsampling lvl dict, in loop new dicts for new levels are appended
     levels = [

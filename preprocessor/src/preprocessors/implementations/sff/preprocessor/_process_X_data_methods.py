@@ -53,9 +53,10 @@ def process_three_d_volume_segmentation_data(segm_data_gr: zarr.hierarchy.group,
         # gr is a 'lattice' obj in lattice list
         lattice_id = int(gr.id[...])
         segm_arr = lattice_data_to_np_arr(
-            gr.data[0],
-            gr.mode[0],
-            (gr.size.cols[...], gr.size.rows[...], gr.size.sections[...])
+            data=gr.data[0],
+            mode=gr.mode[0],
+            endianness=gr.endianness[0],
+            arr_shape=(gr.size.cols[...], gr.size.rows[...], gr.size.sections[...])
         )
         segmentation_downsampling_steps = compute_number_of_downsampling_steps(
             MIN_GRID_SIZE,
@@ -74,32 +75,82 @@ def process_three_d_volume_segmentation_data(segm_data_gr: zarr.hierarchy.group,
             value_to_segment_id_dict[lattice_id]
         )
 
+def _write_mesh_component_data_to_zarr_arr(target_group: zarr.hierarchy.group, mesh: zarr.hierarchy.group, mesh_component_name: str):
+    unchunked_component_data = decode_base64_data(
+            data=mesh[mesh_component_name].data[...][0],
+            mode=mesh[mesh_component_name].mode[...][0],
+            endianness=mesh[mesh_component_name].endianness[...][0]
+        )
+    # chunked onto triples
+    chunked_component_data = chunk_numpy_arr(unchunked_component_data, 3)
+    component_arr = target_group.create_dataset(
+        data=chunked_component_data,
+        name=mesh_component_name,
+        shape=chunked_component_data.shape,
+        dtype=chunked_component_data.dtype,
+    )
+    component_arr.attrs[f'num_{mesh_component_name}'] = \
+        int(mesh[mesh_component_name][f'num_{mesh_component_name}'][...])
+
+
 def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_kernel: MagicKernel3dDownsampler, zarr_structure: zarr.hierarchy.group):
-    d = {}
+    original_resolution_group = segm_data_gr.create_group('1')
+
     for segment_name, segment in zarr_structure.segment_list.groups():
-        # TODO: store triangle count in metadata
-        # TODO: decode data of .vertices, .triangles, etc.
-        segment_id = int(segment.id[...])
-        d[segment_id] = []
+        single_segment_group = original_resolution_group.create_group(segment_name)
         for mesh_name, mesh in segment.mesh_list.groups():
-            # indeces of vertices
-            triangles = decode_base64_data(mesh.triangles.data[...][0], mesh.triangles.mode[...][0])
-            vertices = decode_base64_data(mesh.vertices.data[...][0], mesh.vertices.mode[...][0])
-            # TODO: precision when converting
-            mesh_obj  = {
-                'triangles': [x.tolist() for x in chunk_numpy_arr(triangles, 3)],
-                'vertices': [x.tolist() for x in chunk_numpy_arr(vertices, 3)],
-            }
-            d[segment_id].append(mesh_obj)
+            mesh_id = str(int(mesh.id[...]))
+            single_mesh_group = single_segment_group.create_group(mesh_id)
+            for mesh_component_name, mesh_component in mesh.groups():
+                if mesh_component_name != 'id':
+                    _write_mesh_component_data_to_zarr_arr(
+                        target_group=single_mesh_group,
+                        mesh=mesh,
+                        mesh_component_name=mesh_component_name
+                    )
+                
+    
+    # TODO: check if works
+    # TODO: fix endiannes (see notes)
+
+# PLAN:
+    # 1. Store original mesh data in zarr
+
+    # 
+    # 2. Func - Compute number of downsampling steps (simplification steps) - for now just fixed
+    # compute_number_of_mesh_simplification_steps()
+    # 3. Func - Create mesh simplifications providing original mesh data (depends on what lib requires) 
+    # to func similar to create_category_set_downsampling
+    # Implementation of that function depends on how mesh simplification is done by library
+    # 4. In that function, do the same as in create_cat, but start from x2 simplification
+
+
+
+
+    # d = {}
+    # for segment_name, segment in zarr_structure.segment_list.groups():
+    #     # TODO: store triangle count in metadata
+    #     segment_id = int(segment.id[...])
+    #     d[segment_id] = []
+    #     for mesh_name, mesh in segment.mesh_list.groups():
+    #         # indeces of vertices
+    #         triangles = decode_base64_data(mesh.triangles.data[...][0], mesh.triangles.mode[...][0])
+    #         vertices = decode_base64_data(mesh.vertices.data[...][0], mesh.vertices.mode[...][0])
+    #         
+    #         mesh_obj  = {
+    #             'triangles': [x.tolist() for x in chunk_numpy_arr(triangles, 3)],
+    #             'vertices': [x.tolist() for x in chunk_numpy_arr(vertices, 3)],
+    #         }
+    #         d[segment_id].append(mesh_obj)
             
 
-    arr = segm_data_gr.create_dataset(
-            # TODO: should be downsampling level
-            name='1',
-            dtype=object,
-            object_codec=numcodecs.JSON(),
-            shape=1
-        )
+    # arr = segm_data_gr.create_dataset(
+    #         
+    #         name='1',
+    #         dtype=object,
+    #         object_codec=numcodecs.JSON(),
+    #         shape=1
+    #     )
     
-    arr[...] = [d]
-    # TODO: create simplified meshes as downsamplings
+    # arr[...] = [d]
+    # # TODO: create simplified meshes as downsamplings
