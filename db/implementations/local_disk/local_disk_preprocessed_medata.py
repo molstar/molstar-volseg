@@ -50,7 +50,7 @@ class LocalDiskPreprocessedMetadata(IPreprocessedMetadata):
         '''
         Returns the number of points along each axis (X, Y, Z)
         '''
-        return self.raw_metadata['grid_dimensions']
+        return self.raw_metadata['volumes']['grid_dimensions']
 
     def sampled_grid_dimensions(self, level: int) -> List[int]:
         '''
