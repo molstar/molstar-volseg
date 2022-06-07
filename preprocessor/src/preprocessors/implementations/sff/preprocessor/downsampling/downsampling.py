@@ -14,26 +14,51 @@ def compute_number_of_mesh_simplification_steps():
     # TODO: implement - based on size of arrays similar to compute downsampling steps funct
     return 2
 
-def __store_simplified_mesh_in_zarr(vertices, triangles, normals, simplified_mesh_zarr_gr):
-    # TODO: add attrs (num ...) to arrs to
-    pass
+def compute_mesh_complexity(mesh_list_group: zarr.hierarchy.group, mode='area'):
+    '''Returns estimate of mesh complexity'''
+    mesh_list = []
+    total_vertex_count = 0
+    for mesh_name, mesh in mesh_list_group.groups():
+        mesh_list.append(mesh)
+        total_vertex_count = total_vertex_count + mesh.attrs['num_vertices']
 
-def create_mesh_simplifications(vertices, triangles, segm_data_gr, num_steps):
-    mesh = Mesh([vertices, triangles])
-    for step in range(1, num_steps + 1):
-        ratio = Decimal(2)**step
-        factor = float(Decimal(1) / ratio)
-        decimated_mesh = mesh.decimate(factor)
-        decimated_normals = np.array(decimated_mesh.normals(), dtype=np.float32)
-        decimated_vertices = np.array(decimated_mesh.points(), dtype=np.float32)
-        decimated_triangles = np.array(decimated_mesh.faces(), dtype=np.int32)
-        # simplified_mesh_zarr_gr = segm_data_gr.create_group(str(ratio))
-        __store_simplified_mesh_in_zarr(
-            vertices=decimated_vertices,
-            triangles=decimated_triangles,
-            normals=decimated_normals,
-            simplified_mesh_zarr_gr=simplified_mesh_zarr_gr
-        )
+    if mode == 'area':
+        total_area = 0
+        for mesh in mesh_list:
+            total_area = total_area + mesh.attrs['area']
+        
+        return total_area / total_vertex_count
+
+    elif mode == 'volume':
+        total_volume = 0
+        for mesh in mesh_list:
+            total_volume = total_volume + mesh.attrs['volume']
+
+        return total_volume / total_vertex_count
+
+
+# def __store_simplified_mesh_in_zarr(vertices, triangles, normals, simplified_mesh_zarr_gr):
+#     # TODO: add attrs (num ...) to arrs to
+#     pass
+
+# def create_mesh_simplifications(vertices, triangles, segm_data_gr, num_steps):
+#     mesh = Mesh([vertices, triangles])
+#     for step in range(1, num_steps + 1):
+#         ratio = Decimal(2)**step
+#         factor = float(Decimal(1) / ratio)
+#         decimated_mesh = mesh.decimate(factor)
+#         decimated_normals = np.array(decimated_mesh.normals(), dtype=np.float32)
+#         decimated_vertices = np.array(decimated_mesh.points(), dtype=np.float32)
+#         decimated_triangles = np.array(decimated_mesh.faces(), dtype=np.int32)
+#         # simplified_mesh_zarr_gr = segm_data_gr.create_group(str(ratio))
+#         __store_simplified_mesh_in_zarr(
+#             vertices=decimated_vertices,
+#             triangles=decimated_triangles,
+#             normals=decimated_normals,
+#             simplified_mesh_zarr_gr=simplified_mesh_zarr_gr
+#         )
+
+
 
 
 def compute_number_of_downsampling_steps(min_grid_size: int, input_grid_size: int, force_dtype: type, factor: int,

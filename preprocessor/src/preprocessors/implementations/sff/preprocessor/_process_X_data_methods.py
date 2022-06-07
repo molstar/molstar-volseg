@@ -1,4 +1,5 @@
 # methods for processing volume and segmentation data
+from vedo import Mesh
 import math
 import numcodecs
 import gemmi
@@ -106,6 +107,15 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_ker
         for mesh_name, mesh in segment.mesh_list.groups():
             mesh_id = str(int(mesh.id[...]))
             single_mesh_group = single_detail_lvl_group.create_group(mesh_id)
+            
+            # TODO: check in which units is area and volume
+            vertices = mesh['vertices']
+            triangles = mesh['triangles']
+            vedo_mesh_obj = Mesh([vertices, triangles])
+            single_mesh_group['num_vertices'] = vedo_mesh_obj.points()
+            single_mesh_group['area'] = vedo_mesh_obj.area()
+            single_mesh_group['volume'] = vedo_mesh_obj.volume()
+
             for mesh_component_name, mesh_component in mesh.groups():
                 if mesh_component_name != 'id':
                     _write_mesh_component_data_to_zarr_arr(
