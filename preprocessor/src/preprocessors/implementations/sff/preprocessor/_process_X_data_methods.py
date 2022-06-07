@@ -11,7 +11,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor._segmentati
     map_value_to_segment_id, lattice_data_to_np_arr
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import read_volume_data
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.downsampling.downsampling import \
-    compute_number_of_downsampling_steps, create_volume_downsamplings, create_category_set_downsamplings
+    compute_number_of_downsampling_steps, compute_number_of_mesh_simplification_steps, create_mesh_simplifications, create_volume_downsamplings, create_category_set_downsamplings
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.numpy_methods import chunk_numpy_arr
 
@@ -94,13 +94,18 @@ def _write_mesh_component_data_to_zarr_arr(target_group: zarr.hierarchy.group, m
 
 
 def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_kernel: MagicKernel3dDownsampler, zarr_structure: zarr.hierarchy.group):
-    original_resolution_group = segm_data_gr.create_group('1')
+    
+    
+    # original_resolution_group = segm_data_gr.create_group('1')
+
 
     for segment_name, segment in zarr_structure.segment_list.groups():
-        single_segment_group = original_resolution_group.create_group(segment_name)
+        segment_id = str(int(segment.id[...]))
+        single_segment_group = segm_data_gr.create_group(segment_id)
+        single_detail_lvl_group = single_segment_group.create_group('1')
         for mesh_name, mesh in segment.mesh_list.groups():
             mesh_id = str(int(mesh.id[...]))
-            single_mesh_group = single_segment_group.create_group(mesh_id)
+            single_mesh_group = single_detail_lvl_group.create_group(mesh_id)
             for mesh_component_name, mesh_component in mesh.groups():
                 if mesh_component_name != 'id':
                     _write_mesh_component_data_to_zarr_arr(
@@ -108,21 +113,19 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_ker
                         mesh=mesh,
                         mesh_component_name=mesh_component_name
                     )
-                
     
-    # TODO: check if works
-    # TODO: fix endiannes (see notes)
+    # TODO: implement, for now 2 steps
+    mesh_simplification_steps = compute_number_of_mesh_simplification_steps()
 
-# PLAN:
-    # 1. Store original mesh data in zarr
+    # create_mesh_simplifications(
+    #     vertices=original_mesh_component_data['vertices'],
+    #     triangles=original_mesh_component_data['triangles'],
+    #     segm_data_gr=segm_data_gr,
+    #     num_steps=mesh_simplification_steps
+    # )
 
-    # 
-    # 2. Func - Compute number of downsampling steps (simplification steps) - for now just fixed
-    # compute_number_of_mesh_simplification_steps()
-    # 3. Func - Create mesh simplifications providing original mesh data (depends on what lib requires) 
-    # to func similar to create_category_set_downsampling
-    # Implementation of that function depends on how mesh simplification is done by library
-    # 4. In that function, do the same as in create_cat, but start from x2 simplification
+
+
 
 
 
