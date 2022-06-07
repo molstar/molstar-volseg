@@ -78,6 +78,25 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         # TODO: check if copied and store closed properly
         return True
 
+    async def read_meshes(self, namespace: str, key: str, segment_id: int, detail_lvl: float) -> list[object]:
+        '''
+        Returns list of meshes for a given segment, entry, detail lvl
+        '''
+        try:
+            mesh_list = []
+            path: Path = self.__path_to_object__(namespace=namespace, key=key)
+            assert path.exists(), f'Path {path} does not exist'
+            root: zarr.hierarchy.group = open_zarr_structure_from_path(path)
+            mesh_list_group = root[SEGMENTATION_DATA_GROUPNAME][segment_id][detail_lvl]
+            for mesh_name, mesh in mesh_list_group.groups():
+                mesh_list.append(mesh)
+
+        except Exception as e:
+            logging.error(e, stack_info=True, exc_info=True)
+            raise e
+
+        return mesh_list
+
     async def read(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int) -> Dict:
         '''
         Deprecated.
