@@ -13,7 +13,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor._segmentati
     map_value_to_segment_id, lattice_data_to_np_arr
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import read_volume_data
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.downsampling.downsampling import \
-    compute_number_of_downsampling_steps, compute_vertex_density, create_volume_downsamplings, create_category_set_downsamplings, simplify_meshes
+    compute_number_of_downsampling_steps, compute_vertex_density, create_volume_downsamplings, create_category_set_downsamplings, simplify_meshes, _store_mesh_data_in_zarr
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.numpy_methods import chunk_numpy_arr
 
@@ -127,55 +127,9 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_ker
     calc_mode = 'area'
     for segment_name_id, segment in segm_data_gr.groups():
         for detail_lvl, mesh_list_group in segment.groups():
-
+            
             for ratio in MESH_SIMPLIFICATION_CURVE:
                 if compute_vertex_density(mesh_list_group, mode = calc_mode) > MESH_VERTEX_DENSITY_THRESHOLD[calc_mode]:
                     # dict with mesh data for that mesh list group
                     mesh_data_dict = simplify_meshes(mesh_list_group, ratio, segment_id=segment_name_id)
-                    store_mesh_data_in_zarr(mesh_data_dict, segment, ratio)
-
-                    
-                    
-                    
-                    # _simplify_and_store_meshes(mesh_list_group, ratio, segment_id=segment_name_id)
-
-    # create_mesh_simplifications(
-    #     vertices=original_mesh_component_data['vertices'],
-    #     triangles=original_mesh_component_data['triangles'],
-    #     segm_data_gr=segm_data_gr,
-    #     num_steps=mesh_simplification_steps
-    # )
-
-
-
-
-
-
-
-    # d = {}
-    # for segment_name, segment in zarr_structure.segment_list.groups():
-    #     # TODO: store triangle count in metadata
-    #     segment_id = int(segment.id[...])
-    #     d[segment_id] = []
-    #     for mesh_name, mesh in segment.mesh_list.groups():
-    #         # indeces of vertices
-    #         triangles = decode_base64_data(mesh.triangles.data[...][0], mesh.triangles.mode[...][0])
-    #         vertices = decode_base64_data(mesh.vertices.data[...][0], mesh.vertices.mode[...][0])
-    #         
-    #         mesh_obj  = {
-    #             'triangles': [x.tolist() for x in chunk_numpy_arr(triangles, 3)],
-    #             'vertices': [x.tolist() for x in chunk_numpy_arr(vertices, 3)],
-    #         }
-    #         d[segment_id].append(mesh_obj)
-            
-
-    # arr = segm_data_gr.create_dataset(
-    #         
-    #         name='1',
-    #         dtype=object,
-    #         object_codec=numcodecs.JSON(),
-    #         shape=1
-    #     )
-    
-    # arr[...] = [d]
-    # # TODO: create simplified meshes as downsamplings
+                    _store_mesh_data_in_zarr(mesh_data_dict, segment, ratio)

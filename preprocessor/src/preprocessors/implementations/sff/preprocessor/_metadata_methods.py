@@ -71,14 +71,14 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> dict:
         elif root.primary_descriptor[0] == b'mesh_list':
             # TODO: extract number of simplified meshes
             # then write them to return statement
-            for downsampling_name, downsampling_gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
-                mesh_component_numbers_dict[downsampling_name] = {}
-                for segment_id, segment in downsampling_gr.groups():
-                    mesh_component_numbers_dict[downsampling_name][segment_id] = {}
-                    for mesh_id, mesh in segment.groups():
-                        mesh_component_numbers_dict[downsampling_name][segment_id][mesh_id] = {}
+            for segment_id, segment in root[SEGMENTATION_DATA_GROUPNAME].groups():
+                mesh_component_numbers_dict[segment_id] = {}
+                for detail_lvl, mesh_list in segment.groups():
+                    mesh_component_numbers_dict[segment_id][detail_lvl] = {}
+                    for mesh_id, mesh in mesh_list.groups():
+                        mesh_component_numbers_dict[segment_id][detail_lvl][mesh_id] = {}
                         for mesh_component_name, mesh_component in mesh.arrays():
-                            d_ref = mesh_component_numbers_dict[downsampling_name][segment_id][mesh_id]
+                            d_ref = mesh_component_numbers_dict[segment_id][detail_lvl][mesh_id]
                             d_ref[f'num_{mesh_component_name}'] = mesh_component.attrs[f'num_{mesh_component_name}']
                             
 

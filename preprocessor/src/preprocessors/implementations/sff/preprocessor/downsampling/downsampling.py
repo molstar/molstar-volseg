@@ -44,22 +44,39 @@ def _decimate_vedo_obj(vedo_obj, ratio):
     return vedo_obj.decimate(fraction=ratio)
 
 def _get_mesh_data_from_vedo_obj(vedo_obj):
-    d = {}
-    d['vertices'] = np.array(vedo_obj.points(), dtype=np.float32)
-    d['triangles'] = np.array(vedo_obj.faces(), dtype=np.int32)
-    d['normals'] = np.array(vedo_obj.normals(), dtype=np.float32)
-    d['area'] = vedo_obj.area()
-    d['volume'] = vedo_obj.volume()
-    d['num_vertices'] = len(d['vertices'])
+    d = {
+        'arrays': {},
+        'attrs': {}
+    }
+    d['arrays']['vertices'] = np.array(vedo_obj.points(), dtype=np.float32)
+    d['arrays']['triangles'] = np.array(vedo_obj.faces(), dtype=np.int32)
+    d['arrays']['normals'] = np.array(vedo_obj.normals(), dtype=np.float32)
+    d['attrs']['area'] = vedo_obj.area()
+    d['attrs']['volume'] = vedo_obj.volume()
+    d['attrs']['num_vertices'] = len(d['arrays']['vertices'])
 
     return d
 
-def store_mesh_data_in_zarr(mesh_data_dict, segment: zarr.hierarchy.group, ratio):
+def _store_mesh_data_in_zarr(mesh_data_dict, segment: zarr.hierarchy.group, ratio):
     # zarr group for that detail lvl
     new_segment_list_group = segment.create_group(str(ratio))
-    for mesh_id in mesh_data_dict:
+    d = mesh_data_dict
+    for mesh_id in d:
         single_mesh_group = new_segment_list_group.create_group(str(mesh_id))
-        # TODO: create arrays and add attrs from mesh_data_dict as in #4 on paper
+
+        for array_name, array in d[mesh_id]['arrays'].items():
+            dset = single_mesh_group.create_dataset(
+                data=array,
+                name=array_name,
+                shape=array.shape,
+                dtype=array.dtype,
+            )
+            dset.attrs[f'num_{array_name}'] = len(array)
+            
+        
+        for attr_name, attr_val in d[mesh_id]['attrs'].items():
+            single_mesh_group.attrs[attr_name] = attr_val
+        
 
 def simplify_meshes(mesh_list_group: zarr.hierarchy.Group, ratio: float, segment_id: int):
     '''Returns dict with mesh data for each mesh in mesh list'''
@@ -68,9 +85,9 @@ def simplify_meshes(mesh_list_group: zarr.hierarchy.Group, ratio: float, segment
     # decimate it
     # get vertices and triangles back
     d = {}
-    for mesh_id, mesh in mesh_list_group:
+    for mesh_id, mesh in mesh_list_group.groups():
         vedo_obj = _convert_mesh_to_vedo_obj(mesh)
-        decimated_vedo_obj = _decimate_vedo_obj(vedo_obj)
+        decimated_vedo_obj = _decimate_vedo_obj(vedo_obj, ratio)
         mesh_data = _get_mesh_data_from_vedo_obj(decimated_vedo_obj)
         d[mesh_id] = mesh_data
     return d
