@@ -1,4 +1,5 @@
 # methods for processing volume and segmentation data
+from re import L
 from vedo import Mesh
 import math
 import numcodecs
@@ -6,13 +7,13 @@ import gemmi
 import numpy as np
 import zarr
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._segmentation_methods import decode_base64_data
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import SEGMENTATION_DATA_GROUPNAME, \
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import MESH_SIMPLIFICATION_CURVE, MESH_VERTEX_DENSITY_THRESHOLD, SEGMENTATION_DATA_GROUPNAME, \
     VOLUME_DATA_GROUPNAME, MIN_GRID_SIZE
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._segmentation_methods import \
     map_value_to_segment_id, lattice_data_to_np_arr
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import read_volume_data
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.downsampling.downsampling import \
-    compute_number_of_downsampling_steps, compute_number_of_mesh_simplification_steps, create_volume_downsamplings, create_category_set_downsamplings
+    compute_number_of_downsampling_steps, compute_vertex_density, create_volume_downsamplings, create_category_set_downsamplings, simplify_meshes
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.numpy_methods import chunk_numpy_arr
 
@@ -94,11 +95,8 @@ def _write_mesh_component_data_to_zarr_arr(target_group: zarr.hierarchy.group, m
         int(mesh[mesh_component_name][f'num_{mesh_component_name}'][...])
 
 
-def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_kernel: MagicKernel3dDownsampler, zarr_structure: zarr.hierarchy.group):
-    
-    
-    # original_resolution_group = segm_data_gr.create_group('1')
 
+def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_kernel: MagicKernel3dDownsampler, zarr_structure: zarr.hierarchy.group):
 
     for segment_name, segment in zarr_structure.segment_list.groups():
         segment_id = str(int(segment.id[...]))
@@ -125,8 +123,21 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_ker
             single_mesh_group.attrs['area'] = vedo_mesh_obj.area()
             single_mesh_group.attrs['volume'] = vedo_mesh_obj.volume()
     
-    # TODO: implement, for now 2 steps
-    mesh_simplification_steps = compute_number_of_mesh_simplification_steps()
+
+    calc_mode = 'area'
+    for segment_name_id, segment in segm_data_gr.groups():
+        for detail_lvl, mesh_list_group in segment.groups():
+
+            for ratio in MESH_SIMPLIFICATION_CURVE:
+                if compute_vertex_density(mesh_list_group, mode = calc_mode) > MESH_VERTEX_DENSITY_THRESHOLD[calc_mode]:
+                    # dict with mesh data for that mesh list group
+                    mesh_data_dict = simplify_meshes(mesh_list_group, ratio, segment_id=segment_name_id)
+                    store_mesh_data_in_zarr(mesh_data_dict, segment, ratio)
+
+                    
+                    
+                    
+                    # _simplify_and_store_meshes(mesh_list_group, ratio, segment_id=segment_name_id)
 
     # create_mesh_simplifications(
     #     vertices=original_mesh_component_data['vertices'],
