@@ -14,8 +14,8 @@ def compute_number_of_mesh_simplification_steps():
     # TODO: implement - based on size of arrays similar to compute downsampling steps funct
     return 2
 
-def compute_mesh_complexity(mesh_list_group: zarr.hierarchy.group, mode='area'):
-    '''Returns estimate of mesh complexity'''
+def compute_vertex_density(mesh_list_group: zarr.hierarchy.group, mode='area'):
+    '''Returns estimate of vertex_density'''
     mesh_list = []
     total_vertex_count = 0
     for mesh_name, mesh in mesh_list_group.groups():

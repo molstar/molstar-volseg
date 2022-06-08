@@ -2,8 +2,7 @@ from pathlib import Path
 
 MESH_COMPLEXITY_THRESHOLD = {
     'area': 10,
-    'volume': 10,
-    'vertex_count': 100000
+    'volume': 200,
 }
 VOLUME_DATA_GROUPNAME = '_volume_data'
 SEGMENTATION_DATA_GROUPNAME = '_segmentation_data'
