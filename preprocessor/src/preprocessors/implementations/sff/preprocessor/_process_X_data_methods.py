@@ -12,7 +12,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor._segmentati
     map_value_to_segment_id, lattice_data_to_np_arr
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import read_volume_data
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.downsampling.downsampling import \
-    compute_number_of_downsampling_steps, compute_number_of_mesh_simplification_steps, create_mesh_simplifications, create_volume_downsamplings, create_category_set_downsamplings
+    compute_number_of_downsampling_steps, compute_number_of_mesh_simplification_steps, create_volume_downsamplings, create_category_set_downsamplings
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.numpy_methods import chunk_numpy_arr
 
@@ -108,13 +108,7 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_ker
             mesh_id = str(int(mesh.id[...]))
             single_mesh_group = single_detail_lvl_group.create_group(mesh_id)
             
-            # TODO: check in which units is area and volume
-            vertices = mesh['vertices']
-            triangles = mesh['triangles']
-            vedo_mesh_obj = Mesh([vertices, triangles])
-            single_mesh_group['num_vertices'] = vedo_mesh_obj.points()
-            single_mesh_group['area'] = vedo_mesh_obj.area()
-            single_mesh_group['volume'] = vedo_mesh_obj.volume()
+            
 
             for mesh_component_name, mesh_component in mesh.groups():
                 if mesh_component_name != 'id':
@@ -123,6 +117,13 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_ker
                         mesh=mesh,
                         mesh_component_name=mesh_component_name
                     )
+            # TODO: check in which units is area and volume
+            vertices = single_mesh_group['vertices'][...]
+            triangles = single_mesh_group['triangles'][...]
+            vedo_mesh_obj = Mesh([vertices, triangles])
+            single_mesh_group.attrs['num_vertices'] = single_mesh_group.vertices.attrs['num_vertices']
+            single_mesh_group.attrs['area'] = vedo_mesh_obj.area()
+            single_mesh_group.attrs['volume'] = vedo_mesh_obj.volume()
     
     # TODO: implement, for now 2 steps
     mesh_simplification_steps = compute_number_of_mesh_simplification_steps()
