@@ -126,10 +126,11 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_ker
 
     calc_mode = 'area'
     for segment_name_id, segment in segm_data_gr.groups():
-        for detail_lvl, mesh_list_group in segment.groups():
-            
-            for ratio in MESH_SIMPLIFICATION_CURVE:
-                if compute_vertex_density(mesh_list_group, mode = calc_mode) > MESH_VERTEX_DENSITY_THRESHOLD[calc_mode]:
-                    # dict with mesh data for that mesh list group
-                    mesh_data_dict = simplify_meshes(mesh_list_group, ratio, segment_id=segment_name_id)
-                    _store_mesh_data_in_zarr(mesh_data_dict, segment, ratio)
+        original_detail_lvl_mesh_list_group = segment['1']
+        group_ref = original_detail_lvl_mesh_list_group
+        i = 0
+        while compute_vertex_density(group_ref, mode=calc_mode) > MESH_VERTEX_DENSITY_THRESHOLD[calc_mode]:
+            new_ratio = MESH_SIMPLIFICATION_CURVE[i]
+            mesh_data_dict = simplify_meshes(group_ref, ratio=new_ratio, segment_id=segment_name_id)
+            group_ref = _store_mesh_data_in_zarr(mesh_data_dict, segment, ratio=new_ratio)
+            i = i + 1
