@@ -121,6 +121,7 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_ker
             vedo_mesh_obj = Mesh([vertices, triangles])
             single_mesh_group.attrs['num_vertices'] = single_mesh_group.vertices.attrs['num_vertices']
             single_mesh_group.attrs['area'] = vedo_mesh_obj.area()
+            # TODO: remove computing volume and 
             single_mesh_group.attrs['volume'] = vedo_mesh_obj.volume()
     
 
@@ -129,7 +130,7 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_ker
         original_detail_lvl_mesh_list_group = segment['1']
         group_ref = original_detail_lvl_mesh_list_group
         i = 0
-        while compute_vertex_density(group_ref, mode=calc_mode) > MESH_VERTEX_DENSITY_THRESHOLD[calc_mode]:
+        while i < len(MESH_SIMPLIFICATION_CURVE) and compute_vertex_density(group_ref, mode=calc_mode) > MESH_VERTEX_DENSITY_THRESHOLD[calc_mode]:
             new_ratio = MESH_SIMPLIFICATION_CURVE[i]
             mesh_data_dict = simplify_meshes(group_ref, ratio=new_ratio, segment_id=segment_name_id)
             group_ref = _store_mesh_data_in_zarr(mesh_data_dict, segment, ratio=new_ratio)

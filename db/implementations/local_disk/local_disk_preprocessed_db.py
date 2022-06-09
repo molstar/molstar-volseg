@@ -82,6 +82,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         '''
         Returns list of meshes for a given segment, entry, detail lvl
         '''
+        # TODO: change to int, in metadata have info which detail lvl correspond to which fraction
         try:
             mesh_list = []
             path: Path = self.__path_to_object__(namespace=namespace, key=key)
