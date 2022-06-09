@@ -41,10 +41,11 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> dict:
     grid_dimensions_dict = {}
 
     for arr_name, arr in root[VOLUME_DATA_GROUPNAME].arrays():
-        mean_val = str(np.mean(arr[...]))
-        std_val = str(np.std(arr[...]))
-        max_val = str(arr[...].max())
-        min_val = str(arr[...].min())
+        arr_view = arr[...]
+        mean_val = str(np.mean(arr_view))
+        std_val = str(np.std(arr_view))
+        max_val = str(arr_view.max())
+        min_val = str(arr_view.min())
         grid_dimensions_val: tuple[int, int, int] = arr.shape
 
         mean_dict[str(arr_name)] = mean_val
