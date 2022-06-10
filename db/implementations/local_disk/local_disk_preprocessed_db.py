@@ -78,7 +78,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         # TODO: check if copied and store closed properly
         return True
 
-    async def read_meshes(self, namespace: str, key: str, segment_id: int, detail_lvl: float) -> list[object]:
+    async def read_meshes(self, namespace: str, key: str, segment_id: int, detail_lvl: int) -> list[object]:
         '''
         Returns list of meshes for a given segment, entry, detail lvl
         '''

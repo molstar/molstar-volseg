@@ -46,7 +46,7 @@ def process_segmentation_data(magic_kernel: MagicKernel3dDownsampler, zarr_struc
     if zarr_structure.primary_descriptor[0] == b'three_d_volume':
         process_three_d_volume_segmentation_data(segm_data_gr, magic_kernel, zarr_structure)
     elif zarr_structure.primary_descriptor[0] == b'mesh_list':
-        process_mesh_segmentation_data(segm_data_gr, magic_kernel, zarr_structure)
+        process_mesh_segmentation_data(segm_data_gr, zarr_structure)
 
 def process_three_d_volume_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_kernel: MagicKernel3dDownsampler, zarr_structure: zarr.hierarchy.group):
     value_to_segment_id_dict = map_value_to_segment_id(zarr_structure)
@@ -96,7 +96,7 @@ def _write_mesh_component_data_to_zarr_arr(target_group: zarr.hierarchy.group, m
 
 
 
-def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_kernel: MagicKernel3dDownsampler, zarr_structure: zarr.hierarchy.group):
+def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, zarr_structure: zarr.hierarchy.group):
 
     for segment_name, segment in zarr_structure.segment_list.groups():
         segment_id = str(int(segment.id[...]))
@@ -121,8 +121,7 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_ker
             vedo_mesh_obj = Mesh([vertices, triangles])
             single_mesh_group.attrs['num_vertices'] = single_mesh_group.vertices.attrs['num_vertices']
             single_mesh_group.attrs['area'] = vedo_mesh_obj.area()
-            # TODO: remove computing volume and 
-            single_mesh_group.attrs['volume'] = vedo_mesh_obj.volume()
+            # single_mesh_group.attrs['volume'] = vedo_mesh_obj.volume()
     
 
     calc_mode = 'area'
@@ -131,7 +130,8 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_ker
         group_ref = original_detail_lvl_mesh_list_group
         i = 0
         while i < len(MESH_SIMPLIFICATION_CURVE) and compute_vertex_density(group_ref, mode=calc_mode) > MESH_VERTEX_DENSITY_THRESHOLD[calc_mode]:
-            new_ratio = MESH_SIMPLIFICATION_CURVE[i]
+            new_ratio = MESH_SIMPLIFICATION_CURVE[i][1]
+            new_detail_lvl = MESH_SIMPLIFICATION_CURVE[i][0]
             mesh_data_dict = simplify_meshes(group_ref, ratio=new_ratio, segment_id=segment_name_id)
-            group_ref = _store_mesh_data_in_zarr(mesh_data_dict, segment, ratio=new_ratio)
+            group_ref = _store_mesh_data_in_zarr(mesh_data_dict, segment, ratio=new_detail_lvl)
             i = i + 1

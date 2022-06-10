@@ -26,10 +26,10 @@ def compute_vertex_density(mesh_list_group: zarr.hierarchy.group, mode='area'):
         
         return total_vertex_count / total_area
 
-    elif mode == 'volume':
-        total_volume = 0
-        for mesh in mesh_list:
-            total_volume = total_volume + mesh.attrs['volume']
+    # elif mode == 'volume':
+    #     total_volume = 0
+    #     for mesh in mesh_list:
+    #         total_volume = total_volume + mesh.attrs['volume']
 
         return total_vertex_count / total_volume
 
@@ -52,7 +52,7 @@ def _get_mesh_data_from_vedo_obj(vedo_obj):
     d['arrays']['triangles'] = np.array(vedo_obj.faces(), dtype=np.int32)
     d['arrays']['normals'] = np.array(vedo_obj.normals(), dtype=np.float32)
     d['attrs']['area'] = vedo_obj.area()
-    d['attrs']['volume'] = vedo_obj.volume()
+    # d['attrs']['volume'] = vedo_obj.volume()
     d['attrs']['num_vertices'] = len(d['arrays']['vertices'])
 
     return d

@@ -27,16 +27,16 @@ sample_mesh_list_gr_1 = _mesh_segmentation_data[16][1]
 sample_mesh_list_gr_2 = _mesh_segmentation_data[17][1]
 
 vertex_density_1_area = compute_vertex_density(sample_mesh_list_gr_1, mode='area')
-vertex_density_1_volume = compute_vertex_density(sample_mesh_list_gr_1, mode='volume')
+# vertex_density_1_volume = compute_vertex_density(sample_mesh_list_gr_1, mode='volume')
 
 vertex_density_2_area = compute_vertex_density(sample_mesh_list_gr_2, mode='area')
-vertex_density_2_volume = compute_vertex_density(sample_mesh_list_gr_2, mode='volume')
+# vertex_density_2_volume = compute_vertex_density(sample_mesh_list_gr_2, mode='volume')
 
 print(f'mesh 1 list vertex density, area: {vertex_density_1_area}')
-print(f'mesh 1 list vertex density,  volume: {vertex_density_1_volume}')
+# print(f'mesh 1 list vertex density,  volume: {vertex_density_1_volume}')
 
 print(f'mesh 2 list vertex density, area: {vertex_density_2_area}')
-print(f'mesh 2 list vertex density,  volume: {vertex_density_2_volume}')
+# print(f'mesh 2 list vertex density,  volume: {vertex_density_2_volume}')
 
 
 a = 0
