@@ -25,7 +25,7 @@ def extract_annotations(segm_file_path: Path) -> dict:
     return segm_dict
 
 
-def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> dict:
+def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object, mesh_simplification_curve: list[tuple[int, float]]) -> dict:
     root = zarr_structure
     details = ''
     if 'details' in root:
@@ -57,6 +57,7 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> dict:
     lattice_dict = {}
     lattice_ids = []
     mesh_component_numbers_dict = {}
+    detail_lvl_to_fraction_dict = {}
     if SEGMENTATION_DATA_GROUPNAME in root:
         if root.primary_descriptor[0] == b'three_d_volume':
             for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
@@ -70,8 +71,6 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> dict:
                 lattice_dict[lattice_id] = segm_downsamplings
                 lattice_ids.append(lattice_id)
         elif root.primary_descriptor[0] == b'mesh_list':
-            # TODO: extract number of simplified meshes
-            # then write them to return statement
             for segment_id, segment in root[SEGMENTATION_DATA_GROUPNAME].groups():
                 mesh_component_numbers_dict[segment_id] = {}
                 for detail_lvl, mesh_list in segment.groups():
@@ -81,6 +80,10 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> dict:
                         for mesh_component_name, mesh_component in mesh.arrays():
                             d_ref = mesh_component_numbers_dict[segment_id][detail_lvl][mesh_id]
                             d_ref[f'num_{mesh_component_name}'] = mesh_component.attrs[f'num_{mesh_component_name}']
+
+            # adds original detail lvl
+            detail_lvl_to_fraction_dict = {1: 1.0}
+            detail_lvl_to_fraction_dict.update(dict(mesh_simplification_curve))
                             
 
 
@@ -130,7 +133,8 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> dict:
             'segmentation_downsamplings': lattice_dict
         },
         'segmentation_meshes': {
-            'mesh_component_numbers': mesh_component_numbers_dict
+            'mesh_component_numbers': mesh_component_numbers_dict,
+            'detail_lvl_to_fraction': detail_lvl_to_fraction_dict
         }
     }
 
