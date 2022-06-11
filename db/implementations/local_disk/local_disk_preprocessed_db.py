@@ -82,7 +82,6 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         '''
         Returns list of meshes for a given segment, entry, detail lvl
         '''
-        # TODO: change to int, in metadata have info which detail lvl correspond to which fraction
         try:
             mesh_list = []
             path: Path = self.__path_to_object__(namespace=namespace, key=key)
@@ -90,7 +89,12 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             root: zarr.hierarchy.group = open_zarr_structure_from_path(path)
             mesh_list_group = root[SEGMENTATION_DATA_GROUPNAME][segment_id][detail_lvl]
             for mesh_name, mesh in mesh_list_group.groups():
-                mesh_list.append(mesh)
+                mesh_data = {
+                    'mesh_id': int(mesh_name)
+                }
+                for mesh_component_name, mesh_component_arr in mesh.arrays():
+                    mesh_data[f'{mesh_component_name}'] = mesh_component_arr[...]
+                mesh_list.append(mesh_data)
 
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)
