@@ -1,6 +1,7 @@
 import json
 from decimal import Decimal
 from pathlib import Path
+from typing import TypedDict
 
 import numpy as np
 import zarr
@@ -10,6 +11,20 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants i
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._sfftk_methods import \
     open_hdf5_as_segmentation_object
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import ccp4_words_to_dict
+
+class MeshMetadata(TypedDict):
+    num_vertices: int
+    num_triangles: int
+    num_normals: int
+
+class MeshListMetadata(TypedDict):
+    mesh_ids: dict[int, MeshMetadata]
+
+class DetailLvlsMetadata(TypedDict):
+    detail_lvls: dict[int, MeshListMetadata]
+
+class MeshComponentNumbers(TypedDict):
+    segment_ids: dict[int, DetailLvlsMetadata]
 
 
 def extract_annotations(segm_file_path: Path) -> dict:
@@ -56,7 +71,7 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object, mesh_simp
 
     lattice_dict = {}
     lattice_ids = []
-    mesh_component_numbers_dict = {}
+    mesh_comp_num: MeshComponentNumbers = {}
     detail_lvl_to_fraction_dict = {}
     if SEGMENTATION_DATA_GROUPNAME in root:
         if root.primary_descriptor[0] == b'three_d_volume':
@@ -71,14 +86,19 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object, mesh_simp
                 lattice_dict[lattice_id] = segm_downsamplings
                 lattice_ids.append(lattice_id)
         elif root.primary_descriptor[0] == b'mesh_list':
+            mesh_comp_num['segment_ids'] = {}
             for segment_id, segment in root[SEGMENTATION_DATA_GROUPNAME].groups():
-                mesh_component_numbers_dict[segment_id] = {}
+                mesh_comp_num['segment_ids'][segment_id] = {
+                    'detail_lvls': {}
+                }
                 for detail_lvl, mesh_list in segment.groups():
-                    mesh_component_numbers_dict[segment_id][detail_lvl] = {}
+                    mesh_comp_num['segment_ids'][segment_id]['detail_lvls'][detail_lvl] = {
+                        'mesh_ids': {}
+                    }
                     for mesh_id, mesh in mesh_list.groups():
-                        mesh_component_numbers_dict[segment_id][detail_lvl][mesh_id] = {}
+                        mesh_comp_num['segment_ids'][segment_id]['detail_lvls'][detail_lvl]['mesh_ids'][mesh_id] = {}
                         for mesh_component_name, mesh_component in mesh.arrays():
-                            d_ref = mesh_component_numbers_dict[segment_id][detail_lvl][mesh_id]
+                            d_ref = mesh_comp_num['segment_ids'][segment_id]['detail_lvls'][detail_lvl]['mesh_ids'][mesh_id]
                             d_ref[f'num_{mesh_component_name}'] = mesh_component.attrs[f'num_{mesh_component_name}']
 
             # adds original detail lvl
@@ -133,7 +153,7 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object, mesh_simp
             'segmentation_downsamplings': lattice_dict
         },
         'segmentation_meshes': {
-            'mesh_component_numbers': mesh_component_numbers_dict,
+            'mesh_component_numbers': mesh_comp_num,
             'detail_lvl_to_fraction': detail_lvl_to_fraction_dict
         }
     }

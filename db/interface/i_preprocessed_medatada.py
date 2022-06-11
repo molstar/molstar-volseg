@@ -1,6 +1,6 @@
 import abc
 from typing import Dict, List
-
+from preprocessor.src.preprocessors.implementations.sff.preprocessor._metadata_methods import MeshComponentNumbers
 import numpy as np
 
 
@@ -70,7 +70,7 @@ class IPreprocessedMetadata(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def mesh_component_numbers(self, level: int) -> Dict:
-        '''Return dict with numbers of mesh components (triangles, vertices etc.)
-        at given mesh simplification level for mesh in mesh list of each segment'''
+    def mesh_component_numbers(self) -> MeshComponentNumbers:
+        '''Return typed dict with numbers of mesh components (triangles, vertices etc.) for
+        each segment, detail level and mesh id'''
         pass

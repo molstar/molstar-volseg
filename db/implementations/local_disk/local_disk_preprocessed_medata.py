@@ -3,6 +3,7 @@ from typing import List, Dict
 
 import numpy as np
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
+from preprocessor.src.preprocessors.implementations.sff.preprocessor._metadata_methods import MeshComponentNumbers
 
 
 class LocalDiskPreprocessedMetadata(IPreprocessedMetadata):
@@ -74,9 +75,9 @@ class LocalDiskPreprocessedMetadata(IPreprocessedMetadata):
         '''Return min for data at given downsampling level'''
         return np.float32(self.raw_metadata['volumes']['min'][str(level)])
 
-    def mesh_component_numbers(self, level: int) -> Dict:
-        '''Return dict with numbers of mesh components (triangles, vertices etc.)
-        at given mesh simplification level for mesh in mesh list of each segment'''
-        return self.raw_metadata['segmentation_meshes']['mesh_component_numbers'][str(level)]
+    def mesh_component_numbers(self) -> MeshComponentNumbers:
+        '''Return typed dict with numbers of mesh components (triangles, vertices etc.) for
+        each segment, detail level and mesh id'''
+        return self.raw_metadata['segmentation_meshes']['mesh_component_numbers']
 
 
