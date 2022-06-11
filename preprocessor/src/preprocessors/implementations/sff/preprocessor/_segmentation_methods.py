@@ -4,24 +4,37 @@ import zlib
 
 import numpy as np
 
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.numpy_methods import decide_np_dtype
 
-def lattice_data_to_np_arr(data: str, dtype: str, arr_shape: tuple[int, int, int]) -> np.ndarray:
+
+def lattice_data_to_np_arr(data: str, mode: str, endianness: str, arr_shape: tuple[int, int, int]) -> np.ndarray:
     '''
     Converts lattice data to np array.
     Under the hood, decodes lattice data into zlib-zipped data, decompress it to bytes,
-    and converts to np arr based on dtype (sff mode) and shape (sff size)
+    and converts to np arr based on dtype (sff mode), endianness and shape (sff size)
     '''
     try:
         decoded_data = base64.b64decode(data)
         byteseq = zlib.decompress(decoded_data)
+        np_dtype = decide_np_dtype(mode=mode, endianness=endianness)
         # order should be F as frontend requests in X,Y,Z order,
         # while numpy by default has Z,Y,X (C order)
-        arr = np.frombuffer(byteseq, dtype=dtype).reshape(arr_shape, order='F')
+        arr = np.frombuffer(byteseq, dtype=np_dtype).reshape(arr_shape, order='F')
     except Exception as e:
         logging.error(e, stack_info=True, exc_info=True)
         raise e
     return arr
 
+def decode_base64_data(data: str, mode: str, endianness: str):
+    try:
+        # TODO: decode any data, take into account endiannes
+        decoded_data = base64.b64decode(data)
+        np_dtype = decide_np_dtype(mode=mode, endianness=endianness)
+        arr = np.frombuffer(decoded_data, dtype=np_dtype)
+    except Exception as e:
+        logging.error(e, stack_info=True, exc_info=True)
+        raise e
+    return arr
 
 def map_value_to_segment_id(zarr_structure):
     '''

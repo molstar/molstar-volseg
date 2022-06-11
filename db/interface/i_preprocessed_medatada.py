@@ -1,6 +1,6 @@
 import abc
-from typing import List
-
+from typing import Dict, List
+from preprocessor.src.preprocessors.implementations.sff.preprocessor._metadata_methods import MeshComponentNumbers
 import numpy as np
 
 
@@ -50,11 +50,33 @@ class IPreprocessedMetadata(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def mean(self, level: int)  -> np.float64:
+    def mean(self, level: int)  -> np.float32:
         '''Return mean for data at given downsampling level'''
         pass
 
     @abc.abstractmethod
-    def std(self, level: int)  -> np.float64:
+    def std(self, level: int)  -> np.float32:
         '''Return standard deviation for data at given downsampling level'''
+        pass
+    
+    @abc.abstractmethod
+    def max(self, level: int)  -> np.float32:
+        '''Return max for data at given downsampling level'''
+        pass
+    
+    @abc.abstractmethod
+    def min(self, level: int)  -> np.float32:
+        '''Return min for data at given downsampling level'''
+        pass
+
+    @abc.abstractmethod
+    def mesh_component_numbers(self) -> MeshComponentNumbers:
+        '''Return typed dict with numbers of mesh components (triangles, vertices etc.) for
+        each segment, detail level and mesh id'''
+        pass
+
+    @abc.abstractmethod
+    def detail_lvl_to_fraction(self) -> dict:
+        '''Returns dict with detail lvls (1,2,3 ...) as keys and corresponding
+        mesh simplification ratios (fractions, e.g. 0.8) as values'''
         pass

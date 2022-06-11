@@ -6,7 +6,7 @@ from db.implementations.local_disk.local_disk_preprocessed_medata import LocalDi
 from preprocessor.src.preprocessors.i_data_preprocessor import IDataPreprocessor
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._zarr_methods import get_volume_downsampling_from_zarr, get_segmentation_downsampling_from_zarr
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import GRID_METADATA_FILENAME, \
-    ANNOTATION_METADATA_FILENAME
+    ANNOTATION_METADATA_FILENAME, MESH_SIMPLIFICATION_CURVE
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
 
 
@@ -21,7 +21,7 @@ class SFFPreprocessor(IDataPreprocessor):
     from ._hdf5_to_zarr import hdf5_to_zarr
     from ._volume_map_methods import read_volume_map_to_object, normalize_axis_order
     from ._process_X_data_methods import process_volume_data, process_segmentation_data
-    from ._metadata_methods import temp_save_metadata, extract_annotation_metadata, extract_grid_metadata
+    from ._metadata_methods import temp_save_metadata, extract_annotations, extract_metadata
 
     def __init__(self):
         # path to root of temporary storage for zarr hierarchy
@@ -46,17 +46,18 @@ class SFFPreprocessor(IDataPreprocessor):
             map_object = SFFPreprocessor.read_volume_map_to_object(volume_file_path)
             normalized_axis_map_object = SFFPreprocessor.normalize_axis_order(map_object)
 
+            mesh_simplification_curve = MESH_SIMPLIFICATION_CURVE
             if segm_file_path is not None:
-                SFFPreprocessor.process_segmentation_data(self.magic_kernel, zarr_structure)
+                SFFPreprocessor.process_segmentation_data(self.magic_kernel, zarr_structure, mesh_simplification_curve)
 
             SFFPreprocessor.process_volume_data(zarr_structure, normalized_axis_map_object, volume_force_dtype)
 
-            grid_metadata = SFFPreprocessor.extract_grid_metadata(zarr_structure, normalized_axis_map_object)
+            grid_metadata = SFFPreprocessor.extract_metadata(zarr_structure, normalized_axis_map_object, mesh_simplification_curve)
             
             grid_dimensions: list = list(LocalDiskPreprocessedMetadata(grid_metadata).grid_dimensions())
             zarr_volume_arr_shape: list = list(get_volume_downsampling_from_zarr(1, zarr_structure).shape)
             
-            if segm_file_path is not None:
+            if segm_file_path is not None and zarr_structure.primary_descriptor[0] == b'three_d_volume':
                 zarr_segm_arr_shape: list = list(get_segmentation_downsampling_from_zarr(1, zarr_structure, 0).shape)
                 assert grid_dimensions == zarr_segm_arr_shape, \
                 f'grid dimensions from metadata {grid_dimensions} are not equal to segmentation arr shape {zarr_segm_arr_shape}'
@@ -67,7 +68,7 @@ class SFFPreprocessor(IDataPreprocessor):
             SFFPreprocessor.temp_save_metadata(grid_metadata, GRID_METADATA_FILENAME, self.temp_zarr_structure_path)
 
             if segm_file_path is not None:
-                annotation_metadata = SFFPreprocessor.extract_annotation_metadata(segm_file_path)
+                annotation_metadata = SFFPreprocessor.extract_annotations(segm_file_path)
                 SFFPreprocessor.temp_save_metadata(annotation_metadata, ANNOTATION_METADATA_FILENAME, self.temp_zarr_structure_path)
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)

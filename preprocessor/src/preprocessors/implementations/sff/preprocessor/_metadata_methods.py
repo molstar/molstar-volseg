@@ -1,6 +1,7 @@
 import json
 from decimal import Decimal
 from pathlib import Path
+from typing import TypedDict
 
 import numpy as np
 import zarr
@@ -11,18 +12,35 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor._sfftk_meth
     open_hdf5_as_segmentation_object
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import ccp4_words_to_dict
 
+class MeshMetadata(TypedDict):
+    num_vertices: int
+    num_triangles: int
+    num_normals: int
 
-def extract_annotation_metadata(segm_file_path: Path) -> dict:
+class MeshListMetadata(TypedDict):
+    mesh_ids: dict[int, MeshMetadata]
+
+class DetailLvlsMetadata(TypedDict):
+    detail_lvls: dict[int, MeshListMetadata]
+
+class MeshComponentNumbers(TypedDict):
+    segment_ids: dict[int, DetailLvlsMetadata]
+
+
+def extract_annotations(segm_file_path: Path) -> dict:
     '''Returns processed dict of annotation metadata (some fields are removed)'''
     segm_obj = open_hdf5_as_segmentation_object(segm_file_path)
     segm_dict = segm_obj.as_json()
     for lattice in segm_dict['lattice_list']:
         del lattice['data']
+    for segment in segm_dict['segment_list']:
+        # mesh list with list of ids
+        segment['mesh_list'] = [x['id'] for x in segment['mesh_list']]
 
     return segm_dict
 
 
-def extract_grid_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> dict:
+def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object, mesh_simplification_curve: list[tuple[int, float]]) -> dict:
     root = zarr_structure
     details = ''
     if 'details' in root:
@@ -38,10 +56,11 @@ def extract_grid_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> d
     grid_dimensions_dict = {}
 
     for arr_name, arr in root[VOLUME_DATA_GROUPNAME].arrays():
-        mean_val = str(np.mean(arr[...]))
-        std_val = str(np.std(arr[...]))
-        max_val = str(arr[...].max())
-        min_val = str(arr[...].min())
+        arr_view = arr[...]
+        mean_val = str(np.mean(arr_view))
+        std_val = str(np.std(arr_view))
+        max_val = str(arr_view.max())
+        min_val = str(arr_view.min())
         grid_dimensions_val: tuple[int, int, int] = arr.shape
 
         mean_dict[str(arr_name)] = mean_val
@@ -52,17 +71,41 @@ def extract_grid_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> d
 
     lattice_dict = {}
     lattice_ids = []
+    mesh_comp_num: MeshComponentNumbers = {}
+    detail_lvl_to_fraction_dict = {}
     if SEGMENTATION_DATA_GROUPNAME in root:
-        for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
-            # each key is lattice id
-            lattice_id = int(gr_name)
+        if root.primary_descriptor[0] == b'three_d_volume':
+            for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
+                # each key is lattice id
+                lattice_id = int(gr_name)
 
-            segm_downsamplings = sorted(gr.group_keys())
-            # convert to ints
-            segm_downsamplings = sorted([int(x) for x in segm_downsamplings])
+                segm_downsamplings = sorted(gr.group_keys())
+                # convert to ints
+                segm_downsamplings = sorted([int(x) for x in segm_downsamplings])
 
-            lattice_dict[lattice_id] = segm_downsamplings
-            lattice_ids.append(lattice_id)
+                lattice_dict[lattice_id] = segm_downsamplings
+                lattice_ids.append(lattice_id)
+        elif root.primary_descriptor[0] == b'mesh_list':
+            mesh_comp_num['segment_ids'] = {}
+            for segment_id, segment in root[SEGMENTATION_DATA_GROUPNAME].groups():
+                mesh_comp_num['segment_ids'][segment_id] = {
+                    'detail_lvls': {}
+                }
+                for detail_lvl, mesh_list in segment.groups():
+                    mesh_comp_num['segment_ids'][segment_id]['detail_lvls'][detail_lvl] = {
+                        'mesh_ids': {}
+                    }
+                    for mesh_id, mesh in mesh_list.groups():
+                        mesh_comp_num['segment_ids'][segment_id]['detail_lvls'][detail_lvl]['mesh_ids'][mesh_id] = {}
+                        for mesh_component_name, mesh_component in mesh.arrays():
+                            d_ref = mesh_comp_num['segment_ids'][segment_id]['detail_lvls'][detail_lvl]['mesh_ids'][mesh_id]
+                            d_ref[f'num_{mesh_component_name}'] = mesh_component.attrs[f'num_{mesh_component_name}']
+
+            # adds original detail lvl
+            detail_lvl_to_fraction_dict = {1: 1.0}
+            detail_lvl_to_fraction_dict.update(dict(mesh_simplification_curve))
+                            
+
 
     d = ccp4_words_to_dict(map_object)
 
@@ -90,19 +133,29 @@ def extract_grid_metadata(zarr_structure: zarr.hierarchy.group, map_object) -> d
     # original_grid_dimensions: Tuple[int, int, int] = (d['NC'], d['NR'], d['NS'])
 
     return {
-        'details': details,
-        'volume_downsamplings': volume_downsamplings,
-        'segmentation_lattice_ids': lattice_ids,
-        'segmentation_downsamplings': lattice_dict,
-        # downsamplings have different voxel size so it is a dict
-        'voxel_size': voxel_sizes_in_downsamplings,
-        'origin': origin,
-        'grid_dimensions': (d['NC'], d['NR'], d['NS']),
-        'sampled_grid_dimensions': grid_dimensions_dict,
-        'mean': mean_dict,
-        'std': std_dict,
-        'max': max_dict,
-        'min': min_dict
+        'general': {
+            'details': details
+        },
+        'volumes': {
+            'volume_downsamplings': volume_downsamplings,
+            # downsamplings have different voxel size so it is a dict
+            'voxel_size': voxel_sizes_in_downsamplings,
+            'origin': origin,
+            'grid_dimensions': (d['NC'], d['NR'], d['NS']),
+            'sampled_grid_dimensions': grid_dimensions_dict,
+            'mean': mean_dict,
+            'std': std_dict,
+            'max': max_dict,
+            'min': min_dict
+        },
+        'segmentation_lattices': {
+            'segmentation_lattice_ids': lattice_ids,
+            'segmentation_downsamplings': lattice_dict
+        },
+        'segmentation_meshes': {
+            'mesh_component_numbers': mesh_comp_num,
+            'detail_lvl_to_fraction': detail_lvl_to_fraction_dict
+        }
     }
 
 

@@ -78,6 +78,30 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         # TODO: check if copied and store closed properly
         return True
 
+    async def read_meshes(self, namespace: str, key: str, segment_id: int, detail_lvl: int) -> list[object]:
+        '''
+        Returns list of meshes for a given segment, entry, detail lvl
+        '''
+        try:
+            mesh_list = []
+            path: Path = self.__path_to_object__(namespace=namespace, key=key)
+            assert path.exists(), f'Path {path} does not exist'
+            root: zarr.hierarchy.group = open_zarr_structure_from_path(path)
+            mesh_list_group = root[SEGMENTATION_DATA_GROUPNAME][segment_id][detail_lvl]
+            for mesh_name, mesh in mesh_list_group.groups():
+                mesh_data = {
+                    'mesh_id': int(mesh_name)
+                }
+                for mesh_component_name, mesh_component_arr in mesh.arrays():
+                    mesh_data[f'{mesh_component_name}'] = mesh_component_arr[...]
+                mesh_list.append(mesh_data)
+
+        except Exception as e:
+            logging.error(e, stack_info=True, exc_info=True)
+            raise e
+
+        return mesh_list
+
     async def read(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int) -> Dict:
         '''
         Deprecated.
@@ -194,14 +218,14 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
 
         return d
 
-    async def read_grid_metadata(self, namespace: str, key: str) -> IPreprocessedMetadata:
+    async def read_metadata(self, namespace: str, key: str) -> IPreprocessedMetadata:
         path: Path = self.__path_to_object__(namespace=namespace, key=key) / GRID_METADATA_FILENAME
         with open(path.resolve(), 'r', encoding='utf-8') as f:
             # reads into dict
             read_json_of_metadata: Dict = json.load(f)
         return LocalDiskPreprocessedMetadata(read_json_of_metadata)
     
-    async def read_annotation_metadata(self, namespace: str, key: str) -> Dict:
+    async def read_annotations(self, namespace: str, key: str) -> Dict:
         path: Path = self.__path_to_object__(namespace=namespace, key=key) / ANNOTATION_METADATA_FILENAME
         with open(path.resolve(), 'r', encoding='utf-8') as f:
             # reads into dict

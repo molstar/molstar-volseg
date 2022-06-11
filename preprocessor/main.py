@@ -1,3 +1,5 @@
+import asyncio
+from pprint import pprint
 from asgiref.sync import async_to_sync
 import numpy as np
 
@@ -142,6 +144,17 @@ async def check_read_slice(db: LocalDiskPreprocessedDb):
         'slice_emd_99999': slice_emd_99999
     }
 
+async def check_read_meshes(db: LocalDiskPreprocessedDb):
+    read_meshes_list = await db.read_meshes(
+        'empiar',
+        'empiar-10070',
+        15,
+        3
+    )
+    pprint(read_meshes_list)
+
+    return read_meshes_list
+
 
 if __name__ == '__main__':
     db = LocalDiskPreprocessedDb()
@@ -149,6 +162,9 @@ if __name__ == '__main__':
     preprocess_everything(db, RAW_INPUT_FILES_DIR)
     # uncomment to check read slice method
     # asyncio.run(check_read_slice(db))
+
+    # uncomment to check read_meshes method
+    # asyncio.run(check_read_meshes(db))
 
     # event loop works, while async to sync returns Metadata class
     # https://stackoverflow.com/questions/44048536/python3-get-result-from-async-method

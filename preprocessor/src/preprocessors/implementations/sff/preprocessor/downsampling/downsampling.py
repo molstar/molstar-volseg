@@ -1,12 +1,121 @@
+from decimal import Decimal
 import logging
 import math
 from typing import Dict, List
-
+from vedo import Mesh
 from ._category_set_downsampling_methods import *
 from preprocessor.src.preprocessors.implementations.sff.downsampling_level_dict import DownsamplingLevelDict
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DOWNSAMPLING_KERNEL
 from preprocessor.src.preprocessors.implementations.sff.segmentation_set_table import SegmentationSetTable
 from scipy import signal, ndimage
+
+
+def compute_vertex_density(mesh_list_group: zarr.hierarchy.group, mode='area'):
+    '''Takes as input mesh list group with stored original lvl meshes.
+    Returns estimate of vertex_density for mesh list'''
+    mesh_list = []
+    total_vertex_count = 0
+    for mesh_name, mesh in mesh_list_group.groups():
+        mesh_list.append(mesh)
+        total_vertex_count = total_vertex_count + mesh.attrs['num_vertices']
+
+    if mode == 'area':
+        total_area = 0
+        for mesh in mesh_list:
+            total_area = total_area + mesh.attrs['area']
+        
+        return total_vertex_count / total_area
+
+    # elif mode == 'volume':
+    #     total_volume = 0
+    #     for mesh in mesh_list:
+    #         total_volume = total_volume + mesh.attrs['volume']
+
+        return total_vertex_count / total_volume
+
+
+def _convert_mesh_to_vedo_obj(mesh_from_zarr):
+    vertices = mesh_from_zarr.vertices[...]
+    triangles = mesh_from_zarr.triangles[...]
+    vedo_mesh_obj = Mesh([vertices, triangles])
+    return vedo_mesh_obj
+
+def _decimate_vedo_obj(vedo_obj, ratio):
+    return vedo_obj.decimate(fraction=ratio)
+
+def _get_mesh_data_from_vedo_obj(vedo_obj):
+    d = {
+        'arrays': {},
+        'attrs': {}
+    }
+    d['arrays']['vertices'] = np.array(vedo_obj.points(), dtype=np.float32)
+    d['arrays']['triangles'] = np.array(vedo_obj.faces(), dtype=np.int32)
+    d['arrays']['normals'] = np.array(vedo_obj.normals(), dtype=np.float32)
+    d['attrs']['area'] = vedo_obj.area()
+    # d['attrs']['volume'] = vedo_obj.volume()
+    d['attrs']['num_vertices'] = len(d['arrays']['vertices'])
+
+    return d
+
+def _store_mesh_data_in_zarr(mesh_data_dict, segment: zarr.hierarchy.group, ratio):
+    # zarr group for that detail lvl
+    new_segment_list_group = segment.create_group(str(ratio))
+    d = mesh_data_dict
+    for mesh_id in d:
+        single_mesh_group = new_segment_list_group.create_group(str(mesh_id))
+
+        for array_name, array in d[mesh_id]['arrays'].items():
+            dset = single_mesh_group.create_dataset(
+                data=array,
+                name=array_name,
+                shape=array.shape,
+                dtype=array.dtype,
+            )
+            dset.attrs[f'num_{array_name}'] = len(array)
+            
+        
+        for attr_name, attr_val in d[mesh_id]['attrs'].items():
+            single_mesh_group.attrs[attr_name] = attr_val
+
+    return new_segment_list_group
+        
+
+def simplify_meshes(mesh_list_group: zarr.hierarchy.Group, ratio: float, segment_id: int):
+    '''Returns dict with mesh data for each mesh in mesh list'''
+    # for each mesh
+    # construct vedo mesh object
+    # decimate it
+    # get vertices and triangles back
+    d = {}
+    for mesh_id, mesh in mesh_list_group.groups():
+        vedo_obj = _convert_mesh_to_vedo_obj(mesh)
+        decimated_vedo_obj = _decimate_vedo_obj(vedo_obj, ratio)
+        mesh_data = _get_mesh_data_from_vedo_obj(decimated_vedo_obj)
+        d[mesh_id] = mesh_data
+    return d
+
+# def __store_simplified_mesh_in_zarr(vertices, triangles, normals, simplified_mesh_zarr_gr):
+#     # TODO: add attrs (num ...) to arrs to
+#     pass
+
+# def create_mesh_simplifications(vertices, triangles, segm_data_gr, num_steps):
+#     mesh = Mesh([vertices, triangles])
+#     for step in range(1, num_steps + 1):
+#         ratio = Decimal(2)**step
+#         factor = float(Decimal(1) / ratio)
+#         decimated_mesh = mesh.decimate(factor)
+#         decimated_normals = np.array(decimated_mesh.normals(), dtype=np.float32)
+#         decimated_vertices = np.array(decimated_mesh.points(), dtype=np.float32)
+#         decimated_triangles = np.array(decimated_mesh.faces(), dtype=np.int32)
+#         # simplified_mesh_zarr_gr = segm_data_gr.create_group(str(ratio))
+#         __store_simplified_mesh_in_zarr(
+#             vertices=decimated_vertices,
+#             triangles=decimated_triangles,
+#             normals=decimated_normals,
+#             simplified_mesh_zarr_gr=simplified_mesh_zarr_gr
+#         )
+
+
 
 
 def compute_number_of_downsampling_steps(min_grid_size: int, input_grid_size: int, force_dtype: type, factor: int,
@@ -58,9 +167,6 @@ def create_category_set_downsamplings(
     '''
     # table with just singletons, e.g. "104": {104}, "94" :{94}
     initial_set_table = SegmentationSetTable(original_data, value_to_segment_id_dict_for_specific_lattice_id)
-
-    # to make it uniform int32 with other level grids
-    original_data = original_data.astype(np.int32)
 
     # for now contains just x1 downsampling lvl dict, in loop new dicts for new levels are appended
     levels = [
