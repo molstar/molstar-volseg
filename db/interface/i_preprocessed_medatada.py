@@ -74,3 +74,9 @@ class IPreprocessedMetadata(abc.ABC):
         '''Return typed dict with numbers of mesh components (triangles, vertices etc.) for
         each segment, detail level and mesh id'''
         pass
+
+    @abc.abstractmethod
+    def detail_lvl_to_fraction(self) -> dict:
+        '''Returns dict with detail lvls (1,2,3 ...) as keys and corresponding
+        mesh simplification ratios (fractions, e.g. 0.8) as values'''
+        pass

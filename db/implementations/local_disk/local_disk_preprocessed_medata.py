@@ -80,4 +80,7 @@ class LocalDiskPreprocessedMetadata(IPreprocessedMetadata):
         each segment, detail level and mesh id'''
         return self.raw_metadata['segmentation_meshes']['mesh_component_numbers']
 
-
+    def detail_lvl_to_fraction(self) -> dict:
+        '''Returns dict with detail lvls (1,2,3 ...) as keys and corresponding
+        mesh simplification ratios (fractions, e.g. 0.8) as values'''
+        return self.raw_metadata['segmentation_meshes']['detail_lvl_to_fraction']
