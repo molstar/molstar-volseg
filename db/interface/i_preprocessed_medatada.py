@@ -50,22 +50,22 @@ class IPreprocessedMetadata(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def mean(self, level: int)  -> np.float64:
+    def mean(self, level: int)  -> np.float32:
         '''Return mean for data at given downsampling level'''
         pass
 
     @abc.abstractmethod
-    def std(self, level: int)  -> np.float64:
+    def std(self, level: int)  -> np.float32:
         '''Return standard deviation for data at given downsampling level'''
         pass
     
     @abc.abstractmethod
-    def max(self, level: int)  -> np.float64:
+    def max(self, level: int)  -> np.float32:
         '''Return max for data at given downsampling level'''
         pass
     
     @abc.abstractmethod
-    def min(self, level: int)  -> np.float64:
+    def min(self, level: int)  -> np.float32:
         '''Return min for data at given downsampling level'''
         pass
 

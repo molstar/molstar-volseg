@@ -59,19 +59,19 @@ class LocalDiskPreprocessedMetadata(IPreprocessedMetadata):
         '''
         return self.raw_metadata['volumes']['sampled_grid_dimensions'][str(level)]
 
-    def mean(self, level: int)  -> np.float64:
+    def mean(self, level: int)  -> np.float32:
         '''Return mean for data at given downsampling level'''
         return np.float32(self.raw_metadata['volumes']['mean'][str(level)])
 
-    def std(self, level: int)  -> np.float64:
+    def std(self, level: int)  -> np.float32:
         '''Return standard deviation for data at given downsampling level'''
         return np.float32(self.raw_metadata['volumes']['std'][str(level)])
 
-    def max(self, level: int)  -> np.float64:
+    def max(self, level: int)  -> np.float32:
         '''Return max for data at given downsampling level'''
         return np.float32(self.raw_metadata['volumes']['max'][str(level)])
     
-    def min(self, level: int)  -> np.float64:
+    def min(self, level: int)  -> np.float32:
         '''Return min for data at given downsampling level'''
         return np.float32(self.raw_metadata['volumes']['min'][str(level)])
 
