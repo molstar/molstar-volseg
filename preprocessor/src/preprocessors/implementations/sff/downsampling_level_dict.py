@@ -4,7 +4,7 @@ from preprocessor.src.preprocessors.implementations.sff.segmentation_set_table i
 
 
 class DownsamplingLevelDict:
-    def __init__(self, level_dict):
+    def __init__(self, level_dict: dict):
         '''
         Dict for categorical set downsampling level
         '''

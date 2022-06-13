@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def chunk_numpy_arr(arr, chunk_size):
+def chunk_numpy_arr(arr: np.ndarray, chunk_size: int):
     lst = np.split(arr, np.arange(chunk_size, len(arr), chunk_size))
     return np.stack(lst, axis=0)
 
