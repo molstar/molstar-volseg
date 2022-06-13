@@ -1,0 +1,1 @@
+1. Compressor/filter for zarr arrs - maybe such that will allow faster reading, not smaller filesizes
