@@ -4,7 +4,7 @@ import zarr
 import numpy as np
 from db.implementations.local_disk.local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
 from preprocessor.src.preprocessors.i_data_preprocessor import IDataPreprocessor
-from preprocessor.src.preprocessors.implementations.sff.preprocessor._zarr_methods import get_volume_downsampling_from_zarr, get_segmentation_downsampling_from_zarr
+from preprocessor.src.preprocessors.implementations.sff.preprocessor._zarr_methods import get_volume_downsampling_from_zarr, get_grid_segmentation_downsampling_from_zarr
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import GRID_METADATA_FILENAME, \
     ANNOTATION_METADATA_FILENAME, MESH_SIMPLIFICATION_CURVE
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
@@ -58,7 +58,7 @@ class SFFPreprocessor(IDataPreprocessor):
             zarr_volume_arr_shape: list = list(get_volume_downsampling_from_zarr(1, zarr_structure).shape)
             
             if segm_file_path is not None and zarr_structure.primary_descriptor[0] == b'three_d_volume':
-                zarr_segm_arr_shape: list = list(get_segmentation_downsampling_from_zarr(1, zarr_structure, 0).shape)
+                zarr_segm_arr_shape: list = list(get_grid_segmentation_downsampling_from_zarr(1, zarr_structure, 0).shape)
                 assert grid_dimensions == zarr_segm_arr_shape, \
                 f'grid dimensions from metadata {grid_dimensions} are not equal to segmentation arr shape {zarr_segm_arr_shape}'
             

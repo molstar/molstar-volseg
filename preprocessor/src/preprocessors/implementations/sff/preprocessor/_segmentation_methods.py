@@ -1,6 +1,7 @@
 import base64
 import logging
 import zlib
+import zarr
 
 import numpy as np
 
@@ -36,7 +37,7 @@ def decode_base64_data(data: str, mode: str, endianness: str):
         raise e
     return arr
 
-def map_value_to_segment_id(zarr_structure):
+def map_value_to_segment_id(zarr_structure: zarr.hierarchy.group):
     '''
     Iterates over zarr structure and returns dict with
     keys=lattice_id, and for each lattice id => keys=grid values, values=segm ids
@@ -50,5 +51,4 @@ def map_value_to_segment_id(zarr_structure):
         if lat_id not in d:
             d[lat_id] = {}
         d[lat_id][value] = segment_id
-    # print(d)
     return d

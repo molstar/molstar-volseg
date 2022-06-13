@@ -23,7 +23,6 @@ def read_volume_data(m: gemmi.Ccp4Map, force_dtype=np.float32) -> np.ndarray:
     '''
     Takes read map object (axis normalized upfront) and returns numpy arr with volume data
     '''
-    # TODO: can be dask array to save memory?
     arr: np.ndarray = np.array(m.grid, dtype=force_dtype)
     # gemmi assigns columns to 1st numpy dimension, and sections to 3rd
     # but we don't need swapaxes, as slices are requested from
@@ -33,8 +32,8 @@ def read_volume_data(m: gemmi.Ccp4Map, force_dtype=np.float32) -> np.ndarray:
 
 
 def read_and_normalize_map(volume_file_path: Path) -> np.ndarray:
-    map_object = read_volume_map_to_object(volume_file_path)
-    normalized_axis_map_object = normalize_axis_order(map_object)
+    map_object: gemmi.Ccp4Map = read_volume_map_to_object(volume_file_path)
+    normalized_axis_map_object: gemmi.Ccp4Map = normalize_axis_order(map_object)
     arr = read_volume_data(normalized_axis_map_object)
     return arr
 
@@ -50,7 +49,6 @@ def normalize_axis_order(map_object: gemmi.Ccp4Map):
     try:
         assert new_axis_order == (1, 2, 3), f'Axis order is {new_axis_order}, should be (1, 2, 3) or X, Y, Z'
     except AssertionError as e:
-        # TODO: check if it should be logger instead LATER ON
         logging.error(e, stack_info=True, exc_info=True)
     return map_object
 

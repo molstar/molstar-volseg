@@ -57,7 +57,7 @@ def _get_mesh_data_from_vedo_obj(vedo_obj):
 
 def _store_mesh_data_in_zarr(mesh_data_dict, segment: zarr.hierarchy.group, ratio):
     # zarr group for that detail lvl
-    new_segment_list_group = segment.create_group(str(ratio))
+    new_segment_list_group: zarr.hierarchy.group = segment.create_group(str(ratio))
     d = mesh_data_dict
     for mesh_id in d:
         single_mesh_group = new_segment_list_group.create_group(str(mesh_id))
