@@ -17,7 +17,7 @@ def compute_vertex_density(mesh_list_group: zarr.hierarchy.group, mode='area'):
     total_vertex_count = 0
     for mesh_name, mesh in mesh_list_group.groups():
         mesh_list.append(mesh)
-        total_vertex_count = total_vertex_count + mesh.attrs['num_vertices']
+        total_vertex_count: int = total_vertex_count + int(mesh.attrs['num_vertices'])
 
     if mode == 'area':
         total_area = 0
@@ -30,8 +30,6 @@ def compute_vertex_density(mesh_list_group: zarr.hierarchy.group, mode='area'):
     #     total_volume = 0
     #     for mesh in mesh_list:
     #         total_volume = total_volume + mesh.attrs['volume']
-
-        return total_vertex_count / total_volume
 
 
 def _convert_mesh_to_vedo_obj(mesh_from_zarr):

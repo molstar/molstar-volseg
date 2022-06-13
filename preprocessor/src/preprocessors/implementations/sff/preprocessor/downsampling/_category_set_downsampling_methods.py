@@ -15,7 +15,7 @@ def store_downsampling_levels_in_zarr(levels_list: list[DownsamplingLevelDict],
         ratio = level_dict.get_ratio()
 
         new_level_group: zarr.hierarchy.Group = downsampled_data_group.create_group(str(ratio))
-        grid_arr = new_level_group.create_dataset(
+        new_level_group.create_dataset(
             data=grid,
             name='grid',
             shape=grid.shape,
