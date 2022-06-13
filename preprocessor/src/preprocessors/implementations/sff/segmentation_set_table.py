@@ -50,7 +50,6 @@ class SegmentationSetTable:
         '''
         Looks up a category (set) in entries dict, returns its id or None if not found
         '''
-        # TODO: check if dict has unique categories indeed!
         for category_id, category in self.entries.items():
             if category == target_category:
                 return category_id

@@ -68,7 +68,7 @@ def process_three_d_volume_segmentation_data(segm_data_gr: zarr.hierarchy.group,
             min_downsampled_file_size_bytes=5 * 10 ** 6
         )
         # specific lattice with specific id
-        lattice_gr = segm_data_gr.create_group(gr_name)
+        lattice_gr: zarr.hierarchy.group = segm_data_gr.create_group(gr_name)
         create_category_set_downsamplings(
             magic_kernel,
             segm_arr,
@@ -85,7 +85,7 @@ def _write_mesh_component_data_to_zarr_arr(target_group: zarr.hierarchy.group, m
         )
     # chunked onto triples
     chunked_component_data = chunk_numpy_arr(unchunked_component_data, 3)
-    component_arr = target_group.create_dataset(
+    component_arr: zarr.core.Array = target_group.create_dataset(
         data=chunked_component_data,
         name=mesh_component_name,
         shape=chunked_component_data.shape,
@@ -105,8 +105,6 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, zarr_stru
         for mesh_name, mesh in segment.mesh_list.groups():
             mesh_id = str(int(mesh.id[...]))
             single_mesh_group = single_detail_lvl_group.create_group(mesh_id)
-            
-            
 
             for mesh_component_name, mesh_component in mesh.groups():
                 if mesh_component_name != 'id':

@@ -92,30 +92,6 @@ def simplify_meshes(mesh_list_group: zarr.hierarchy.Group, ratio: float, segment
         d[mesh_id] = mesh_data
     return d
 
-# def __store_simplified_mesh_in_zarr(vertices, triangles, normals, simplified_mesh_zarr_gr):
-#     # TODO: add attrs (num ...) to arrs to
-#     pass
-
-# def create_mesh_simplifications(vertices, triangles, segm_data_gr, num_steps):
-#     mesh = Mesh([vertices, triangles])
-#     for step in range(1, num_steps + 1):
-#         ratio = Decimal(2)**step
-#         factor = float(Decimal(1) / ratio)
-#         decimated_mesh = mesh.decimate(factor)
-#         decimated_normals = np.array(decimated_mesh.normals(), dtype=np.float32)
-#         decimated_vertices = np.array(decimated_mesh.points(), dtype=np.float32)
-#         decimated_triangles = np.array(decimated_mesh.faces(), dtype=np.int32)
-#         # simplified_mesh_zarr_gr = segm_data_gr.create_group(str(ratio))
-#         __store_simplified_mesh_in_zarr(
-#             vertices=decimated_vertices,
-#             triangles=decimated_triangles,
-#             normals=decimated_normals,
-#             simplified_mesh_zarr_gr=simplified_mesh_zarr_gr
-#         )
-
-
-
-
 def compute_number_of_downsampling_steps(min_grid_size: int, input_grid_size: int, force_dtype: type, factor: int,
                                          min_downsampled_file_size_bytes: int = 5 * 10 ** 6) -> int:
     if input_grid_size <= min_grid_size:
@@ -139,7 +115,7 @@ def create_volume_downsamplings(original_data: np.ndarray, downsampling_steps: i
     current_level_data = original_data
     __store_single_volume_downsampling_in_zarr_stucture(current_level_data, downsampled_data_group, 1)
     for i in range(downsampling_steps):
-        current_ratio = 2 ** (i + 1)
+        current_ratio: int = 2 ** (i + 1)
         kernel = generate_kernel_3d_arr(list(DOWNSAMPLING_KERNEL))
         # downsampled_data: np.ndarray = signal.convolve(current_level_data, kernel, mode='same', method='fft')
         downsampled_data: np.ndarray = ndimage.convolve(current_level_data, kernel, mode='mirror', cval=0.0)
@@ -188,7 +164,7 @@ def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: np.nda
         shape=downsampled_data.shape,
         # just change dtype for storing 
         dtype=force_dtype,
-        # # TODO: figure out how to determine optimal chunk size depending on the data
+        # TODO: figure out how to determine optimal chunk size depending on the data
         chunks=(50, 50, 50)
     )
 
