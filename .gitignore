@@ -1,4 +1,6 @@
 ### Custom
+cpu_profiling/
+preprocessor/data/raw_input_files/empiar/
 preprocessor/src/preprocessors/implementations/sff/data/*
 preprocessor.3.10.4.env/
 PYTHONPATH.sh
