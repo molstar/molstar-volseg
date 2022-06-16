@@ -19,3 +19,5 @@ OUTPUT_FILEPATH = Path('preprocessor/data/fake_segmentations/fake_emd_1832.hff')
 # FILEPATH_JSON = Path('preprocessor/fake_segmentations/fake_emd_1832.json')
 
 REAL_MAP_FILEPATH = Path('preprocessor/data/sample_volumes/emdb_sff/EMD-1832.map')
+
+TEMP_ZARR_HIERARCHY_STORAGE_PATH = Path('preprocessor/data/temp_zarr_hierarchy_storage')
