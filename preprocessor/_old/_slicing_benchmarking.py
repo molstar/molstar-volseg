@@ -17,7 +17,7 @@ MODES_LIST = [
     'tensorstore'
 ]
 
-CHUNK_SIZES = [25, 50, 100, 400]
+CHUNK_SIZES = [25, 50, 100, 200, 400]
 
 TEMP_STORE_PATH = Path(__file__).parents[0] / 'temp' / 'benchmarking_zarr_structure'
 

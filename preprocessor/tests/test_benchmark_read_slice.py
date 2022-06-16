@@ -1,3 +1,4 @@
+# TODO: suggest to switch default mode to zarr colon (faster)
 import pytest
 
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
@@ -47,10 +48,10 @@ def aio_benchmark(benchmark):
 @pytest.mark.parametrize("key", ['emd-1832', 'emd-99999'])
 # TODO: box sizes should be computed using func we had from preprocessor\tests\test_slicing_methods_benchmarking.py
 @pytest.mark.parametrize("box", [((10, 10, 10), (20, 20, 20)), ((10, 10, 10), (30, 30, 30))])
-# TODO: downsampling ratios from metadata
-@pytest.mark.parametrize("down_sampling_ratio", [1, 2])
+# TODO LATER: downsampling ratios from metadata: for now irrelevant
+# @pytest.mark.parametrize("down_sampling_ratio", [1, 2])
 @pytest.mark.asyncio
-async def test_t(aio_benchmark, key, box, down_sampling_ratio):
+async def test_t(aio_benchmark, key, box):
     @aio_benchmark
     async def _():
         db = LocalDiskPreprocessedDb()
@@ -58,7 +59,7 @@ async def test_t(aio_benchmark, key, box, down_sampling_ratio):
             namespace='emdb',
             key=key,
             lattice_id=0,
-            down_sampling_ratio=down_sampling_ratio,
+            down_sampling_ratio=1,
             box=box,
             mode='zarr_colon'
         )
