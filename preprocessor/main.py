@@ -1,5 +1,7 @@
+import argparse
 import asyncio
 from pprint import pprint
+import shutil
 from asgiref.sync import async_to_sync
 import numpy as np
 
@@ -8,7 +10,7 @@ from typing import Dict
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 from preprocessor.src.service.implementations.preprocessor_service import PreprocessorService
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import \
-    OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH
+    OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH, TEMP_ZARR_HIERARCHY_STORAGE_PATH
 
 from db.interface.i_preprocessed_db import IPreprocessedDb
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import SFFPreprocessor
@@ -155,11 +157,36 @@ async def check_read_meshes(db: LocalDiskPreprocessedDb):
 
     return read_meshes_list
 
+def remove_temp_zarr_hierarchy_storage_folder(path: Path):
+    shutil.rmtree(path, ignore_errors=True)
+
+def main():
+    args = parse_script_args()
+    if args.db_path:
+        new_db_path = Path(args.db_path)
+        if new_db_path.is_dir() == False:
+            new_db_path.mkdir()
+
+        remove_temp_zarr_hierarchy_storage_folder(TEMP_ZARR_HIERARCHY_STORAGE_PATH)
+        db = LocalDiskPreprocessedDb(new_db_path)
+        db.remove_all_entries()
+        preprocess_everything(db, RAW_INPUT_FILES_DIR)
+    else:
+        raise ValueError('No db path is provided as argument')
+
+def parse_script_args():
+    parser=argparse.ArgumentParser()
+    parser.add_argument("--db_path")
+    args=parser.parse_args()
+    return args
 
 if __name__ == '__main__':
-    db = LocalDiskPreprocessedDb()
-    db.remove_all_entries(namespace='emdb')
-    preprocess_everything(db, RAW_INPUT_FILES_DIR)
+    # TODO: once new approach to db pathes works, go to main.py
+    # \draft for creating multiple dbs
+    # and implement something similar to it (NEW CODE/NEW CODE ENDS)
+    main()
+
+
     # uncomment to check read slice method
     # asyncio.run(check_read_slice(db))
 

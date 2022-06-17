@@ -10,7 +10,7 @@ import dask.array as da
 from timeit import default_timer as timer
 import tensorstore as ts
 
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import SEGMENTATION_DATA_GROUPNAME, \
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DB_NAMESPACES, SEGMENTATION_DATA_GROUPNAME, \
     VOLUME_DATA_GROUPNAME
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import ANNOTATION_METADATA_FILENAME, GRID_METADATA_FILENAME
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import open_zarr_structure_from_path
@@ -21,31 +21,38 @@ from ...interface.i_preprocessed_medatada import IPreprocessedMetadata
 
 
 class LocalDiskPreprocessedDb(IPreprocessedDb):
-    @staticmethod
-    def __path_to_object__(namespace: str, key: str) -> Path:
+    def __init__(self, folder: Path):
+        # either create of say it doesn't exist
+        if not folder.is_dir():
+            raise ValueError(f"Input folder doesn't exist {folder}")
+
+        self.folder = folder
+
+    def _path_to_object(self, namespace: str, key: str) -> Path:
         '''
         Returns path to DB entry based on namespace and key
         '''
-        return Path(__file__).resolve().parents[2] / namespace / key
-
+        return self.folder / namespace / key
+        
     async def contains(self, namespace: str, key: str) -> bool:
         '''
         Checks if DB entry exists
         '''
-        return self.__path_to_object__(namespace, key).is_dir()
+        return self._path_to_object(namespace, key).is_dir()
     
-    def remove_all_entries(self, namespace: str = 'emdb'):
+    def remove_all_entries(self):
         '''
-        Removes all entries from dir of certain source db (namespace);
+        Removes all entries from db
         used before another run of building db to build it from scratch without interfering with
         previously existing entries
         '''
-        content = sorted((Path(__file__).resolve().parents[2] / namespace).glob('*'))
-        for path in content:
-            if path.is_file():
-                path.unlink()
-            if path.is_dir():
-                shutil.rmtree(path, ignore_errors=True)
+        for namespace in DB_NAMESPACES:
+            content = sorted((self.folder / namespace).glob('*'))
+            for path in content:
+                if path.is_file():
+                    path.unlink()
+                if path.is_dir():
+                    shutil.rmtree(path, ignore_errors=True)
 
     async def store(self, namespace: str, key: str, temp_store_path: Path) -> bool:
         '''
@@ -59,16 +66,16 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         # ZIP_LZMA = 1
         # close store after writing, or use 'with' https://zarr.readthedocs.io/en/stable/api/storage.html#zarr.storage.ZipStore
         temp_store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(temp_store_path))
-        # perm_store = zarr.ZipStore(self.__path_to_object__(namespace, key) + '.zip', mode='w', compression=12)
-        perm_store = zarr.DirectoryStore(str(self.__path_to_object__(namespace, key)))
+        # perm_store = zarr.ZipStore(self._path_to_object(namespace, key) + '.zip', mode='w', compression=12)
+        perm_store = zarr.DirectoryStore(str(self._path_to_object(namespace, key)))
         zarr.copy_store(temp_store, perm_store, log=stdout)
 
         print("A: " + str(temp_store_path))
         print("B: " + GRID_METADATA_FILENAME)
 
-        shutil.copy2(temp_store_path / GRID_METADATA_FILENAME, self.__path_to_object__(namespace, key) / GRID_METADATA_FILENAME)
+        shutil.copy2(temp_store_path / GRID_METADATA_FILENAME, self._path_to_object(namespace, key) / GRID_METADATA_FILENAME)
         if (temp_store_path / ANNOTATION_METADATA_FILENAME).exists():
-            shutil.copy2(temp_store_path / ANNOTATION_METADATA_FILENAME, self.__path_to_object__(namespace, key) / ANNOTATION_METADATA_FILENAME)
+            shutil.copy2(temp_store_path / ANNOTATION_METADATA_FILENAME, self._path_to_object(namespace, key) / ANNOTATION_METADATA_FILENAME)
         else:
             print('no annotation metadata file found, continuing without copying it')
         # TODO: check if temp dir will be correctly removed and read at the beginning, given that there is a JSON file inside
@@ -84,7 +91,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         '''
         try:
             mesh_list = []
-            path: Path = self.__path_to_object__(namespace=namespace, key=key)
+            path: Path = self._path_to_object(namespace=namespace, key=key)
             assert path.exists(), f'Path {path} does not exist'
             root: zarr.hierarchy.group = open_zarr_structure_from_path(path)
             mesh_list_group = root[SEGMENTATION_DATA_GROUPNAME][segment_id][detail_lvl]
@@ -111,7 +118,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         '''
         print('This method is deprecated, please use read_slice method instead')
         try:
-            path: Path = self.__path_to_object__(namespace=namespace, key=key)
+            path: Path = self._path_to_object(namespace=namespace, key=key)
             assert path.exists(), f'Path {path} does not exist'
             root: zarr.hierarchy.group = open_zarr_structure_from_path(path)
             segm_arr = None
@@ -152,7 +159,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         and slice box (vec3, vec3) 
         '''
         try:
-            path: Path = self.__path_to_object__(namespace=namespace, key=key)
+            path: Path = self._path_to_object(namespace=namespace, key=key)
             assert path.exists(), f'Path {path} does not exist'
             root: zarr.hierarchy.group = open_zarr_structure_from_path(path)
             segm_arr = None
@@ -219,14 +226,14 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         return d
 
     async def read_metadata(self, namespace: str, key: str) -> IPreprocessedMetadata:
-        path: Path = self.__path_to_object__(namespace=namespace, key=key) / GRID_METADATA_FILENAME
+        path: Path = self._path_to_object(namespace=namespace, key=key) / GRID_METADATA_FILENAME
         with open(path.resolve(), 'r', encoding='utf-8') as f:
             # reads into dict
             read_json_of_metadata: Dict = json.load(f)
         return LocalDiskPreprocessedMetadata(read_json_of_metadata)
     
     async def read_annotations(self, namespace: str, key: str) -> Dict:
-        path: Path = self.__path_to_object__(namespace=namespace, key=key) / ANNOTATION_METADATA_FILENAME
+        path: Path = self._path_to_object(namespace=namespace, key=key) / ANNOTATION_METADATA_FILENAME
         with open(path.resolve(), 'r', encoding='utf-8') as f:
             # reads into dict
             read_json_of_metadata: Dict = json.load(f)

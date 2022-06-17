@@ -54,5 +54,5 @@ if __name__ == '__main__':
 
     sff_converter.create_fake_sff_from_input_volumes(list_of_input_volume_files, DIR_WITH_FILES_FOR_STORING, SOURCE_DB)
     db = LocalDiskPreprocessedDb()
-    db.remove_all_entries(namespace='emdb')
+    db.remove_all_entries()
     preprocess_everything(db, DIR_WITH_FILES_FOR_STORING)

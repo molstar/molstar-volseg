@@ -19,11 +19,11 @@ class FakePreprocessedDb(IPreprocessedDb):
         return FakePreprocessedMetadata()
 
     @staticmethod
-    def __path_to_object__(namespace: str, key: str) -> str:
+    def _path_to_object(namespace: str, key: str) -> str:
         return path.join("../../..", namespace, key)
 
     async def contains(self, namespace: str, key: str) -> bool:
-        return True  # path.isfile(self.__path_to_object__(namespace, key))
+        return True  # path.isfile(self._path_to_object(namespace, key))
 
     async def store(self, namespace: str, key: str, value: object) -> bool:
         return True
