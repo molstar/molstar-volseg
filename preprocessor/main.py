@@ -93,7 +93,7 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
     return d
 
 
-def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path) -> None:
+def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path, params_for_storing: dict) -> None:
     preprocessor_service = PreprocessorService([SFFPreprocessor()])
     files_dict = obtain_paths_to_all_files(raw_input_files_dir, hardcoded=False)
     for source_name, source_entries in files_dict.items():
@@ -157,26 +157,51 @@ async def check_read_meshes(db: LocalDiskPreprocessedDb):
 
     return read_meshes_list
 
+def create_dict_of_input_params_for_storing(chunk_sizes: list, compressors: list, compression_ratios: list, filters: list) -> dict:
+    i = 1
+    d = {}
+    for chunk_size in chunk_sizes:
+        for compressor in compressors:
+            for filter in filters:
+                for compression_ratio in compression_ratios:
+                    d[i] = {
+                        'chunk_size': chunk_size,
+                        'compressor': compressor,
+                        'filter': filter,
+                        'compression_ratio': compression_ratio
+                    }
+                    i = i + 1
+    
+    return d
+
 def remove_temp_zarr_hierarchy_storage_folder(path: Path):
     shutil.rmtree(path, ignore_errors=True)
 
+def create_db(db_path: Path, params_for_storing: dict):
+    new_db_path = Path(db_path)
+    if new_db_path.is_dir() == False:
+        new_db_path.mkdir()
+
+    remove_temp_zarr_hierarchy_storage_folder(TEMP_ZARR_HIERARCHY_STORAGE_PATH)
+    db = LocalDiskPreprocessedDb(new_db_path)
+    db.remove_all_entries()
+    preprocess_everything(db, RAW_INPUT_FILES_DIR, params_for_storing=params_for_storing)
+
 def main():
     args = parse_script_args()
-    if args.db_path:
-        new_db_path = Path(args.db_path)
-        if new_db_path.is_dir() == False:
-            new_db_path.mkdir()
-
-        remove_temp_zarr_hierarchy_storage_folder(TEMP_ZARR_HIERARCHY_STORAGE_PATH)
-        db = LocalDiskPreprocessedDb(new_db_path)
-        db.remove_all_entries()
-        preprocess_everything(db, RAW_INPUT_FILES_DIR)
+    if args.create_parametrized_dbs:
+        storing_params_dict = create_dict_of_input_params_for_storing()
+        for db_id, param_set in storing_params_dict.items():
+            pass
+    elif args.db_path:
+        create_db(args.db_path)
     else:
         raise ValueError('No db path is provided as argument')
 
 def parse_script_args():
     parser=argparse.ArgumentParser()
     parser.add_argument("--db_path")
+    parser.add_argument("--create_parametrized_dbs", action='store_true')
     args=parser.parse_args()
     return args
 
