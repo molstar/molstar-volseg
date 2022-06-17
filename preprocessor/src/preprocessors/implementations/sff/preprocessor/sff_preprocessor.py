@@ -29,7 +29,7 @@ class SFFPreprocessor(IDataPreprocessor):
         self.magic_kernel = MagicKernel3dDownsampler()
         self.temp_zarr_structure_path = None
 
-    def preprocess(self, segm_file_path: Path, volume_file_path: Path, volume_force_dtype=np.float32):
+    def preprocess(self, segm_file_path: Path, volume_file_path: Path, params_for_storing: dict, volume_force_dtype=np.float32):
         '''
         Returns path to temporary zarr structure that will be stored permanently using db.store
         '''

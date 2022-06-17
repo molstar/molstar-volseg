@@ -17,9 +17,8 @@ COMPRESSORS = (
         Blosc(cname='lz4', clevel=9, shuffle=Blosc.SHUFFLE, blocksize=0),
     )
 
-CHUNK_SIZES = (
+CHUNKING_MODES = (
     # zarr determines => pass True in that function
         'auto',
         'custom_function'
-    # 
 )

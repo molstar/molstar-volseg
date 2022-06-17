@@ -85,6 +85,7 @@ def _write_mesh_component_data_to_zarr_arr(target_group: zarr.hierarchy.group, m
         )
     # chunked onto triples
     chunked_component_data = chunk_numpy_arr(unchunked_component_data, 3)
+    
     component_arr = target_group.create_dataset(
         data=chunked_component_data,
         name=mesh_component_name,

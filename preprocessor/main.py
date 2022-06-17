@@ -6,8 +6,10 @@ from asgiref.sync import async_to_sync
 import numpy as np
 
 from pathlib import Path
+from numcodecs import Blosc
 from typing import Dict
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
+from preprocessor.params_for_storing_db import CHUNKING_MODES, COMPRESSORS
 from preprocessor.src.service.implementations.preprocessor_service import PreprocessorService
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import \
     OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH, TEMP_ZARR_HIERARCHY_STORAGE_PATH
@@ -107,7 +109,8 @@ def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path, params
             processed_data_temp_path = file_preprocessor.preprocess(
                 segm_file_path=entry['segmentation_file_path'],
                 volume_file_path=entry['volume_file_path'],
-                volume_force_dtype=volume_force_dtype
+                volume_force_dtype=volume_force_dtype,
+                params_for_storing=params_for_storing
             )
             async_to_sync(db.store)(namespace=source_name, key=entry['id'], temp_store_path=processed_data_temp_path)
 
@@ -157,20 +160,16 @@ async def check_read_meshes(db: LocalDiskPreprocessedDb):
 
     return read_meshes_list
 
-def create_dict_of_input_params_for_storing(chunk_sizes: list, compressors: list, compression_ratios: list, filters: list) -> dict:
+def create_dict_of_input_params_for_storing(chunking_mode: list, compressors: list) -> dict:
     i = 1
     d = {}
-    for chunk_size in chunk_sizes:
+    for mode in chunking_mode:
         for compressor in compressors:
-            for filter in filters:
-                for compression_ratio in compression_ratios:
-                    d[i] = {
-                        'chunk_size': chunk_size,
-                        'compressor': compressor,
-                        'filter': filter,
-                        'compression_ratio': compression_ratio
-                    }
-                    i = i + 1
+            d[i] = {
+                'chunking_mode': mode,
+                'compressor': compressor,
+            }
+            i = i + 1
     
     return d
 
@@ -190,11 +189,17 @@ def create_db(db_path: Path, params_for_storing: dict):
 def main():
     args = parse_script_args()
     if args.create_parametrized_dbs:
-        storing_params_dict = create_dict_of_input_params_for_storing()
+        storing_params_dict = create_dict_of_input_params_for_storing(
+            chunking_mode=CHUNKING_MODES,
+            compressors=COMPRESSORS
+        )
         for db_id, param_set in storing_params_dict.items():
-            pass
+            create_db(f'db_{db_id}', params_for_storing=param_set)
     elif args.db_path:
-        create_db(args.db_path)
+        create_db(args.db_path, params_for_storing={
+            'chunking_mode': 'auto',
+            'compressor': Blosc(cname='lz4', clevel=5, shuffle=Blosc.SHUFFLE, blocksize=0)
+        })
     else:
         raise ValueError('No db path is provided as argument')
 
