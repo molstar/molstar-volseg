@@ -5,7 +5,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants i
 
 def compute_chunk_size_based_on_data(arr: np.ndarray) -> tuple[int, int, int]:
     shape: tuple = arr.shape
-    chunks = tuple([int(i/4) for i in shape])
+    chunks = tuple([int(i/4) if i > 4 else i for i in shape])
     return chunks
 
 def get_volume_downsampling_from_zarr(

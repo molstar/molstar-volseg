@@ -2,12 +2,25 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: parametrized dbs",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--create_parametrized_dbs"
+            ]
+        },
+        {
             "name": "Python: Текущий файл",
             "type": "python",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["--db_path", "db"]
+            "args": [
+                "--db_path",
+                "db"
+            ]
         }
     ]
 }

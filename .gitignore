@@ -1,4 +1,5 @@
 ### Custom
+db_*/
 db/empiar/
 cpu_profiling/
 preprocessor/data/raw_input_files/empiar/

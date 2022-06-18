@@ -12,10 +12,12 @@ from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPr
 from preprocessor.params_for_storing_db import CHUNKING_MODES, COMPRESSORS
 from preprocessor.src.service.implementations.preprocessor_service import PreprocessorService
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import \
-    OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH, TEMP_ZARR_HIERARCHY_STORAGE_PATH
+    OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH, PARAMETRIZED_DBS_INPUT_PARAMS_FILEPATH, TEMP_ZARR_HIERARCHY_STORAGE_PATH
 
 from db.interface.i_preprocessed_db import IPreprocessedDb
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import SFFPreprocessor
+from preprocessor.src.tools.write_dict_to_file.write_dict_to_json import write_dict_to_json
+from preprocessor.src.tools.write_dict_to_file.write_dict_to_txt import write_dict_to_txt
 
 RAW_INPUT_FILES_DIR = Path(__file__).parent / 'data/raw_input_files'
 
@@ -193,6 +195,7 @@ def main():
             chunking_mode=CHUNKING_MODES,
             compressors=COMPRESSORS
         )
+        write_dict_to_txt(storing_params_dict, PARAMETRIZED_DBS_INPUT_PARAMS_FILEPATH)
         for db_id, param_set in storing_params_dict.items():
             create_db(f'db_{db_id}', params_for_storing=param_set)
     elif args.db_path:
