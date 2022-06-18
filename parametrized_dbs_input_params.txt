@@ -1,0 +1,8 @@
+1: {'chunking_mode': 'auto', 'compressor': None}
+2: {'chunking_mode': 'auto', 'compressor': Blosc(cname='lz4', clevel=0, shuffle=SHUFFLE, blocksize=0)}
+3: {'chunking_mode': 'auto', 'compressor': Blosc(cname='lz4', clevel=5, shuffle=SHUFFLE, blocksize=0)}
+4: {'chunking_mode': 'auto', 'compressor': Blosc(cname='lz4', clevel=9, shuffle=SHUFFLE, blocksize=0)}
+5: {'chunking_mode': 'custom_function', 'compressor': None}
+6: {'chunking_mode': 'custom_function', 'compressor': Blosc(cname='lz4', clevel=0, shuffle=SHUFFLE, blocksize=0)}
+7: {'chunking_mode': 'custom_function', 'compressor': Blosc(cname='lz4', clevel=5, shuffle=SHUFFLE, blocksize=0)}
+8: {'chunking_mode': 'custom_function', 'compressor': Blosc(cname='lz4', clevel=9, shuffle=SHUFFLE, blocksize=0)}
