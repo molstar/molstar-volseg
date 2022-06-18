@@ -27,16 +27,18 @@ def create_dataset_wrapper(
         name,
         shape,
         dtype,
-        compressor,
-        chunking_approach='auto'
+        params_for_storing: dict,
     ) -> zarr.core.Array:
 
-    if chunking_approach == 'auto':
+    compressor = params_for_storing['compressor']
+    chunking_mode = params_for_storing['chunking_mode']
+
+    if chunking_mode == 'auto':
         chunks = True
-    elif chunking_approach == 'custom_function':
+    elif chunking_mode == 'custom_function':
         chunks = compute_chunk_size_based_on_data(data)
     else:
-        raise ValueError(f'Chunking approach arg value is invalid: {chunking_approach}')
+        raise ValueError(f'Chunking approach arg value is invalid: {chunking_mode}')
 
     zarr_arr = zarr_group.create_dataset(
         data=data,

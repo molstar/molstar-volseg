@@ -16,8 +16,9 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.downsamplin
     compute_number_of_downsampling_steps, compute_vertex_density, create_volume_downsamplings, create_category_set_downsamplings, simplify_meshes, _store_mesh_data_in_zarr
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.numpy_methods import chunk_numpy_arr
+from preprocessor.src.preprocessors.implementations.sff.preprocessor._zarr_methods import create_dataset_wrapper
 
-def process_volume_data(zarr_structure: zarr.hierarchy.group, map_object: gemmi.Ccp4Map, force_dtype=np.float32):
+def process_volume_data(zarr_structure: zarr.hierarchy.group, map_object: gemmi.Ccp4Map, params_for_storing: dict, force_dtype=np.float32):
     '''
     Takes read map object, extracts volume data, downsamples it, stores to zarr_structure
     '''
@@ -34,21 +35,22 @@ def process_volume_data(zarr_structure: zarr.hierarchy.group, map_object: gemmi.
         original_data=volume_arr,
         downsampled_data_group=volume_data_gr,
         downsampling_steps=volume_downsampling_steps,
+        params_for_storing=params_for_storing,
         force_dtype=force_dtype
     )
 
 
-def process_segmentation_data(magic_kernel: MagicKernel3dDownsampler, zarr_structure: zarr.hierarchy.group, mesh_simplification_curve: list[tuple[int, float]]) -> None:
+def process_segmentation_data(magic_kernel: MagicKernel3dDownsampler, zarr_structure: zarr.hierarchy.group, mesh_simplification_curve: list[tuple[int, float]], params_for_storing: dict) -> None:
     '''
     Extracts segmentation data from lattice, downsamples it, stores to zarr structure
     '''
     segm_data_gr: zarr.hierarchy.group = zarr_structure.create_group(SEGMENTATION_DATA_GROUPNAME)
     if zarr_structure.primary_descriptor[0] == b'three_d_volume':
-        process_three_d_volume_segmentation_data(segm_data_gr, magic_kernel, zarr_structure)
+        process_three_d_volume_segmentation_data(segm_data_gr, magic_kernel, zarr_structure, params_for_storing=params_for_storing)
     elif zarr_structure.primary_descriptor[0] == b'mesh_list':
-        process_mesh_segmentation_data(segm_data_gr, zarr_structure, mesh_simplification_curve)
+        process_mesh_segmentation_data(segm_data_gr, zarr_structure, mesh_simplification_curve, params_for_storing=params_for_storing)
 
-def process_three_d_volume_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_kernel: MagicKernel3dDownsampler, zarr_structure: zarr.hierarchy.group):
+def process_three_d_volume_segmentation_data(segm_data_gr: zarr.hierarchy.group, magic_kernel: MagicKernel3dDownsampler, zarr_structure: zarr.hierarchy.group, params_for_storing):
     value_to_segment_id_dict = map_value_to_segment_id(zarr_structure)
 
     for gr_name, gr in zarr_structure.lattice_list.groups():
@@ -74,10 +76,11 @@ def process_three_d_volume_segmentation_data(segm_data_gr: zarr.hierarchy.group,
             segm_arr,
             segmentation_downsampling_steps,
             lattice_gr,
-            value_to_segment_id_dict[lattice_id]
+            value_to_segment_id_dict[lattice_id],
+            params_for_storing=params_for_storing
         )
 
-def _write_mesh_component_data_to_zarr_arr(target_group: zarr.hierarchy.group, mesh: zarr.hierarchy.group, mesh_component_name: str):
+def _write_mesh_component_data_to_zarr_arr(target_group: zarr.hierarchy.group, mesh: zarr.hierarchy.group, mesh_component_name: str, params_for_storing: dict):
     unchunked_component_data = decode_base64_data(
             data=mesh[mesh_component_name].data[...][0],
             mode=mesh[mesh_component_name].mode[...][0],
@@ -86,18 +89,21 @@ def _write_mesh_component_data_to_zarr_arr(target_group: zarr.hierarchy.group, m
     # chunked onto triples
     chunked_component_data = chunk_numpy_arr(unchunked_component_data, 3)
     
-    component_arr = target_group.create_dataset(
+    component_arr = create_dataset_wrapper(
+        zarr_group=target_group,
         data=chunked_component_data,
         name=mesh_component_name,
         shape=chunked_component_data.shape,
         dtype=chunked_component_data.dtype,
+        params_for_storing=params_for_storing
     )
+
     component_arr.attrs[f'num_{mesh_component_name}'] = \
         int(mesh[mesh_component_name][f'num_{mesh_component_name}'][...])
 
 
 
-def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, zarr_structure: zarr.hierarchy.group, simplification_curve: list[tuple[int, float]]):
+def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, zarr_structure: zarr.hierarchy.group, simplification_curve: list[tuple[int, float]], params_for_storing: dict):
 
     for segment_name, segment in zarr_structure.segment_list.groups():
         segment_id = str(int(segment.id[...]))
@@ -114,7 +120,8 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, zarr_stru
                     _write_mesh_component_data_to_zarr_arr(
                         target_group=single_mesh_group,
                         mesh=mesh,
-                        mesh_component_name=mesh_component_name
+                        mesh_component_name=mesh_component_name,
+                        params_for_storing=params_for_storing
                     )
             # TODO: check in which units is area and volume
             vertices = single_mesh_group['vertices'][...]
@@ -134,5 +141,5 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, zarr_stru
             new_ratio = simplification_curve[i][1]
             new_detail_lvl = simplification_curve[i][0]
             mesh_data_dict = simplify_meshes(group_ref, ratio=new_ratio, segment_id=segment_name_id)
-            group_ref = _store_mesh_data_in_zarr(mesh_data_dict, segment, ratio=new_detail_lvl)
+            group_ref = _store_mesh_data_in_zarr(mesh_data_dict, segment, ratio=new_detail_lvl, params_for_storing=params_for_storing)
             i = i + 1

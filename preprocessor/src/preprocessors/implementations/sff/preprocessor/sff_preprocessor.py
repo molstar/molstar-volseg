@@ -48,9 +48,9 @@ class SFFPreprocessor(IDataPreprocessor):
 
             mesh_simplification_curve = MESH_SIMPLIFICATION_CURVE
             if segm_file_path is not None:
-                SFFPreprocessor.process_segmentation_data(self.magic_kernel, zarr_structure, mesh_simplification_curve)
+                SFFPreprocessor.process_segmentation_data(self.magic_kernel, zarr_structure, mesh_simplification_curve, params_for_storing=params_for_storing)
 
-            SFFPreprocessor.process_volume_data(zarr_structure, normalized_axis_map_object, volume_force_dtype)
+            SFFPreprocessor.process_volume_data(zarr_structure=zarr_structure, map_object=normalized_axis_map_object, params_for_storing=params_for_storing, force_dtype=volume_force_dtype)
 
             grid_metadata = SFFPreprocessor.extract_metadata(zarr_structure, normalized_axis_map_object, mesh_simplification_curve)
             
