@@ -5,6 +5,22 @@ from pathlib import Path
 
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 
+async def compute_box_size_from_box_fraction(box_fraction: int, db: LocalDiskPreprocessedDb, namespace: str, key: str):
+    metadata = await db.read_metadata(namespace, key)
+    dims: tuple = metadata.grid_dimensions()
+    origin = (0, 0, 0)
+    max_coords = tuple([int(box_fraction * x) for x in dims])
+
+    box = (
+        origin,
+        max_coords
+    )
+
+    print(f'{box_fraction} box for {key}:')
+    print(box)
+    
+    return box
+
 @pytest.fixture(scope='function')
 def aio_benchmark(benchmark):
     import asyncio
@@ -48,14 +64,14 @@ def aio_benchmark(benchmark):
     return _wrapper
 
 @pytest.mark.parametrize("key", ['emd-1832', 'emd-99999'])
-# TODO: box sizes should be computed using func we had from preprocessor\tests\test_slicing_methods_benchmarking.py
-@pytest.mark.parametrize("box", [((10, 10, 10), (20, 20, 20)), ((10, 10, 10), (30, 30, 30))])
+@pytest.mark.parametrize("box_fraction", [0.95])
 @pytest.mark.parametrize("db_path", glob('db_*/'))
 @pytest.mark.asyncio
-async def test_t(aio_benchmark, key, box, db_path):
+async def test_t(aio_benchmark, key, box_fraction, db_path):
     @aio_benchmark
     async def _():
         db = LocalDiskPreprocessedDb(folder=Path(db_path))
+        box = await compute_box_size_from_box_fraction(box_fraction=box_fraction, db=db, namespace='emdb', key=key)
         result = await db.read_slice(
             namespace='emdb',
             key=key,
