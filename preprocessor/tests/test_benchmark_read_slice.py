@@ -1,15 +1,49 @@
 # TODO: suggest to switch default mode to zarr colon (faster)
+from random import randint
+import numpy as np
 import pytest
 from glob import glob
 from pathlib import Path
 
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 
+def generate_random_3d_point_coords(min: tuple[int, int, int], max: tuple[int, int, int]) -> tuple[int, int, int]:
+    '''Both min and max are inclusive'''
+    return (
+        randint(min[0], max[0]),
+        randint(min[1], max[1]),
+        randint(min[2], max[2]),
+    )
+
+async def compute_random_static_box(db: LocalDiskPreprocessedDb, namespace: str, key: str):
+    metadata = await db.read_metadata(namespace, key)
+    dims: tuple = metadata.grid_dimensions()
+    if key == 'emd-1832':
+        box_size = 11
+    else:
+        box_size = 127
+
+    # grid dimensions = arr.shape, so for 64**3 grid entry, grid dimensions is 64,64,64
+    # so we need to do -1
+    # also we do -box_size to later add box_size
+    max_coords = tuple([x - 1 for x in dims])
+    max_coords_adjusted = tuple([x - box_size for x in max_coords])
+    origin = (0, 0, 0)
+    p1 = generate_random_3d_point_coords(origin, max_coords_adjusted)
+    p2 = tuple([x + box_size for x in p1])
+    assert (np.array(p2) <= np.array(max_coords)).all(), 'p2 exceeds max coords'
+    box = (
+        p1,
+        p2
+    )
+
+    return box
+
 async def compute_box_size_from_box_fraction(box_fraction: int, db: LocalDiskPreprocessedDb, namespace: str, key: str):
     metadata = await db.read_metadata(namespace, key)
     dims: tuple = metadata.grid_dimensions()
     origin = (0, 0, 0)
-    max_coords = tuple([int(box_fraction * x) for x in dims])
+    max_coords = tuple([int(box_fraction * (x - 1)) for x in dims])
 
     box = (
         origin,
@@ -63,15 +97,20 @@ def aio_benchmark(benchmark):
 
     return _wrapper
 
-@pytest.mark.parametrize("key", ['emd-1832', 'emd-99999'])
-@pytest.mark.parametrize("box_fraction", [0.95])
+@pytest.mark.parametrize("key", ['emd-88888'])
+@pytest.mark.parametrize("box_choice", [0.1, 1.0, 'random_static_region'])
 @pytest.mark.parametrize("db_path", glob('db_*/'))
 @pytest.mark.asyncio
-async def test_t(aio_benchmark, key, box_fraction, db_path):
+async def test_t(aio_benchmark, key, box_choice, db_path):
     @aio_benchmark
     async def _():
         db = LocalDiskPreprocessedDb(folder=Path(db_path))
-        box = await compute_box_size_from_box_fraction(box_fraction=box_fraction, db=db, namespace='emdb', key=key)
+
+        if isinstance(box_choice, float):
+            box = await compute_box_size_from_box_fraction(box_fraction=box_choice, db=db, namespace='emdb', key=key)
+        elif isinstance(box_choice, str) and box_choice == 'random_static_region':
+            box = await compute_random_static_box(db=db, namespace='emdb', key=key)
+        
         result = await db.read_slice(
             namespace='emdb',
             key=key,
