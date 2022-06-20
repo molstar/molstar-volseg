@@ -19,6 +19,18 @@ from .local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
 from db.interface.i_preprocessed_db import IPreprocessedDb, ProcessedVolumeSliceData
 from ...interface.i_preprocessed_medatada import IPreprocessedMetadata
 
+def normalize_box(box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]) -> Tuple[Tuple[int, int, int], Tuple[int, int, int]]:
+    '''Normalizes box so that first point is less than 2nd with respect to X, Y, Z'''
+    p1 = box[0]
+    p2 = box[1]
+
+    new_p1 = tuple(np.minimum(p1, p2))
+    new_p2 = tuple(np.maximum(p1, p2))
+
+    return (
+        new_p1,
+        new_p2
+    )
 
 class LocalDiskPreprocessedDb(IPreprocessedDb):
     def __init__(self, folder: Path):
@@ -159,6 +171,9 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         and slice box (vec3, vec3) 
         '''
         try:
+
+            box = normalize_box(box)
+
             path: Path = self._path_to_object(namespace=namespace, key=key)
             assert path.exists(), f'Path {path} does not exist'
             root: zarr.hierarchy.group = open_zarr_structure_from_path(path)
