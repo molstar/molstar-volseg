@@ -1,4 +1,5 @@
 ### Custom
+preprocessor/data/temp_raw_input_files/*
 preprocessor/data/raw_input_files/emdb/emd-9199/*
 preprocessor/data/raw_input_files/emdb/emd-88888/*
 db_*/
