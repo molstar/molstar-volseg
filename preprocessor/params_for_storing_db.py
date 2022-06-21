@@ -12,7 +12,7 @@ import numpy as np
 # Just different compression ratios
 COMPRESSORS = (
         None,
-        Blosc(cname='lz4', clevel=0, shuffle=Blosc.SHUFFLE, blocksize=0),
+        Blosc(cname='lz4', clevel=1, shuffle=Blosc.SHUFFLE, blocksize=0),
         Blosc(cname='lz4', clevel=5, shuffle=Blosc.SHUFFLE, blocksize=0),
         Blosc(cname='lz4', clevel=9, shuffle=Blosc.SHUFFLE, blocksize=0),
     )
