@@ -16,6 +16,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants i
 
 from db.interface.i_preprocessed_db import IPreprocessedDb
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import SFFPreprocessor
+from preprocessor.src.tools.remove_files_or_folders_by_pattern.remove_files_or_folders_by_pattern import remove_files_or_folders_by_pattern
 from preprocessor.src.tools.write_dict_to_file.write_dict_to_json import write_dict_to_json
 from preprocessor.src.tools.write_dict_to_file.write_dict_to_txt import write_dict_to_txt
 
@@ -191,6 +192,7 @@ def create_db(db_path: Path, params_for_storing: dict):
 def main():
     args = parse_script_args()
     if args.create_parametrized_dbs:
+        remove_files_or_folders_by_pattern('db_*/')
         storing_params_dict = create_dict_of_input_params_for_storing(
             chunking_mode=CHUNKING_MODES,
             compressors=COMPRESSORS
