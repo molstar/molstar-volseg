@@ -23,6 +23,5 @@ COMPRESSORS = (
 CHUNKING_MODES = (
     # zarr determines => pass True in that function
         'auto',
-        'custom_function',
         'false'
 )
