@@ -39,6 +39,8 @@ def create_dataset_wrapper(
         chunks = True
     elif chunking_mode == 'custom_function':
         chunks = compute_chunk_size_based_on_data(data)
+    elif chunking_mode == 'false':
+        chunks == False
     else:
         raise ValueError(f'Chunking approach arg value is invalid: {chunking_mode}')
 
