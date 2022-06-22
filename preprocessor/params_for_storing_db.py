@@ -15,7 +15,6 @@ COMPRESSORS = (
         Blosc(cname='blosclz', clevel=1, shuffle=Blosc.SHUFFLE, blocksize=0),
         Blosc(cname='lz4', clevel=1, shuffle=Blosc.SHUFFLE, blocksize=0),
         Blosc(cname='lz4hc', clevel=1, shuffle=Blosc.SHUFFLE, blocksize=0),
-        Blosc(cname='snappy', clevel=1, shuffle=Blosc.SHUFFLE, blocksize=0),
         Blosc(cname='zlib', clevel=1, shuffle=Blosc.SHUFFLE, blocksize=0),
         Blosc(cname='zstd', clevel=1, shuffle=Blosc.SHUFFLE, blocksize=0)
     )
