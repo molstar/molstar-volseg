@@ -7,7 +7,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map
 
 def create_fake_ccp4_map(grid_size: tuple[int, int, int], filepath: Path, dtype):
     ccp4 = gemmi.Ccp4Map()
-    ccp4.grid = gemmi.FloatGrid(np.zeros(grid_size, dtype=dtype))
+    ccp4.grid = gemmi.FloatGrid(np.random.rand(*grid_size).astype(dtype=dtype))
 
     # TODO: these two is relevant?
     ccp4.grid.unit_cell.set(20, 20, 20, 90, 90, 90)
