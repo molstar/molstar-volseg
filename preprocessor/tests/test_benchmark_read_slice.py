@@ -7,6 +7,10 @@ from pathlib import Path
 
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 
+KEYS = ['emd-1832', 'emd-88888']
+BOX_CHOICES = [0.1, 1.0, 'random_static_region']
+DB_PATHS = glob('db_*/')
+
 def generate_random_3d_point_coords(min: tuple[int, int, int], max: tuple[int, int, int]) -> tuple[int, int, int]:
     '''Both min and max are inclusive'''
     return (
@@ -97,9 +101,9 @@ def aio_benchmark(benchmark):
 
     return _wrapper
 
-@pytest.mark.parametrize("key", ['emd-88888'])
-@pytest.mark.parametrize("box_choice", [0.1, 1.0, 'random_static_region'])
-@pytest.mark.parametrize("db_path", glob('db_*/'))
+@pytest.mark.parametrize("key", KEYS)
+@pytest.mark.parametrize("box_choice", BOX_CHOICES)
+@pytest.mark.parametrize("db_path", DB_PATHS)
 @pytest.mark.asyncio
 async def test_t(aio_benchmark, key, box_choice, db_path):
     @aio_benchmark
