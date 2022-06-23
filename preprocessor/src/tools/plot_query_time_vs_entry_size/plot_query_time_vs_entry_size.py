@@ -23,7 +23,7 @@ def parse_script_args():
 def _plot_single_entry_data(dframe_dict: dict):
     df = pd.DataFrame(dframe_dict)
     df = df.sort_values(by='entry_size')
-    df.plot(x='db_id', y=['0.1', 'random_static_region'], kind='bar')
+    df.plot(x='db_id', y=[str(x) for x in BOX_CHOICES], kind='bar')
     plt.show()
 
 if __name__ == '__main__':
