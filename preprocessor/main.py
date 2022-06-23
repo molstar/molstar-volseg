@@ -105,7 +105,7 @@ def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path, params
         for entry in source_entries:
             segm_file_type = preprocessor_service.get_raw_file_type(entry['segmentation_file_path'])
             file_preprocessor = preprocessor_service.get_preprocessor(segm_file_type)
-            if entry['segmentation_file_path'] == None:
+            if entry['id'] == 'emd-99999':
                 volume_force_dtype = np.uint8
             else:
                 volume_force_dtype = np.float32
