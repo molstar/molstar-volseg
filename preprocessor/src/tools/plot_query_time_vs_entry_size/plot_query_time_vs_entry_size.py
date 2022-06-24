@@ -22,8 +22,11 @@ def parse_script_args():
 
 def _plot_single_entry_data(dframe_dict: dict):
     df = pd.DataFrame(dframe_dict)
+    df['entry_size'] = round(df['entry_size'] / 10**6, 2)
+    df['db_id_and_entry_size'] = df['db_id'].astype(str) + '\n' + df['entry_size'].astype(str) + ' MB'
     df = df.sort_values(by='entry_size')
-    df.plot(x='db_id', y=[str(x) for x in BOX_CHOICES], kind='bar')
+    print(df)
+    df.plot(x='db_id_and_entry_size', y=[str(x) for x in BOX_CHOICES], kind='bar', rot=0)
     plt.show()
 
 if __name__ == '__main__':
