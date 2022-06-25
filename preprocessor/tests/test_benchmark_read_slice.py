@@ -7,9 +7,12 @@ from pathlib import Path
 
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 
-KEYS = ['emd-1832', 'emd-88888']
-BOX_CHOICES = [0.1, 1.0, 'random_static_region']
-DB_PATHS = glob('db_*/')
+KEYS = ['emd-88888']
+BOX_CHOICES = ['random_static_region_small', 'random_static_region_big']
+DB_PATHES_FULL = glob('db_*/')
+DB_PATHES_FULL.remove('db_11\\')
+DB_PATHES_FULL.remove('db_12\\')
+DB_PATHS = DB_PATHES_FULL
 
 def generate_random_3d_point_coords(min: tuple[int, int, int], max: tuple[int, int, int]) -> tuple[int, int, int]:
     '''Both min and max are inclusive'''
@@ -19,13 +22,13 @@ def generate_random_3d_point_coords(min: tuple[int, int, int], max: tuple[int, i
         randint(min[2], max[2]),
     )
 
-async def compute_random_static_box(db: LocalDiskPreprocessedDb, namespace: str, key: str):
+async def compute_random_static_box(db: LocalDiskPreprocessedDb, namespace: str, key: str, box: int):
     metadata = await db.read_metadata(namespace, key)
     dims: tuple = metadata.grid_dimensions()
     if key == 'emd-1832':
-        box_size = 11
+        box_size = box / 10
     else:
-        box_size = 127
+        box_size = box
 
     # grid dimensions = arr.shape, so for 64**3 grid entry, grid dimensions is 64,64,64
     # so we need to do -1
@@ -112,8 +115,10 @@ async def test_t(aio_benchmark, key, box_choice, db_path):
 
         if isinstance(box_choice, float):
             box = await compute_box_size_from_box_fraction(box_fraction=box_choice, db=db, namespace='emdb', key=key)
-        elif isinstance(box_choice, str) and box_choice == 'random_static_region':
-            box = await compute_random_static_box(db=db, namespace='emdb', key=key)
+        elif isinstance(box_choice, str) and box_choice == 'random_static_region_small':
+            box = await compute_random_static_box(db=db, namespace='emdb', key=key, box=127)
+        elif isinstance(box_choice, str) and box_choice == 'random_static_region_big':
+            box = await compute_random_static_box(db=db, namespace='emdb', key=key, box=299)
         
         result = await db.read_slice(
             namespace='emdb',
