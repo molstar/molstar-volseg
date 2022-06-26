@@ -1,4 +1,5 @@
 ### Custom
+temp/
 .benchmarks/
 parametrized_dbs_input_params.txt
 preprocessor/data/temp_raw_input_files/*
