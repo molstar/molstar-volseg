@@ -48,7 +48,7 @@ class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
             'tensorstore'
         ]
 
-        db = LocalDiskPreprocessedDb()
+        db = LocalDiskPreprocessedDb(Path('db'))
 
         d = {}
         for namespace, entry_id in test_suite_entries:
