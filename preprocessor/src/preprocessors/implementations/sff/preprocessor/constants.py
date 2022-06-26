@@ -6,6 +6,7 @@ MESH_VERTEX_DENSITY_THRESHOLD = {
     'area': 0.02,
     # 'volume': 0.0015,
 }
+ZIP_STORE_DATA_ZIP_NAME = 'data.zip'
 VOLUME_DATA_GROUPNAME = '_volume_data'
 SEGMENTATION_DATA_GROUPNAME = '_segmentation_data'
 GRID_METADATA_FILENAME = 'metadata.json'

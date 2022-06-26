@@ -1,3 +1,4 @@
+from argparse import ArgumentError
 import logging
 import shutil
 from typing import Dict, Tuple, Union
@@ -11,7 +12,7 @@ from timeit import default_timer as timer
 import tensorstore as ts
 
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DB_NAMESPACES, SEGMENTATION_DATA_GROUPNAME, \
-    VOLUME_DATA_GROUPNAME
+    VOLUME_DATA_GROUPNAME, ZIP_STORE_DATA_ZIP_NAME
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import ANNOTATION_METADATA_FILENAME, GRID_METADATA_FILENAME
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import open_zarr_structure_from_path
 
@@ -33,18 +34,34 @@ def normalize_box(box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]) -> Tup
     )
 
 class LocalDiskPreprocessedDb(IPreprocessedDb):
-    def __init__(self, folder: Path):
+    def __init__(self, folder: Path, store_type: str = 'directory'):
         # either create of say it doesn't exist
         if not folder.is_dir():
             raise ValueError(f"Input folder doesn't exist {folder}")
 
         self.folder = folder
 
+        if not store_type in ['directory', 'zip']:
+            raise ArgumentError(f'store type is not supported: {store_type}')
+
+        self.store_type = store_type
+
     def _path_to_object(self, namespace: str, key: str) -> Path:
         '''
         Returns path to DB entry based on namespace and key
         '''
         return self.folder / namespace / key
+    
+    def __path_to_zarr_root_data(self, namespace: str, key: str) -> Path:
+        '''
+        Returns path to actual zarr structure root depending on store type - used in read* methods
+        '''
+        if self.store_type == 'directory':
+            return self._path_to_object(namespace=namespace, key=key)
+        elif self.store_type == 'zip':
+            return self._path_to_object(namespace=namespace, key=key) / ZIP_STORE_DATA_ZIP_NAME
+        else:
+            raise ValueError(f'store type is not supported: {self.store_type}')
         
     async def contains(self, namespace: str, key: str) -> bool:
         '''
@@ -78,10 +95,28 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         # ZIP_LZMA = 1
         # close store after writing, or use 'with' https://zarr.readthedocs.io/en/stable/api/storage.html#zarr.storage.ZipStore
         temp_store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(temp_store_path))
+        
+        
+        
+        
+        # WHAT NEEDS TO BE CHANGED
         # perm_store = zarr.ZipStore(self._path_to_object(namespace, key) + '.zip', mode='w', compression=12)
-        perm_store = zarr.DirectoryStore(str(self._path_to_object(namespace, key)))
-        zarr.copy_store(temp_store, perm_store, log=stdout)
+        
+        if self.store_type == 'directory':
+            perm_store = zarr.DirectoryStore(str(self._path_to_object(namespace, key)))
+            zarr.copy_store(temp_store, perm_store, log=stdout)
+        elif self.store_type == 'zip':
+            perm_store = zarr.ZipStore(
+                path=str(self.__path_to_zarr_root_data(namespace, key)),
+                compression=0,
+                allowZip64=True,
+                mode='w'
+                )
+            zarr.copy_store(temp_store, perm_store, log=stdout)
+        else:
+            raise ArgumentError('store type is wrong: {self.store_type}')
 
+        # PART BELOW WILL STAY AS IT IS probably
         print("A: " + str(temp_store_path))
         print("B: " + GRID_METADATA_FILENAME)
 
@@ -90,9 +125,10 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             shutil.copy2(temp_store_path / ANNOTATION_METADATA_FILENAME, self._path_to_object(namespace, key) / ANNOTATION_METADATA_FILENAME)
         else:
             print('no annotation metadata file found, continuing without copying it')
-        # TODO: check if temp dir will be correctly removed and read at the beginning, given that there is a JSON file inside
-        # temp_store.close()
-        # perm_store.close()
+
+        if self.store_type == 'zip':
+            perm_store.close()
+            
         temp_store.rmdir()
         # TODO: check if copied and store closed properly
         return True
@@ -103,9 +139,9 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         '''
         try:
             mesh_list = []
-            path: Path = self._path_to_object(namespace=namespace, key=key)
+            path: Path = self.__path_to_zarr_root_data(namespace=namespace, key=key)
             assert path.exists(), f'Path {path} does not exist'
-            root: zarr.hierarchy.group = open_zarr_structure_from_path(path)
+            root: zarr.hierarchy.group = open_zarr_structure_from_path(path, store_type=self.store_type)
             mesh_list_group = root[SEGMENTATION_DATA_GROUPNAME][segment_id][detail_lvl]
             for mesh_name, mesh in mesh_list_group.groups():
                 mesh_data = {
@@ -130,9 +166,9 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         '''
         print('This method is deprecated, please use read_slice method instead')
         try:
-            path: Path = self._path_to_object(namespace=namespace, key=key)
+            path: Path = self.__path_to_zarr_root_data(namespace=namespace, key=key)
             assert path.exists(), f'Path {path} does not exist'
-            root: zarr.hierarchy.group = open_zarr_structure_from_path(path)
+            root: zarr.hierarchy.group = open_zarr_structure_from_path(path, store_type=self.store_type)
             segm_arr = None
             segm_dict = None
             if SEGMENTATION_DATA_GROUPNAME in root:
@@ -174,9 +210,9 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
 
             box = normalize_box(box)
 
-            path: Path = self._path_to_object(namespace=namespace, key=key)
+            path: Path = self.__path_to_zarr_root_data(namespace=namespace, key=key)
             assert path.exists(), f'Path {path} does not exist'
-            root: zarr.hierarchy.group = open_zarr_structure_from_path(path)
+            root: zarr.hierarchy.group = open_zarr_structure_from_path(path, store_type=self.store_type)
             segm_arr = None
             segm_dict = None
             if SEGMENTATION_DATA_GROUPNAME in root:
@@ -302,7 +338,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         # TODO: await? # store - future object, result - ONE of the ways how to get it sync (can be async)
         # store.read() - returns everything as future object. again result() or other methods
         # can be store[1:10].read() ...
-        
+        print('This method is MAY not work properly for ZIP store. Needs to be checked')
         path = self.__get_path_to_zarr_object(arr)
         store = ts.open(
             {

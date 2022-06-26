@@ -10,8 +10,19 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants i
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
 
 
-def open_zarr_structure_from_path(path: Path) -> zarr.hierarchy.Group:
-    store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
+def open_zarr_structure_from_path(path: Path, store_type: str = 'directory') -> zarr.hierarchy.Group:
+    if store_type == 'directory':
+        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
+    elif store_type == 'zip':
+        store: zarr.storage.ZipStore = zarr.ZipStore(
+                path=str(path),
+                compression=0,
+                allowZip64=True,
+                mode='r'
+                )
+    else:
+        raise ValueError(f'store type is not supported: {store_type}')
+
     # Re-create zarr hierarchy from opened store
     root: zarr.hierarchy.group = zarr.group(store=store)
     return root
