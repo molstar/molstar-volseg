@@ -21,6 +21,9 @@ preprocessor/real_volumes_for_converstion_to_fake_sff/
 preprocessor/sample_volumes/
 requirements.txt_COPY
 
+**/_trial_temp
+
+
 preprocessor/fake_segmentations/
 preprocessor/data/real_volumes_for_conversion_to_fake_sff/*
 !preprocessor/data/real_volumes_for_conversion_to_fake_sff/.gitkeep

@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/cellstar-volume-server.iml" filepath="$PROJECT_DIR$/.idea/cellstar-volume-server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../ciftools-python2/.idea/ciftools-python.iml" filepath="$PROJECT_DIR$/../ciftools-python2/.idea/ciftools-python.iml" />
     </modules>
   </component>
 </project>

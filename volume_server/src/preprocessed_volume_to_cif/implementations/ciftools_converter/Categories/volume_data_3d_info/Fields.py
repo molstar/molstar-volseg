@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import numpy as np
 from ciftools.binary.encoding import BinaryCIFEncoder
@@ -15,7 +15,7 @@ from ciftools.binary.encoding.impl.encoders.byte_array import BYTE_ARRAY_CIF_ENC
 def number_field_volume3d_info(
     *,
     name: str,
-    value: Callable[[VolumeInfo, int], Optional[int | float]],
+    value: Callable[[VolumeInfo, int], Optional[Union[int, float]]],
     dtype: np.dtype,
     encoder: Callable[[VolumeInfo], BinaryCIFEncoder],
     presence: Optional[Callable[[VolumeInfo, int], Optional[ValuePresenceEnum]]] = None,

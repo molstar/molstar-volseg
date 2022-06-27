@@ -2,6 +2,7 @@ import unittest
 
 testmodules = [
     "start_server",
+    "get_cell",
     "get_metadata",
 ]
 
