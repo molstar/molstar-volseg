@@ -171,6 +171,7 @@ def create_dict_of_input_params_for_storing(chunking_mode: list, compressors: li
             d[i] = {
                 'chunking_mode': mode,
                 'compressor': compressor,
+                'store_type': 'directory'
             }
             i = i + 1
     
@@ -185,7 +186,7 @@ def create_db(db_path: Path, params_for_storing: dict):
         new_db_path.mkdir()
 
     remove_temp_zarr_hierarchy_storage_folder(TEMP_ZARR_HIERARCHY_STORAGE_PATH)
-    db = LocalDiskPreprocessedDb(new_db_path)
+    db = LocalDiskPreprocessedDb(new_db_path, params_for_storing['store_type'])
     db.remove_all_entries()
     preprocess_everything(db, RAW_INPUT_FILES_DIR, params_for_storing=params_for_storing)
 
@@ -203,7 +204,9 @@ def main():
     elif args.db_path:
         create_db(args.db_path, params_for_storing={
             'chunking_mode': 'auto',
-            'compressor': Blosc(cname='lz4', clevel=5, shuffle=Blosc.SHUFFLE, blocksize=0)
+            'compressor': Blosc(cname='lz4', clevel=5, shuffle=Blosc.SHUFFLE, blocksize=0),
+            'store_type': 'zip'
+            # 'store_type': 'directory'
         })
     else:
         raise ValueError('No db path is provided as argument')

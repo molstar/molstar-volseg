@@ -1,4 +1,5 @@
 ### Custom
+db-*/
 temp/
 .benchmarks/
 parametrized_dbs_input_params.txt
