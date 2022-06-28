@@ -106,12 +106,15 @@ def aio_benchmark(benchmark):
 
 @pytest.mark.parametrize("key", KEYS)
 @pytest.mark.parametrize("box_choice", BOX_CHOICES)
-@pytest.mark.parametrize("db_path", DB_PATHS)
+@pytest.mark.parametrize("db_path", ['db-ZIP//'])
 @pytest.mark.asyncio
 async def test_t(aio_benchmark, key, box_choice, db_path):
     @aio_benchmark
     async def _():
-        db = LocalDiskPreprocessedDb(folder=Path(db_path))
+        if db_path == 'db-ZIP//':
+            db = LocalDiskPreprocessedDb(folder=Path(db_path), store_type='zip')
+        else:
+            db = LocalDiskPreprocessedDb(folder=Path(db_path))
 
         if isinstance(box_choice, float):
             box = await compute_box_size_from_box_fraction(box_fraction=box_choice, db=db, namespace='emdb', key=key)

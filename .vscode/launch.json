@@ -1,6 +1,7 @@
 {
     "version": "0.2.0",
     "configurations": [
+        
 
         {
             "name": "Python: Current File",
@@ -20,7 +21,7 @@
             ]
         },
         {
-            "name": "Python: default db building",
+            "name": "Python: default db building to db folder",
             "type": "python",
             "request": "launch",
             "program": "${file}",
@@ -39,6 +40,17 @@
             "args": [
                 "--db_path",
                 "db-ZIP"
+            ]
+        },
+        {
+            "name": "Python: default no-zip db building",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--db_path",
+                "db-nozip"
             ]
         }
     ]
