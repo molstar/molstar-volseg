@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import numpy as np
 from ciftools.binary.encoding import BinaryCIFEncoder
@@ -17,7 +17,7 @@ from ciftools.binary.encoding.data_types import DataType, DataTypeEnum
 def number_field_volume3d(
     *,
     name: str,
-    value: Callable[[np.ndarray, int], Optional[int | float]],
+    value: Callable[[np.ndarray, int], Optional[Union[int, float]]],
     dtype: np.dtype,
     encoder: Callable[[np.ndarray], BinaryCIFEncoder],
     presence: Optional[Callable[[np.ndarray, int], Optional[ValuePresenceEnum]]] = None,

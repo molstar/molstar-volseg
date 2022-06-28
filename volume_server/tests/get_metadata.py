@@ -164,6 +164,7 @@ class FetchMetadataTest(ServerTestBase):
                     self.assertAlmostEqual(_std, previous_std, delta=abs(_std / 2))  # TODO: check if this std is ok
                     previous_std = _std
 
+                print(body)
                 annotaion_metadata = body.get("annotation")
                 self.assertIsNotNone(annotaion_metadata)
         finally:
