@@ -57,7 +57,7 @@ def _get_mesh_data_from_vedo_obj(vedo_obj):
 
     return d
 
-def _store_mesh_data_in_zarr(mesh_data_dict, segment: zarr.hierarchy.group, ratio):
+def _store_mesh_data_in_zarr(mesh_data_dict, segment: zarr.hierarchy.group, ratio, params_for_storing: dict):
     # zarr group for that detail lvl
     new_segment_list_group = segment.create_group(str(ratio))
     d = mesh_data_dict
@@ -65,12 +65,15 @@ def _store_mesh_data_in_zarr(mesh_data_dict, segment: zarr.hierarchy.group, rati
         single_mesh_group = new_segment_list_group.create_group(str(mesh_id))
 
         for array_name, array in d[mesh_id]['arrays'].items():
-            dset = single_mesh_group.create_dataset(
+            dset = create_dataset_wrapper(
+                zarr_group=single_mesh_group,
                 data=array,
                 name=array_name,
                 shape=array.shape,
                 dtype=array.dtype,
+                params_for_storing=params_for_storing
             )
+
             dset.attrs[f'num_{array_name}'] = len(array)
             
         
@@ -134,12 +137,12 @@ def compute_number_of_downsampling_steps(min_grid_size: int, input_grid_size: in
 
 
 def create_volume_downsamplings(original_data: np.ndarray, downsampling_steps: int,
-                                downsampled_data_group: zarr.hierarchy.Group, force_dtype=np.float32):
+                                downsampled_data_group: zarr.hierarchy.Group, params_for_storing: dict, force_dtype=np.float32):
     '''
     Take original volume data, do all downsampling levels and store in zarr struct one by one
     '''
     current_level_data = original_data
-    __store_single_volume_downsampling_in_zarr_stucture(current_level_data, downsampled_data_group, 1)
+    __store_single_volume_downsampling_in_zarr_stucture(current_level_data, downsampled_data_group, 1, params_for_storing=params_for_storing, force_dtype=force_dtype)
     for i in range(downsampling_steps):
         current_ratio = 2 ** (i + 1)
         kernel = generate_kernel_3d_arr(list(DOWNSAMPLING_KERNEL))
@@ -148,7 +151,8 @@ def create_volume_downsamplings(original_data: np.ndarray, downsampling_steps: i
         downsampled_data = downsampled_data[::2, ::2, ::2]
 
         __store_single_volume_downsampling_in_zarr_stucture(downsampled_data, downsampled_data_group, current_ratio,
-                                                            force_dtype)
+                                                            params_for_storing=params_for_storing,
+                                                            force_dtype=force_dtype)
         current_level_data = downsampled_data
     # # TODO: figure out compression/filters: b64 encoded zlib-zipped .data is just 8 bytes
     # downsamplings sizes in raw uncompressed state are much bigger 
@@ -160,7 +164,8 @@ def create_category_set_downsamplings(
         original_data: np.ndarray,
         downsampling_steps: int,
         downsampled_data_group: zarr.hierarchy.Group,
-        value_to_segment_id_dict_for_specific_lattice_id: Dict
+        value_to_segment_id_dict_for_specific_lattice_id: Dict,
+        params_for_storing: dict
 ):
     '''
     Take original segmentation data, do all downsampling levels, create zarr datasets for each
@@ -178,20 +183,20 @@ def create_category_set_downsamplings(
         levels.append(downsample_categorical_data(magic_kernel, levels[i], current_set_table))
 
     # store levels list in zarr structure (can be separate function)
-    store_downsampling_levels_in_zarr(levels, downsampled_data_group)
+    store_downsampling_levels_in_zarr(levels, downsampled_data_group, params_for_storing=params_for_storing)
 
 
 def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: np.ndarray,
                                                         downsampled_data_group: zarr.hierarchy.Group, ratio: int,
+                                                        params_for_storing: dict,
                                                         force_dtype=np.float32):
-    downsampled_data_group.create_dataset(
+    create_dataset_wrapper(
+        zarr_group=downsampled_data_group,
         data=downsampled_data.astype(force_dtype),
         name=str(ratio),
         shape=downsampled_data.shape,
-        # just change dtype for storing 
         dtype=force_dtype,
-        # # TODO: figure out how to determine optimal chunk size depending on the data
-        chunks=(50, 50, 50)
+        params_for_storing=params_for_storing
     )
 
 

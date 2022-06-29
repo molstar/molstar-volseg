@@ -1,17 +1,24 @@
+import argparse
 import asyncio
 from pprint import pprint
+import shutil
 from asgiref.sync import async_to_sync
 import numpy as np
 
 from pathlib import Path
+from numcodecs import Blosc
 from typing import Dict
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
+from preprocessor.params_for_storing_db import CHUNKING_MODES, COMPRESSORS
 from preprocessor.src.service.implementations.preprocessor_service import PreprocessorService
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import \
-    OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH
+    OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH, PARAMETRIZED_DBS_INPUT_PARAMS_FILEPATH, TEMP_ZARR_HIERARCHY_STORAGE_PATH
 
 from db.interface.i_preprocessed_db import IPreprocessedDb
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import SFFPreprocessor
+from preprocessor.src.tools.remove_files_or_folders_by_pattern.remove_files_or_folders_by_pattern import remove_files_or_folders_by_pattern
+from preprocessor.src.tools.write_dict_to_file.write_dict_to_json import write_dict_to_json
+from preprocessor.src.tools.write_dict_to_file.write_dict_to_txt import write_dict_to_txt
 
 RAW_INPUT_FILES_DIR = Path(__file__).parent / 'data/raw_input_files'
 
@@ -91,21 +98,22 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
     return d
 
 
-def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path) -> None:
+def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path, params_for_storing: dict) -> None:
     preprocessor_service = PreprocessorService([SFFPreprocessor()])
     files_dict = obtain_paths_to_all_files(raw_input_files_dir, hardcoded=False)
     for source_name, source_entries in files_dict.items():
         for entry in source_entries:
             segm_file_type = preprocessor_service.get_raw_file_type(entry['segmentation_file_path'])
             file_preprocessor = preprocessor_service.get_preprocessor(segm_file_type)
-            if entry['segmentation_file_path'] == None:
+            if entry['id'] == 'emd-99999':
                 volume_force_dtype = np.uint8
             else:
                 volume_force_dtype = np.float32
             processed_data_temp_path = file_preprocessor.preprocess(
                 segm_file_path=entry['segmentation_file_path'],
                 volume_file_path=entry['volume_file_path'],
-                volume_force_dtype=volume_force_dtype
+                volume_force_dtype=volume_force_dtype,
+                params_for_storing=params_for_storing
             )
             async_to_sync(db.store)(namespace=source_name, key=entry['id'], temp_store_path=processed_data_temp_path)
 
@@ -155,11 +163,68 @@ async def check_read_meshes(db: LocalDiskPreprocessedDb):
 
     return read_meshes_list
 
+def create_dict_of_input_params_for_storing(chunking_mode: list, compressors: list) -> dict:
+    i = 1
+    d = {}
+    for mode in chunking_mode:
+        for compressor in compressors:
+            d[i] = {
+                'chunking_mode': mode,
+                'compressor': compressor,
+                'store_type': 'directory'
+            }
+            i = i + 1
+    
+    return d
+
+def remove_temp_zarr_hierarchy_storage_folder(path: Path):
+    shutil.rmtree(path, ignore_errors=True)
+
+def create_db(db_path: Path, params_for_storing: dict):
+    new_db_path = Path(db_path)
+    if new_db_path.is_dir() == False:
+        new_db_path.mkdir()
+
+    remove_temp_zarr_hierarchy_storage_folder(TEMP_ZARR_HIERARCHY_STORAGE_PATH)
+    db = LocalDiskPreprocessedDb(new_db_path, params_for_storing['store_type'])
+    db.remove_all_entries()
+    preprocess_everything(db, RAW_INPUT_FILES_DIR, params_for_storing=params_for_storing)
+
+def main():
+    args = parse_script_args()
+    if args.create_parametrized_dbs:
+        remove_files_or_folders_by_pattern('db_*/')
+        storing_params_dict = create_dict_of_input_params_for_storing(
+            chunking_mode=CHUNKING_MODES,
+            compressors=COMPRESSORS
+        )
+        write_dict_to_txt(storing_params_dict, PARAMETRIZED_DBS_INPUT_PARAMS_FILEPATH)
+        for db_id, param_set in storing_params_dict.items():
+            create_db(f'db_{db_id}', params_for_storing=param_set)
+    elif args.db_path:
+        create_db(args.db_path, params_for_storing={
+            'chunking_mode': 'auto',
+            'compressor': Blosc(cname='lz4', clevel=5, shuffle=Blosc.SHUFFLE, blocksize=0),
+            'store_type': 'zip'
+            # 'store_type': 'directory'
+        })
+    else:
+        raise ValueError('No db path is provided as argument')
+
+def parse_script_args():
+    parser=argparse.ArgumentParser()
+    parser.add_argument("--db_path")
+    parser.add_argument("--create_parametrized_dbs", action='store_true')
+    args=parser.parse_args()
+    return args
 
 if __name__ == '__main__':
-    db = LocalDiskPreprocessedDb()
-    db.remove_all_entries(namespace='emdb')
-    preprocess_everything(db, RAW_INPUT_FILES_DIR)
+    # TODO: once new approach to db pathes works, go to main.py
+    # \draft for creating multiple dbs
+    # and implement something similar to it (NEW CODE/NEW CODE ENDS)
+    main()
+
+
     # uncomment to check read slice method
     # asyncio.run(check_read_slice(db))
 

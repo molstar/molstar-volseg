@@ -10,8 +10,19 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants i
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
 
 
-def open_zarr_structure_from_path(path: Path) -> zarr.hierarchy.Group:
-    store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
+def open_zarr_structure_from_path(path: Path, store_type: str = 'directory') -> zarr.hierarchy.Group:
+    if store_type == 'directory':
+        store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
+    elif store_type == 'zip':
+        store: zarr.storage.ZipStore = zarr.ZipStore(
+                path=str(path),
+                compression=0,
+                allowZip64=True,
+                mode='r'
+                )
+    else:
+        raise ValueError(f'store type is not supported: {store_type}')
+
     # Re-create zarr hierarchy from opened store
     root: zarr.hierarchy.group = zarr.group(store=store)
     return root
@@ -29,7 +40,7 @@ class SFFPreprocessor(IDataPreprocessor):
         self.magic_kernel = MagicKernel3dDownsampler()
         self.temp_zarr_structure_path = None
 
-    def preprocess(self, segm_file_path: Path, volume_file_path: Path, volume_force_dtype=np.float32):
+    def preprocess(self, segm_file_path: Path, volume_file_path: Path, params_for_storing: dict, volume_force_dtype=np.float32):
         '''
         Returns path to temporary zarr structure that will be stored permanently using db.store
         '''
@@ -48,9 +59,9 @@ class SFFPreprocessor(IDataPreprocessor):
 
             mesh_simplification_curve = MESH_SIMPLIFICATION_CURVE
             if segm_file_path is not None:
-                SFFPreprocessor.process_segmentation_data(self.magic_kernel, zarr_structure, mesh_simplification_curve)
+                SFFPreprocessor.process_segmentation_data(self.magic_kernel, zarr_structure, mesh_simplification_curve, params_for_storing=params_for_storing)
 
-            SFFPreprocessor.process_volume_data(zarr_structure, normalized_axis_map_object, volume_force_dtype)
+            SFFPreprocessor.process_volume_data(zarr_structure=zarr_structure, map_object=normalized_axis_map_object, params_for_storing=params_for_storing, force_dtype=volume_force_dtype)
 
             grid_metadata = SFFPreprocessor.extract_metadata(zarr_structure, normalized_axis_map_object, mesh_simplification_curve)
             

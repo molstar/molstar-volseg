@@ -1,3 +1,4 @@
+from pathlib import Path
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,7 +32,7 @@ def prepare_fastapi_app():
     app.add_middleware(GZipMiddleware, minimum_size=1000)
 
     # initialize dependencies
-    db = LocalDiskPreprocessedDb()
+    db = LocalDiskPreprocessedDb(folder=Path('db'))
     volume_to_cif_converter = CifToolsVolumeToCifConverter()
 
     # initialize server

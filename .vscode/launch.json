@@ -1,12 +1,57 @@
 {
     "version": "0.2.0",
     "configurations": [
+        
+
         {
-            "name": "Python: Текущий файл",
+            "name": "Python: Current File",
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+        },
+        {
+            "name": "Python: parametrized dbs",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--create_parametrized_dbs"
+            ]
+        },
+        {
+            "name": "Python: default db building to db folder",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--db_path",
+                "db"
+            ]
+        },
+        {
+            "name": "Python: default ZIP db building",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--db_path",
+                "db-ZIP"
+            ]
+        },
+        {
+            "name": "Python: default no-zip db building",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--db_path",
+                "db-nozip"
+            ]
         }
     ]
 }

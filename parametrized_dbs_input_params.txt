@@ -1,0 +1,12 @@
+1: {'chunking_mode': 'auto', 'compressor': None}
+2: {'chunking_mode': 'auto', 'compressor': Zstd(level=1)}
+3: {'chunking_mode': 'auto', 'compressor': Zlib(level=1)}
+4: {'chunking_mode': 'auto', 'compressor': GZip(level=1)}
+5: {'chunking_mode': 'auto', 'compressor': BZ2(level=1)}
+6: {'chunking_mode': 'auto', 'compressor': LZMA(format=1, check=-1, preset=1, filters=None)}
+7: {'chunking_mode': 'false', 'compressor': None}
+8: {'chunking_mode': 'false', 'compressor': Zstd(level=1)}
+9: {'chunking_mode': 'false', 'compressor': Zlib(level=1)}
+10: {'chunking_mode': 'false', 'compressor': GZip(level=1)}
+11: {'chunking_mode': 'false', 'compressor': BZ2(level=1)}
+12: {'chunking_mode': 'false', 'compressor': LZMA(format=1, check=-1, preset=1, filters=None)}

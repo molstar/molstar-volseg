@@ -23,11 +23,16 @@ class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
             medium_box = tuple([int(0.5 * x) for x in dims])
             large_box = tuple([x - 1 for x in dims])
             
-            return (
+            boxes = (
                 (origin, small_box),
                 (origin, medium_box),
                 (origin, large_box)
             )
+
+            print(f'Boxes for {key}:')
+            print(boxes)
+            
+            return boxes
 
         # method names
         test_suite_entries = [
@@ -43,7 +48,7 @@ class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
             'tensorstore'
         ]
 
-        db = LocalDiskPreprocessedDb()
+        db = LocalDiskPreprocessedDb(Path('db'))
 
         d = {}
         for namespace, entry_id in test_suite_entries:

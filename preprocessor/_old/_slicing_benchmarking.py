@@ -17,7 +17,7 @@ MODES_LIST = [
     'tensorstore'
 ]
 
-CHUNK_SIZES = [25, 50, 100, 400]
+CHUNK_SIZES = [25, 50, 100, 200, 400]
 
 TEMP_STORE_PATH = Path(__file__).parents[0] / 'temp' / 'benchmarking_zarr_structure'
 
@@ -195,7 +195,7 @@ def _get_sample_zarr_structure():
 
 
 if __name__ == '__main__':
-    db = LocalDiskPreprocessedDb()
+    db = LocalDiskPreprocessedDb(Path('db'))
     # for mode in MODES_LIST:    
     #     slice_dict = async_to_sync(db.read_slice)('emdb', 'emd-1832', 0, 2, ((10,10,10), (25,25,25)), mode=mode)
         

@@ -5,23 +5,25 @@ import zarr
 from preprocessor.src.preprocessors.implementations.sff.downsampling_level_dict import DownsamplingLevelDict
 from preprocessor.src.preprocessors.implementations.sff.segmentation_set_table import SegmentationSetTable
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
+from preprocessor.src.preprocessors.implementations.sff.preprocessor._zarr_methods import create_dataset_wrapper
 
 
 def store_downsampling_levels_in_zarr(levels_list: list[DownsamplingLevelDict],
-                                                downsampled_data_group: zarr.hierarchy.Group):
+                                                downsampled_data_group: zarr.hierarchy.Group, params_for_storing: dict):
     for level_dict in levels_list:
         grid = level_dict.get_grid()
         table = level_dict.get_set_table()
         ratio = level_dict.get_ratio()
 
         new_level_group: zarr.hierarchy.Group = downsampled_data_group.create_group(str(ratio))
-        grid_arr = new_level_group.create_dataset(
+
+        grid_arr = create_dataset_wrapper(
+            zarr_group=new_level_group,
             data=grid,
             name='grid',
             shape=grid.shape,
             dtype=grid.dtype,
-            # # TODO: figure out how to determine optimal chunk size depending on the data
-            chunks=(25, 25, 25)
+            params_for_storing=params_for_storing
         )
 
         table_obj_arr = new_level_group.create_dataset(

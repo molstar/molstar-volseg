@@ -1,4 +1,15 @@
 ### Custom
+db-*/
+temp/
+.benchmarks/
+parametrized_dbs_input_params.txt
+preprocessor/data/temp_raw_input_files/*
+preprocessor/data/raw_input_files/emdb/emd-9199/*
+preprocessor/data/raw_input_files/emdb/emd-88888/*
+db_*/
+db/empiar/
+cpu_profiling/
+preprocessor/data/raw_input_files/empiar/
 preprocessor/src/preprocessors/implementations/sff/data/*
 preprocessor.3.10.4.env/
 PYTHONPATH.sh
