@@ -120,20 +120,21 @@ def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path, params
 
 async def check_read_slice(db: LocalDiskPreprocessedDb):
     box = ((0, 0, 0), (10, 10, 10), (10, 10, 10))
-    slice_emd_1832 = await db.read_slice(
-        'emdb',
-        'emd-1832',
-        0,
-        1,
-        box
-    )
-    slice_emd_99999 = await db.read_slice(
-        'emdb',
-        'emd-99999',
-        0,
-        1,
-        box
-    )
+    
+    with db.read(namespace='emdb', key='emd-99999') as reader:
+        slice_emd_99999 = await reader.read_slice(
+            lattice_id=0,
+            down_sampling_ratio=1,
+            box=box
+        )
+
+    with db.read(namespace='emdb', key='emd-1832') as reader:
+        slice_emd_1832 = await reader.read_slice(
+            lattice_id=0,
+            down_sampling_ratio=1,
+            box=box
+        )
+
     emd_1832_volume_slice = slice_emd_1832['volume_slice']
     emd_1832_segm_slice = slice_emd_1832['segmentation_slice']['category_set_ids']
 
@@ -153,12 +154,12 @@ async def check_read_slice(db: LocalDiskPreprocessedDb):
     }
 
 async def check_read_meshes(db: LocalDiskPreprocessedDb):
-    read_meshes_list = await db.read_meshes(
-        'empiar',
-        'empiar-10070',
-        15,
-        3
-    )
+    with db.read(namespace='empiar', key='empiar-10070') as reader:
+        read_meshes_list = await reader.read_meshes(
+            segment_id=15,
+            detail_lvl=3
+        )
+
     pprint(read_meshes_list)
 
     return read_meshes_list

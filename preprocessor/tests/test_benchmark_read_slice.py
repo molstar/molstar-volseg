@@ -122,15 +122,14 @@ async def test_t(aio_benchmark, key, box_choice, db_path):
             box = await compute_random_static_box(db=db, namespace='emdb', key=key, box=127)
         elif isinstance(box_choice, str) and box_choice == 'random_static_region_big':
             box = await compute_random_static_box(db=db, namespace='emdb', key=key, box=299)
-        
-        result = await db.read_slice(
-            namespace='emdb',
-            key=key,
-            lattice_id=0,
-            down_sampling_ratio=1,
-            box=box,
-            mode='zarr_colon'
-        )
+
+        with db.read(namespace='emdb', key=key) as reader:
+            result = await reader.read_slice(
+                lattice_id=0,
+                down_sampling_ratio=1,
+                box=box,
+                mode='zarr_colon'
+            )
 
         
     
