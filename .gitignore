@@ -1,4 +1,5 @@
 ### Custom
+preprocessor/data/sample_volumes/emdb_sff/*
 db-*/
 temp/
 .benchmarks/
