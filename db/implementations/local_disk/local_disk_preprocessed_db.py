@@ -279,7 +279,7 @@ class ReadContext():
 
 
 class LocalDiskPreprocessedDb(IPreprocessedDb):
-    def __init__(self, folder: Path, store_type: str = 'directory'):
+    def __init__(self, folder: Path, store_type: str = 'zip'):
         # either create of say it doesn't exist
         if not folder.is_dir():
             raise ValueError(f"Input folder doesn't exist {folder}")
