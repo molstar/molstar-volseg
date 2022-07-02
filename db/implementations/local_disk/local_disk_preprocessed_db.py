@@ -254,7 +254,7 @@ class ReadContext():
     def __aenter__(self):
         return self
 
-    def __aexit__(self):
+    def __aexit__(self, *args, **kwargs):
         if hasattr(self.store, 'close'):
             self.store.close()
         else:
