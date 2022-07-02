@@ -45,12 +45,13 @@ class VolumeServerV1(IVolumeServer):
               "  lattice: " + str(lattice) + "\n" +
               "  down_sampling: " + str(down_sampling) + "\n" +
               "  grid: " + str(grid))
-        db_slice = await self.db.read_slice(
-            req.source(),
-            req.structure_id(),
-            lattice,
-            down_sampling,
-            grid)
+
+        with self.db.read(namespace=req.source(), key=req.structure_id()) as reader:
+            db_slice = await reader.read_slice(
+                lattice_id=lattice,
+                down_sampling_ratio=down_sampling,
+                box=grid,
+            )
 
         cif = self.volume_to_cif.convert(db_slice, metadata, down_sampling, self.grid_size(grid))
         return cif

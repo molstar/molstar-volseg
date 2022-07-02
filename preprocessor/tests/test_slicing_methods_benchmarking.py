@@ -45,7 +45,7 @@ class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
             'zarr_gbs',
             'dask',
             'dask_from_zarr',
-            'tensorstore'
+            # 'tensorstore'
         ]
 
         db = LocalDiskPreprocessedDb(Path('db'))
@@ -61,14 +61,15 @@ class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
                 print(f'   BOX: {box}')
                 for method in test_suite_methods:
                     start = timer()
-                    slice_read = await db.read_slice(
-                        namespace=namespace,
-                        key=entry_id,
-                        lattice_id=0,
-                        down_sampling_ratio=1,
-                        box=box,
-                        mode=method
-                    )
+
+                    with db.read(namespace=namespace, key=entry_id) as reader:
+                        slice_read = await reader.read_slice(
+                            lattice_id=0,
+                            down_sampling_ratio=1,
+                            box=box,
+                            mode=method
+                        )
+
                     stop = timer()
                     measurement = stop - start
                     d[entry_id][str_repr_of_box][method] = {

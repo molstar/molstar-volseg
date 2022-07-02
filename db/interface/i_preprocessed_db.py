@@ -1,8 +1,10 @@
 import abc
 from pathlib import Path
-from typing import Dict, Tuple, TypedDict
+from typing import TYPE_CHECKING, Dict, Tuple, TypedDict
 
 import numpy as np
+if TYPE_CHECKING:
+    from db.implementations.local_disk.local_disk_preprocessed_db import ReadContext
 
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 
@@ -23,11 +25,7 @@ class IReadOnlyPreprocessedDb(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def read(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int) -> Dict:
-        pass
-    
-    @abc.abstractmethod
-    async def read_slice(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask') -> ProcessedVolumeSliceData:
+    def read(self, namespace: str, key: str) -> "ReadContext":
         pass
 
     @abc.abstractmethod
@@ -37,11 +35,6 @@ class IReadOnlyPreprocessedDb(abc.ABC):
     @abc.abstractmethod
     async def read_annotations(self, namespace: str, key: str) -> Dict:
         pass
-
-    @abc.abstractmethod
-    async def read_meshes(self, namespace: str, key: str, segment_id: int, detail_lvl: int) -> list[object]:
-        pass
-
 
 class IPreprocessedDb(IReadOnlyPreprocessedDb, abc.ABC):
     @abc.abstractmethod
