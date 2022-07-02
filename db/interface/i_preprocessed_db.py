@@ -1,8 +1,10 @@
 import abc
 from pathlib import Path
-from typing import Dict, Tuple, TypedDict
+from typing import TYPE_CHECKING, Dict, Tuple, TypedDict
 
 import numpy as np
+if TYPE_CHECKING:
+    from db.implementations.local_disk.local_disk_preprocessed_db import ReadContext
 
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 
@@ -23,7 +25,7 @@ class IReadOnlyPreprocessedDb(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def read(self, namespace: str, key: str):
+    def read(self, namespace: str, key: str) -> "ReadContext":
         pass
 
     @abc.abstractmethod
