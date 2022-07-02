@@ -45,7 +45,7 @@ class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
             'zarr_gbs',
             'dask',
             'dask_from_zarr',
-            'tensorstore'
+            # 'tensorstore'
         ]
 
         db = LocalDiskPreprocessedDb(Path('db'))
