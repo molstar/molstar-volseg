@@ -254,11 +254,14 @@ class ReadContext():
     def __aenter__(self):
         return self
 
-    def __aexit__(self, *args, **kwargs):
+    async def __aexit__(self, *args, **kwargs):
+        if hasattr(self.store, 'aclose'):
+            await self.store.aclose()
         if hasattr(self.store, 'close'):
             self.store.close()
         else:
             pass
+
 
     def __init__(self, db: IPreprocessedDb, namespace: str, key: str):
         self.db = db
