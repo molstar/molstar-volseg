@@ -251,7 +251,7 @@ class ReadContext():
         else:
             pass
     
-    def __aenter__(self):
+    async def __aenter__(self):
         return self
 
     async def __aexit__(self, *args, **kwargs):
