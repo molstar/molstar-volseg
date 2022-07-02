@@ -1,11 +1,12 @@
 
 
+from pathlib import Path
 import unittest
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 
 class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
     async def test(self):
-        db = LocalDiskPreprocessedDb()
+        db = LocalDiskPreprocessedDb(folder=Path('db'))
 
         test_suite_entries = [
             ('emdb', 'emd-1832'),
@@ -24,8 +25,7 @@ class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
                             for {namespace, entry_id}'
             
             with db.read(namespace=namespace, key=entry_id) as reader:
-              for downsampling_ratio in volume_downsamplings:
-                arr_dict: dict = await db.read(namespace, entry_id, 0, downsampling_ratio)
+                for downsampling_ratio in volume_downsamplings:
                     arr_dict: dict = await reader.read(
                         lattice_id=0,
                         down_sampling_ratio=downsampling_ratio
