@@ -7,60 +7,35 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.downsamplin
 from timeit import default_timer as timer
 
 def downsample_map(input_path: Path, output_path: Path, size_limit: int):
-    # use read function
+    kernel = generate_kernel_3d_arr(list(DOWNSAMPLING_KERNEL))
+    # open with mmap if too big
+    data: np.ndarray = mrcfile.read(str(input_path.resolve()))
+    size = data.nbytes
+    print(f'size of original data: ~ {size / 1000000} MB')
+    downsampled_data = data
+    while size > size_limit:
+        downsampled_data = ndimage.convolve(downsampled_data, kernel, mode='mirror', cval=0.0)
+        downsampled_data = downsampled_data[::2, ::2, ::2]
+        size = downsampled_data.nbytes
+        print(f'downsampled to: {size / 1000000} MB')
+        
+    with mrcfile.new(str(output_path.resolve()), overwrite=True) as mrc:
+        mrc.set_data(downsampled_data)
+    
+
+def _check_if_map_is_ok(map_path: Path):
+    with mrcfile.open(str(map_path.resolve())) as mrc:
+        data = mrc.data
+        print(f'shape of new file is {data.shape}')
 
 
-
-
-
-
-def _delete():
-
-
+        
+if __name__ == '__main__':
     INPUT_MAP = 'preprocessor\data\sample_volumes\emdb_sff\emd_9199.map'
     # INPUT_MAP = 'preprocessor\data\sample_volumes\emdb_sff\EMD-1832.map'
     OUTPUT_MAP = 'temp/downsampled_9199.map'
-
-    kernel = generate_kernel_3d_arr(list(DOWNSAMPLING_KERNEL))
-
-    data_to_write = None
-
-    start_mrcfile = timer()
-    with mrcfile.open(INPUT_MAP) as mrc:
-        stop_mrcfile = timer()
-        start_data = timer()
-        data = mrc.data
-        stop_data = timer()
-        # works with 16GB RAM
-        # print(data.shape)
-
-        # works
-        start_convolve = timer()
-        downsampled_data = ndimage.convolve(data, kernel, mode='mirror', cval=0.0)
-        stop_convolve = timer()
-
-        downsampled_data = downsampled_data[::2, ::2, ::2]
-        stop_every_other = timer()
-        # print(downsampled_data.shape)
-
-        print(f'mrcfile opening took: {stop_mrcfile - start_mrcfile}')
-        print(f'accessing mrc object data (numpy arr) took: {stop_data - start_data}')
-        print(f'convolve took: {stop_convolve - start_convolve}')
-        print(f'slicing (every other value) took: {stop_every_other - stop_convolve}')
-
-        data_to_write = downsampled_data
-
-    with mrcfile.new(OUTPUT_MAP, overwrite=True) as mrc:
-        set_data_start = timer()
-        mrc.set_data(data_to_write)
-        set_data_stop = timer()
-        print(f'writing data to new file took: {set_data_stop - set_data_start}')
-
-
-    with mrcfile.open(OUTPUT_MAP) as mrc:
-        data = mrc.data
-        print(f'shape of new file is {data.shape}')
+    SIZE_LIMIT = 1 * (10**9)
+    downsample_map(input_path=Path(INPUT_MAP), output_path=Path(OUTPUT_MAP), size_limit=SIZE_LIMIT)
+    _check_if_map_is_ok(Path(OUTPUT_MAP))
+    
         
-        # other options:
-        # open with mmap
-        # explicitly try specifying 'r' mode while opening
