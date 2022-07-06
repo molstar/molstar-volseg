@@ -11,7 +11,7 @@ def downsample_map(input_path: Path, output_path: Path, size_limit: int):
     # open with mmap if too big
     data: np.ndarray = mrcfile.read(str(input_path.resolve()))
     size = data.nbytes
-    print(f'size of original data: ~ {size / 1000000} MB')
+    print(f'{input_path.name} - size of original data: ~ {size / 1000000} MB')
     downsampled_data = data
     while size > size_limit:
         downsampled_data = ndimage.convolve(downsampled_data, kernel, mode='mirror', cval=0.0)
