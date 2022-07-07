@@ -1,3 +1,4 @@
+import math
 from pathlib import Path
 import mrcfile
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DOWNSAMPLING_KERNEL
@@ -12,7 +13,10 @@ def downsample_map(input_path: Path, output_path: Path, size_limit: int):
     # open with mmap if too big
     with mrcfile.open(str(input_path.resolve())) as mrc_original:
         original_cella = mrc_original.header.cella
+        original_nstart = mrc_original.nstart
         data: np.ndarray = mrc_original.data
+        print('original header')
+        mrc_original.print_header()
 
     size = data.nbytes
     print(f'{input_path.name} - size of original data: ~ {size / 1000000} MB')
@@ -27,12 +31,16 @@ def downsample_map(input_path: Path, output_path: Path, size_limit: int):
         print(f'downsampled to: {size / 1000000} MB')
         
     with mrcfile.new(str(output_path.resolve()), overwrite=True) as mrc:
-        cella_divisor = 2 ** num_steps
+        nstart_divisor = 2 ** num_steps
         mrc.set_data(downsampled_data)
-        mrc.header.cella.x = original_cella.x / cella_divisor
-        mrc.header.cella.y = original_cella.y / cella_divisor
-        mrc.header.cella.z = original_cella.z / cella_divisor
-        
+        mrc.header.cella = original_cella
+        # TODO: negative -55.5 => -55; positive 55.5 => 56. Issue?
+        mrc.nstart = (
+            math.ceil(original_nstart.x / nstart_divisor),
+            math.ceil(original_nstart.y / nstart_divisor),
+            math.ceil(original_nstart.z / nstart_divisor),
+            )
+
         mrc.print_header()
         mrc.update_header_from_data()
         mrc.update_header_stats()    
