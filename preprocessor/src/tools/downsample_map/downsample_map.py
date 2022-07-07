@@ -36,9 +36,9 @@ def downsample_map(input_path: Path, output_path: Path, size_limit: int):
         mrc.header.cella = original_cella
         # TODO: negative -55.5 => -55; positive 55.5 => 56. Issue?
         mrc.nstart = (
-            math.ceil(original_nstart.x / nstart_divisor),
-            math.ceil(original_nstart.y / nstart_divisor),
-            math.ceil(original_nstart.z / nstart_divisor),
+            math.floor(original_nstart.x / nstart_divisor),
+            math.floor(original_nstart.y / nstart_divisor),
+            math.floor(original_nstart.z / nstart_divisor),
             )
 
         mrc.print_header()
