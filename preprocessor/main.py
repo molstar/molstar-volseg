@@ -8,8 +8,6 @@ import numpy as np
 from pathlib import Path
 from numcodecs import Blosc
 from typing import Dict
-
-import psutil
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 from preprocessor.params_for_storing_db import CHUNKING_MODES, COMPRESSORS
 from preprocessor.src.service.implementations.preprocessor_service import PreprocessorService
@@ -18,13 +16,12 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants i
 
 from db.interface.i_preprocessed_db import IPreprocessedDb
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import SFFPreprocessor
-from preprocessor.src.tools.downsample_map.downsample_map import downsample_map
 from preprocessor.src.tools.remove_files_or_folders_by_pattern.remove_files_or_folders_by_pattern import remove_files_or_folders_by_pattern
 from preprocessor.src.tools.write_dict_to_file.write_dict_to_json import write_dict_to_json
 from preprocessor.src.tools.write_dict_to_file.write_dict_to_txt import write_dict_to_txt
 
 RAW_INPUT_FILES_DIR = Path(__file__).parent / 'data/raw_input_files'
-
+DEFAULT_DB_PATH = Path(__file__).parent.parent/'db' 
 
 def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict:
     '''
@@ -100,6 +97,7 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
                         )
     return d
 
+
 def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path, params_for_storing: dict) -> None:
     preprocessor_service = PreprocessorService([SFFPreprocessor()])
     files_dict = obtain_paths_to_all_files(raw_input_files_dir, hardcoded=False)
@@ -111,17 +109,6 @@ def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path, params
                 volume_force_dtype = np.uint8
             else:
                 volume_force_dtype = np.float32
-
-            volume_file_size: int = entry['volume_file_path'].stat().st_size
-            ram_available = psutil.virtual_memory().total
-
-            if volume_file_size > ram_available:
-                downsample_map(
-                    input_path=entry['volume_file_path'],
-                    output_path=entry['volume_file_path'],
-                    size_limit=ram_available * 0.8
-                )
-
             processed_data_temp_path = file_preprocessor.preprocess(
                 segm_file_path=entry['segmentation_file_path'],
                 volume_file_path=entry['volume_file_path'],
@@ -214,9 +201,9 @@ def main():
         )
         write_dict_to_txt(storing_params_dict, PARAMETRIZED_DBS_INPUT_PARAMS_FILEPATH)
         for db_id, param_set in storing_params_dict.items():
-            create_db(f'db_{db_id}', params_for_storing=param_set)
+            create_db(Path(f'db_{db_id}'), params_for_storing=param_set)
     elif args.db_path:
-        create_db(args.db_path, params_for_storing={
+        create_db(Path(args.db_path), params_for_storing={
             'chunking_mode': 'auto',
             'compressor': Blosc(cname='lz4', clevel=5, shuffle=Blosc.SHUFFLE, blocksize=0),
             'store_type': 'zip'
@@ -227,7 +214,7 @@ def main():
 
 def parse_script_args():
     parser=argparse.ArgumentParser()
-    parser.add_argument("--db_path")
+    parser.add_argument("--db_path", type=Path, default=DEFAULT_DB_PATH, help='path to db folder')
     parser.add_argument("--create_parametrized_dbs", action='store_true')
     args=parser.parse_args()
     return args
