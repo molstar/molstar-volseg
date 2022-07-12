@@ -69,7 +69,7 @@ class VolumeServerV1(IVolumeServer):
 
         # hack for "emd-99999"
         if original_grid[1][0] > 1000:
-            return 8
+            return 4
         return 1
 
         # down_samplings = metadata.volume_downsamplings()

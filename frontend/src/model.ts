@@ -2,7 +2,7 @@ import { createPluginUI } from 'molstar/lib/mol-plugin-ui/react18';
 import { PluginUIContext } from 'molstar/lib/mol-plugin-ui/context';
 import { DefaultPluginUISpec } from 'molstar/lib/mol-plugin-ui/spec';
 import { PluginConfig } from 'molstar/lib/mol-plugin/config';
-import { StateObjectSelector, StateTransformer } from 'molstar/lib/mol-state';
+import { StateObjectSelector, StateTransform, StateTransformer } from 'molstar/lib/mol-state';
 import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
 import { StateTransforms } from 'molstar/lib/mol-plugin-state/transforms';
 import { createVolumeRepresentationParams } from 'molstar/lib/mol-plugin-state/helpers/volume-representation-params';
@@ -13,6 +13,9 @@ import { CustomProperties } from 'molstar/lib/mol-model/custom-property';
 import { arrayMean, arrayRms } from 'molstar/lib/mol-util/array';
 import { Vec2 } from 'molstar/lib/mol-math/linear-algebra';
 import { BehaviorSubject } from 'rxjs';
+
+
+const VOLUME_SERVER = 'http://localhost:9000';
 
 
 interface Segment {
@@ -67,7 +70,8 @@ export class AppModel {
             ],
         });
 
-        setTimeout(() => this.load1832(), 50);
+        // setTimeout(() => this.load1832(), 50);
+        setTimeout(() => this.load10070(), 50);
     }
 
     createFakeSegment(volume: Volume, level: number): Volume {
@@ -273,11 +277,42 @@ export class AppModel {
     annotation = new BehaviorSubject<Annotation | undefined>(undefined);
     currentSegment = new BehaviorSubject<Segment | undefined>(undefined);
 
+
+    volumeServerRequestUrl(entryId: string, segmentation: number, box: [[number, number, number], [number, number, number]], maxPoints: number): string {
+        const [[a1, a2, a3], [b1, b2, b3]] = box;
+        return `${VOLUME_SERVER}/v1/emdb/${entryId}/box/${segmentation}/${a1}/${a2}/${a3}/${b1}/${b2}/${b3}/${maxPoints}`;
+    }
+
+    // Temporary solution
+    async getMeshData_debugging(source: string, entryId: string, segment: number, detailLevel: number){
+        const url = `${VOLUME_SERVER}/v1/${source}/${entryId}/mesh/${segment}/${detailLevel}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data;
+    }
+
+    async load10070() {
+        //debugging:
+        const entryId = 'empiar-10070';
+        const segmentId = 1;
+        const detailLevel = 7;
+        const meshes = await this.getMeshData_debugging('empiar', 'empiar-10070', segmentId, detailLevel);
+        console.log(`Meshes (segment ${segmentId}, detail ${detailLevel}):\n`, meshes);
+
+        await this.plugin.clear();
+        const repr = await this.plugin.build();
+        repr.to('picovina');
+        // StateTransforms.Representation.VolumeRepresentation3D
+
+        this.entryId.next(entryId);
+        this.dataSource.next('10070');  // React magic for async stuff instead of return, I guess
+    }
+
     async load1832() {
         const entryId = 'emd-1832';
         const isoLevel = 2.73;
         // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
-        const url = `http://localhost:9000/v1/emdb/${entryId}/box/0/-1000/-1000/-1000/1000/1000/1000/100000000`;
+        const url = this.volumeServerRequestUrl(entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
         const { plugin } = this;
 
         await plugin.clear();
@@ -350,7 +385,7 @@ export class AppModel {
     private repr: any = undefined;
     async load99999() {
         const entryId = 'emd-99999';
-        const url = `http://localhost:9000/v1/emdb/${entryId}/box/0/-10000/-10000/-10000/10000/10000/10000/10000000`;
+        const url = this.volumeServerRequestUrl(entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
         // http://localhost:9000/v1/emdb/emd-99999/box/0/-10000/-10000/-10000/10000/10000/10000/10000000
         const { plugin } = this;
 
