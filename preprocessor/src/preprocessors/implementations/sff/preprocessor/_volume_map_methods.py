@@ -1,8 +1,10 @@
 from decimal import getcontext, ROUND_CEILING, Decimal
+from email import header
 import logging
 from pathlib import Path
 
 import gemmi
+import dask.array as da
 import numpy as np
 
 
@@ -66,9 +68,30 @@ def normalize_axis_order(map_object: gemmi.Ccp4Map):
     try:
         assert new_axis_order == (1, 2, 3), f'Axis order is {new_axis_order}, should be (1, 2, 3) or X, Y, Z'
     except AssertionError as e:
-        # TODO: check if it should be logger instead LATER ON
         logging.error(e, stack_info=True, exc_info=True)
     return map_object
+
+def normalize_axis_order_mrcfile(dask_arr: da.Array, mrc_header: object) -> da.Array:
+    '''
+    Normalizes axis order to X, Y, Z (1, 2, 3)
+    '''
+    h = mrc_header
+    standard_order = (1, 2, 3)
+    current_order = int(h.mapc), int(h.mapr), int(h.maps)
+    if standard_order != current_order:
+        # mapc/r/s correspondance to dask arr dimensions
+        d = {
+            int(h.mapc): 0,
+            int(h.mapr): 1,
+            int(h.maps): 2
+        }
+        sorted_d = dict(sorted(d.items()))
+
+        # reorder dask arr dimensions and return new arr
+        transposed_dask_arr = dask_arr.transpose(sorted_d[1], sorted_d[2], sorted_d[3])
+
+    return transposed_dask_arr
+    
 
 
 def read_volume_map_to_object(volume_file_path: Path) -> gemmi.Ccp4Map:
