@@ -28,9 +28,9 @@ def ccp4_words_to_dict_mrcfile(mrc_header: object) -> dict:
     # mrcfile implementation
     d['NC'], d['NR'], d['NS'] = int(m.nx), int(m.ny), int(m.nz)
     d['NCSTART'], d['NRSTART'], d['NSSTART'] = int(m.nxstart), int(m.nystart), int(m.nzstart)
-    d['xLength'] = round(Decimal(m.cella.x), 1)
-    d['yLength'] = round(Decimal(m.cella.y), 1)
-    d['zLength'] = round(Decimal(m.cella.z), 1)
+    d['xLength'] = round(Decimal(float(m.cella.x)), 1)
+    d['yLength'] = round(Decimal(float(m.cella.y)), 1)
+    d['zLength'] = round(Decimal(float(m.cella.z)), 1)
     d['MAPC'], d['MAPR'], d['MAPS'] = int(m.mapc), int(m.mapr), int(m.maps)
 
     return d

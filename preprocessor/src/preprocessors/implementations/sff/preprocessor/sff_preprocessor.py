@@ -50,6 +50,9 @@ class SFFPreprocessor(IDataPreprocessor):
 
             dask_arr = da.from_array(data)
             # TODO: normalize axes
+            # this one just swaps x to z as mrcfile writes it in specific order
+            # actual normalization should be done perhaps using mapr,mapc, etc. (can look at gemmi)
+            dask_arr = dask_arr.swapaxes(0, 2)
 
             mesh_simplification_curve = MESH_SIMPLIFICATION_CURVE
             if segm_file_path is not None:

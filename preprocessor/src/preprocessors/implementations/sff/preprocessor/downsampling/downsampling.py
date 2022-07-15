@@ -194,6 +194,7 @@ def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: da.Arr
     
     zarr_arr = create_dataset_wrapper(
         zarr_group=downsampled_data_group,
+        data=None,
         name=str(ratio),
         shape=downsampled_data.shape,
         dtype=force_dtype,
