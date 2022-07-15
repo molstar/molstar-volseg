@@ -17,13 +17,14 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.downsamplin
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.numpy_methods import chunk_numpy_arr
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._zarr_methods import create_dataset_wrapper
+import dask.array as da
 
-def process_volume_data(zarr_structure: zarr.hierarchy.group, map_object: gemmi.Ccp4Map, params_for_storing: dict, force_dtype=np.float32):
+def process_volume_data(zarr_structure: zarr.hierarchy.group, dask_arr: da.Array, params_for_storing: dict, force_dtype=np.float32):
     '''
     Takes read map object, extracts volume data, downsamples it, stores to zarr_structure
     '''
     volume_data_gr: zarr.hierarchy.group = zarr_structure.create_group(VOLUME_DATA_GROUPNAME)
-    volume_arr = read_volume_data(map_object, force_dtype)
+    volume_arr = dask_arr
     volume_downsampling_steps = compute_number_of_downsampling_steps(
         MIN_GRID_SIZE,
         input_grid_size=math.prod(volume_arr.shape),

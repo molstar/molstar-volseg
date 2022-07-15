@@ -10,7 +10,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants i
     SEGMENTATION_DATA_GROUPNAME
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._sfftk_methods import \
     open_hdf5_as_segmentation_object
-from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import ccp4_words_to_dict
+from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import ccp4_words_to_dict_mrcfile
 
 class MeshMetadata(TypedDict):
     num_vertices: int
@@ -40,7 +40,7 @@ def extract_annotations(segm_file_path: Path) -> dict:
     return segm_dict
 
 
-def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object, mesh_simplification_curve: list[tuple[int, float]]) -> dict:
+def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, mesh_simplification_curve: list[tuple[int, float]]) -> dict:
     root = zarr_structure
     details = ''
     if 'details' in root:
@@ -107,7 +107,7 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, map_object, mesh_simp
                             
 
 
-    d = ccp4_words_to_dict(map_object)
+    d = ccp4_words_to_dict_mrcfile(mrc_header)
 
     original_voxel_size: tuple[float, float, float] = (
         d['xLength'] / d['NC'],

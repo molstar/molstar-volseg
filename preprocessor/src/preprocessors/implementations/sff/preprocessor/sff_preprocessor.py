@@ -8,7 +8,8 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor._zarr_metho
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import GRID_METADATA_FILENAME, \
     ANNOTATION_METADATA_FILENAME, MESH_SIMPLIFICATION_CURVE
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
-
+import mrcfile
+import dask.array as da
 
 def open_zarr_structure_from_path(path: Path) -> zarr.hierarchy.Group:
     store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
@@ -43,16 +44,20 @@ class SFFPreprocessor(IDataPreprocessor):
                 self.temp_zarr_structure_path)
 
             # read map
-            map_object = SFFPreprocessor.read_volume_map_to_object(volume_file_path)
-            normalized_axis_map_object = SFFPreprocessor.normalize_axis_order(map_object)
+            with mrcfile.mmap(str(volume_file_path.resolve())) as mrc_original:
+                data: np.memmap = mrc_original.data
+                header = mrc_original.header
+
+            dask_arr = da.from_array(data)
+            # TODO: normalize axes
 
             mesh_simplification_curve = MESH_SIMPLIFICATION_CURVE
             if segm_file_path is not None:
                 SFFPreprocessor.process_segmentation_data(self.magic_kernel, zarr_structure, mesh_simplification_curve, params_for_storing=params_for_storing)
 
-            SFFPreprocessor.process_volume_data(zarr_structure=zarr_structure, map_object=normalized_axis_map_object, params_for_storing=params_for_storing, force_dtype=volume_force_dtype)
+            SFFPreprocessor.process_volume_data(zarr_structure=zarr_structure, dask_arr=dask_arr, params_for_storing=params_for_storing, force_dtype=volume_force_dtype)
 
-            grid_metadata = SFFPreprocessor.extract_metadata(zarr_structure, normalized_axis_map_object, mesh_simplification_curve)
+            grid_metadata = SFFPreprocessor.extract_metadata(zarr_structure, mrc_header=header, mesh_simplification_curve=mesh_simplification_curve)
             
             grid_dimensions: list = list(LocalDiskPreprocessedMetadata(grid_metadata).grid_dimensions())
             zarr_volume_arr_shape: list = list(get_volume_downsampling_from_zarr(1, zarr_structure).shape)

@@ -18,6 +18,22 @@ def ccp4_words_to_dict(m: gemmi.Ccp4Map) -> dict:
     d['MAPC'], d['MAPR'], d['MAPS'] = m.header_i32(17), m.header_i32(18), m.header_i32(19)
     return d
 
+def ccp4_words_to_dict_mrcfile(mrc_header: object) -> dict:
+    '''input - mrcfile object header (mrc.header)'''
+    ctx = getcontext()
+    ctx.rounding = ROUND_CEILING
+    d = {}
+
+    m = mrc_header
+    # mrcfile implementation
+    d['NC'], d['NR'], d['NS'] = int(m.nx), int(m.ny), int(m.nz)
+    d['NCSTART'], d['NRSTART'], d['NSSTART'] = int(m.nxstart), int(m.nystart), int(m.nzstart)
+    d['xLength'] = round(Decimal(m.cella.x), 1)
+    d['yLength'] = round(Decimal(m.cella.y), 1)
+    d['zLength'] = round(Decimal(m.cella.z), 1)
+    d['MAPC'], d['MAPR'], d['MAPS'] = int(m.mapc), int(m.mapr), int(m.maps)
+
+    return d
 
 def read_volume_data(m: gemmi.Ccp4Map, force_dtype=np.float32) -> np.ndarray:
     '''

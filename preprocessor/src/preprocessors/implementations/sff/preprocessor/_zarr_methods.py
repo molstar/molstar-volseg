@@ -17,19 +17,20 @@ def get_volume_downsampling_from_zarr(
     
 def get_segmentation_downsampling_from_zarr(
     downsampling_ratio: int,
-    zarr_structure: zarr.hierarchy.Group,
+    zarr_structure: zarr.hierarchy.group,
     lattice_id: int) -> zarr.core.Array:
     root = zarr_structure
     arr: zarr.core.Array = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][downsampling_ratio].grid
     return arr
 
 def create_dataset_wrapper(
-        zarr_group,
+        zarr_group: zarr.hierarchy.group,
         data,
         name,
         shape,
         dtype,
         params_for_storing: dict,
+        isEmpty=False
     ) -> zarr.core.Array:
 
     compressor = params_for_storing['compressor']
@@ -43,14 +44,22 @@ def create_dataset_wrapper(
         chunks = False
     else:
         raise ValueError(f'Chunking approach arg value is invalid: {chunking_mode}')
-
-    zarr_arr = zarr_group.create_dataset(
-        data=data,
-        name=name,
-        shape=shape,
-        dtype=dtype,
-        compressor=compressor,
-        chunks=chunks
-    )
+    if isEmpty == False:
+        zarr_arr = zarr_group.create_dataset(
+            data=data,
+            name=name,
+            shape=shape,
+            dtype=dtype,
+            compressor=compressor,
+            chunks=chunks
+        )
+    elif isEmpty == True:
+        zarr_arr = zarr_group.create_dataset(
+            name=name,
+            shape=shape,
+            dtype=dtype,
+            compressor=compressor,
+            chunks=chunks
+        )
 
     return zarr_arr

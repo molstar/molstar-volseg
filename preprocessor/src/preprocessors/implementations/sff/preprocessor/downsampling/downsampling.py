@@ -8,6 +8,8 @@ from preprocessor.src.preprocessors.implementations.sff.downsampling_level_dict 
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DOWNSAMPLING_KERNEL
 from preprocessor.src.preprocessors.implementations.sff.segmentation_set_table import SegmentationSetTable
 from scipy import signal, ndimage
+import dask.array as da
+from dask_image.ndfilters import convolve as dask_convolve
 
 
 def compute_vertex_density(mesh_list_group: zarr.hierarchy.group, mode='area'):
@@ -136,7 +138,7 @@ def compute_number_of_downsampling_steps(min_grid_size: int, input_grid_size: in
     return num_of_downsampling_steps
 
 
-def create_volume_downsamplings(original_data: np.ndarray, downsampling_steps: int,
+def create_volume_downsamplings(original_data: da.Array, downsampling_steps: int,
                                 downsampled_data_group: zarr.hierarchy.Group, params_for_storing: dict, force_dtype=np.float32):
     '''
     Take original volume data, do all downsampling levels and store in zarr struct one by one
@@ -147,16 +149,14 @@ def create_volume_downsamplings(original_data: np.ndarray, downsampling_steps: i
         current_ratio = 2 ** (i + 1)
         kernel = generate_kernel_3d_arr(list(DOWNSAMPLING_KERNEL))
         # downsampled_data: np.ndarray = signal.convolve(current_level_data, kernel, mode='same', method='fft')
-        downsampled_data: np.ndarray = ndimage.convolve(current_level_data, kernel, mode='mirror', cval=0.0)
+        # downsampled_data: np.ndarray = ndimage.convolve(current_level_data, kernel, mode='mirror', cval=0.0)
+        downsampled_data = dask_convolve(current_level_data, kernel, mode='mirror', cval=0.0)
         downsampled_data = downsampled_data[::2, ::2, ::2]
 
         __store_single_volume_downsampling_in_zarr_stucture(downsampled_data, downsampled_data_group, current_ratio,
                                                             params_for_storing=params_for_storing,
                                                             force_dtype=force_dtype)
         current_level_data = downsampled_data
-    # # TODO: figure out compression/filters: b64 encoded zlib-zipped .data is just 8 bytes
-    # downsamplings sizes in raw uncompressed state are much bigger 
-    # TODO: figure out what to do with chunks - currently their size is not optimized
 
 
 def create_category_set_downsamplings(
@@ -186,18 +186,23 @@ def create_category_set_downsamplings(
     store_downsampling_levels_in_zarr(levels, downsampled_data_group, params_for_storing=params_for_storing)
 
 
-def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: np.ndarray,
+def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: da.Array,
                                                         downsampled_data_group: zarr.hierarchy.Group, ratio: int,
                                                         params_for_storing: dict,
                                                         force_dtype=np.float32):
-    create_dataset_wrapper(
+    
+    
+    zarr_arr = create_dataset_wrapper(
         zarr_group=downsampled_data_group,
-        data=downsampled_data.astype(force_dtype),
         name=str(ratio),
         shape=downsampled_data.shape,
         dtype=force_dtype,
-        params_for_storing=params_for_storing
+        params_for_storing=params_for_storing,
+        isEmpty=True
     )
+
+    da.to_zarr(arr=downsampled_data, url=zarr_arr, overwrite=True, compute=True)
+    
 
 
 def generate_kernel_3d_arr(pattern: List[int]) -> np.ndarray:
