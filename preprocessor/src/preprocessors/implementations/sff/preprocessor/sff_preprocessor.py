@@ -20,7 +20,7 @@ def open_zarr_structure_from_path(path: Path) -> zarr.hierarchy.Group:
 
 class SFFPreprocessor(IDataPreprocessor):
     from ._hdf5_to_zarr import hdf5_to_zarr
-    from ._volume_map_methods import read_volume_map_to_object, normalize_axis_order
+    from ._volume_map_methods import normalize_axis_order_mrcfile
     from ._process_X_data_methods import process_volume_data, process_segmentation_data
     from ._metadata_methods import temp_save_metadata, extract_annotations, extract_metadata
 
@@ -49,10 +49,10 @@ class SFFPreprocessor(IDataPreprocessor):
                 header = mrc_original.header
 
             dask_arr = da.from_array(data)
-            # TODO: normalize axes
             # this one just swaps x to z as mrcfile writes it in specific order
-            # actual normalization should be done perhaps using mapr,mapc, etc. (can look at gemmi)
             dask_arr = dask_arr.swapaxes(0, 2)
+            # this should normalize
+            dask_arr = SFFPreprocessor.normalize_axis_order_mrcfile(dask_arr=dask_arr, mrc_header=header)
 
             mesh_simplification_curve = MESH_SIMPLIFICATION_CURVE
             if segm_file_path is not None:

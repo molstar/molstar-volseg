@@ -88,9 +88,9 @@ def normalize_axis_order_mrcfile(dask_arr: da.Array, mrc_header: object) -> da.A
         sorted_d = dict(sorted(d.items()))
 
         # reorder dask arr dimensions and return new arr
-        transposed_dask_arr = dask_arr.transpose(sorted_d[1], sorted_d[2], sorted_d[3])
+        dask_arr = dask_arr.transpose(sorted_d[1], sorted_d[2], sorted_d[3])
 
-    return transposed_dask_arr
+    return dask_arr
     
 
 
