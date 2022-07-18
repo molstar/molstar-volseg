@@ -1,5 +1,6 @@
 
 from pathlib import Path
+from typing import Union
 import mrcfile
 import numpy as np
 import dask.array as da
@@ -9,7 +10,7 @@ def read_ccp4_map_mrcfile(map_path: Path) -> np.ndarray:
         data: np.memmap = mrc_original.data
     return data
 
-def quantize_data(data: da.Array, output_dtype) -> np.ndarray:
+def quantize_data(data: Union[da.Array, np.ndarray], output_dtype) -> np.ndarray:
     bits_in_dtype = output_dtype().itemsize * 8
     num_steps = 2**bits_in_dtype - 1
     
@@ -27,7 +28,10 @@ def quantize_data(data: da.Array, output_dtype) -> np.ndarray:
     np.divide(quantized, delta, out=quantized)
     quantized = quantized.astype(dtype=output_dtype)
 
-    return quantized.compute()
+    if isinstance(data, da.Array):
+        return quantized.compute()
+    else:
+        return quantized
 
 if __name__ == '__main__':
     INPUT_MAP_PATH = Path('preprocessor\data\sample_volumes\emdb_sff\EMD-1832.map')
