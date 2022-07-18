@@ -5,7 +5,9 @@ import numpy as np
 import dask.array as da
 
 def read_ccp4_map_mrcfile(map_path: Path) -> np.ndarray:
-    return mrcfile.read(str(map_path.resolve()))
+    with mrcfile.mmap(str(map_path.resolve())) as mrc_original:
+        data: np.memmap = mrc_original.data
+    return data
 
 def quantize_data(data: da.Array, output_dtype) -> np.ndarray:
     bits_in_dtype = output_dtype().itemsize * 8
@@ -29,6 +31,7 @@ def quantize_data(data: da.Array, output_dtype) -> np.ndarray:
 
 if __name__ == '__main__':
     INPUT_MAP_PATH = Path('preprocessor\data\sample_volumes\emdb_sff\EMD-1832.map')
+    # INPUT_MAP_PATH = Path('preprocessor\data\sample_volumes\emdb_sff\emd_9199.map')
     data = read_ccp4_map_mrcfile(INPUT_MAP_PATH)
     data = da.from_array(data)
     quantized_data = quantize_data(data=data, output_dtype=np.uint8)
