@@ -20,8 +20,9 @@ def quantize_data(data: da.Array, output_dtype) -> np.ndarray:
     min_value = data.min()
 
     delta = (max_value - min_value) / (num_steps - 1)
+
     quantized = np.subtract(data, min_value)
-    np.divide(data, delta, out=quantized)
+    np.divide(quantized, delta, out=quantized)
     quantized = quantized.astype(dtype=output_dtype)
 
     return quantized.compute()
