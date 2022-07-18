@@ -14,7 +14,7 @@ def quantize_data(data: da.Array, output_dtype) -> np.ndarray:
     num_steps = 2**bits_in_dtype - 1
     
     # remove negatives: add abs min + 1
-    np.add(data, np.abs(data.min() + 1), out=data)
+    np.add(data, np.abs(data.min()) + 1, out=data)
     # log transform
     data = np.log(data)
 
