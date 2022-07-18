@@ -30,7 +30,7 @@ def create_dataset_wrapper(
         shape,
         dtype,
         params_for_storing: dict,
-        isEmpty=False
+        is_empty=False
     ) -> zarr.core.Array:
 
     compressor = params_for_storing['compressor']
@@ -44,7 +44,7 @@ def create_dataset_wrapper(
         chunks = False
     else:
         raise ValueError(f'Chunking approach arg value is invalid: {chunking_mode}')
-    if isEmpty == False:
+    if is_empty == False:
         zarr_arr = zarr_group.create_dataset(
             data=data,
             name=name,
@@ -53,7 +53,7 @@ def create_dataset_wrapper(
             compressor=compressor,
             chunks=chunks
         )
-    elif isEmpty == True:
+    elif is_empty == True:
         zarr_arr = zarr_group.create_dataset(
             name=name,
             shape=shape,

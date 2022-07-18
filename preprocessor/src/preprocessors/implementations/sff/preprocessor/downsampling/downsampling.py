@@ -199,7 +199,7 @@ def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: da.Arr
         shape=downsampled_data.shape,
         dtype=force_dtype,
         params_for_storing=params_for_storing,
-        isEmpty=True
+        is_empty=True
     )
 
     da.to_zarr(arr=downsampled_data, url=zarr_arr, overwrite=True, compute=True)
