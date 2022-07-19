@@ -54,7 +54,9 @@ function UI10070({ model }: { model: AppModel }) {
     return <>
         <Typography variant='caption'>{entryId}</Typography>
         <Typography variant='h6'>Example of meshes for debugging</Typography>
-        <Typography variant='body1'>See console</Typography>
+        <Typography variant='body1'>
+            All except 2 largest segments (~background) at detail-2 (detail-1 has no normals)
+        </Typography>
     </>;
 }
 
