@@ -13,25 +13,48 @@ def read_ccp4_map_mrcfile(map_path: Path) -> np.ndarray:
 def quantize_data(data: Union[da.Array, np.ndarray], output_dtype) -> np.ndarray:
     bits_in_dtype = output_dtype().itemsize * 8
     num_steps = 2**bits_in_dtype - 1
-    
+    src_data_type = data.dtype.str
+    original_min = data.min()
+    added_to_remove_negatives = da.absolute(original_min) + 1
+
     # remove negatives: add abs min + 1
-    np.add(data, np.abs(data.min()) + 1, out=data)
+    da.add(data, added_to_remove_negatives, out=data)
     # log transform
-    data = np.log(data)
+    data = da.log(data)
 
     max_value = data.max()
     min_value = data.min()
 
     delta = (max_value - min_value) / (num_steps - 1)
 
-    quantized = np.subtract(data, min_value)
-    np.divide(quantized, delta, out=quantized)
+    quantized = da.subtract(data, min_value)
+    da.divide(quantized, delta, out=quantized)
     quantized = quantized.astype(dtype=output_dtype)
 
     if isinstance(data, da.Array):
-        return quantized.compute()
-    else:
-        return quantized
+        quantized = quantized.compute()
+    
+    d = {
+        "min": min_value,
+        "max": max_value,
+        "num_steps": num_steps,
+        "src_type": src_data_type,
+        "data": quantized,
+        "added_to_remove_negatives": added_to_remove_negatives,
+    }
+
+    return d
+
+def decode_quantized_data(data_dict: dict) -> np.ndarray:
+    # this will decode back to log data
+    delta = (data_dict["max"] - data_dict["min"]) / (data_dict["num_steps"] - 1)
+    log_data = np.array(data_dict["data"], dtype=data_dict["src_type"]) * delta + data_dict["min"]
+
+    # subtract what was added
+    original_data = np.exp(log_data)
+    np.subtract(original_data, data_dict["added_to_remove_negatives"], out=original_data)
+
+    return original_data
 
 if __name__ == '__main__':
     INPUT_MAP_PATH = Path('preprocessor\data\sample_volumes\emdb_sff\EMD-1832.map')
