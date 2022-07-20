@@ -1,4 +1,5 @@
 from pathlib import Path
+import argparse
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +13,11 @@ import msgpack_numpy as m
 from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_volume_to_cif_converter import \
     CifToolsVolumeToCifConverter
 from volume_server.src.volume_server_v1 import VolumeServerV1
+
+
+DEFAULT_HOST = '0.0.0.0'  # 0.0.0.0 = localhost
+DEFAULT_PORT = 9000
+EXTENDED_API = True  # Include dumb API extension used for debugging mesh visualization in frontend
 
 
 def prepare_fastapi_app():
@@ -40,17 +46,32 @@ def prepare_fastapi_app():
 
     api.configure_endpoints(app, volume_server)
 
+    if EXTENDED_API:  
+        # Include temporary API extension used for debugging mesh visualization in frontend
+        from api import dumb_api_extension
+        dumb_api_extension.configure_endpoints(app, db)
+
     return app
 
 
-def initialize_server():
+def initialize_server(*, host: str = DEFAULT_HOST, port: int = DEFAULT_PORT):
+    '''Initialize and run API server'''
     m.patch()
 
     app = prepare_fastapi_app()
 
     # noinspection PyTypeChecker
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host=host, port=port)
+
+def parse_args() -> argparse.Namespace:
+    '''Parse command line arguments for `initialize_server`'''
+    parser = argparse.ArgumentParser(description='Run Volume Server API')
+    parser.add_argument('--host', type=str, default=DEFAULT_HOST, help=f'Set API IP (default: {DEFAULT_HOST} (localhost))')
+    parser.add_argument('--port', type=int, default=DEFAULT_PORT, help=f'Set API port (default: {DEFAULT_PORT})')
+    return parser.parse_args()
 
 
 if __name__ == '__main__':
-    initialize_server()
+    args = parse_args()
+    print(args)
+    initialize_server(**vars(args))

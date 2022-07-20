@@ -59,7 +59,8 @@ class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
         data_category = CategoryWriterProvider_VolumeData3d()
 
         # TODO: transpose is a temp hack until proper ordering is figured
-        to_export = volume.transpose().flatten()
+        # to_export = volume.transpose().flatten()
+        to_export = volume.flatten()
 
         writer.write_category(data_category, [to_export])
 
