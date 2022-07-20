@@ -10,7 +10,7 @@ def read_ccp4_map_mrcfile(map_path: Path) -> np.ndarray:
         data: np.memmap = mrc_original.data
     return data
 
-def quantize_data(data: Union[da.Array, np.ndarray], output_dtype) -> np.ndarray:
+def quantize_data(data: Union[da.Array, np.ndarray], output_dtype) -> dict:
     bits_in_dtype = output_dtype().itemsize * 8
     num_steps = 2**bits_in_dtype - 1
     src_data_type = data.dtype.str
@@ -31,8 +31,8 @@ def quantize_data(data: Union[da.Array, np.ndarray], output_dtype) -> np.ndarray
     da.divide(quantized, delta, out=quantized)
     quantized = quantized.astype(dtype=output_dtype)
 
-    if isinstance(data, da.Array):
-        quantized = quantized.compute()
+    # if isinstance(data, da.Array):
+    #     quantized = quantized.compute()
     
     d = {
         "min": min_value,
@@ -45,14 +45,15 @@ def quantize_data(data: Union[da.Array, np.ndarray], output_dtype) -> np.ndarray
 
     return d
 
-def decode_quantized_data(data_dict: dict) -> np.ndarray:
+def decode_quantized_data(data_dict: dict) -> Union[da.Array, np.ndarray]:
     # this will decode back to log data
     delta = (data_dict["max"] - data_dict["min"]) / (data_dict["num_steps"] - 1)
-    log_data = np.array(data_dict["data"], dtype=data_dict["src_type"]) * delta + data_dict["min"]
+    log_data = data_dict["data"].astype(dtype=data_dict["src_type"])
+    da.multiply(log_data, delta, out=log_data)
+    da.add(log_data, data_dict["min"], out=log_data)
 
-    # subtract what was added
-    original_data = np.exp(log_data)
-    np.subtract(original_data, data_dict["added_to_remove_negatives"], out=original_data)
+    original_data = da.exp(log_data)
+    da.subtract(original_data, data_dict["added_to_remove_negatives"], out=original_data)
 
     return original_data
 
