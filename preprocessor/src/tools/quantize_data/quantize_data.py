@@ -15,10 +15,10 @@ def quantize_data(data: Union[da.Array, np.ndarray], output_dtype) -> dict:
     num_steps = 2**bits_in_dtype - 1
     src_data_type = data.dtype.str
     original_min = data.min()
-    added_to_remove_negatives = da.absolute(original_min) + 1
+    added_to_remove_negatives = original_min - 1
 
     # remove negatives
-    da.subtract(data, original_min - 1, out=data)
+    da.subtract(data, added_to_remove_negatives, out=data)
     # log transform
     data = da.log(data)
 
