@@ -17,8 +17,8 @@ def quantize_data(data: Union[da.Array, np.ndarray], output_dtype) -> dict:
     original_min = data.min()
     added_to_remove_negatives = da.absolute(original_min) + 1
 
-    # remove negatives: add abs min + 1
-    da.add(data, added_to_remove_negatives, out=data)
+    # remove negatives
+    da.subtract(data, original_min - 1, out=data)
     # log transform
     data = da.log(data)
 
@@ -29,6 +29,12 @@ def quantize_data(data: Union[da.Array, np.ndarray], output_dtype) -> dict:
 
     quantized = da.subtract(data, min_value)
     da.divide(quantized, delta, out=quantized)
+    if isinstance(quantized, da.Array):
+        quantized = da.round(quantized, 0)
+    elif isinstance(quantized, np.ndarray):
+        np.round(quantized, 0, out=quantized)
+    else:
+        raise Exception('array dtype is neither dask arr nor np ndarray')
     quantized = quantized.astype(dtype=output_dtype)
 
     # if isinstance(data, da.Array):
