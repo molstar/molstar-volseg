@@ -35,12 +35,28 @@ function Main() {
                 <ButtonGroup fullWidth>
                     <Button variant={src === '1832' ? 'contained' : 'outlined'} onClick={() => model.load1832()}>EMDB SFF</Button>
                     <Button variant={src === '99999' ? 'contained' : 'outlined'} onClick={() => model.load99999()}>BioImage Archive</Button>
+                    <Button variant={src === '10070' ? 'contained' : 'outlined'} onClick={() => model.load10070()}>Meshes</Button>
                 </ButtonGroup>
             </div>
             {src === '1832' && <UI1832 model={model} />}
             {src === '99999' && <UI99999 model={model} />}
+            {src === '10070' && <UI10070 model={model} />}
         </div>
         {src === '99999' && <img src='/emd-99999.png' alt='' style={{ width: '33%', position: 'absolute', right: 8, bottom: 8, border: '1px solid #777' }} />}
+    </>;
+}
+
+function UI10070({ model }: { model: AppModel }) {
+    const entryId = useBehavior(model.entryId);
+    const annotation = useBehavior(model.annotation);
+    const current = useBehavior(model.currentSegment);
+
+    return <>
+        <Typography variant='caption'>{entryId}</Typography>
+        <Typography variant='h6'>Example of meshes for debugging</Typography>
+        <Typography variant='body1'>
+            All except 2 largest segments (~background) at detail-2 (detail-1 has no normals)
+        </Typography>
     </>;
 }
 
