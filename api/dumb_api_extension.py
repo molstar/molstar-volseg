@@ -2,6 +2,7 @@
 Extension to the API used for debugging purposes (for mesh visualization in frontend)
 '''
 from collections import defaultdict
+from contextlib import suppress
 
 from fastapi import FastAPI, Response
 from fastapi.responses import JSONResponse
@@ -35,6 +36,9 @@ def configure_endpoints(app: FastAPI, db: IReadOnlyPreprocessedDb):
                 segments_levels = _extract_segments_detail_levels(meta)
                 error_msg = f'Invalid segment_id={segment_id} or detail_lvl={detail_lvl} (available segment_ids and detail_lvls: {segments_levels})'
                 return JSONResponse({'error': error_msg}, status_code=HTTP_CODE_UNPROCESSABLE_ENTITY)
+        for mesh in meshes:
+            with suppress(KeyError):
+                mesh.pop('normals')
         return JSONNumpyResponse(meshes)
     
 

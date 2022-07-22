@@ -73,13 +73,18 @@ function UI1832({ model }: { model: AppModel }) {
             <Divider style={{ margin: '8px 0' }} />
             <Typography variant='h6'>Segmentation</Typography>
             <Button variant={current ? 'outlined' : 'contained'} size='small' onClick={() => model.showSegments(annotation?.segment_list ?? [])}>Show All</Button>
-            {annotation?.segment_list.map((seg) => <Button size='small' key={seg.id} style={{ marginTop: 4 }} variant={current === seg ? 'contained' : 'outlined'} onClick={() => model.showSegments([seg])}>{seg.biological_annotation.name}</Button>)}
+            {annotation?.segment_list.map((seg) => 
+                <Button size='small' key={seg.id} style={{ marginTop: 4 }} variant={current === seg ? 'contained' : 'outlined'} 
+                onClick={() => model.showSegments([seg])}>
+                    {seg.biological_annotation.name}
+                </Button>)
+            }
             <Divider style={{ margin: '8px 0' }} />
             {current && <Typography variant='h6'>{current.biological_annotation.name}</Typography>}
             {current && <div>
                 {current.biological_annotation.external_references.map(r => <div key={r.id}>
                     <Typography variant='caption' style={{ marginBottom: 8 }}><b>{r.resource}:{r.accession}</b><br />{r.description}</Typography>
-                </div>)}
+                </div>)}3
             </div>}
         </>}
     </>;

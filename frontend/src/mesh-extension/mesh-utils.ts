@@ -76,9 +76,12 @@ export function makeMeshFromData(data: MeshlistData, meshIndex?: number, group?:
         let nTriangles = d.triangles.length;
         let vertices = new Float32Array(d.vertices.flat());
         let indices = new Uint32Array(d.triangles.flat());
-        let normals = new Float32Array(d.normals.flat());  // QUESTION: What are normals good for?
+        // let normals = new Float32Array(d.normals.flat());  // QUESTION: What are normals good for?
+        let normals = new Float32Array();  
         let groups = new Float32Array(nVertices).fill(group ?? 0);  // QUESTION: What are groups good for? Something with mouse-picking but how?
-        return MS.Mesh.create(vertices, indices, normals, groups, nVertices, nTriangles);
+        const mesh = MS.Mesh.create(vertices, indices, normals, groups, nVertices, nTriangles);
+        MS.Mesh.computeNormals(mesh);  // normals only necessary if flatShaded==false
+        return mesh;
     } else {
         const meshes = data.meshes.map((m, i) => makeMeshFromData(data, i, group ?? m.mesh_id));
         return concat(...meshes);

@@ -31,7 +31,7 @@ export namespace MeshlistData {
     export function stats(meshListData: MeshlistData): string {
         let lines = [`Meshlist "${meshListData.segmentName}" (detail ${meshListData.detail}) [${meshListData.meshes.length}]:`];
         for (let meshData of meshListData.meshes) {
-            lines.push(`    { mesh_id: ${meshData.mesh_id}, vertices: ${meshData.vertices.length}, normals: ${meshData.normals.length}, triangles: ${meshData.triangles.length} }`);
+            lines.push(`    { mesh_id: ${meshData.mesh_id}, vertices: ${meshData.vertices.length}, normals: ${meshData.normals?.length}, triangles: ${meshData.triangles.length} }`);
         }
         return lines.join('\n');
     }
@@ -48,7 +48,6 @@ export namespace MeshlistData {
             validateType(obj.mesh_id, x => typeof x === 'number', '$[i].mesh_id', () => 'number'),
             validateType(obj.vertices, Array.isArray, '$[i].vertices', 'number[][]'),
             validateType(obj.triangles, Array.isArray, '$[i].triangles', 'number[][]'),
-            validateType(obj.normals, Array.isArray, () => '$[i].normals', () => 'number[][]'),
         ].find(s => s) ?? '';
     }
 
@@ -128,7 +127,7 @@ const meshParamDef: MS.Mesh.Params = {
     // Mesh.Params
     doubleSided: PD.Boolean(false, MS.BaseGeometry.CustomQualityParamInfo),
     flipSided: PD.Boolean(false, MS.BaseGeometry.ShadingCategory),
-    flatShaded: PD.Boolean(false, MS.BaseGeometry.ShadingCategory),  // CHANGED, default: true (set false to see the real mesh vertices and triangles)
+    flatShaded: PD.Boolean(true, MS.BaseGeometry.ShadingCategory),  // CHANGED, default: false (set true to see the real mesh vertices and triangles)
     ignoreLight: PD.Boolean(false, MS.BaseGeometry.ShadingCategory),
     xrayShaded: PD.Boolean(false, MS.BaseGeometry.ShadingCategory),  // this is like better opacity (angle-dependent), nice
     transparentBackfaces: PD.Select('off', PD.arrayToOptions(['off', 'on', 'opaque']), MS.BaseGeometry.ShadingCategory),
@@ -150,7 +149,7 @@ export const MeshShapeTransformer = CellStarTransform({
         const shapeProvider: MeshShapeProvider = {
             label: 'Mesh',
             data: origData,
-            params: meshParamDef,
+            params: meshParamDef,  // TODO how to pass the real params correctly?
             geometryUtils: MS.Mesh.Utils,
             getShape: (ctx, data: MeshlistData) => {
                 let mesh = MeshUtils.makeMeshFromData(data);

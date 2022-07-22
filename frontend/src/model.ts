@@ -33,16 +33,61 @@ interface BiologicalAnnotation {
     external_references: { id: number, resource: string, accession: string, label: string, description: string }[]
 }
 
-interface Annotation  {
+interface Annotation {
     name: string,
     details: string,
     segment_list: Segment[],
 }
 
+interface SegmentationMeshes {
+    mesh_component_numbers: {
+        segment_ids: {
+            [segId: number]: {
+                detail_lvls: {
+                    [detail: number]: {
+                        mesh_ids: {
+                            [meshId: number]: {
+                                num_triangles: number,
+                                num_vertices: number
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    detail_lvl_to_fraction: { 
+        [lvl: number]: number 
+    }
+}
+
 // partial model
 interface Metadata {
-    grid: any,
-    annotation:Annotation,
+    grid: { 
+        segmentation_meshes: SegmentationMeshes,
+        // more stuff is there
+    },
+    annotation: Annotation,
+}
+namespace Metadata {
+    export function meshSegments(metadata: Metadata): number[] {
+        const segmentIds = metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids;
+        return Object.keys(segmentIds).map(s => parseInt(s));
+    }
+    export function meshSegmentDetails(metadata: Metadata, segmentId: number): number[] {
+        const details = metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids[segmentId].detail_lvls;
+        return Object.keys(details).map(s => parseInt(s));
+    }
+    export function annotationsBySegment(metadata: Metadata): {[id: number]: Segment}{
+        const result: {[id: number]: Segment} = {};
+        for (const segment of metadata.annotation.segment_list){
+            if (segment.id in result) {
+                throw new Error(`Duplicate segment annotation for segment ${segment.id}`);
+            }
+            result[segment.id] = segment;
+        }
+        return result;
+    }
 }
 
 export class AppModel {
@@ -282,14 +327,21 @@ export class AppModel {
     currentSegment = new BehaviorSubject<Segment | undefined>(undefined);
 
 
-    volumeServerRequestUrl(entryId: string, segmentation: number, box: [[number, number, number], [number, number, number]], maxPoints: number): string {
-        const [[a1, a2, a3], [b1, b2, b3]] = box;
-        return `${VOLUME_SERVER}/v1/emdb/${entryId}/box/${segmentation}/${a1}/${a2}/${a3}/${b1}/${b2}/${b3}/${maxPoints}`;
+    metadataUrl(source: string, entryId: string): string {
+        return `http://localhost:9000/v1/${source}/${entryId}/metadata`;
     }
-
+    volumeServerRequestUrl(source: string, entryId: string, segmentation: number, box: [[number, number, number], [number, number, number]], maxPoints: number): string {
+        const [[a1, a2, a3], [b1, b2, b3]] = box;
+        return `${VOLUME_SERVER}/v1/${source}/${entryId}/box/${segmentation}/${a1}/${a2}/${a3}/${b1}/${b2}/${b3}/${maxPoints}`;
+    }
     // Temporary solution
     meshServerRequestUrl(source: string, entryId: string, segment: number, detailLevel: number): string{
         return `${VOLUME_SERVER}/v1/${source}/${entryId}/mesh/${segment}/${detailLevel}`;
+    }
+
+    async getMetadata(source: string, entryId: string): Promise<Metadata> {
+        const response = await fetch(this.metadataUrl(source, entryId));
+        return await response.json();
     }
     async getMeshData_debugging(source: string, entryId: string, segment: number, detailLevel: number){
         const url = this.meshServerRequestUrl(source, entryId, segment, detailLevel);
@@ -306,19 +358,50 @@ export class AppModel {
     }
 
     async load10070() {
+        const entryId = 'empiar-10070';
+        const theDetail: number|null = null;  // null means worst
+        // QUESTION: Detail-1 constains no normals. Why?
+        // TODO ensure normal are in the input data (or create fake normals???)
+        
         // Testing API:
-        try {
-            const meshes = await this.getMeshData_debugging('empiar', 'empiar-10070', 1, 7);
-            console.log('Meshes from API:\n', meshes);
-        } catch {
-            console.error('Could not get mesh data from API (maybe API not running?)');
-        }
+        // try {
+        //     const meshes = await this.getMeshData_debugging('empiar', 'empiar-10070', 1, 7);
+        //     console.log('Meshes from API:\n', meshes);
+        // } catch {
+        //     console.error('Could not get mesh data from API (maybe API not running?)');
+        // }
+        // await this.plugin.clear();
 
         // Examples for mesh visualization - currently taking static data stored on a MetaCentrum VM
-        MeshExamples.runMeshExample(this.plugin, 'fg', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');
+        // MeshExamples.runMeshExample(this.plugin, 'fg', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');
         // MeshExamples.runMultimeshExample(this.plugin, 'fg', 'worst', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');  // Multiple segments merged into 1 segment with multiple meshes
+        
+        let segments = 'fg';
 
-        this.entryId.next('empiar-10070');
+        const metadata = await this.getMetadata('empiar', entryId);
+        let segmentIds = Metadata.meshSegments(metadata);
+        const bgSegments = new Set([13, 15]);
+        if (segments === 'fg'){
+            segmentIds = segmentIds.filter(s => !bgSegments.has(s));
+        }
+        console.log('Segments:', segmentIds);
+        // const segmentIds = (segments === 'all') ? 
+        // [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17]     // segment-16 has no detail-2
+        //     : [1,2,3,4,5,6,7,8,9,10,11,12,   14,   17];  // segment-13 and segment-15 are quasi background
+        
+        const segmentAnnotations = Metadata.annotationsBySegment(metadata);
+            
+        for (let segmentId of segmentIds) {
+            const annot = segmentAnnotations[segmentId];
+            const detail = theDetail ?? Math.max(...Metadata.meshSegmentDetails(metadata, segmentId));  // worst detail if theDetail==null
+            const color = annot.colour;  // QUESTION: hmm, shouldn't it be "color"?
+            const name = annot.biological_annotation.name;
+            console.log(`Annotation: segment ${segmentId}. ${name} ${color} ${detail}`);
+            MeshExamples.createMeshFromUrl(this.plugin, this.meshServerRequestUrl('empiar', entryId, segmentId, detail), segmentId, detail, true, false);
+        }
+
+        this.entryId.next(entryId);
+        this.annotation.next(metadata.annotation);
         this.dataSource.next('10070');  // React magic for async stuff instead of return, I guess
     }
 
@@ -326,7 +409,7 @@ export class AppModel {
         const entryId = 'emd-1832';
         const isoLevel = 2.73;
         // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
-        const url = this.volumeServerRequestUrl(entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
+        const url = this.volumeServerRequestUrl('emdb', entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
         const { plugin } = this;
 
         await plugin.clear();
@@ -343,6 +426,8 @@ export class AppModel {
         const values = segmentation.categories['segmentation_data_3d'].getField('values')?.toIntArray();
 
         const metadata: Metadata = await (await fetch(`http://localhost:9000/v1/emdb/${entryId}/metadata`)).json();
+
+        console.log('annotation:', metadata.annotation);
 
         this.entryId.next(entryId);
         this.annotation.next(metadata.annotation);
@@ -398,7 +483,7 @@ export class AppModel {
     private repr: any = undefined;
     async load99999() {
         const entryId = 'emd-99999';
-        const url = this.volumeServerRequestUrl(entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
+        const url = this.volumeServerRequestUrl('emdb', entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
         // http://localhost:9000/v1/emdb/emd-99999/box/0/-10000/-10000/-10000/10000/10000/10000/10000000
         const { plugin } = this;
 

@@ -100,6 +100,8 @@ export async function createMeshFromUrl(plugin: MS.PluginUIContext, meshDataUrl:
     if (log) console.log('reprNode:', reprNode);
     if (log) console.log('reprNode.data:', reprNode.data);
 
+    return rawDataNode;
+
 }
 
 /** Example for downloading a protein structure and visualizing molecular surface. */
