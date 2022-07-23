@@ -13,10 +13,10 @@ def calculate_atol(data_dict: dict):
 
 def transform_data_to_log_space(data: Union[da.Array, np.ndarray]) -> Union[da.Array, np.ndarray]:
     original_min = data.min()
-    added_to_remove_negatives = original_min - 1
+    to_remove_negatives = original_min - 1
 
     # remove negatives
-    da.subtract(data, added_to_remove_negatives, out=data)
+    da.subtract(data, to_remove_negatives, out=data)
     # log transform
     data = da.log(data)
 

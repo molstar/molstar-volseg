@@ -15,10 +15,10 @@ def quantize_data(data: Union[da.Array, np.ndarray], output_dtype) -> dict:
     num_steps = 2**bits_in_dtype - 1
     src_data_type = data.dtype.str
     original_min = data.min()
-    added_to_remove_negatives = original_min - 1
+    to_remove_negatives = original_min - 1
 
     # remove negatives
-    da.subtract(data, added_to_remove_negatives, out=data)
+    da.subtract(data, to_remove_negatives, out=data)
     # log transform
     data = da.log(data)
 
@@ -46,7 +46,7 @@ def quantize_data(data: Union[da.Array, np.ndarray], output_dtype) -> dict:
         "num_steps": num_steps,
         "src_type": src_data_type,
         "data": quantized,
-        "added_to_remove_negatives": added_to_remove_negatives,
+        "to_remove_negatives": to_remove_negatives,
     }
 
     return d
@@ -59,7 +59,7 @@ def decode_quantized_data(data_dict: dict) -> Union[da.Array, np.ndarray]:
     da.add(log_data, data_dict["min"], out=log_data)
 
     original_data = da.exp(log_data)
-    da.subtract(original_data, data_dict["added_to_remove_negatives"], out=original_data)
+    da.add(original_data, data_dict["to_remove_negatives"], out=original_data)
 
     return original_data
 
