@@ -44,7 +44,11 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, m
     root = zarr_structure
     details = ''
     if 'details' in root:
-        details = root.details[...][0].decode('utf-8')
+        # temp hack, for some reason emd-1181 instead of empty string has int here
+        if isinstance(root.details[...][0], int):
+            details = root.details[...][0]
+        else:
+            details = root.details[...][0].decode('utf-8')
     volume_downsamplings = sorted(root[VOLUME_DATA_GROUPNAME].array_keys())
     # convert to ints
     volume_downsamplings = sorted([int(x) for x in volume_downsamplings])
