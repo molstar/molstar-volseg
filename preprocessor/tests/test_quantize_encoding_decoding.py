@@ -1,3 +1,4 @@
+from typing import Union
 import unittest
 import dask.array as da
 import numpy as np
@@ -5,10 +6,24 @@ import numpy as np
 from preprocessor.src.tools.quantize_data.quantize_data import decode_quantized_data, quantize_data
 
 def calculate_atol(data_dict: dict):
-    atol = data_dict['max'] - data_dict['min'] / data_dict['num_steps'] / 2
+    atol = (data_dict['max'] - data_dict['min']) / data_dict['num_steps'] / 2
     if isinstance(atol, da.Array):
         return atol.compute()
     return atol
+
+def transform_data_to_log_space(data: Union[da.Array, np.ndarray]) -> Union[da.Array, np.ndarray]:
+    original_min = data.min()
+    added_to_remove_negatives = original_min - 1
+
+    # remove negatives
+    da.subtract(data, added_to_remove_negatives, out=data)
+    # log transform
+    data = da.log(data)
+
+    if isinstance(data, da.Array):
+        data = data.compute()
+
+    return data
 
 class TestEncodingsIntervalQuantization(unittest.TestCase):
     def test(self):
@@ -21,12 +36,23 @@ class TestEncodingsIntervalQuantization(unittest.TestCase):
         ]
 
         for test_arr, dtype in test_suite:
-            bits_in_dtype = dtype().itemsize * 8
-            steps = 2**bits_in_dtype - 1
-            low, high = np.min(test_arr), np.max(test_arr)
             encoded = quantize_data(data=test_arr, output_dtype=dtype)
             decoded = decode_quantized_data(encoded)
             
             atol = calculate_atol(encoded)
-            self.assertTrue(np.allclose(test_arr, decoded, atol=atol),
-                msg=f'{test_arr}, {decoded}')
+            rtol = 1e-05
+
+            decoded_log = transform_data_to_log_space(decoded)
+            cmp_log = transform_data_to_log_space(test_arr)
+
+            # temp code
+            max_diff = da.max(da.absolute(decoded_log - cmp_log))
+            if isinstance(max_diff, da.Array):
+                max_diff = max_diff.compute()
+            # end temp code
+
+            print(atol)
+            print(max_diff)
+            self.assertTrue(np.allclose(decoded_log, cmp_log, atol=atol, rtol=rtol),
+                msg=f'{decoded_log}, {cmp_log}')
+
