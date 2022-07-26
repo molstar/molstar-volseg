@@ -40,19 +40,19 @@ class TestEncodingsIntervalQuantization(unittest.TestCase):
             decoded = decode_quantized_data(encoded)
             
             atol = calculate_atol(encoded)
-            rtol = 1e-05
+            rtol = 1e-06
+            tol = 1.1 * (atol + rtol)
 
             decoded_log = transform_data_to_log_space(decoded)
             cmp_log = transform_data_to_log_space(test_arr)
 
-            # temp code
             max_diff = da.max(da.absolute(decoded_log - cmp_log))
             if isinstance(max_diff, da.Array):
                 max_diff = max_diff.compute()
-            # end temp code
 
-            print(atol)
-            print(max_diff)
-            self.assertTrue(np.allclose(decoded_log, cmp_log, atol=atol, rtol=rtol),
-                msg=f'{decoded_log}, {cmp_log}')
+            # print(tol)
+            # print(max_diff)
+            self.assertTrue(max_diff <= tol, msg=f'{max_diff}, {tol}')
+            # self.assertTrue(np.allclose(decoded_log, cmp_log, atol=atol, rtol=rtol),
+            #     msg=f'{decoded_log}, {cmp_log}')
 
