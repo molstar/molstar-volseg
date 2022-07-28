@@ -21,7 +21,7 @@ from preprocessor.src.tools.write_dict_to_file.write_dict_to_json import write_d
 from preprocessor.src.tools.write_dict_to_file.write_dict_to_txt import write_dict_to_txt
 
 RAW_INPUT_FILES_DIR = Path(__file__).parent / 'data/raw_input_files'
-
+DEFAULT_DB_PATH = Path(__file__).parent.parent/'db' 
 
 def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict:
     '''
@@ -201,9 +201,9 @@ def main():
         )
         write_dict_to_txt(storing_params_dict, PARAMETRIZED_DBS_INPUT_PARAMS_FILEPATH)
         for db_id, param_set in storing_params_dict.items():
-            create_db(f'db_{db_id}', params_for_storing=param_set)
+            create_db(Path(f'db_{db_id}'), params_for_storing=param_set)
     elif args.db_path:
-        create_db(args.db_path, params_for_storing={
+        create_db(Path(args.db_path), params_for_storing={
             'chunking_mode': 'auto',
             'compressor': Blosc(cname='lz4', clevel=5, shuffle=Blosc.SHUFFLE, blocksize=0),
             'store_type': 'zip'
@@ -214,7 +214,7 @@ def main():
 
 def parse_script_args():
     parser=argparse.ArgumentParser()
-    parser.add_argument("--db_path")
+    parser.add_argument("--db_path", type=Path, default=DEFAULT_DB_PATH, help='path to db folder')
     parser.add_argument("--create_parametrized_dbs", action='store_true')
     args=parser.parse_args()
     return args

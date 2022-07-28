@@ -1,8 +1,10 @@
 from decimal import getcontext, ROUND_CEILING, Decimal
+from email import header
 import logging
 from pathlib import Path
 
 import gemmi
+import dask.array as da
 import numpy as np
 
 
@@ -18,6 +20,22 @@ def ccp4_words_to_dict(m: gemmi.Ccp4Map) -> dict:
     d['MAPC'], d['MAPR'], d['MAPS'] = m.header_i32(17), m.header_i32(18), m.header_i32(19)
     return d
 
+def ccp4_words_to_dict_mrcfile(mrc_header: object) -> dict:
+    '''input - mrcfile object header (mrc.header)'''
+    ctx = getcontext()
+    ctx.rounding = ROUND_CEILING
+    d = {}
+
+    m = mrc_header
+    # mrcfile implementation
+    d['NC'], d['NR'], d['NS'] = int(m.nx), int(m.ny), int(m.nz)
+    d['NCSTART'], d['NRSTART'], d['NSSTART'] = int(m.nxstart), int(m.nystart), int(m.nzstart)
+    d['xLength'] = round(Decimal(float(m.cella.x)), 5)
+    d['yLength'] = round(Decimal(float(m.cella.y)), 5)
+    d['zLength'] = round(Decimal(float(m.cella.z)), 5)
+    d['MAPC'], d['MAPR'], d['MAPS'] = int(m.mapc), int(m.mapr), int(m.maps)
+
+    return d
 
 def read_volume_data(m: gemmi.Ccp4Map, force_dtype=np.float32) -> np.ndarray:
     '''
@@ -50,9 +68,30 @@ def normalize_axis_order(map_object: gemmi.Ccp4Map):
     try:
         assert new_axis_order == (1, 2, 3), f'Axis order is {new_axis_order}, should be (1, 2, 3) or X, Y, Z'
     except AssertionError as e:
-        # TODO: check if it should be logger instead LATER ON
         logging.error(e, stack_info=True, exc_info=True)
     return map_object
+
+def normalize_axis_order_mrcfile(dask_arr: da.Array, mrc_header: object) -> da.Array:
+    '''
+    Normalizes axis order to X, Y, Z (1, 2, 3)
+    '''
+    h = mrc_header
+    standard_order = (1, 2, 3)
+    current_order = int(h.mapc), int(h.mapr), int(h.maps)
+    if standard_order != current_order:
+        # mapc/r/s correspondance to dask arr dimensions
+        d = {
+            int(h.mapc): 0,
+            int(h.mapr): 1,
+            int(h.maps): 2
+        }
+        sorted_d = dict(sorted(d.items()))
+
+        # reorder dask arr dimensions and return new arr
+        dask_arr = dask_arr.transpose(sorted_d[1], sorted_d[2], sorted_d[3])
+
+    return dask_arr
+    
 
 
 def read_volume_map_to_object(volume_file_path: Path) -> gemmi.Ccp4Map:

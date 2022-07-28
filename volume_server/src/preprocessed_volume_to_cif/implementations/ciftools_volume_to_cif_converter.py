@@ -78,9 +78,10 @@ class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
                 segmentation_table.append(v)
 
         table_writer_provider = CategoryWriterProvider_SegmentationDataTable()
-        writer.write_category(table_writer_provider, [np.asarray(segmentation_table, dtype="u1")])
+        writer.write_category(table_writer_provider, [np.asarray(segmentation_table, dtype="i4")])
 
         # 3d_ids
+        # uint32
         set_ids = segmentation["category_set_ids"]
 
         ids_writer_provider = CategoryWriterProvider_SegmentationData3d()

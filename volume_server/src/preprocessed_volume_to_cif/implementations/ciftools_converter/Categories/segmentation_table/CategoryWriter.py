@@ -23,12 +23,12 @@ class CategoryWriterProvider_SegmentationDataTable(CategoryWriterProvider):
 
         encoders: list[CIFEncoderBase] = [ByteArrayCIFEncoder()]
 
-        if data_type != DataTypeEnum.Uint8:
-            error = "Invalid data type for segmentation table: Expected Uint8 and received " + data_type.name
-            print(error)
-            raise AttributeError(error)
+        # if data_type != DataTypeEnum.Uint8:
+        #     error = "Invalid data type for segmentation table: Expected Uint8 and received " + data_type.name
+        #     print(error)
+        #     raise AttributeError(error)
 
-        return BinaryCIFEncoder(encoders), DataType.to_dtype(DataTypeEnum.Int8)
+        return BinaryCIFEncoder(encoders), DataType.to_dtype(DataTypeEnum.Int32)
 
     def category_writer(self, ctx: np.ndarray) -> CategoryWriter:
         field_desc: list[FieldDesc] = Fields_SegmentationDataTable(*self._decide_encoder(ctx)).fields

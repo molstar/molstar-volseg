@@ -31,7 +31,7 @@ class CategoryWriterProvider_SegmentationData3d(CategoryWriterProvider):
             encoders.insert(0, interval_quantization)
             typed_array = DataType.to_dtype(DataTypeEnum.Float32)
         else:
-            typed_array = DataType.to_dtype(DataTypeEnum.Int8)
+            typed_array = DataType.to_dtype(DataTypeEnum.Int32)
 
         return BinaryCIFEncoder(encoders), typed_array
 
