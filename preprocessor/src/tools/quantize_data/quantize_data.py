@@ -10,8 +10,13 @@ def read_ccp4_map_mrcfile(map_path: Path) -> np.ndarray:
         data: np.memmap = mrc_original.data
     return data
 
-def quantize_data(data: Union[da.Array, np.ndarray], output_dtype) -> dict:
-    bits_in_dtype = output_dtype().itemsize * 8
+def quantize_data(data: Union[da.Array, np.ndarray], output_dtype: Union[str, type]) -> dict:
+    if isinstance(output_dtype, str):
+        output_dtype = np.dtype(output_dtype)
+        bits_in_dtype = output_dtype.itemsize * 8
+    else:
+        bits_in_dtype = output_dtype().itemsize * 8
+
     num_steps = 2**bits_in_dtype - 1
     src_data_type = data.dtype.str
     original_min = data.min()
