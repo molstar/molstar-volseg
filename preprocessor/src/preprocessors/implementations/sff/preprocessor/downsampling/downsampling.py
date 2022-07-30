@@ -3,9 +3,11 @@ import logging
 import math
 from typing import Dict, List
 from vedo import Mesh
+
+from preprocessor.src.tools.quantize_data.quantize_data import quantize_data
 from ._category_set_downsampling_methods import *
 from preprocessor.src.preprocessors.implementations.sff.downsampling_level_dict import DownsamplingLevelDict
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DOWNSAMPLING_KERNEL
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DOWNSAMPLING_KERNEL, QUANTIZATION_DATA_DICT_ATTR_NAME
 from preprocessor.src.preprocessors.implementations.sff.segmentation_set_table import SegmentationSetTable
 from scipy import signal, ndimage
 import dask.array as da
@@ -191,7 +193,8 @@ def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: da.Arr
                                                         params_for_storing: dict,
                                                         force_dtype=np.float32):
     
-    
+    # here downsampled_data (current_level_data) is still float32, max 3.39, min -1.9496
+    # so it is unchanged
     zarr_arr = create_dataset_wrapper(
         zarr_group=downsampled_data_group,
         data=None,
@@ -201,6 +204,19 @@ def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: da.Arr
         params_for_storing=params_for_storing,
         is_empty=True
     )
+    # np.uint8 - hack for emd-99999
+    if 'quantize_dtype_str' in params_for_storing and force_dtype != np.uint8:
+        quantized_data_dict = quantize_data(
+            data=downsampled_data,
+            output_dtype=params_for_storing['quantize_dtype_str'])
+        
+        downsampled_data = quantized_data_dict["data"]
+        
+        quantized_data_dict_without_data = quantized_data_dict.copy()
+        quantized_data_dict_without_data.pop('data')
+
+        # save this dict as attr of zarr arr
+        zarr_arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME] = quantized_data_dict_without_data
 
     da.to_zarr(arr=downsampled_data, url=zarr_arr, overwrite=True, compute=True)
     
