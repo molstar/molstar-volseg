@@ -10,6 +10,21 @@ def read_ccp4_map_mrcfile(map_path: Path) -> np.ndarray:
         data: np.memmap = mrc_original.data
     return data
 
+def _convert_data_dict_to_python_dtypes(data_dict: dict) -> dict:
+    for key in data_dict:
+        if key != 'data' and (isinstance(data_dict[key], da.Array) or isinstance(data_dict[key], np.ndarray)):
+            if isinstance(data_dict[key], da.Array):
+                data_dict[key] = data_dict[key].compute()
+            if data_dict[key].dtype in (np.float32, np.float64):
+                data_dict[key] = float(str(data_dict[key]))
+            elif data_dict[key].dtype == np.uint8:
+                data_dict[key] = int(str(data_dict[key]))
+            else:
+                raise Exception(f'dtype of quantized data_dict members is {data_dict[key].dtype}(neither float32 nor uint8)')
+
+    return data_dict
+            
+
 def quantize_data(data: Union[da.Array, np.ndarray], output_dtype: Union[str, type]) -> dict:
     if isinstance(output_dtype, str):
         output_dtype = np.dtype(output_dtype)
@@ -45,6 +60,13 @@ def quantize_data(data: Union[da.Array, np.ndarray], output_dtype: Union[str, ty
     # if isinstance(data, da.Array):
     #     quantized = quantized.compute()
     
+    # convert min_value, max_value, to_remove_negatives to python dtypes
+    # if those three are dask arrs, compute() each prior to conversion
+    # convert can be done as:
+    # 1. x' = str(x)
+    # 2. if x.dtype was float32: float(x')
+        # if x.dtype was uint8: int(x')
+
     d = {
         "min": min_value,
         "max": max_value,
@@ -53,6 +75,8 @@ def quantize_data(data: Union[da.Array, np.ndarray], output_dtype: Union[str, ty
         "data": quantized,
         "to_remove_negatives": to_remove_negatives,
     }
+
+    d = _convert_data_dict_to_python_dtypes(d)
 
     return d
 
