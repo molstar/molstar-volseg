@@ -15,12 +15,12 @@ def _convert_data_dict_to_python_dtypes(data_dict: dict) -> dict:
         if key != 'data' and (isinstance(data_dict[key], da.Array) or isinstance(data_dict[key], np.ndarray)):
             if isinstance(data_dict[key], da.Array):
                 data_dict[key] = data_dict[key].compute()
-            if data_dict[key].dtype in (np.float32, np.float64):
+            if data_dict[key].dtype in (np.float16, np.float32, np.float64):
                 data_dict[key] = float(str(data_dict[key]))
             elif data_dict[key].dtype == np.uint8:
                 data_dict[key] = int(str(data_dict[key]))
             else:
-                raise Exception(f'dtype of quantized data_dict members is {data_dict[key].dtype}(neither float32 nor uint8)')
+                raise Exception(f'dtype of quantized data_dict members is {data_dict[key].dtype} and is not supported')
 
     return data_dict
             
@@ -35,10 +35,12 @@ def quantize_data(data: Union[da.Array, np.ndarray], output_dtype: Union[str, ty
     num_steps = 2**bits_in_dtype - 1
     src_data_type = data.dtype.str
     original_min = data.min()
-    to_remove_negatives = original_min - 1
+    to_remove_negatives = original_min - 1.0
+    to_remove_negatives = to_remove_negatives.astype(data.dtype)
 
     # remove negatives
-    da.subtract(data, to_remove_negatives, out=data)
+    # here it is subtracting from original downsampled_data if out=downsampled data
+    data = da.subtract(data, to_remove_negatives)
     # log transform
     data = da.log(data)
 
