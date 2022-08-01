@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import argparse
 import uvicorn
@@ -38,7 +39,7 @@ def prepare_fastapi_app():
     app.add_middleware(GZipMiddleware, minimum_size=1000)
 
     # initialize dependencies
-    db = LocalDiskPreprocessedDb(folder=Path('db'))
+    db = LocalDiskPreprocessedDb(folder=Path.joinpath(Path(os.path.dirname(os.path.abspath(__file__))), 'db'))
     volume_to_cif_converter = CifToolsVolumeToCifConverter()
 
     # initialize server
