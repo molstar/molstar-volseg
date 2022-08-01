@@ -2,15 +2,16 @@ import json
 from decimal import Decimal
 from pathlib import Path
 from typing import TypedDict
-
+import dask.array as da
 import numpy as np
 import zarr
 
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import VOLUME_DATA_GROUPNAME, \
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import QUANTIZATION_DATA_DICT_ATTR_NAME, VOLUME_DATA_GROUPNAME, \
     SEGMENTATION_DATA_GROUPNAME
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._sfftk_methods import \
     open_hdf5_as_segmentation_object
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import ccp4_words_to_dict_mrcfile
+from preprocessor.src.tools.quantize_data.quantize_data import decode_quantized_data
 
 class MeshMetadata(TypedDict):
     num_vertices: int
@@ -61,6 +62,13 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, m
 
     for arr_name, arr in root[VOLUME_DATA_GROUPNAME].arrays():
         arr_view = arr[...]
+        if QUANTIZATION_DATA_DICT_ATTR_NAME in arr.attrs:
+            data_dict = arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME]
+            data_dict['data'] = arr_view
+            arr_view = decode_quantized_data(data_dict)
+            if isinstance(arr_view, da.Array):
+                arr_view = arr_view.compute()
+
         mean_val = str(np.mean(arr_view))
         std_val = str(np.std(arr_view))
         max_val = str(arr_view.max())
