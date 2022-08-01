@@ -193,8 +193,9 @@ def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: da.Arr
                                                         params_for_storing: dict,
                                                         force_dtype=np.float32):
     
-    # here downsampled_data (current_level_data) is still float32, max 3.39, min -1.9496
-    # so it is unchanged
+    if 'quantize_dtype_str' in params_for_storing and force_dtype != np.uint8:
+        force_dtype = params_for_storing['quantize_dtype_str']
+
     zarr_arr = create_dataset_wrapper(
         zarr_group=downsampled_data_group,
         data=None,
@@ -218,6 +219,7 @@ def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: da.Arr
         # save this dict as attr of zarr arr
         zarr_arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME] = quantized_data_dict_without_data
 
+    # here downsampled_data is uint8
     da.to_zarr(arr=downsampled_data, url=zarr_arr, overwrite=True, compute=True)
     
 
