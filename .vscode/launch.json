@@ -32,6 +32,19 @@
             ]
         },
         {
+            "name": "Python: default db building to db folder+quantization",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--db_path",
+                "db",
+                "--quantize_volume_data_dtype_str",
+                "u1"
+            ]
+        },
+        {
             "name": "Python: default ZIP db building",
             "type": "python",
             "request": "launch",
