@@ -1,4 +1,9 @@
 ### Custom
+db not_quantized_for_comparing_meta/
+preprocessor/data/raw_input_files/emdb/emd-1547/
+quantized_db_for_meta_comparison/
+preprocessor/data/raw_input_files/emdb/emd-1181/
+preprocessor/data/sample_segmentations/emdb_sff/emd_1181.hff
 preprocessor/data/sample_volumes/emdb_sff/*
 db-*/
 temp/
