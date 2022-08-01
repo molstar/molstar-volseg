@@ -22,6 +22,7 @@ from preprocessor.src.tools.write_dict_to_file.write_dict_to_txt import write_di
 
 RAW_INPUT_FILES_DIR = Path(__file__).parent / 'data/raw_input_files'
 DEFAULT_DB_PATH = Path(__file__).parent.parent/'db' 
+DEFAULT_QUANTIZE_DTYPE_STR = 'u1'
 
 def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict:
     '''
@@ -194,6 +195,7 @@ def create_db(db_path: Path, params_for_storing: dict):
 def main():
     args = parse_script_args()
     if args.create_parametrized_dbs:
+        # TODO: add quantize here too
         remove_files_or_folders_by_pattern('db_*/')
         storing_params_dict = create_dict_of_input_params_for_storing(
             chunking_mode=CHUNKING_MODES,
@@ -203,12 +205,15 @@ def main():
         for db_id, param_set in storing_params_dict.items():
             create_db(Path(f'db_{db_id}'), params_for_storing=param_set)
     elif args.db_path:
-        create_db(Path(args.db_path), params_for_storing={
+        # print(args.quantize_volume_data_dtype_str)
+        params_for_storing={
             'chunking_mode': 'auto',
             'compressor': Blosc(cname='lz4', clevel=5, shuffle=Blosc.SHUFFLE, blocksize=0),
             'store_type': 'zip'
-            # 'store_type': 'directory'
-        })
+        }
+        if args.quantize_volume_data_dtype_str:
+            params_for_storing['quantize_dtype_str'] = args.quantize_volume_data_dtype_str
+        create_db(Path(args.db_path), params_for_storing=params_for_storing)
     else:
         raise ValueError('No db path is provided as argument')
 
@@ -216,13 +221,11 @@ def parse_script_args():
     parser=argparse.ArgumentParser()
     parser.add_argument("--db_path", type=Path, default=DEFAULT_DB_PATH, help='path to db folder')
     parser.add_argument("--create_parametrized_dbs", action='store_true')
+    parser.add_argument("--quantize_volume_data_dtype_str", action="store", choices=['u1', 'u2'])
     args=parser.parse_args()
     return args
 
 if __name__ == '__main__':
-    # TODO: once new approach to db pathes works, go to main.py
-    # \draft for creating multiple dbs
-    # and implement something similar to it (NEW CODE/NEW CODE ENDS)
     main()
 
 

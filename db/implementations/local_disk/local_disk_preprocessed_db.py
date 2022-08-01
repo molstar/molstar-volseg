@@ -11,10 +11,11 @@ import dask.array as da
 from timeit import default_timer as timer
 import tensorstore as ts
 
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DB_NAMESPACES, SEGMENTATION_DATA_GROUPNAME, \
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DB_NAMESPACES, QUANTIZATION_DATA_DICT_ATTR_NAME, SEGMENTATION_DATA_GROUPNAME, \
     VOLUME_DATA_GROUPNAME, ZIP_STORE_DATA_ZIP_NAME
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import ANNOTATION_METADATA_FILENAME, GRID_METADATA_FILENAME
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import open_zarr_structure_from_path
+from preprocessor.src.tools.quantize_data.quantize_data import decode_quantized_data
 
 from .local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
 from db.interface.i_preprocessed_db import IPreprocessedDb, ProcessedVolumeSliceData
@@ -114,6 +115,18 @@ class ReadContext():
                 volume_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=volume_arr, box=box)
             
             end = timer()
+
+            # check if volume_arr was originally quantized data (e.g. some attr on array, e.g. data_dict attr with data_dict)
+            # if yes, decode volume_slice (reassamble data dict from data_dict attr, just add 'data' key with volume_slice)
+            # do .compute on output of decode_quantized_data function if output is da.Array
+
+            if QUANTIZATION_DATA_DICT_ATTR_NAME in volume_arr.attrs:
+                data_dict = volume_arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME]
+                data_dict['data'] = volume_slice
+                volume_slice = decode_quantized_data(data_dict)
+                if isinstance(volume_slice, da.Array):
+                    volume_slice = volume_slice.compute()
+
             if timer_printout == True:
                 print(f'read_slice with mode {mode}: {end - start}')
             if segm_arr:
