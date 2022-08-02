@@ -12,7 +12,7 @@ from preprocessor.src.tools.parse_pytest_benchmark_results.parse_pytest_benchmar
 from preprocessor.tests.test_benchmark_read_slice import BOX_CHOICES
 
 
-BENCHMARKING_RESULTS_FILENAME = Path('.benchmarks/Windows-CPython-3.9-64bit/0002_benchmark.json')
+BENCHMARKING_RESULTS_FILENAME = Path('.benchmarks/Windows-CPython-3.9-64bit/0004_quantized.json')
 
 def parse_script_args():
     parser=argparse.ArgumentParser()
