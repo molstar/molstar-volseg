@@ -29,7 +29,6 @@ function Main() {
     const src = useBehavior(model.dataSource);
 
     return <>
-        <MolStar model={model} />
         <div style={{ display: 'flex', flexDirection: 'column', width: RightWidth, position: 'absolute', right: 0, top: 0, bottom: 0, padding: '8px 8px 8px 0', overflow: 'hidden', overflowY: 'auto' }}>
             <div style={{ marginBottom: 8 }}>
                 <ButtonGroup fullWidth>
@@ -43,6 +42,7 @@ function Main() {
             {src === '10070' && <UI10070 model={model} />}
         </div>
         {src === '99999' && <img src='/emd-99999.png' alt='' style={{ width: '33%', position: 'absolute', right: 8, bottom: 8, border: '1px solid #777' }} />}
+        <MolStar model={model} />
     </>;
 }
 
@@ -55,8 +55,18 @@ function UI10070({ model }: { model: AppModel }) {
         <Typography variant='caption'>{entryId}</Typography>
         <Typography variant='h6'>Example of meshes for debugging</Typography>
         <Typography variant='body1'>
-            All except 2 largest segments (~background) at detail-2 (detail-1 has no normals)
+            All except 2 largest segments (~background) at the worst detail
         </Typography>
+        <Button variant={current ? 'outlined' : 'contained'} size='small' 
+        onClick={() => model.showMeshSegments(annotation?.segment_list ?? [], entryId)}>
+            Show All
+        </Button>
+        {annotation?.segment_list.map(seg => 
+            <Button size='small' key={seg.id} style={{ marginTop: 4 }} variant={current === seg ? 'contained' : 'outlined'} 
+            onClick={() => model.showMeshSegments([seg], entryId)}>
+                {seg.id}. {seg.biological_annotation.name}
+            </Button>
+        )}
     </>;
 }
 
@@ -84,7 +94,7 @@ function UI1832({ model }: { model: AppModel }) {
             {current && <div>
                 {current.biological_annotation.external_references.map(r => <div key={r.id}>
                     <Typography variant='caption' style={{ marginBottom: 8 }}><b>{r.resource}:{r.accession}</b><br />{r.description}</Typography>
-                </div>)}3
+                </div>)}
             </div>}
         </>}
     </>;

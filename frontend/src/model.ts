@@ -13,13 +13,12 @@ import { CustomProperties } from 'molstar/lib/mol-model/custom-property';
 import { arrayMean, arrayRms } from 'molstar/lib/mol-util/array';
 import { Vec2 } from 'molstar/lib/mol-math/linear-algebra';
 import { BehaviorSubject } from 'rxjs';
-
-// DEBUG IMPORTS:
-import { Mesh } from 'molstar/lib/commonjs/mol-geo/geometry/mesh/mesh';
+import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/state';
 
 import * as MeshExamples from './mesh-extension/examples'
 
 const VOLUME_SERVER = 'http://localhost:9000';
+const DEFAULT_DETAIL: number|null = null;  // null means worst
 
 
 interface Segment {
@@ -78,6 +77,16 @@ namespace Metadata {
         const details = metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids[segmentId].detail_lvls;
         return Object.keys(details).map(s => parseInt(s));
     }
+    /** Get the worst available detail level that is not worse than preferredDetail. 
+     * If preferredDetail is null, get the worst detail level overall.
+     * (worse = greater number) */
+    export function getSufficientDetail(metadata: Metadata, segmentId: number, preferredDetail: number|null){
+        let availDetails = meshSegmentDetails(metadata, segmentId);
+        if (preferredDetail !== null){
+            availDetails = availDetails.filter(det => det <= preferredDetail);
+        }
+        return Math.max(...availDetails);
+    }
     export function annotationsBySegment(metadata: Metadata): {[id: number]: Segment}{
         const result: {[id: number]: Segment} = {};
         for (const segment of metadata.annotation.segment_list){
@@ -87,6 +96,13 @@ namespace Metadata {
             result[segment.id] = segment;
         }
         return result;
+    }
+    export function dropSegments(metadata: Metadata, segments: number[]): void {
+        const dropSet = new Set(segments);
+        metadata.annotation.segment_list = metadata.annotation.segment_list.filter(seg => !dropSet.has(seg.id));
+        for (const seg of segments) {
+            delete metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids[seg];
+        }
     }
 }
 
@@ -100,11 +116,13 @@ export class AppModel {
             layout: {
                 initial: {
                     isExpanded: false,
-                    showControls: false,
+                    showControls: true,  // original: false
+                    controlsDisplay: 'landscape',  // original: not given
                 },
             },
             components: {
-                controls: { left: 'none', right: 'none', top: 'none', bottom: 'none' },
+                // controls: { left: 'none', right: 'none', top: 'none', bottom: 'none' },
+                controls: { right: 'none', top: 'none', bottom: 'none' },
             },
             canvas3d: {
                 camera: {
@@ -112,8 +130,8 @@ export class AppModel {
                 }
             },
             config: [
-                [PluginConfig.Viewport.ShowExpand, false],
-                [PluginConfig.Viewport.ShowControls, false],
+                [PluginConfig.Viewport.ShowExpand, true],  // original: false
+                [PluginConfig.Viewport.ShowControls, true],  // original: false
                 [PluginConfig.Viewport.ShowSelectionMode, false],
                 [PluginConfig.Viewport.ShowAnimation, false],
             ],
@@ -218,7 +236,6 @@ export class AppModel {
         };
     }
 
-
     createSegment(volume: Volume, segmentation: number[], segId: number): Volume {
         const { mean, sigma } = volume.grid.stats;
         const { data, space } = volume.grid.cells;
@@ -303,8 +320,7 @@ export class AppModel {
 
     private currentSegments: any[] = [];
 
-    async showSegment(volume: Volume, color: number[], opacity = 1) {        
-      
+    async showSegment(volume: Volume, color: number[], opacity = 1) {     
         const update = this.plugin.build();
         const root = update.toRoot().apply(CreateVolume, { volume });
         this.currentLevel.push(root.selector);
@@ -356,13 +372,35 @@ export class AppModel {
         console.log('tree:\n', repr.currentTree);
         console.log('children:', repr.currentTree.children.size);
     }
+    
+    private metadata?: Metadata = undefined;
+    private meshSegmentNodes: {[segid: number]: any} = {};
+
+    async showMeshSegments(segments: Segment[], entryId: string){  
+        if (segments.length === 1) {
+            this.currentSegment.next(segments[0]);
+        } else {
+            this.currentSegment.next(undefined);
+        }
+
+        for (const node of Object.values(this.meshSegmentNodes)) {
+            setSubtreeVisibility(node.state!, node.ref, true);  // hide
+        }
+        for (const seg of segments) {
+            const detail = Metadata.getSufficientDetail(this.metadata!, seg.id, DEFAULT_DETAIL);
+            let node = this.meshSegmentNodes[seg.id];
+            if (!node) {
+                node = await MeshExamples.createMeshFromUrl(this.plugin, this.meshServerRequestUrl('empiar', entryId, seg.id, detail), seg.id, detail, true, false);
+                this.meshSegmentNodes[seg.id] = node;
+            }
+            setSubtreeVisibility(node.state!, node.ref, false);  // show
+        }
+    }
 
     async load10070() {
         const entryId = 'empiar-10070';
-        const theDetail: number|null = null;  // null means worst
-        // QUESTION: Detail-1 constains no normals. Why?
-        // TODO ensure normal are in the input data (or create fake normals???)
-        
+        const segments = 'fg';
+        await this.plugin.clear();
         // Testing API:
         // try {
         //     const meshes = await this.getMeshData_debugging('empiar', 'empiar-10070', 1, 7);
@@ -376,32 +414,23 @@ export class AppModel {
         // MeshExamples.runMeshExample(this.plugin, 'fg', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');
         // MeshExamples.runMultimeshExample(this.plugin, 'fg', 'worst', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');  // Multiple segments merged into 1 segment with multiple meshes
         
-        let segments = 'fg';
-
-        const metadata = await this.getMetadata('empiar', entryId);
-        let segmentIds = Metadata.meshSegments(metadata);
-        const bgSegments = new Set([13, 15]);
+        this.metadata = await this.getMetadata('empiar', entryId);
         if (segments === 'fg'){
-            segmentIds = segmentIds.filter(s => !bgSegments.has(s));
+            const bgSegments = [13, 15];
+            Metadata.dropSegments(this.metadata, bgSegments);
         }
-        console.log('Segments:', segmentIds);
-        // const segmentIds = (segments === 'all') ? 
-        // [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17]     // segment-16 has no detail-2
-        //     : [1,2,3,4,5,6,7,8,9,10,11,12,   14,   17];  // segment-13 and segment-15 are quasi background
         
-        const segmentAnnotations = Metadata.annotationsBySegment(metadata);
-            
-        for (let segmentId of segmentIds) {
-            const annot = segmentAnnotations[segmentId];
-            const detail = theDetail ?? Math.max(...Metadata.meshSegmentDetails(metadata, segmentId));  // worst detail if theDetail==null
-            const color = annot.colour;  // QUESTION: hmm, shouldn't it be "color"?
-            const name = annot.biological_annotation.name;
-            console.log(`Annotation: segment ${segmentId}. ${name} ${color} ${detail}`);
-            MeshExamples.createMeshFromUrl(this.plugin, this.meshServerRequestUrl('empiar', entryId, segmentId, detail), segmentId, detail, true, false);
+        for (let segment of this.metadata!.annotation.segment_list) {
+            const detail = Metadata.getSufficientDetail(this.metadata!, segment.id, DEFAULT_DETAIL);
+            console.log(`Annotation: segment ${segment.id}. ${segment.biological_annotation.name} ${segment.colour} ${detail}`);
+            // QUESTION: hmm, shouldn't it be "color"?
         }
+        
+        this.meshSegmentNodes = {};
+        this.showMeshSegments(this.metadata!.annotation.segment_list, entryId);
 
         this.entryId.next(entryId);
-        this.annotation.next(metadata.annotation);
+        this.annotation.next(this.metadata!.annotation);
         this.dataSource.next('10070');  // React magic for async stuff instead of return, I guess
     }
 
