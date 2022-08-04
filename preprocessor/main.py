@@ -16,6 +16,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants i
 
 from db.interface.i_preprocessed_db import IPreprocessedDb
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import SFFPreprocessor
+from preprocessor.src.tools.convert_app_specific_segm_to_sff.convert_app_specific_segm_to_sff import convert_app_specific_segm_to_sff
 from preprocessor.src.tools.remove_files_or_folders_by_pattern.remove_files_or_folders_by_pattern import remove_files_or_folders_by_pattern
 from preprocessor.src.tools.write_dict_to_file.write_dict_to_json import write_dict_to_json
 from preprocessor.src.tools.write_dict_to_file.write_dict_to_txt import write_dict_to_txt
@@ -23,6 +24,7 @@ from preprocessor.src.tools.write_dict_to_file.write_dict_to_txt import write_di
 RAW_INPUT_FILES_DIR = Path(__file__).parent / 'data/raw_input_files'
 DEFAULT_DB_PATH = Path(__file__).parent.parent/'db' 
 DEFAULT_QUANTIZE_DTYPE_STR = 'u1'
+APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS = ['.am', '.mod', '.seg', '.surf', '.stl']
 
 def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict:
     '''
@@ -85,6 +87,9 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
                         content = sorted(subdir_path.glob('*'))
                         for item in content:
                             if item.is_file():
+                                if item.suffix in APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS:
+                                    sff_segmentation_hff_file = convert_app_specific_segm_to_sff(input_file=item)
+                                    segmentation_file_path = sff_segmentation_hff_file
                                 if item.suffix == '.hff':
                                     segmentation_file_path = item
                                 if item.suffix == '.map' or item.suffix == '.ccp4' or item.suffix == '.mrc':
