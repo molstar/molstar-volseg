@@ -115,6 +115,11 @@ export const ParseMeshlistTransformer = CellStarTransform({
 /** Data type for PluginStateObject.Shape.Provider */
 type MeshShapeProvider = MS.ShapeProvider<MeshlistData, MS.Mesh, MS.Mesh.Params>;
 
+/** Params for MeshShapeTransformer */
+const meshShapeParamDef = {
+    color: PD.Value<MS.Color|undefined>(undefined), // undefined means random color
+}
+
 const meshParamDef0 = MS.Mesh.Params;
 const meshParamDef: MS.Mesh.Params = {
     // These are basically 
@@ -141,11 +146,12 @@ export const MeshShapeTransformer = CellStarTransform({
     display: { name: 'Shape from Meshlist', description: 'Create Shape from Meshlist data' },
     from: MeshlistStateObject,
     to: MS.PluginStateObject.Shape.Provider,
-    params: meshParamDef
+    params: meshShapeParamDef
 })({
     apply({ a, params }) {
         const origData = a.data;
         // you can look for example at ShapeFromPly in mol-plugin-state/tansforms/model.ts as an example
+        const color = params.color ?? MeshUtils.ColorGenerator.next().value;
         const shapeProvider: MeshShapeProvider = {
             label: 'Mesh',
             data: origData,
@@ -154,7 +160,9 @@ export const MeshShapeTransformer = CellStarTransform({
             getShape: (ctx, data: MeshlistData) => {
                 let mesh = MeshUtils.makeMeshFromData(data);
                 MeshUtils.modify(mesh, { invertSides: true });  // QUESTION: vertex orientation convention is probably opposite in API and in MolStar -> TODO solve
-                const meshShape: MS.Shape<MS.Mesh> = MS.Shape.create('MyShape', data, mesh, () => MeshUtils.ColorGenerator.next().value, () => 1, (group) => `${data.segmentName} | Detail ${data.detail} | Mesh ${group}`);
+                const meshShape: MS.Shape<MS.Mesh> = MS.Shape.create('MyShape', data, mesh,
+                () => color, 
+                () => 1, (group) => `${data.segmentName} | Detail ${data.detail} | Mesh ${group}`);
                 return meshShape;
             }
         }

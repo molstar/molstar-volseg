@@ -15,9 +15,9 @@ export async function runMeshExtensionExamples(plugin: MS.PluginUIContext, db_ur
     // await runMolsurfaceExample(plugin);
 
     // Focused Ion Beam-Scanning Electron Microscopy of mitochondrial reticulum in murine skeletal muscle: https://www.ebi.ac.uk/empiar/EMPIAR-10070/
-    await runMeshExample(plugin, 'all', db_url);
+    // await runMeshExample(plugin, 'all', db_url);
     await runMeshExample(plugin, 'fg', db_url);
-    await runMultimeshExample(plugin, 'fg', 'worst', db_url);
+    // await runMultimeshExample(plugin, 'fg', 'worst', db_url);
 
     console.timeEnd('TIME MESH EXAMPLES');
 }
@@ -33,18 +33,18 @@ export async function runMeshExample(plugin: MS.PluginUIContext, segments: 'fg'|
         : [1,2,3,4,5,6,7,8,9,10,11,12,   14,   17];  // segment-13 and segment-15 are quasi background
 
     for (let segmentId of segmentIds){
-        createMeshFromUrl(plugin, `${db_url}/empiar-10070-mesh-rounded/segment-${segmentId}/detail-${detail}`, segmentId, detail, true, true);
+        createMeshFromUrl(plugin, `${db_url}/empiar-10070-mesh-rounded/segment-${segmentId}/detail-${detail}`, segmentId, detail, true, true, undefined);
     }
 }
 
 /** Example for downloading a single segment containing multiple meshes. */
 export async function runMultimeshExample(plugin: MS.PluginUIContext, segments: 'fg'|'all', detailChoice: 'best'|'worst', db_url: string = DB_URL) {
     const detail = (detailChoice === 'best') ? '2' : 'worst';
-    await createMeshFromUrl(plugin, `${db_url}/empiar-10070-multimesh-rounded/segments-${segments}/detail-${detail}`, 0, detail, false, true);
+    await createMeshFromUrl(plugin, `${db_url}/empiar-10070-multimesh-rounded/segments-${segments}/detail-${detail}`, 0, detail, false, true, undefined);
 }
 
 /** Download data and create state tree hierarchy down to visual representation. */
-export async function createMeshFromUrl(plugin: MS.PluginUIContext, meshDataUrl: string, segmentId: number, detail: number|string, collapseTree: boolean, log: boolean) {
+export async function createMeshFromUrl(plugin: MS.PluginUIContext, meshDataUrl: string, segmentId: number, detail: number|string, collapseTree: boolean, log: boolean, color?: MS.Color) {
 
     // PARAMS - Depend on the type of transformer T -> Params<T>
     // 1st argument to plugin.builders.data.rawData, 2nd argument to .apply
@@ -86,7 +86,7 @@ export async function createMeshFromUrl(plugin: MS.PluginUIContext, meshDataUrl:
 
     // MESH SHAPE NODE
     const shapeNode = await plugin.build().to(parsedDataNode).apply(MeshShapeTransformer, 
-        {},  // options
+        { color: color },  // options
         { ref: `ref-shape-node-${segmentId}` }
     ).commit();
     if (log) console.log('shapeNode:', shapeNode);

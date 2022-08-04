@@ -16,6 +16,7 @@ import { BehaviorSubject } from 'rxjs';
 import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/state';
 
 import * as MeshExamples from './mesh-extension/examples'
+import { ColorNames } from './mesh-extension/molstar-lib-imports';
 
 const VOLUME_SERVER = 'http://localhost:9000';
 const DEFAULT_DETAIL: number|null = null;  // null means worst
@@ -387,10 +388,11 @@ export class AppModel {
             setSubtreeVisibility(node.state!, node.ref, true);  // hide
         }
         for (const seg of segments) {
-            const detail = Metadata.getSufficientDetail(this.metadata!, seg.id, DEFAULT_DETAIL);
             let node = this.meshSegmentNodes[seg.id];
             if (!node) {
-                node = await MeshExamples.createMeshFromUrl(this.plugin, this.meshServerRequestUrl('empiar', entryId, seg.id, detail), seg.id, detail, true, false);
+                const detail = Metadata.getSufficientDetail(this.metadata!, seg.id, DEFAULT_DETAIL);
+                const color = seg.colour.length >= 3 ? Color.fromNormalizedArray(seg.colour, 0) : ColorNames.gray;
+                node = await MeshExamples.createMeshFromUrl(this.plugin, this.meshServerRequestUrl('empiar', entryId, seg.id, detail), seg.id, detail, true, false, color);
                 this.meshSegmentNodes[seg.id] = node;
             }
             setSubtreeVisibility(node.state!, node.ref, false);  // show
