@@ -90,9 +90,9 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
                                 if item.suffix in APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS:
                                     sff_segmentation_hff_file = convert_app_specific_segm_to_sff(input_file=item)
                                     segmentation_file_path = sff_segmentation_hff_file
-                                if item.suffix == '.hff':
+                                elif item.suffix == '.hff':
                                     segmentation_file_path = item
-                                if item.suffix == '.map' or item.suffix == '.ccp4' or item.suffix == '.mrc':
+                                elif item.suffix == '.map' or item.suffix == '.ccp4' or item.suffix == '.mrc':
                                     volume_file_path: Path = item
                         d[source_db].append(
                             {
