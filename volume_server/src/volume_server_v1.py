@@ -128,16 +128,12 @@ class VolumeServerV1(IVolumeServer):
     def decide_grid(self, req: IVolumeRequest, meta: IPreprocessedMetadata) \
             -> tuple[tuple[int, int, int], tuple[int, int, int]]:
         return (
-            (0, 0, 0),
-            meta.grid_dimensions()
-        )
-        # return (
-        #     (self._float_to_grid(meta.origin()[0], meta.voxel_size(1)[0], meta.grid_dimensions()[0], req.x_min()),
-        #      self._float_to_grid(meta.origin()[1], meta.voxel_size(1)[1], meta.grid_dimensions()[1], req.y_min()),
-        #      self._float_to_grid(meta.origin()[2], meta.voxel_size(1)[2], meta.grid_dimensions()[2], req.z_min())),
-        #     (self._float_to_grid(meta.origin()[0], meta.voxel_size(1)[0], meta.grid_dimensions()[0], req.x_max()),
-        #      self._float_to_grid(meta.origin()[1], meta.voxel_size(1)[1], meta.grid_dimensions()[1], req.y_max()),
-        #      self._float_to_grid(meta.origin()[2], meta.voxel_size(1)[2], meta.grid_dimensions()[2], req.z_max())))
+            (self._float_to_grid(meta.origin()[0], meta.voxel_size(1)[0], meta.grid_dimensions()[0], req.x_min()),
+             self._float_to_grid(meta.origin()[1], meta.voxel_size(1)[1], meta.grid_dimensions()[1], req.y_min()),
+             self._float_to_grid(meta.origin()[2], meta.voxel_size(1)[2], meta.grid_dimensions()[2], req.z_min())),
+            (self._float_to_grid(meta.origin()[0], meta.voxel_size(1)[0], meta.grid_dimensions()[0], req.x_max()),
+             self._float_to_grid(meta.origin()[1], meta.voxel_size(1)[1], meta.grid_dimensions()[1], req.y_max()),
+             self._float_to_grid(meta.origin()[2], meta.voxel_size(1)[2], meta.grid_dimensions()[2], req.z_max())))
 
     def down_sampled_grid(self, down_sampling: int, original_grid: tuple[tuple[int, int, int], tuple[int, int, int]]) \
             -> tuple[tuple[int, int, int], tuple[int, int, int]]:
@@ -157,6 +153,6 @@ class VolumeServerV1(IVolumeServer):
             return 0
 
         if to_convert > origin + step * (grid_size - 1):
-            return grid_size
+            return grid_size - 1
 
         return round((to_convert - origin) / step)
