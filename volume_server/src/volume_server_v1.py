@@ -1,3 +1,4 @@
+from math import ceil
 from typing import Optional, Union
 
 from db.interface.i_preprocessed_db import IReadOnlyPreprocessedDb
@@ -8,6 +9,8 @@ from volume_server.src.requests.volume_request.i_volume_request import IVolumeRe
 from .requests.cell_request.i_cell_request import ICellRequest
 from .requests.metadata_request.i_metadata_request import IMetadataRequest
 
+
+__MAX_DOWN_SAMPLING_VALUE__ = 1000000
 
 class VolumeServerV1(IVolumeServer):
     async def get_metadata(self, req: IMetadataRequest) -> Union[bytes, str]:
@@ -30,9 +33,9 @@ class VolumeServerV1(IVolumeServer):
         with self.db.read(namespace=req.source(), key=req.structure_id()) as reader:
             db_slice = await reader.read(
                 lattice_id=1,
-                down_sampling_ratio=1) #TODO: parse params from request + metadata
+                down_sampling_ratio=1)  # TODO: parse params from request + metadata
 
-        cif = self.volume_to_cif.convert(db_slice, metadata, 1, [10,10,10]) #TODO: replace 10,10,10 with cell size
+        cif = self.volume_to_cif.convert(db_slice, metadata, 1, [10, 10, 10])  # TODO: replace 10,10,10 with cell size
         return cif
 
     async def get_volume(self, req: IVolumeRequest) -> bytes:  # TODO: add binary cif to the project
@@ -77,34 +80,41 @@ class VolumeServerV1(IVolumeServer):
     def decide_down_sampling(self, original_grid: tuple[tuple[int, int, int], tuple[int, int, int]],
                              req: IVolumeRequest, metadata: IPreprocessedMetadata) -> int:
 
-        # TODO: it seems that downsamplings are strings -> check and fix
+        down_samplings = metadata.volume_downsamplings()
+        print("[Downsampling] Available downsamplings: " + str(down_samplings))
+        print("[Downsampling] Max points: " + str(req.max_points()))
+        if not req.max_points():
+            print("[Downsampling] req.max_points() is false -> returning instead downsampling = " + str(
+                int(down_samplings[0])))
+            return 1 if '1' in down_samplings else int(down_samplings[0])
 
-        # hack for "emd-99999"
-        if original_grid[1][0] > 1000:
-            return 4
-        return 1
+        size = 1
+        for i in self.grid_size(original_grid):
+            size *= i
 
-        # down_samplings = metadata.volume_downsamplings()
-        # print("[Downsampling] Available downsamplings: " + str(down_samplings))
-        # print("[Downsampling] Max points: " + str(req.max_points()))
-        # if not req.max_points():
-        #     return 1 if '1' in down_samplings else int(down_samplings[0])
+        print("[Downsampling] Original grid size: " + str(size))
 
-        # size = 1
-        # for i in self.grid_size(original_grid):
-        #     size *= i
+        # TODO: improve rounding depending on conservative, strict, etc approach
+        desired_down_sampling = ceil(size / req.max_points())
+        print("[Downsampling] Computed desired downsampling: " + str(desired_down_sampling))
 
-        # # TODO: improve rounding depending on conservative, strict, etc approach
-        # desired_down_sampling = ceil(size/req.max_points())
-        # print("[Downsampling] Computed desired downsampling: " + str(desired_down_sampling))
+        decided = False
+        decided_down_sampling = __MAX_DOWN_SAMPLING_VALUE__  # max_value
+        highest_down_sampling = 0
+        for ds in down_samplings:
+            if int(ds) > highest_down_sampling:
+                highest_down_sampling = int(ds)
 
-        # for ds in down_samplings:
-        #     if int(ds) >= desired_down_sampling:
-        #         print("[Downsampling] Decided (A): " + str(ds))
-        #         return int(ds)
+            if desired_down_sampling <= int(ds) < decided_down_sampling:
+                decided_down_sampling = int(ds)
+                decided = True
 
-        # print("[Downsampling] Decided (B): " + str(down_samplings[-1]))
-        # return int(down_samplings[-1])  # TODO: check assumption that last is highest
+        if decided:
+            print("[Downsampling] Decided (A): " + str(decided_down_sampling))
+            return decided_down_sampling
+
+        print("[Downsampling] Decided (B): " + str(highest_down_sampling))
+        return highest_down_sampling
 
     def grid_size(self, grid: tuple[tuple[int, int, int], tuple[int, int, int]]) -> list[int]:
         print("[Downsampling] Computing grid")

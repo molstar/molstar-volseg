@@ -4,6 +4,7 @@ testmodules = [
     "start_server",
     "get_cell",
     "get_metadata",
+    "get_volume"
 ]
 
 suite = unittest.TestSuite()
