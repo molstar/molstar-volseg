@@ -20,8 +20,11 @@ class FetchMetadataTest(ServerTestBase):
                 self.assertIsNotNone(grid_metadata)
                 grid_metadata: dict = dict(grid_metadata)
 
-                 # assert downsamplings start at 1 and always double
-                volume_downsamplings: list = grid_metadata.get("volume_downsamplings")
+                # get volumes metadata
+                volume_metadata = grid_metadata.get("volumes")
+
+                # assert downsamplings start at 1 and always double
+                volume_downsamplings: list = volume_metadata.get("volume_downsamplings")
                 self.assertIsNotNone(volume_downsamplings)
                 self.assertTrue(len(volume_downsamplings) > 0)
                 previous_downsampling = volume_downsamplings[0]
@@ -32,11 +35,14 @@ class FetchMetadataTest(ServerTestBase):
 
                 self.assertIsNotNone(dict())
 
-                 # assert all segmentations contain valid downsamplings
-                segmentation_lattices: list = grid_metadata.get("segmentation_lattice_ids")
+                # get segmentation metadata
+                segmentation_metadata = grid_metadata.get("segmentation_lattices")
+
+                # assert all segmentations contain valid downsamplings
+                segmentation_lattices: list = segmentation_metadata.get("segmentation_lattice_ids")
                 self.assertIsNotNone(segmentation_lattices)
                 self.assertTrue(len(segmentation_lattices) > 0)
-                segmentation_downsamplings_dict: dict = grid_metadata.get("segmentation_downsamplings")
+                segmentation_downsamplings_dict: dict = segmentation_metadata.get("segmentation_downsamplings")
                 self.assertIsNotNone(segmentation_downsamplings_dict)
                 for i in range(0, len(segmentation_lattices)):
                     segmentation_downsamplings: list = segmentation_downsamplings_dict.get(
@@ -50,7 +56,7 @@ class FetchMetadataTest(ServerTestBase):
                         previous_downsampling = segmentation_downsamplings[i]
 
                 # assert corresponding voxel sizes exist for each downsampling
-                voxel_sizes_dict: dict = grid_metadata.get("voxel_size")
+                voxel_sizes_dict: dict = volume_metadata.get("voxel_size")
                 self.assertIsNotNone(voxel_sizes_dict)
                 self.assertEqual(len(voxel_sizes_dict.keys()), len(volume_downsamplings))
                 for downsampling in volume_downsamplings:
@@ -69,16 +75,16 @@ class FetchMetadataTest(ServerTestBase):
                     previous_voxel_size = voxel_size_of_downsampling
 
                 # assert origin exists
-                origin: list = grid_metadata.get("origin")
+                origin: list = volume_metadata.get("origin")
                 self.assertIsNotNone(origin)
                 self.assertEqual(len(origin), 3)
 
                 # downsampled grid dimensions are consistent
-                grid_dimensions: list = grid_metadata.get("grid_dimensions")
+                grid_dimensions: list = volume_metadata.get("grid_dimensions")
                 self.assertIsNotNone(grid_dimensions)
                 self.assertEqual(len(grid_dimensions), 3)
 
-                downsampled_grid_dict: dict = grid_metadata.get("sampled_grid_dimensions")
+                downsampled_grid_dict: dict = volume_metadata.get("sampled_grid_dimensions")
                 self.assertIsNotNone(downsampled_grid_dict)
                 self.assertEqual(len(downsampled_grid_dict.keys()), len(volume_downsamplings))
                 for downsampling in volume_downsamplings:
@@ -97,7 +103,7 @@ class FetchMetadataTest(ServerTestBase):
                     previous_downsampled_grid = downsampled_grid
 
                 # assert mean is consistent
-                mean_dict: dict = grid_metadata.get("mean")
+                mean_dict: dict = volume_metadata.get("mean")
                 self.assertIsNotNone(mean_dict)
                 self.assertEqual(len(mean_dict.keys()), len(volume_downsamplings))
                 for downsampling in volume_downsamplings:
@@ -114,7 +120,7 @@ class FetchMetadataTest(ServerTestBase):
                     previous_mean = mean
 
                 # assert min is consistent
-                min_dict: dict = grid_metadata.get("min")
+                min_dict: dict = volume_metadata.get("min")
                 self.assertIsNotNone(min_dict)
                 self.assertEqual(len(min_dict.keys()), len(volume_downsamplings))
                 for downsampling in volume_downsamplings:
@@ -131,7 +137,7 @@ class FetchMetadataTest(ServerTestBase):
                     previous_min = _min
 
                 # assert max is consistent
-                max_dict: dict = grid_metadata.get("max")
+                max_dict: dict = volume_metadata.get("max")
                 self.assertIsNotNone(max_dict)
                 self.assertEqual(len(max_dict.keys()), len(volume_downsamplings))
                 for downsampling in volume_downsamplings:
@@ -148,7 +154,7 @@ class FetchMetadataTest(ServerTestBase):
                     previous_max = _max
 
                 # assert std is consistent
-                std_dict: dict = grid_metadata.get("std")
+                std_dict: dict = volume_metadata.get("std")
                 self.assertIsNotNone(std_dict)
                 self.assertEqual(len(std_dict.keys()), len(volume_downsamplings))
                 for downsampling in volume_downsamplings:
