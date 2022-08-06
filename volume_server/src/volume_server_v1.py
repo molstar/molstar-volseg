@@ -5,6 +5,7 @@ from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 from .i_volume_server import IVolumeServer
 from .preprocessed_volume_to_cif.i_volume_to_cif_converter import IVolumeToCifConverter
 from volume_server.src.requests.volume_request.i_volume_request import IVolumeRequest
+from .requests.cell_request.i_cell_request import ICellRequest
 from .requests.metadata_request.i_metadata_request import IMetadataRequest
 
 
@@ -22,6 +23,17 @@ class VolumeServerV1(IVolumeServer):
     def __init__(self, db: IReadOnlyPreprocessedDb, volume_to_cif: IVolumeToCifConverter):
         self.db = db
         self.volume_to_cif = volume_to_cif
+
+    async def get_cell(self, req: ICellRequest) -> bytes:  # TODO: add binary cif to the project
+        metadata = await self.db.read_metadata(req.source(), req.structure_id())
+
+        with self.db.read(namespace=req.source(), key=req.structure_id()) as reader:
+            db_slice = await reader.read(
+                lattice_id=1,
+                down_sampling_ratio=1) #TODO: parse params from request + metadata
+
+        cif = self.volume_to_cif.convert(db_slice, metadata, 1, [10,10,10]) #TODO: replace 10,10,10 with cell size
+        return cif
 
     async def get_volume(self, req: IVolumeRequest) -> bytes:  # TODO: add binary cif to the project
         metadata = await self.db.read_metadata(req.source(), req.structure_id())
