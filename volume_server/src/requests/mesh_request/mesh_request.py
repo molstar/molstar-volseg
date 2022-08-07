@@ -17,11 +17,11 @@ class MeshRequest(IMeshRequest):
         return self._source
 
     def id(self) -> str:
-        return self._structure_id
+        return self._id
 
     def segment_id(self) -> int:
-        return self._segmentation_id
+        return self._segment_id
 
     def detail_lvl(self) -> int:
-        return self._max_points
+        return self._detail_lvl
 
