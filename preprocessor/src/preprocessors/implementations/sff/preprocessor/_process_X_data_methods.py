@@ -141,6 +141,6 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, zarr_stru
         while i < len(simplification_curve) and compute_vertex_density(group_ref, mode=calc_mode) > MESH_VERTEX_DENSITY_THRESHOLD[calc_mode]:
             new_ratio = simplification_curve[i][1]
             new_detail_lvl = simplification_curve[i][0]
-            mesh_data_dict = simplify_meshes(group_ref, ratio=new_ratio, segment_id=segment_name_id)
+            mesh_data_dict = simplify_meshes(original_detail_lvl_mesh_list_group, ratio=new_ratio, segment_id=segment_name_id)
             group_ref = _store_mesh_data_in_zarr(mesh_data_dict, segment, ratio=new_detail_lvl, params_for_storing=params_for_storing)
             i = i + 1
