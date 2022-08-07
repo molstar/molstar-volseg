@@ -18,7 +18,6 @@ from volume_server.src.volume_server_v1 import VolumeServerV1
 
 DEFAULT_HOST = '0.0.0.0'  # 0.0.0.0 = localhost
 DEFAULT_PORT = 9000
-EXTENDED_API = True  # Include dumb API extension used for debugging mesh visualization in frontend
 
 
 def prepare_fastapi_app():
@@ -46,11 +45,6 @@ def prepare_fastapi_app():
     volume_server = VolumeServerV1(db, volume_to_cif_converter)
 
     api.configure_endpoints(app, volume_server)
-
-    if EXTENDED_API:  
-        # Include temporary API extension used for debugging mesh visualization in frontend
-        from api import dumb_api_extension
-        dumb_api_extension.configure_endpoints(app, db)
 
     return app
 

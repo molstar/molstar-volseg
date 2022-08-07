@@ -1,6 +1,7 @@
 import abc
 
 from volume_server.src.requests.cell_request.i_cell_request import ICellRequest
+from volume_server.src.requests.mesh_request.i_mesh_request import IMeshRequest
 from volume_server.src.requests.metadata_request.i_metadata_request import IMetadataRequest
 from volume_server.src.requests.volume_request.i_volume_request import IVolumeRequest
 
@@ -16,4 +17,8 @@ class IVolumeServer(abc.ABC):
 
     @abc.abstractmethod
     async def get_metadata(self, req: IMetadataRequest) -> str:
+        pass
+
+    @abc.abstractmethod
+    async def get_meshes(self, req: IMeshRequest) -> list[object]:
         pass

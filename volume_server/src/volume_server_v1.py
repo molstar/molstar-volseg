@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from math import ceil
 from typing import Optional, Union
 
@@ -7,6 +9,7 @@ from .i_volume_server import IVolumeServer
 from .preprocessed_volume_to_cif.i_volume_to_cif_converter import IVolumeToCifConverter
 from volume_server.src.requests.volume_request.i_volume_request import IVolumeRequest
 from .requests.cell_request.i_cell_request import ICellRequest
+from .requests.mesh_request.i_mesh_request import IMeshRequest
 from .requests.metadata_request.i_metadata_request import IMetadataRequest
 
 __MAX_DOWN_SAMPLING_VALUE__ = 1000000
@@ -70,6 +73,28 @@ class VolumeServerV1(IVolumeServer):
 
         cif = self.volume_to_cif.convert(db_slice, metadata, down_sampling, self.grid_size(grid))
         return cif
+
+    async def get_meshes(self, req: IMeshRequest) -> list[object]:
+        with self.db.read(req.source(), req.id()) as context:
+            try:
+                return await context.read_meshes(req.segment_id(), req.detail_lvl())
+            except KeyError:
+                meta = await self.db.read_metadata(req.source(), req.id())
+                segments_levels = self._extract_segments_detail_levels(meta)
+                error_msg = f'Invalid segment_id={req.segment_id()} or detail_lvl={req.detail_lvl()} (available segment_ids and detail_lvls: {segments_levels})'
+                raise error_msg
+
+    def _extract_segments_detail_levels(self, meta: IPreprocessedMetadata) -> dict[int, list[int]]:
+        '''Extract available segment_ids and detail_lvls for each segment_id'''
+        meta_js = meta.json_metadata()
+        segments_levels = meta_js.get('segmentation_meshes', {}).get('mesh_component_numbers', {}).get('segment_ids',
+                                                                                                       {})
+        result: dict[int, list[int]] = defaultdict(list)
+        for seg, obj in segments_levels.items():
+            for lvl in obj.get('detail_lvls', {}).keys():
+                result[int(seg)].append(int(lvl))
+        sorted_result = {seg: sorted(result[seg]) for seg in sorted(result.keys())}
+        return sorted_result
 
     def decide_lattice(self, req: IVolumeRequest, metadata: IPreprocessedMetadata) -> Optional[int]:
         ids = metadata.segmentation_lattice_ids() or []

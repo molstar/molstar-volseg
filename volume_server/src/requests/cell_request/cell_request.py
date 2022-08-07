@@ -1,7 +1,7 @@
-from volume_server.src.requests.volume_request.i_volume_request import IVolumeRequest
+from volume_server.src.requests.cell_request.i_cell_request import ICellRequest
 
 
-class VolumeRequest(IVolumeRequest):
+class CellRequest(ICellRequest):
     def __init__(self,
                  source: str,
                  structure_id: str,
