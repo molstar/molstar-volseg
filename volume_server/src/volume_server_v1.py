@@ -78,7 +78,8 @@ class VolumeServerV1(IVolumeServer):
         with self.db.read(req.source(), req.id()) as context:
             try:
                 return await context.read_meshes(req.segment_id(), req.detail_lvl())
-            except KeyError:
+            except KeyError as e:
+                print("Exception in get_meshes: " + str(e))
                 meta = await self.db.read_metadata(req.source(), req.id())
                 segments_levels = self._extract_segments_detail_levels(meta)
                 error_msg = f'Invalid segment_id={req.segment_id()} or detail_lvl={req.detail_lvl()} (available segment_ids and detail_lvls: {segments_levels})'

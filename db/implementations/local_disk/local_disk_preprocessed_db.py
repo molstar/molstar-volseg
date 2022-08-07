@@ -144,9 +144,7 @@ class ReadContext():
         '''
         try:
             mesh_list = []
-            
             root: zarr.hierarchy.group = zarr.group(self.store)
-
             mesh_list_group = root[SEGMENTATION_DATA_GROUPNAME][segment_id][detail_lvl]
             for mesh_name, mesh in mesh_list_group.groups():
                 mesh_data = {
@@ -155,7 +153,6 @@ class ReadContext():
                 for mesh_component_name, mesh_component_arr in mesh.arrays():
                     mesh_data[f'{mesh_component_name}'] = mesh_component_arr[...]
                 mesh_list.append(mesh_data)
-
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)
             raise e

@@ -7,13 +7,13 @@ from volume_server.tests._test_server_runner import ServerTestBase
 test_configs = {
     "empiar": {
         "empiar-10070": {
-            "1": {
-                "segmentation": 0,
-                "detail_lvl": 1
-            },
             "2": {
-                "segmentation": 0,
-                "max_points": 2
+                "segmentation": 1,
+                "detail_lvl": 2
+            },
+            "1": {
+                "segmentation": 1,
+                "detail_lvl": 1
             }
         }
     }
