@@ -9,8 +9,8 @@ from volume_server.src.requests.volume_request.i_volume_request import IVolumeRe
 from .requests.cell_request.i_cell_request import ICellRequest
 from .requests.metadata_request.i_metadata_request import IMetadataRequest
 
-
 __MAX_DOWN_SAMPLING_VALUE__ = 1000000
+
 
 class VolumeServerV1(IVolumeServer):
     async def get_metadata(self, req: IMetadataRequest) -> Union[bytes, str]:
