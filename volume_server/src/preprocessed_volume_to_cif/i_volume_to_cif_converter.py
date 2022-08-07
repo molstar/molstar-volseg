@@ -1,8 +1,6 @@
 import abc
 from typing import Union
 
-import numpy as np
-
 from db.interface.i_preprocessed_db import ProcessedVolumeSliceData
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 

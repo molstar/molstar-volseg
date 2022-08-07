@@ -1,0 +1,19 @@
+[project]
+name = "CifTools"
+version = "0.1.2"
+authors = [
+  { name="Ravi Jose Tristao Ramos", email="souoravi@gmail.com" },
+]
+description = "A library for handling CIF and BinaryCIF files."
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[tool.black]
+line-length = 120
+target-version = ['py39']

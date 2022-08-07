@@ -1,17 +1,10 @@
 from typing import Callable, Optional, Union
 
 import numpy as np
-from ciftools.binary.encoding import BinaryCIFEncoder
-from ciftools.cif_format import ValuePresenceEnum
-from ciftools.writer.base import FieldDesc
-from ciftools.writer.fields import number_field
-
-from db.interface.i_preprocessed_volume import IPreprocessedVolume
-
-from ciftools.binary.encoding.impl.encoders.byte_array import BYTE_ARRAY_CIF_ENCODER
-# from ciftools.binary.encoding.impl.encoders.integer_packing import BYTE_ARRAY_CIF_ENCODER
-from ciftools.binary.encoding.impl.encoders.interval_quantization import IntervalQuantizationCIFEncoder
-from ciftools.binary.encoding.data_types import DataType, DataTypeEnum
+from ciftools.src.binary.encoding.impl.binary_cif_encoder import BinaryCIFEncoder
+from ciftools.src.cif_format import ValuePresenceEnum
+from ciftools.src.writer.base import FieldDesc
+from ciftools.src.writer.fields import number_field
 
 
 def number_field_volume3d(
