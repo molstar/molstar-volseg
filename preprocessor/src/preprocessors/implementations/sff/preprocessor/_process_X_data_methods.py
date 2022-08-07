@@ -142,5 +142,7 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, zarr_stru
             new_ratio = simplification_curve[i][1]
             new_detail_lvl = simplification_curve[i][0]
             mesh_data_dict = simplify_meshes(original_detail_lvl_mesh_list_group, ratio=new_ratio, segment_id=segment_name_id)
+            # TODO: potentially simplify meshes may output mesh with 0 vertices, normals, triangles
+            # it should not be stored?
             group_ref = _store_mesh_data_in_zarr(mesh_data_dict, segment, ratio=new_detail_lvl, params_for_storing=params_for_storing)
             i = i + 1
