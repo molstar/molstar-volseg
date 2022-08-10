@@ -8,6 +8,7 @@ from volume_server.src.i_volume_server import IVolumeServer
 from volume_server.src.requests.mesh_request.mesh_request import MeshRequest
 from volume_server.src.requests.metadata_request.metadata_request import MetadataRequest
 from volume_server.src.requests.volume_request.volume_request import VolumeRequest
+from .json_numpy_response import JSONNumpyResponse
 
 HTTP_CODE_UNPROCESSABLE_ENTITY = 422
 
@@ -71,7 +72,8 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
         request = MeshRequest(source, id, segment_id, detail_lvl)
         try:
             meshes = await volume_server.get_meshes(request)
-            return JSONResponse(str(meshes))  # JSONResponse(meshes) throws error
+            # return JSONResponse(str(meshes))  # JSONResponse(meshes) throws error
+            return JSONNumpyResponse(meshes)  # JSONResponse(meshes) throws error
         except Exception as e:
             return JSONResponse({'error': str(e)}, status_code=HTTP_CODE_UNPROCESSABLE_ENTITY)
 
