@@ -13,36 +13,52 @@ import { CustomProperties } from 'molstar/lib/mol-model/custom-property';
 import { arrayMean, arrayRms } from 'molstar/lib/mol-util/array';
 import { Vec2 } from 'molstar/lib/mol-math/linear-algebra';
 import { BehaviorSubject } from 'rxjs';
-
-// DEBUG IMPORTS:
-import { Mesh } from 'molstar/lib/commonjs/mol-geo/geometry/mesh/mesh';
+import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/state';
 
 import * as MeshExamples from './mesh-extension/examples'
+import { ColorNames } from './mesh-extension/molstar-lib-imports';
+import { type Metadata, Annotation, Segment } from './volume-api-client-lib/data';
 
 const VOLUME_SERVER = 'http://localhost:9000';
+const DEFAULT_DETAIL: number|null = null;  // null means worst
 
 
-interface Segment {
-    id: number,
-    colour: number[],
-    biological_annotation: BiologicalAnnotation,
-}
-
-interface BiologicalAnnotation {
-    name: string,
-    external_references: { id: number, resource: string, accession: string, label: string, description: string }[]
-}
-
-interface Annotation  {
-    name: string,
-    details: string,
-    segment_list: Segment[],
-}
-
-// partial model
-interface Metadata {
-    grid: any,
-    annotation:Annotation,
+namespace Metadata {
+    export function meshSegments(metadata: Metadata): number[] {
+        const segmentIds = metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids;
+        return Object.keys(segmentIds).map(s => parseInt(s));
+    }
+    export function meshSegmentDetails(metadata: Metadata, segmentId: number): number[] {
+        const details = metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids[segmentId].detail_lvls;
+        return Object.keys(details).map(s => parseInt(s));
+    }
+    /** Get the worst available detail level that is not worse than preferredDetail. 
+     * If preferredDetail is null, get the worst detail level overall.
+     * (worse = greater number) */
+    export function getSufficientDetail(metadata: Metadata, segmentId: number, preferredDetail: number|null){
+        let availDetails = meshSegmentDetails(metadata, segmentId);
+        if (preferredDetail !== null){
+            availDetails = availDetails.filter(det => det <= preferredDetail);
+        }
+        return Math.max(...availDetails);
+    }
+    export function annotationsBySegment(metadata: Metadata): {[id: number]: Segment}{
+        const result: {[id: number]: Segment} = {};
+        for (const segment of metadata.annotation.segment_list){
+            if (segment.id in result) {
+                throw new Error(`Duplicate segment annotation for segment ${segment.id}`);
+            }
+            result[segment.id] = segment;
+        }
+        return result;
+    }
+    export function dropSegments(metadata: Metadata, segments: number[]): void {
+        const dropSet = new Set(segments);
+        metadata.annotation.segment_list = metadata.annotation.segment_list.filter(seg => !dropSet.has(seg.id));
+        for (const seg of segments) {
+            delete metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids[seg];
+        }
+    }
 }
 
 export class AppModel {
@@ -55,11 +71,13 @@ export class AppModel {
             layout: {
                 initial: {
                     isExpanded: false,
-                    showControls: false,
+                    showControls: true,  // original: false
+                    controlsDisplay: 'landscape',  // original: not given
                 },
             },
             components: {
-                controls: { left: 'none', right: 'none', top: 'none', bottom: 'none' },
+                // controls: { left: 'none', right: 'none', top: 'none', bottom: 'none' },
+                controls: { right: 'none', top: 'none', bottom: 'none' },
             },
             canvas3d: {
                 camera: {
@@ -67,8 +85,8 @@ export class AppModel {
                 }
             },
             config: [
-                [PluginConfig.Viewport.ShowExpand, false],
-                [PluginConfig.Viewport.ShowControls, false],
+                [PluginConfig.Viewport.ShowExpand, true],  // original: false
+                [PluginConfig.Viewport.ShowControls, true],  // original: false
                 [PluginConfig.Viewport.ShowSelectionMode, false],
                 [PluginConfig.Viewport.ShowAnimation, false],
             ],
@@ -173,7 +191,6 @@ export class AppModel {
         };
     }
 
-
     createSegment(volume: Volume, segmentation: number[], segId: number): Volume {
         const { mean, sigma } = volume.grid.stats;
         const { data, space } = volume.grid.cells;
@@ -258,8 +275,7 @@ export class AppModel {
 
     private currentSegments: any[] = [];
 
-    async showSegment(volume: Volume, color: number[], opacity = 1) {        
-      
+    async showSegment(volume: Volume, color: number[], opacity = 1) {     
         const update = this.plugin.build();
         const root = update.toRoot().apply(CreateVolume, { volume });
         this.currentLevel.push(root.selector);
@@ -282,14 +298,21 @@ export class AppModel {
     currentSegment = new BehaviorSubject<Segment | undefined>(undefined);
 
 
-    volumeServerRequestUrl(entryId: string, segmentation: number, box: [[number, number, number], [number, number, number]], maxPoints: number): string {
-        const [[a1, a2, a3], [b1, b2, b3]] = box;
-        return `${VOLUME_SERVER}/v1/emdb/${entryId}/box/${segmentation}/${a1}/${a2}/${a3}/${b1}/${b2}/${b3}/${maxPoints}`;
+    metadataUrl(source: string, entryId: string): string {
+        return `http://localhost:9000/v1/${source}/${entryId}/metadata`;
     }
-
+    volumeServerRequestUrl(source: string, entryId: string, segmentation: number, box: [[number, number, number], [number, number, number]], maxPoints: number): string {
+        const [[a1, a2, a3], [b1, b2, b3]] = box;
+        return `${VOLUME_SERVER}/v1/${source}/${entryId}/box/${segmentation}/${a1}/${a2}/${a3}/${b1}/${b2}/${b3}/${maxPoints}`;
+    }
     // Temporary solution
     meshServerRequestUrl(source: string, entryId: string, segment: number, detailLevel: number): string{
         return `${VOLUME_SERVER}/v1/${source}/${entryId}/mesh/${segment}/${detailLevel}`;
+    }
+
+    async getMetadata(source: string, entryId: string): Promise<Metadata> {
+        const response = await fetch(this.metadataUrl(source, entryId));
+        return await response.json();
     }
     async getMeshData_debugging(source: string, entryId: string, segment: number, detailLevel: number){
         const url = this.meshServerRequestUrl(source, entryId, segment, detailLevel);
@@ -304,21 +327,66 @@ export class AppModel {
         console.log('tree:\n', repr.currentTree);
         console.log('children:', repr.currentTree.children.size);
     }
+    
+    private metadata?: Metadata = undefined;
+    private meshSegmentNodes: {[segid: number]: any} = {};
 
-    async load10070() {
-        // Testing API:
-        try {
-            const meshes = await this.getMeshData_debugging('empiar', 'empiar-10070', 1, 7);
-            console.log('Meshes from API:\n', meshes);
-        } catch {
-            console.error('Could not get mesh data from API (maybe API not running?)');
+    async showMeshSegments(segments: Segment[], entryId: string){  
+        if (segments.length === 1) {
+            this.currentSegment.next(segments[0]);
+        } else {
+            this.currentSegment.next(undefined);
         }
 
-        // Examples for mesh visualization - currently taking static data stored on a MetaCentrum VM
-        MeshExamples.runMeshExample(this.plugin, 'fg', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');
-        // MeshExamples.runMultimeshExample(this.plugin, 'fg', 'worst', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');  // Multiple segments merged into 1 segment with multiple meshes
+        for (const node of Object.values(this.meshSegmentNodes)) {
+            setSubtreeVisibility(node.state!, node.ref, true);  // hide
+        }
+        for (const seg of segments) {
+            let node = this.meshSegmentNodes[seg.id];
+            if (!node) {
+                const detail = Metadata.getSufficientDetail(this.metadata!, seg.id, DEFAULT_DETAIL);
+                const color = seg.colour.length >= 3 ? Color.fromNormalizedArray(seg.colour, 0) : ColorNames.gray;
+                node = await MeshExamples.createMeshFromUrl(this.plugin, this.meshServerRequestUrl('empiar', entryId, seg.id, detail), seg.id, detail, true, false, color);
+                this.meshSegmentNodes[seg.id] = node;
+            }
+            setSubtreeVisibility(node.state!, node.ref, false);  // show
+        }
+    }
 
-        this.entryId.next('empiar-10070');
+    async load10070() {
+        const entryId = 'empiar-10070';
+        const segments = 'fg';
+        await this.plugin.clear();
+        // Testing API:
+        // try {
+        //     const meshes = await this.getMeshData_debugging('empiar', 'empiar-10070', 1, 7);
+        //     console.log('Meshes from API:\n', meshes);
+        // } catch {
+        //     console.error('Could not get mesh data from API (maybe API not running?)');
+        // }
+        // await this.plugin.clear();
+
+        // Examples for mesh visualization - currently taking static data stored on a MetaCentrum VM
+        // MeshExamples.runMeshExample(this.plugin, 'fg', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');
+        // MeshExamples.runMultimeshExample(this.plugin, 'fg', 'worst', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');  // Multiple segments merged into 1 segment with multiple meshes
+        
+        this.metadata = await this.getMetadata('empiar', entryId);
+        if (segments === 'fg'){
+            const bgSegments = [13, 15];
+            Metadata.dropSegments(this.metadata, bgSegments);
+        }
+        
+        for (let segment of this.metadata!.annotation.segment_list) {
+            const detail = Metadata.getSufficientDetail(this.metadata!, segment.id, DEFAULT_DETAIL);
+            console.log(`Annotation: segment ${segment.id}. ${segment.biological_annotation.name} ${segment.colour} ${detail}`);
+            // QUESTION: hmm, shouldn't it be "color"?
+        }
+        
+        this.meshSegmentNodes = {};
+        this.showMeshSegments(this.metadata!.annotation.segment_list, entryId);
+
+        this.entryId.next(entryId);
+        this.annotation.next(this.metadata!.annotation);
         this.dataSource.next('10070');  // React magic for async stuff instead of return, I guess
     }
 
@@ -326,7 +394,7 @@ export class AppModel {
         const entryId = 'emd-1832';
         const isoLevel = 2.73;
         // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
-        const url = this.volumeServerRequestUrl(entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
+        const url = this.volumeServerRequestUrl('emdb', entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
         const { plugin } = this;
 
         await plugin.clear();
@@ -343,6 +411,8 @@ export class AppModel {
         const values = segmentation.categories['segmentation_data_3d'].getField('values')?.toIntArray();
 
         const metadata: Metadata = await (await fetch(`http://localhost:9000/v1/emdb/${entryId}/metadata`)).json();
+
+        console.log('annotation:', metadata.annotation);
 
         this.entryId.next(entryId);
         this.annotation.next(metadata.annotation);
@@ -398,7 +468,7 @@ export class AppModel {
     private repr: any = undefined;
     async load99999() {
         const entryId = 'emd-99999';
-        const url = this.volumeServerRequestUrl(entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
+        const url = this.volumeServerRequestUrl('emdb', entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
         // http://localhost:9000/v1/emdb/emd-99999/box/0/-10000/-10000/-10000/10000/10000/10000/10000000
         const { plugin } = this;
 
