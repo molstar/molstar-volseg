@@ -17,58 +17,12 @@ import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/sta
 
 import * as MeshExamples from './mesh-extension/examples'
 import { ColorNames } from './mesh-extension/molstar-lib-imports';
+import { type Metadata, Annotation, Segment } from './volume-api-client-lib/data';
 
 const VOLUME_SERVER = 'http://localhost:9000';
 const DEFAULT_DETAIL: number|null = null;  // null means worst
 
 
-interface Segment {
-    id: number,
-    colour: number[],
-    biological_annotation: BiologicalAnnotation,
-}
-
-interface BiologicalAnnotation {
-    name: string,
-    external_references: { id: number, resource: string, accession: string, label: string, description: string }[]
-}
-
-interface Annotation {
-    name: string,
-    details: string,
-    segment_list: Segment[],
-}
-
-interface SegmentationMeshes {
-    mesh_component_numbers: {
-        segment_ids: {
-            [segId: number]: {
-                detail_lvls: {
-                    [detail: number]: {
-                        mesh_ids: {
-                            [meshId: number]: {
-                                num_triangles: number,
-                                num_vertices: number
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    detail_lvl_to_fraction: { 
-        [lvl: number]: number 
-    }
-}
-
-// partial model
-interface Metadata {
-    grid: { 
-        segmentation_meshes: SegmentationMeshes,
-        // more stuff is there
-    },
-    annotation: Annotation,
-}
 namespace Metadata {
     export function meshSegments(metadata: Metadata): number[] {
         const segmentIds = metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids;
