@@ -296,6 +296,7 @@ export class AppModel {
     entryId = new BehaviorSubject<string>('');
     annotation = new BehaviorSubject<Annotation | undefined>(undefined);
     currentSegment = new BehaviorSubject<Segment | undefined>(undefined);
+    error = new BehaviorSubject<any>(undefined);
 
 
     metadataUrl(source: string, entryId: string): string {
@@ -346,48 +347,57 @@ export class AppModel {
             if (!node) {
                 const detail = Metadata.getSufficientDetail(this.metadata!, seg.id, DEFAULT_DETAIL);
                 const color = seg.colour.length >= 3 ? Color.fromNormalizedArray(seg.colour, 0) : ColorNames.gray;
-                node = await MeshExamples.createMeshFromUrl(this.plugin, this.meshServerRequestUrl('empiar', entryId, seg.id, detail), seg.id, detail, true, false, color);
+                node = await MeshExamples.createMeshFromUrl(this.plugin, this.meshServerRequestUrl(this.splitEntryId(entryId).source, entryId, seg.id, detail), seg.id, detail, true, false, color);
                 this.meshSegmentNodes[seg.id] = node;
             }
             setSubtreeVisibility(node.state!, node.ref, false);  // show
         }
     }
 
-    async load10070() {
-        const entryId = 'empiar-10070';
+    async load10070(entryId: string = 'empiar-10070') {
+        const source = this.splitEntryId(entryId).source;
         const segments = 'fg';
-        await this.plugin.clear();
-        // Testing API:
-        // try {
-        //     const meshes = await this.getMeshData_debugging('empiar', 'empiar-10070', 1, 7);
-        //     console.log('Meshes from API:\n', meshes);
-        // } catch {
-        //     console.error('Could not get mesh data from API (maybe API not running?)');
-        // }
-        // await this.plugin.clear();
+        let error = undefined;
 
-        // Examples for mesh visualization - currently taking static data stored on a MetaCentrum VM
-        // MeshExamples.runMeshExample(this.plugin, 'fg', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');
-        // MeshExamples.runMultimeshExample(this.plugin, 'fg', 'worst', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');  // Multiple segments merged into 1 segment with multiple meshes
-        
-        this.metadata = await this.getMetadata('empiar', entryId);
-        if (segments === 'fg'){
-            const bgSegments = [13, 15];
-            Metadata.dropSegments(this.metadata, bgSegments);
-        }
-        
-        for (let segment of this.metadata!.annotation.segment_list) {
-            const detail = Metadata.getSufficientDetail(this.metadata!, segment.id, DEFAULT_DETAIL);
-            console.log(`Annotation: segment ${segment.id}. ${segment.biological_annotation.name} ${segment.colour} ${detail}`);
-            // QUESTION: hmm, shouldn't it be "color"?
-        }
-        
-        this.meshSegmentNodes = {};
-        this.showMeshSegments(this.metadata!.annotation.segment_list, entryId);
+        try {
+            await this.plugin.clear();
+            // Testing API:
+            // try {
+            //     const meshes = await this.getMeshData_debugging('empiar', 'empiar-10070', 1, 7);
+            //     console.log('Meshes from API:\n', meshes);
+            // } catch {
+            //     console.error('Could not get mesh data from API (maybe API not running?)');
+            // }
+            // await this.plugin.clear();
 
-        this.entryId.next(entryId);
-        this.annotation.next(this.metadata!.annotation);
-        this.dataSource.next('10070');  // React magic for async stuff instead of return, I guess
+            // Examples for mesh visualization - currently taking static data stored on a MetaCentrum VM
+            // MeshExamples.runMeshExample(this.plugin, 'fg', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');
+            // MeshExamples.runMultimeshExample(this.plugin, 'fg', 'worst', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');  // Multiple segments merged into 1 segment with multiple meshes
+            
+            this.metadata = await this.getMetadata(source, entryId);
+            if (segments === 'fg'){
+                const bgSegments = [13, 15];
+                Metadata.dropSegments(this.metadata, bgSegments);
+            }
+            
+            for (let segment of this.metadata!.annotation.segment_list) {
+                const detail = Metadata.getSufficientDetail(this.metadata!, segment.id, DEFAULT_DETAIL);
+                // console.log(`Annotation: segment ${segment.id}. ${segment.biological_annotation.name} ${segment.colour} ${detail}`);
+                // QUESTION: hmm, shouldn't it be "color"?
+            }
+            
+            this.meshSegmentNodes = {};
+            this.showMeshSegments(this.metadata!.annotation.segment_list, entryId);
+        } catch (ex) {
+            this.metadata = undefined;
+            error = ex;
+            throw ex;
+        } finally {
+            this.entryId.next(entryId);
+            this.annotation.next(this.metadata?.annotation);
+            this.dataSource.next('10070');  // This is not actual entry number just selector of example (10070 = mesh example)
+            this.error.next(error);
+        }
     }
 
     async load1832() {
@@ -435,7 +445,6 @@ export class AppModel {
 
         this.dataSource.next('1832');
     }
-
 
     dataSource = new BehaviorSubject<string>('');
 
@@ -500,6 +509,21 @@ export class AppModel {
 
         this.dataSource.next('99999');
     }
+
+
+    splitEntryId(entryId: string){
+        const PREFIX_TO_SOURCE: {[prefix: string]: string} = {'empiar': 'empiar', 'emd': 'emdb'};
+        const [prefix, entry] = entryId.split('-');
+        return {
+            source: PREFIX_TO_SOURCE[prefix], 
+            entryNumber: entry
+        };
+    }
+    createEntryId(source: string, entryNumber: string|number){
+        const SOURCE_TO_PREFIX: {[prefix: string]: string} = {'empiar': 'empiar', 'emdb': 'emd'};
+        return `${SOURCE_TO_PREFIX[source]}-${entryNumber}`;
+    }
+
 }
 
 
