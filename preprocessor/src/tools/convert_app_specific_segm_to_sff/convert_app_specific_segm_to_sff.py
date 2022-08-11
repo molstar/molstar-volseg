@@ -18,8 +18,9 @@ def convert_app_specific_segm_to_sff(input_file: Path) -> Path:
         app_spec_seg = IMODSegmentation(filepath_str)
     elif extension == '.seg':   
         app_spec_seg = SeggerSegmentation(filepath_str)
-    elif extension == '.stl':    
-        app_spec_seg = STLSegmentation(filepath_str)
+    elif extension == '.stl':
+        # temp fix from Paul Korir
+        app_spec_seg = STLSegmentation([filepath_str])
     elif extension == '.surf':    
         app_spec_seg = AmiraHyperSurfaceSegmentation(filepath_str)
     else:
