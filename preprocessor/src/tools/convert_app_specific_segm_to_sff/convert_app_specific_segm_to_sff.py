@@ -29,7 +29,8 @@ def convert_app_specific_segm_to_sff(input_file: Path) -> Path:
     # temp fix from Paul Korir
     args = Namespace()
     args.details = None
-
+    args.verbose = None
+    
     sff_seg = app_spec_seg.convert(args=args)
     try:
         sff_seg.export(fn=sff_filepath_str)
