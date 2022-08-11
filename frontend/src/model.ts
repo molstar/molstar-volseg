@@ -92,8 +92,10 @@ export class AppModel {
             ],
         });
 
+        const entryFromURL = window.location.hash.replace('#', '') || undefined;
+    
         // setTimeout(() => this.load1832(), 50);
-        setTimeout(() => this.load10070(), 50);
+        setTimeout(() => this.load10070(entryFromURL), 50);
     }
 
     createFakeSegment(volume: Volume, level: number): Volume {
@@ -393,6 +395,7 @@ export class AppModel {
             error = ex;
             throw ex;
         } finally {
+            window.location.hash = entryId;
             this.entryId.next(entryId);
             this.annotation.next(this.metadata?.annotation);
             this.dataSource.next('10070');  // This is not actual entry number just selector of example (10070 = mesh example)

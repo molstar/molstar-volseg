@@ -28,6 +28,7 @@ function Main() {
 
     const src = useBehavior(model.dataSource);
 
+
     return <>
         <div style={{ display: 'flex', flexDirection: 'column', width: RightWidth, position: 'absolute', right: 0, top: 0, bottom: 0, padding: '8px 8px 8px 0', overflow: 'hidden', overflowY: 'auto' }}>
             <div style={{ marginBottom: 8 }}>
@@ -52,10 +53,10 @@ function UI10070({ model }: { model: AppModel }) {
     const current = useBehavior(model.currentSegment);
     const error = useBehavior(model.error);
     let form = model.splitEntryId(entryId);
-    console.log('annotation', annotation, 'error', error);
+
 
     return <>
-        <form onSubmit={(e) => { console.log('picovina', form.source, form.entryNumber); model.load10070(model.createEntryId(form.source, form.entryNumber)); e.preventDefault(); }} >
+        <form onSubmit={(e) => { model.load10070(model.createEntryId(form.source, form.entryNumber)); e.preventDefault(); }} >
             <InputLabel>Source</InputLabel>
             <Select id='input-source' label='Source' defaultValue={form.source} onChange={(e) => { form.source = e.target.value; }} size='small' fullWidth style={{ marginBottom: 8 }}>
                 <MenuItem value='empiar'>EMPIAR</MenuItem>
