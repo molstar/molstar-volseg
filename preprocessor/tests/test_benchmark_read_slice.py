@@ -13,7 +13,7 @@ BOX_CHOICES = ['random_static_region_small', 'random_static_region_big']
 # DB_PATHES_FULL.remove('db_11\\')
 # DB_PATHES_FULL.remove('db_12\\')
 # DB_PATHS = DB_PATHES_FULL
-DB_PATHS = ['db_quantized_u2', 'db_not_quantized']
+DB_PATHS = ['db_quantized_u1', 'db_quantized_u2', 'db_not_quantized']
 
 def generate_random_3d_point_coords(min: tuple[int, int, int], max: tuple[int, int, int]) -> tuple[int, int, int]:
     '''Both min and max are inclusive'''
