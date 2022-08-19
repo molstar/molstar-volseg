@@ -12,7 +12,7 @@ from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPr
 from preprocessor.params_for_storing_db import CHUNKING_MODES, COMPRESSORS
 from preprocessor.src.service.implementations.preprocessor_service import PreprocessorService
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import \
-    OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH, PARAMETRIZED_DBS_INPUT_PARAMS_FILEPATH, TEMP_ZARR_HIERARCHY_STORAGE_PATH
+    APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS, MASK_FILE_PATTERN, MASK_FILES_EXTENSIONS, OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH, PARAMETRIZED_DBS_INPUT_PARAMS_FILEPATH, TEMP_ZARR_HIERARCHY_STORAGE_PATH
 
 from db.interface.i_preprocessed_db import IPreprocessedDb
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import SFFPreprocessor
@@ -24,7 +24,7 @@ from preprocessor.src.tools.write_dict_to_file.write_dict_to_txt import write_di
 RAW_INPUT_FILES_DIR = Path(__file__).parent / 'data/raw_input_files'
 DEFAULT_DB_PATH = Path(__file__).parent.parent/'db' 
 DEFAULT_QUANTIZE_DTYPE_STR = 'u1'
-APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS = ['.am', '.mod', '.seg', '.surf', '.stl']
+
 
 def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict:
     '''
@@ -87,12 +87,12 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
                         content = sorted(subdir_path.glob('*'))
                         for item in content:
                             if item.is_file():
-                                if item.suffix in APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS:
+                                if item.suffix in APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS or _check_if_map_is_mask(item):
                                     sff_segmentation_hff_file = convert_app_specific_segm_to_sff(input_file=item)
                                     segmentation_file_path = sff_segmentation_hff_file
                                 elif item.suffix == '.hff':
                                     segmentation_file_path = item
-                                elif item.suffix == '.map' or item.suffix == '.ccp4' or item.suffix == '.mrc':
+                                elif (item.suffix == '.map' or item.suffix == '.ccp4' or item.suffix == '.mrc') and not _check_if_map_is_mask(item):
                                     volume_file_path: Path = item
                         d[source_db].append(
                             {
@@ -229,6 +229,12 @@ def parse_script_args():
     parser.add_argument("--quantize_volume_data_dtype_str", action="store", choices=['u1', 'u2'])
     args=parser.parse_args()
     return args
+
+def _check_if_map_is_mask(filepath: Path) -> bool:
+    if MASK_FILE_PATTERN in filepath.stem and filepath.suffix in MASK_FILES_EXTENSIONS:
+        return True
+    else:
+        return False
 
 if __name__ == '__main__':
     main()

@@ -28,3 +28,6 @@ DB_NAMESPACES = ('emdb', 'empiar')
 PARAMETRIZED_DBS_INPUT_PARAMS_FILEPATH = Path('parametrized_dbs_input_params.txt')
 
 QUANTIZATION_DATA_DICT_ATTR_NAME = 'quantization_data_dict'
+APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS = ['.am', '.mod', '.seg', '.surf', '.stl', '.h5']
+MASK_FILE_PATTERN = '_msk'
+MASK_FILES_EXTENSIONS = ['.map', '.rec', '.mrc']

@@ -5,6 +5,10 @@ from sfftk.formats.seg import SeggerSegmentation
 from sfftk.formats.stl import STLSegmentation
 from sfftk.formats.surf import AmiraHyperSurfaceSegmentation
 from argparse import Namespace
+from sfftk.formats.map import MapSegmentation
+from sfftk.formats.survos import SuRVoSSegmentation
+
+from ...preprocessors.implementations.sff.preprocessor.constants import MASK_FILES_EXTENSIONS
 
 
 def convert_app_specific_segm_to_sff(input_file: Path) -> Path:
@@ -23,6 +27,14 @@ def convert_app_specific_segm_to_sff(input_file: Path) -> Path:
         app_spec_seg = STLSegmentation([filepath_str])
     elif extension == '.surf':    
         app_spec_seg = AmiraHyperSurfaceSegmentation(filepath_str)
+    elif extension in MASK_FILES_EXTENSIONS:
+        try:
+            # temp fix from Paul Korir
+            app_spec_seg = MapSegmentation([filepath_str])
+        except AttributeError:
+            pass
+    elif extension == '.h5':    
+        app_spec_seg = SuRVoSSegmentation(filepath_str)
     else:
         raise Exception('application specific segmentation file extension is not supported')
 
