@@ -21,7 +21,8 @@ def convert_app_specific_segm_to_sff(input_file: Path) -> Path:
     elif extension == '.stl':
         # temp fix from Paul Korir
         app_spec_seg = STLSegmentation([filepath_str])
-    elif extension == '.surf':    
+    elif extension == '.surf':
+        # won't work because of sfftk bug https://github.com/emdb-empiar/sfftk/issues/25  
         app_spec_seg = AmiraHyperSurfaceSegmentation(filepath_str)
     else:
         raise Exception('application specific segmentation file extension is not supported')
