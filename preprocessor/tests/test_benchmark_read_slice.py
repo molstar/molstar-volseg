@@ -9,10 +9,11 @@ from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPr
 
 KEYS = ['emd-9199']
 BOX_CHOICES = ['random_static_region_small', 'random_static_region_big']
-DB_PATHES_FULL = glob('db_*/')
-DB_PATHES_FULL.remove('db_11\\')
-DB_PATHES_FULL.remove('db_12\\')
-DB_PATHS = DB_PATHES_FULL
+# DB_PATHES_FULL = glob('db_*/')
+# DB_PATHES_FULL.remove('db_11\\')
+# DB_PATHES_FULL.remove('db_12\\')
+# DB_PATHS = DB_PATHES_FULL
+DB_PATHS = ['db_quantized_u1', 'db_quantized_u2', 'db_not_quantized']
 
 def generate_random_3d_point_coords(min: tuple[int, int, int], max: tuple[int, int, int]) -> tuple[int, int, int]:
     '''Both min and max are inclusive'''
@@ -106,7 +107,7 @@ def aio_benchmark(benchmark):
 
 @pytest.mark.parametrize("key", KEYS)
 @pytest.mark.parametrize("box_choice", BOX_CHOICES)
-@pytest.mark.parametrize("db_path", ['db'])
+@pytest.mark.parametrize("db_path", DB_PATHS)
 @pytest.mark.asyncio
 async def test_t(aio_benchmark, key, box_choice, db_path):
     @aio_benchmark

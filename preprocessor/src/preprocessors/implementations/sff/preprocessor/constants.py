@@ -26,3 +26,5 @@ TEMP_ZARR_HIERARCHY_STORAGE_PATH = Path('preprocessor/data/temp_zarr_hierarchy_s
 DB_NAMESPACES = ('emdb', 'empiar')
 
 PARAMETRIZED_DBS_INPUT_PARAMS_FILEPATH = Path('parametrized_dbs_input_params.txt')
+
+QUANTIZATION_DATA_DICT_ATTR_NAME = 'quantization_data_dict'

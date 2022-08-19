@@ -16,12 +16,15 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants i
 
 from db.interface.i_preprocessed_db import IPreprocessedDb
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import SFFPreprocessor
+from preprocessor.src.tools.convert_app_specific_segm_to_sff.convert_app_specific_segm_to_sff import convert_app_specific_segm_to_sff
 from preprocessor.src.tools.remove_files_or_folders_by_pattern.remove_files_or_folders_by_pattern import remove_files_or_folders_by_pattern
 from preprocessor.src.tools.write_dict_to_file.write_dict_to_json import write_dict_to_json
 from preprocessor.src.tools.write_dict_to_file.write_dict_to_txt import write_dict_to_txt
 
 RAW_INPUT_FILES_DIR = Path(__file__).parent / 'data/raw_input_files'
 DEFAULT_DB_PATH = Path(__file__).parent.parent/'db' 
+DEFAULT_QUANTIZE_DTYPE_STR = 'u1'
+APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS = ['.am', '.mod', '.seg', '.surf', '.stl']
 
 def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict:
     '''
@@ -84,9 +87,12 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
                         content = sorted(subdir_path.glob('*'))
                         for item in content:
                             if item.is_file():
-                                if item.suffix == '.hff':
+                                if item.suffix in APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS:
+                                    sff_segmentation_hff_file = convert_app_specific_segm_to_sff(input_file=item)
+                                    segmentation_file_path = sff_segmentation_hff_file
+                                elif item.suffix == '.hff':
                                     segmentation_file_path = item
-                                if item.suffix == '.map' or item.suffix == '.ccp4' or item.suffix == '.mrc':
+                                elif item.suffix == '.map' or item.suffix == '.ccp4' or item.suffix == '.mrc':
                                     volume_file_path: Path = item
                         d[source_db].append(
                             {
@@ -105,7 +111,7 @@ def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path, params
         for entry in source_entries:
             segm_file_type = preprocessor_service.get_raw_file_type(entry['segmentation_file_path'])
             file_preprocessor = preprocessor_service.get_preprocessor(segm_file_type)
-            if entry['id'] == 'emd-99999':
+            if entry['id'] == 'emd-99999' or entry['id'] == 'empiar-10070':
                 volume_force_dtype = np.uint8
             else:
                 volume_force_dtype = np.float32
@@ -194,6 +200,7 @@ def create_db(db_path: Path, params_for_storing: dict):
 def main():
     args = parse_script_args()
     if args.create_parametrized_dbs:
+        # TODO: add quantize here too
         remove_files_or_folders_by_pattern('db_*/')
         storing_params_dict = create_dict_of_input_params_for_storing(
             chunking_mode=CHUNKING_MODES,
@@ -203,12 +210,15 @@ def main():
         for db_id, param_set in storing_params_dict.items():
             create_db(Path(f'db_{db_id}'), params_for_storing=param_set)
     elif args.db_path:
-        create_db(Path(args.db_path), params_for_storing={
+        # print(args.quantize_volume_data_dtype_str)
+        params_for_storing={
             'chunking_mode': 'auto',
             'compressor': Blosc(cname='lz4', clevel=5, shuffle=Blosc.SHUFFLE, blocksize=0),
             'store_type': 'zip'
-            # 'store_type': 'directory'
-        })
+        }
+        if args.quantize_volume_data_dtype_str:
+            params_for_storing['quantize_dtype_str'] = args.quantize_volume_data_dtype_str
+        create_db(Path(args.db_path), params_for_storing=params_for_storing)
     else:
         raise ValueError('No db path is provided as argument')
 
@@ -216,13 +226,11 @@ def parse_script_args():
     parser=argparse.ArgumentParser()
     parser.add_argument("--db_path", type=Path, default=DEFAULT_DB_PATH, help='path to db folder')
     parser.add_argument("--create_parametrized_dbs", action='store_true')
+    parser.add_argument("--quantize_volume_data_dtype_str", action="store", choices=['u1', 'u2'])
     args=parser.parse_args()
     return args
 
 if __name__ == '__main__':
-    # TODO: once new approach to db pathes works, go to main.py
-    # \draft for creating multiple dbs
-    # and implement something similar to it (NEW CODE/NEW CODE ENDS)
     main()
 
 
