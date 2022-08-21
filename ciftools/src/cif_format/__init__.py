@@ -1,1 +1,0 @@
-from ciftools.src.cif_format.value_presence import ValuePresenceEnum

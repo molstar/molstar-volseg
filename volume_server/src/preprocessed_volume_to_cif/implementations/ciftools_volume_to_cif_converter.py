@@ -1,8 +1,8 @@
 from typing import Union
 
 import numpy as np
-from ciftools.src.binary import BinaryCIFWriter
-from ciftools.src.writer.base import OutputStream
+from src.ciftools.ciftools.binary import BinaryCIFWriter
+from src.ciftools.ciftools.writer.base import OutputStream
 
 from db.interface.i_preprocessed_db import ProcessedVolumeSliceData, SegmentationSliceData
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata

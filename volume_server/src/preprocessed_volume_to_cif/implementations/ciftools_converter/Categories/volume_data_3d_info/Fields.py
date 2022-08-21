@@ -1,15 +1,15 @@
 from typing import Callable, Optional, Union
 
 import numpy as np
-from ciftools.src.binary.encoding.impl.binary_cif_encoder import BinaryCIFEncoder
-from ciftools.src.cif_format import ValuePresenceEnum
-from ciftools.src.writer.base import FieldDesc
-from ciftools.src.writer.fields import number_field, string_field
+from src.ciftools.ciftools.binary.encoding.impl.binary_cif_encoder import BinaryCIFEncoder
+from src.ciftools.ciftools.cif_format import ValuePresenceEnum
+from src.ciftools.ciftools.writer.base import FieldDesc
+from src.ciftools.ciftools.writer.fields import number_field, string_field
 
 from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.volume_data_3d_info.volume_info import \
     VolumeInfo
 
-from ciftools.src.binary.encoding.impl.encoders.byte_array import BYTE_ARRAY_CIF_ENCODER
+from src.ciftools.ciftools.binary.encoding.impl.encoders.byte_array import BYTE_ARRAY_CIF_ENCODER
 
 
 def number_field_volume3d_info(

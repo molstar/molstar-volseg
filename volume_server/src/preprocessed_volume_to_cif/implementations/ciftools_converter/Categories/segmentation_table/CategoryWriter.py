@@ -1,9 +1,9 @@
 import numpy as np
-from ciftools.src.binary.encoding.impl.binary_cif_encoder import BinaryCIFEncoder
-from ciftools.src.binary.encoding.data_types import DataType, DataTypeEnum
-from ciftools.src.binary.encoding.base.cif_encoder_base import CIFEncoderBase
-from ciftools.src.binary.encoding.impl.encoders.byte_array import ByteArrayCIFEncoder
-from ciftools.src.writer.base import CategoryWriter, CategoryWriterProvider, FieldDesc
+from src.ciftools.ciftools.binary.encoding.impl.binary_cif_encoder import BinaryCIFEncoder
+from src.ciftools.ciftools.binary.encoding.data_types import DataType, DataTypeEnum
+from src.ciftools.ciftools.binary.encoding.base.cif_encoder_base import CIFEncoderBase
+from src.ciftools.ciftools.binary.encoding.impl.encoders.byte_array import ByteArrayCIFEncoder
+from src.ciftools.ciftools.writer.base import CategoryWriter, CategoryWriterProvider, FieldDesc
 
 from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories._writer import CategoryDesc, \
     CategoryDescImpl
