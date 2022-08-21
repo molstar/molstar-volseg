@@ -3,6 +3,7 @@ from src.ciftools.ciftools.binary.encoding.impl.binary_cif_encoder import Binary
 from src.ciftools.ciftools.binary.encoding.data_types import DataType, DataTypeEnum
 from src.ciftools.ciftools.binary.encoding.base.cif_encoder_base import CIFEncoderBase
 from src.ciftools.ciftools.binary.encoding.impl.encoders.byte_array import ByteArrayCIFEncoder
+from src.ciftools.ciftools.binary.encoding.impl.encoders.interval_quantization import IntervalQuantizationCIFEncoder
 from src.ciftools.ciftools.writer.base import CategoryWriter, CategoryWriterProvider, FieldDesc
 
 from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories._writer import CategoryDesc, \
@@ -23,25 +24,16 @@ class CategoryWriterProvider_VolumeData3d(CategoryWriterProvider):
 
         encoders: list[CIFEncoderBase] = [ByteArrayCIFEncoder()]
 
-        # if data_type == DataTypeEnum.Float32 or data_type == DataTypeEnum.Int16:
-        #     # data_min: int = ctx.min(initial=ctx[0])
-        #     # data_max: int = ctx.max(initial=ctx[0])
-        #     # interval_quantization = IntervalQuantizationCIFEncoder(data_min, data_max, 255, DataTypeEnum.Uint8)
-        #     # encoders.insert(0, interval_quantization)
-        #     typed_array = DataType.to_dtype(data_type)
-        # else:
-        #     typed_array = DataType.to_dtype(DataTypeEnum.Uint8)
-
-
-        # Hack away to make demo work
-        if data_type == DataTypeEnum.Float64:
-            typed_array = DataType.to_dtype(DataTypeEnum.Uint8) # back for "emd-99999" since the downsamling is stored as 64bit floats
-            # data_min: int = ctx.min(initial=ctx[0])
-            # data_max: int = ctx.max(initial=ctx[0])
-            # interval_quantization = IntervalQuantizationCIFEncoder(data_min, data_max, 255, DataTypeEnum.Uint8)
-            # encoders.insert(0, interval_quantization)
-        else:
+        if data_type == DataTypeEnum.Float32 or data_type == DataTypeEnum.Int16:
+            data_min: int = ctx.min(initial=ctx[0])
+            data_max: int = ctx.max(initial=ctx[0])
+            interval_quantization = IntervalQuantizationCIFEncoder(data_min, data_max, 255, DataTypeEnum.Uint8)
+            encoders.insert(0, interval_quantization)
             typed_array = DataType.to_dtype(data_type)
+            print("Encoder for VolumeData3d was chosen as IntervalQuantizationCIFEncoder for dataType = " + str(data_type))
+        else:
+            typed_array = DataType.to_dtype(DataTypeEnum.Uint8)
+            print("Encoder for VolumeData3d was chosen as Uint8 for dataType = " + str(data_type))
 
         return BinaryCIFEncoder(encoders), typed_array
 

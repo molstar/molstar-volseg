@@ -22,16 +22,6 @@ class Fields_VolumeData3d:
         return volume[index]
 
     def __init__(self, encoder: BinaryCIFEncoder, dtype: np.dtype):
-        # def create_encoder(d):
-        #     vmin, vmax = np.min(d), np.max(d)
-        #     # return BinaryCIFEncoder([IntervalQuantizationCIFEncoder(vmin, vmax, 255, DataTypeEnum.Uint8), BYTE_ARRAY_CIF_ENCODER])
-        #     return BinaryCIFEncoder([BYTE_ARRAY_CIF_ENCODER])
-        # # create_encoder = lambda d: BinaryCIFEncoder([IntervalQuantizationCIFEncoder(np.min(d), np.max(d), 255, DataTypeEnum.Uint8), BYTE_ARRAY_CIF_ENCODER])
-
-        # self.fields: list[FieldDesc] = [
-        #     number_field_volume3d(name="values", value=self._value, encoder=create_encoder, dtype='f4')
-        # ]
-
         self.fields: list[FieldDesc] = [
             number_field_volume3d(name="values", value=self._value, encoder=lambda _: encoder, dtype=dtype)
         ]

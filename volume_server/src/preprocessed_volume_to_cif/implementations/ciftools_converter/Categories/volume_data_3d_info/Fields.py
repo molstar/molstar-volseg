@@ -2,7 +2,7 @@ from typing import Callable, Optional, Union
 
 import numpy as np
 from src.ciftools.ciftools.binary.encoding.impl.binary_cif_encoder import BinaryCIFEncoder
-from src.ciftools.ciftools.cif_format import ValuePresenceEnum
+from src.ciftools.ciftools.cif_format.value_presence import ValuePresenceEnum
 from src.ciftools.ciftools.writer.base import FieldDesc
 from src.ciftools.ciftools.writer.fields import number_field, string_field
 
@@ -76,9 +76,9 @@ class Fields_VolumeData3dInfo:
             number_field_volume3d_info(name="mean_sampled", value=lambda d, i: _d.metadata.mean(_d.downsampling), encoder=byte_array, dtype='f8'),
             number_field_volume3d_info(name="sigma_source", value=lambda d, i: _d.metadata.std(1), encoder=byte_array, dtype='f8'),
             number_field_volume3d_info(name="sigma_sampled", value=lambda d, i: _d.metadata.std(_d.downsampling), encoder=byte_array, dtype='f8'),
-            # TODO: missing min_source and max_source
-            number_field_volume3d_info(name="min_source", value=lambda d, i: _d.min_downsampled, encoder=byte_array, dtype='f8'),
+
+            number_field_volume3d_info(name="min_source", value=lambda d, i: _d.min_source, encoder=byte_array, dtype='f8'),
             number_field_volume3d_info(name="min_sampled", value=lambda d, i: _d.min_downsampled, encoder=byte_array, dtype='f8'),
-            number_field_volume3d_info(name="max_source", value=lambda d, i: _d.max_downsampled, encoder=byte_array, dtype='f8'),
+            number_field_volume3d_info(name="max_source", value=lambda d, i: _d.max_source, encoder=byte_array, dtype='f8'),
             number_field_volume3d_info(name="max_sampled", value=lambda d, i: _d.max_downsampled, encoder=byte_array, dtype='f8'),
         ]

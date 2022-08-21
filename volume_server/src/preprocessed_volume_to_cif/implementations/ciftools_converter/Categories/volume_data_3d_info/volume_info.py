@@ -22,14 +22,7 @@ class VolumeInfo:
 
 
         # NOTE: this isn't accurate, but should be good enough for the prototype
-        nx, ny, nz = metadata.grid_dimensions()
-        self.downsampled_grid_size = [int(nx / downsampling), int(ny / downsampling), int(nz / downsampling)]
-        vx, vy, vz = metadata.voxel_size(1)
+        self.downsampled_grid_size = metadata.sampled_grid_dimensions(downsampling)
         dx, dy, dz = self.downsampled_grid_size
-
-        self.dimensions = [grid_size[0] / dx, grid_size[1] / dy, grid_size[2] / dz]
-        self.cell_size = [vx * nx, vy * ny, vz * nz]
-
-        # hack for emd 99999 demo
-        if downsampling == 8:
-            self.cell_size[2] *= 3
+        self.dimensions = self.metadata.voxel_size(downsampling)
+        self.cell_size = [dx * self.dimensions[0], dy * self.dimensions[1], dz * self.dimensions[2]]
