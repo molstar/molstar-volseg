@@ -9,7 +9,7 @@ import multiprocessing as mp
 import numpy as np
 
 # Methodology:
-# exec(open(".\\custom_scripts\\run_amira_benchmarking.py").read())
+# exec(open("C:\\Users\\chere\\Work\\cellstar-volume-server\\preprocessor\\src\\tools\\run_amira_benchmarking\\run_amira_benchmarking.py").read())
 # works and have access to hx_project variable
 # it also runs the code below all methods
 # DONT FORGET TO COPY RELEVANT FILE THERE
