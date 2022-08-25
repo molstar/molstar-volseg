@@ -1,0 +1,9 @@
+name: cellstar-volume-server
+channels:
+  - https://conda.anaconda.org/conda-forge
+dependencies:
+  - python ==3.9.7
+  - pip
+
+  - pip:
+    - -r requirements.txt

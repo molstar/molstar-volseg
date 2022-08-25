@@ -1,4 +1,4 @@
-from src.ciftools.ciftools.writer.base import CategoryDesc, FieldDesc
+from ciftools.writer.base import CategoryDesc, FieldDesc
 
 
 # TODO: rename categoryDesc to CategoryDescBase to be more consistent

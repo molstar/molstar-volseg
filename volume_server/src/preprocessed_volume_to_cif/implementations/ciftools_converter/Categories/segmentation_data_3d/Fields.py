@@ -1,10 +1,10 @@
 from typing import Callable, Optional, Union
 
 import numpy as np
-from src.ciftools.ciftools.binary.encoding.impl.binary_cif_encoder import BinaryCIFEncoder
-from src.ciftools.ciftools.cif_format import ValuePresenceEnum
-from src.ciftools.ciftools.writer.base import FieldDesc
-from src.ciftools.ciftools.writer.fields import number_field
+from ciftools.binary.encoding.impl.binary_cif_encoder import BinaryCIFEncoder
+from ciftools.cif_format import ValuePresenceEnum
+from ciftools.writer.base import FieldDesc
+from ciftools.writer.fields import number_field
 
 
 def number_field_segmentation3d(

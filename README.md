@@ -10,3 +10,10 @@ zarr package (a requirement for this project) requires C++ dev-kit in order to i
 ```
 uvicorn main:app --port 9000 --reload
 ```
+
+# Conda
+
+```
+conda env create -f environment.yaml  # or update
+conda activate cellstar-volume-server
+```
