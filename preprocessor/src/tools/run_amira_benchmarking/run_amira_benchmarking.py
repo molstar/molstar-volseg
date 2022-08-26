@@ -36,6 +36,30 @@ def benchmark_non_local_means_filter():
     a.ports.doIt.was_hit = True
     a.fire()
 
+# def compute_isosurface_threshold():
+#     input_data = hx_project.get('EMD-1832.mrc')
+#     arr = input_data.get_array()
+#     mean = arr.mean()
+#     std = arr.std()
+#     iso_threshold = mean + 2 * std
+#     return iso_threshold
+
+def benchmark_isosurface():
+    hx_project.create('HxIsosurface')
+    isosurface = hx_project.get('Isosurface')
+    input_data = hx_project.get('EMD-1832.mrc')
+    arr = input_data.get_array()
+    mean = arr.mean()
+    std = arr.std()
+    iso_threshold = mean + 2 * std
+
+    isosurface.ports.data.connect(input_data)
+    isosurface.ports.doIt.was_hit = True
+    isosurface.fire()
+    isosurface.ports.threshold.value = iso_threshold
+    isosurface.ports.doIt.was_hit = True
+    isosurface.fire()
+
 def benchmark_method_2():
     pass
 
