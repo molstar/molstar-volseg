@@ -11,5 +11,5 @@ jobs:
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.DEPLOY_KEY}}
-        script: build_script.sh foobar.txt
+        key: ${{ secrets.DEPLOY_KEY }}
+        script: ~/build_script.sh foobar.txt
