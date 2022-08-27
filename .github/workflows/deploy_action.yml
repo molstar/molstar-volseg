@@ -1,15 +1,22 @@
-name: remote ssh command
-on: [push]
-jobs:
+name: Run command on Cell* server
 
+on: 
+  workflow_dispatch:
+    inputs:
+      args:
+        description: 'Arguments to the remote script'
+        required: true
+        type: string
+
+jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
     steps:
-    - name: executing remote ssh commands using password
+    - name: executing remote ssh commands using SSH key
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.DEPLOY_KEY }}
-        script: ~/build_script.sh foobar.txt
+        script: ~/build_script.sh ${{ inputs.args }}
