@@ -1,5 +1,4 @@
 from decimal import getcontext, ROUND_CEILING, Decimal
-from email import header
 import logging
 from pathlib import Path
 
