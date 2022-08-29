@@ -4,6 +4,8 @@ from pathlib import Path
 import re
 import urllib.request
 import os
+import gzip
+import shutil
 
 # emd 1832 is not available!
 LIST_OF_ENTRY_IDS = ['emd-1014', 'emd-1547']
@@ -22,19 +24,24 @@ def prepare_input_for_preprocessor(entry_ids: list):
         if db == 'emd':
             # TODO: try except?
             map_gz_output_path = RAW_INPUT_FILES_DIR / 'emdb' / preprocessor_folder_name / emdb_map_gz_file_name
+            map_gz_output_path.parent.mkdir(parents=True, exist_ok=True)
             map_request_output = urllib.request.urlretrieve(
                 f'https://ftp.ebi.ac.uk/pub/databases/emdb/structures/{emdb_folder_name}/map/{emdb_map_gz_file_name}',
                 str(map_gz_output_path.resolve())
             )
-            # gzipped_filepath = Path(request_output[0])
             
+            # won't work on windows
             # gunzip it, should delete gz and keep .map in correct location
-            os.system('gunzip ' + str(map_gz_output_path.resolve()))
-            # no .gz
-            # map_filepath = map_gz_output_path.stem
+            # os.system('gunzip ' + str(map_gz_output_path.resolve()))
+            
+            with gzip.open(str(map_gz_output_path.resolve()), 'rb') as f_in:
+                with open(str(map_gz_output_path.with_suffix('').resolve()), 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+            map_gz_output_path.unlink()
 
             # get sff (.hff)
-            sff_gz_output_path = RAW_INPUT_FILES_DIR / 'emdb' / preprocessor_folder_name / emdb_map_gz_file_name
+            sff_gz_output_path = RAW_INPUT_FILES_DIR / 'emdb' / preprocessor_folder_name / volume_browser_gz_file_name
+            sff_gz_output_path.parent.mkdir(parents=True, exist_ok=True)
             # first two digits of emd ID?
             emdb_sff_prefix_number = id[0:2]
             sff_request_output = urllib.request.urlretrieve(
@@ -43,6 +50,15 @@ def prepare_input_for_preprocessor(entry_ids: list):
             )
 
             # gunzip it, should delete gz and keep .map in correct location
-            os.system('gunzip ' + str(sff_gz_output_path.resolve()))    
+            # os.system('gunzip ' + str(sff_gz_output_path.resolve()))
+
+            with gzip.open(str(sff_gz_output_path.resolve()), 'rb') as f_in:
+                with open(str(sff_gz_output_path.with_suffix('').resolve()), 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+            sff_gz_output_path.unlink()
+                
         elif db == 'empiar':
             pass
+
+if __name__ == '__main__':
+    prepare_input_for_preprocessor(LIST_OF_ENTRY_IDS)
