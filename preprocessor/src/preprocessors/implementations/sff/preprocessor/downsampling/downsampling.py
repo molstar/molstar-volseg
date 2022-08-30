@@ -58,6 +58,8 @@ def _get_mesh_data_from_vedo_obj(vedo_obj):
     d['attrs']['area'] = vedo_obj.area()
     # d['attrs']['volume'] = vedo_obj.volume()
     d['attrs']['num_vertices'] = len(d['arrays']['vertices'])
+    d['attrs']['num_triangles'] = len(d['arrays']['triangles'])
+    d['attrs']['num_normals'] = len(d['arrays']['normals'])
 
     return d
 
