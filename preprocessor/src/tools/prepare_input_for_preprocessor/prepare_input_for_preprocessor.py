@@ -9,6 +9,7 @@ import shutil
 
 # without empiar for now
 # they require special handling (maps, links to sff)
+# 11
 LIST_OF_ENTRY_IDS = [
     'emd-1014', 'emd-1547', 'EMD-5250', 'EMD-6338',	
     'EMD-5143',
@@ -23,7 +24,7 @@ RAW_INPUT_FILES_DIR = Path(__file__).parent.parent.parent.parent / 'data/raw_inp
 
 def prepare_input_for_preprocessor(entry_ids: list):
     for entry_id in entry_ids:
-        db = re.split('-|_', entry_id)[0]
+        db = re.split('-|_', entry_id)[0].lower()
         id = re.split('-|_', entry_id)[-1]
 
         emdb_folder_name = db.upper() + '-' + id
@@ -52,12 +53,21 @@ def prepare_input_for_preprocessor(entry_ids: list):
             # get sff (.hff)
             sff_gz_output_path = RAW_INPUT_FILES_DIR / 'emdb' / preprocessor_folder_name / volume_browser_gz_file_name
             sff_gz_output_path.parent.mkdir(parents=True, exist_ok=True)
+
             # first two digits of emd ID?
-            emdb_sff_prefix_number = id[0:2]
-            sff_request_output = urllib.request.urlretrieve(
-                f'https://www.ebi.ac.uk/em_static/emdb_sff/{emdb_sff_prefix_number}/{id}/{volume_browser_gz_file_name}',
-                str(sff_gz_output_path.resolve())
-            )
+            if len(id) == 4:
+                emdb_sff_prefix_number = id[0:2]
+                sff_request_output = urllib.request.urlretrieve(
+                    f'https://www.ebi.ac.uk/em_static/emdb_sff/{emdb_sff_prefix_number}/{id}/{volume_browser_gz_file_name}',
+                    str(sff_gz_output_path.resolve())
+                )
+            elif len(id) == 5:
+                emdb_sff_prefix_number_1 = id[0:2]
+                emdb_sff_prefix_number_2 = id[2]
+                sff_request_output = urllib.request.urlretrieve(
+                    f'https://www.ebi.ac.uk/em_static/emdb_sff/{emdb_sff_prefix_number_1}/{emdb_sff_prefix_number_2}/{id}/{volume_browser_gz_file_name}',
+                    str(sff_gz_output_path.resolve())
+                )
 
             # gunzip it, should delete gz and keep .map in correct location
             # os.system('gunzip ' + str(sff_gz_output_path.resolve()))
