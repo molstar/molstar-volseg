@@ -7,8 +7,18 @@ import os
 import gzip
 import shutil
 
-# emd 1832 is not available!
-LIST_OF_ENTRY_IDS = ['emd-1014', 'emd-1547']
+# without empiar for now
+# they require special handling (maps, links to sff)
+LIST_OF_ENTRY_IDS = [
+    'emd-1014', 'emd-1547', 'EMD-5250', 'EMD-6338',	
+    'EMD-5143',
+    'EMD-2847',
+    'EMD-1181',
+    'EMD-1963',
+    'EMD-1080',
+    'EMD-20293',
+    'EMD-1832'
+    ]
 RAW_INPUT_FILES_DIR = Path(__file__).parent.parent.parent.parent / 'data/raw_input_files'
 
 def prepare_input_for_preprocessor(entry_ids: list):
