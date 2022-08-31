@@ -1,5 +1,6 @@
 
 # e.g. emd-1832 or emd_1832
+import argparse
 from pathlib import Path
 import re
 import urllib.request
@@ -21,6 +22,12 @@ LIST_OF_ENTRY_IDS = [
     'EMD-1832'
     ]
 RAW_INPUT_FILES_DIR = Path(__file__).parent.parent.parent.parent / 'data/raw_input_files'
+
+def parse_script_args():
+    parser=argparse.ArgumentParser()
+    parser.add_argument("--output_dir", type=Path, default=RAW_INPUT_FILES_DIR, help='path to dir where files will be downloaded')
+    args=parser.parse_args()
+    return args
 
 def prepare_input_for_preprocessor(entry_ids: list):
     for entry_id in entry_ids:
@@ -79,6 +86,15 @@ def prepare_input_for_preprocessor(entry_ids: list):
                 
         elif db == 'empiar':
             pass
+        # for sff:
+        # https://www.ebi.ac.uk/em_static/emdb_sff/empiar_10087_c2_tomo02/empiar_10087_c2_tomo02.hff.gz
+        # https://www.ebi.ac.uk/em_static/emdb_sff/empiar_10087_e64_tomo03/empiar_10087_e64_tomo03.hff.gz
+        # https://www.ebi.ac.uk/em_static/emdb_sff/empiar_10070_b3talongmusc20130301/empiar_10070_b3talongmusc20130301.hff.gz
+
+        # for maps
+        # any API?
+
 
 if __name__ == '__main__':
+    # TODO: parsing args
     prepare_input_for_preprocessor(LIST_OF_ENTRY_IDS)
