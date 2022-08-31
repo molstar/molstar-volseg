@@ -29,7 +29,7 @@ def parse_script_args():
     args=parser.parse_args()
     return args
 
-def prepare_input_for_preprocessor(entry_ids: list):
+def prepare_input_for_preprocessor(entry_ids: list, output_dir: Path):
     for entry_id in entry_ids:
         db = re.split('-|_', entry_id)[0].lower()
         id = re.split('-|_', entry_id)[-1]
@@ -41,7 +41,7 @@ def prepare_input_for_preprocessor(entry_ids: list):
         preprocessor_folder_name = db.lower() + '-' + id
         if db == 'emd':
             # TODO: try except?
-            map_gz_output_path = RAW_INPUT_FILES_DIR / 'emdb' / preprocessor_folder_name / emdb_map_gz_file_name
+            map_gz_output_path = output_dir / 'emdb' / preprocessor_folder_name / emdb_map_gz_file_name
             map_gz_output_path.parent.mkdir(parents=True, exist_ok=True)
             map_request_output = urllib.request.urlretrieve(
                 f'https://ftp.ebi.ac.uk/pub/databases/emdb/structures/{emdb_folder_name}/map/{emdb_map_gz_file_name}',
@@ -58,7 +58,7 @@ def prepare_input_for_preprocessor(entry_ids: list):
             map_gz_output_path.unlink()
 
             # get sff (.hff)
-            sff_gz_output_path = RAW_INPUT_FILES_DIR / 'emdb' / preprocessor_folder_name / volume_browser_gz_file_name
+            sff_gz_output_path = output_dir / 'emdb' / preprocessor_folder_name / volume_browser_gz_file_name
             sff_gz_output_path.parent.mkdir(parents=True, exist_ok=True)
 
             # first two digits of emd ID?
@@ -94,7 +94,9 @@ def prepare_input_for_preprocessor(entry_ids: list):
         # for maps
         # any API?
 
+        # 1. 2 empiar VB entries with same ID
+        
 
 if __name__ == '__main__':
-    # TODO: parsing args
-    prepare_input_for_preprocessor(LIST_OF_ENTRY_IDS)
+    args = parse_script_args()
+    prepare_input_for_preprocessor(LIST_OF_ENTRY_IDS, args.output_dir)
