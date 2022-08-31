@@ -2,7 +2,43 @@
     "version": "0.2.0",
     "configurations": [
         
-
+        {
+            "name": "build non quantized db to db_not_quantized folder",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--db_path",
+                "db_not_quantized"
+            ]
+        },
+        {
+            "name": "build u1 quantized db to db_quantized_u1 folder",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--db_path",
+                "db_quantized_u1",
+                "--quantize_volume_data_dtype_str",
+                "u1"
+            ]
+        },
+        {
+            "name": "build u2 quantized db to db_quantized_u2 folder",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--db_path",
+                "db_quantized_u2",
+                "--quantize_volume_data_dtype_str",
+                "u2"
+            ]
+        },
         {
             "name": "Python: Current File",
             "type": "python",
