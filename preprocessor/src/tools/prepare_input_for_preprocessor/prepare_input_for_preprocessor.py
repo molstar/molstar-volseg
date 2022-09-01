@@ -7,29 +7,29 @@ import urllib.request
 import os
 import gzip
 import shutil
+import csv
 
-# without empiar for now
-# they require special handling (maps, links to sff)
-# 11
-LIST_OF_ENTRY_IDS = [
-    'emd-1014', 'emd-1547', 'EMD-5250', 'EMD-6338',	
-    'EMD-5143',
-    'EMD-2847',
-    'EMD-1181',
-    'EMD-1963',
-    'EMD-1080',
-    'EMD-20293',
-    'EMD-1832'
-    ]
 RAW_INPUT_FILES_DIR = Path(__file__).parent.parent.parent.parent / 'data/raw_input_files'
+CSV_WITH_ENTRY_IDS_FILE = Path('preprocessor/data/entry_ids.csv')
+
+def _get_list_of_entry_ids_from_csv(csv_file_path: Path) -> list:
+    l = []
+    with open(str(csv_file_path.resolve())) as f:
+        for row in csv.reader(f):
+            l.append(row[0])
+    
+    return l
 
 def parse_script_args():
     parser=argparse.ArgumentParser()
     parser.add_argument("--output_dir", type=Path, default=RAW_INPUT_FILES_DIR, help='path to dir where files will be downloaded')
+    parser.add_argument("--csv_with_entry_ids", type=Path, default=CSV_WITH_ENTRY_IDS_FILE, help='path to csv with entry ids')
     args=parser.parse_args()
     return args
 
-def prepare_input_for_preprocessor(entry_ids: list, output_dir: Path):
+def prepare_input_for_preprocessor(csv_with_entry_ids: list, output_dir: Path):
+    entry_ids = _get_list_of_entry_ids_from_csv(csv_with_entry_ids)
+
     for entry_id in entry_ids:
         db = re.split('-|_', entry_id)[0].lower()
         id = re.split('-|_', entry_id)[-1]
@@ -99,4 +99,4 @@ def prepare_input_for_preprocessor(entry_ids: list, output_dir: Path):
 
 if __name__ == '__main__':
     args = parse_script_args()
-    prepare_input_for_preprocessor(LIST_OF_ENTRY_IDS, args.output_dir)
+    prepare_input_for_preprocessor(args.csv_with_entry_ids, args.output_dir)
