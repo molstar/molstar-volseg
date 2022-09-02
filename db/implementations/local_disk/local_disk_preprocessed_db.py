@@ -327,6 +327,16 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         '''
         return self._path_to_object(namespace, key).is_dir()
     
+    async def delete(self, namespace: str, key: str):
+        '''
+        Removes entry
+        '''
+        path = self._path_to_object(namespace=namespace, key=key)
+        if path.is_dir():
+            shutil.rmtree(path, ignore_errors=True)
+        else:
+            raise Exception(f'Entry path {path} does not exists or is not a dir')
+
     def remove_all_entries(self):
         '''
         Removes all entries from db
