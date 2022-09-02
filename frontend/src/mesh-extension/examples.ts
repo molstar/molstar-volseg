@@ -3,10 +3,12 @@
 import * as MS from './molstar-lib-imports';
 
 import { ParseMeshlistTransformer, MeshShapeTransformer, MeshlistData } from './mesh-extension';
+import { InitMeshStreaming } from './mesh-streaming/transformers';
+import { MeshServerInfo } from './mesh-streaming/server-info';
 
 
-export const DB_URL = '/db';  // local
-// DB_URL = 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db';  // download
+export const DB_URL = '/db'; // local
+// DB_URL = 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db'; // download
 
 
 export async function runMeshExtensionExamples(plugin: MS.PluginUIContext, db_url: string = DB_URL) {
@@ -16,42 +18,37 @@ export async function runMeshExtensionExamples(plugin: MS.PluginUIContext, db_ur
 
     // Focused Ion Beam-Scanning Electron Microscopy of mitochondrial reticulum in murine skeletal muscle: https://www.ebi.ac.uk/empiar/EMPIAR-10070/
     // await runMeshExample(plugin, 'all', db_url);
-    await runMeshExample(plugin, 'fg', db_url);
+    // await runMeshExample(plugin, 'fg', db_url);
     // await runMultimeshExample(plugin, 'fg', 'worst', db_url);
+    await runMeshStreamingExample(plugin);
 
     console.timeEnd('TIME MESH EXAMPLES');
 }
 
 /** Example for downloading multiple separate segments, each containing 1 mesh. */
-export async function runMeshExample(plugin: MS.PluginUIContext, segments: 'fg'|'all', db_url: string = DB_URL) {
-    const detail = 2;  
-    // QUESTION: Detail-1 constains no normals. Why?
-    // TODO ensure normal are in the input data (or create fake normals???)
-    
-    const segmentIds = (segments === 'all') ? 
-        [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17]   // segment-16 has no detail-2
-        : [1,2,3,4,5,6,7,8,9,10,11,12,   14,   17];  // segment-13 and segment-15 are quasi background
+export async function runMeshExample(plugin: MS.PluginUIContext, segments: 'fg' | 'all', db_url: string = DB_URL) {
+    const detail = 2;
+    const segmentIds = (segments === 'all') ?
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17] // segment-16 has no detail-2
+        : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 17]; // segment-13 and segment-15 are quasi background
 
-    for (let segmentId of segmentIds){
+    for (const segmentId of segmentIds) {
         createMeshFromUrl(plugin, `${db_url}/empiar-10070-mesh-rounded/segment-${segmentId}/detail-${detail}`, segmentId, detail, true, true, undefined);
     }
 }
 
 /** Example for downloading a single segment containing multiple meshes. */
-export async function runMultimeshExample(plugin: MS.PluginUIContext, segments: 'fg'|'all', detailChoice: 'best'|'worst', db_url: string = DB_URL) {
-    const detail = (detailChoice === 'best') ? '2' : 'worst';
-    await createMeshFromUrl(plugin, `${db_url}/empiar-10070-multimesh-rounded/segments-${segments}/detail-${detail}`, 0, detail, false, true, undefined);
+export async function runMultimeshExample(plugin: MS.PluginUIContext, segments: 'fg' | 'all', detailChoice: 'best' | 'worst', db_url: string = DB_URL) {
+    const urlDetail = (detailChoice === 'best') ? '2' : 'worst';
+    const numDetail = (detailChoice === 'best') ? 2 : 1000;
+    await createMeshFromUrl(plugin, `${db_url}/empiar-10070-multimesh-rounded/segments-${segments}/detail-${urlDetail}`, 0, numDetail, false, true, undefined);
 }
 
 /** Download data and create state tree hierarchy down to visual representation. */
-export async function createMeshFromUrl(plugin: MS.PluginUIContext, meshDataUrl: string, segmentId: number, detail: number|string, collapseTree: boolean, log: boolean, color?: MS.Color) {
+export async function createMeshFromUrl(plugin: MS.PluginUIContext, meshDataUrl: string, segmentId: number, detail: number, collapseTree: boolean, log: boolean, color?: MS.Color) {
 
     // PARAMS - Depend on the type of transformer T -> Params<T>
     // 1st argument to plugin.builders.data.rawData, 2nd argument to .apply
-    // Params<RawData>: {  // src/mol-plugin-state/transforms/data.ts: 143
-    //     data: PD.Value<string | number[] | ArrayBuffer | Uint8Array>('', { isHidden: true }),
-    //     label: PD.Optional(PD.Text(''))
-    // }
 
     // OPTIONS - Same for each type of transformer
     // Last argument to plugin.builders.data.rawData, plugin.builders.data.download, .apply
@@ -69,24 +66,24 @@ export async function createMeshFromUrl(plugin: MS.PluginUIContext, meshDataUrl:
 
     // RAW DATA NODE
     const rawDataNode = await plugin.builders.data.download(
-        { url: meshDataUrl, isBinary: false, label: `Downloaded Data ${segmentId}` },  // params
-        { ref: `ref-raw-data-node-${segmentId}`, tags: ['What', 'are', 'tags', 'good', 'for?'], state: {isCollapsed: collapseTree}}  // options  // QUESTION: what are tags good for?
+        { url: meshDataUrl, isBinary: false, label: `Downloaded Data ${segmentId}` }, // params
+        { ref: `ref-raw-data-node-${segmentId}`, tags: ['What', 'are', 'tags', 'good', 'for?'], state: { isCollapsed: collapseTree } } // options
     );
     if (log) console.log('rawDataNode:', rawDataNode);
 
     // PARSED DATA NODE
     const parsedDataNode = await plugin.build().to(rawDataNode).apply(
         ParseMeshlistTransformer,
-        { label: undefined, segmentName: `Segment ${segmentId}`, detail: detail.toString() },  // params
-        { ref: `ref-parsed-data-node-${segmentId}` }  // options
+        { label: undefined, segmentId: segmentId, segmentName: `Segment ${segmentId}`, detail: detail }, // params
+        { ref: `ref-parsed-data-node-${segmentId}` } // options
     ).commit();
     if (log) console.log('parsedDataNode:', parsedDataNode);
     if (log) console.log('parsedDataNode.data:', parsedDataNode.data);
     if (log) console.log('parsedDataNode mesh list stats:\n', MeshlistData.stats(parsedDataNode.data!));
 
     // MESH SHAPE NODE
-    const shapeNode = await plugin.build().to(parsedDataNode).apply(MeshShapeTransformer, 
-        { color: color },  // options
+    const shapeNode = await plugin.build().to(parsedDataNode).apply(MeshShapeTransformer,
+        { color: color }, // options
         { ref: `ref-shape-node-${segmentId}` }
     ).commit();
     if (log) console.log('shapeNode:', shapeNode);
@@ -102,6 +99,13 @@ export async function createMeshFromUrl(plugin: MS.PluginUIContext, meshDataUrl:
 
     return rawDataNode;
 
+}
+
+export async function runMeshStreamingExample(plugin: MS.PluginUIContext) {
+    const params = MS.ParamDefinition.getDefaultValues(MeshServerInfo.Params);
+    params.source = 'empiar';
+    params.entryId = 'empiar-10070';
+    await plugin.runTask(plugin.state.data.applyAction(InitMeshStreaming, params), { useOverlay: false });
 }
 
 /** Example for downloading a protein structure and visualizing molecular surface. */
@@ -131,10 +135,6 @@ export async function runMolsurfaceExample(plugin: MS.PluginUIContext) {
     const reprParams = MS.createStructureRepresentationParams(plugin, undefined, { type: 'molecular-surface' });
     const repr = await plugin.build().to(structure).apply(MS.StateTransforms.Representation.StructureRepresentation3D, reprParams).commit();
     console.log('repr:', repr);
-
-    // TODO try to steal from PLY repr?
-
-    // plugin.build().to(repr).apply(MS.StateTransforms.Representation.VolumeRepresentation3D)
 }
 
 /** Example for downloading an EMDB density data and visualizing isosurface. */
