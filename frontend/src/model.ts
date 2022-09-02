@@ -16,11 +16,12 @@ import { BehaviorSubject } from 'rxjs';
 import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/state';
 
 import * as MeshExamples from './mesh-extension/examples'
-import { ColorNames } from './mesh-extension/molstar-lib-imports';
+import { ColorNames, Mesh } from './mesh-extension/molstar-lib-imports';
 import { type Metadata, Annotation, Segment } from './volume-api-client-lib/data';
 
 const VOLUME_SERVER = 'http://localhost:9000';
-const DEFAULT_DETAIL: number|null = null;  // null means worst
+const DEFAULT_DETAIL: number | null = null;  // null means worst
+
 
 
 namespace Metadata {
@@ -35,16 +36,16 @@ namespace Metadata {
     /** Get the worst available detail level that is not worse than preferredDetail. 
      * If preferredDetail is null, get the worst detail level overall.
      * (worse = greater number) */
-    export function getSufficientDetail(metadata: Metadata, segmentId: number, preferredDetail: number|null){
+    export function getSufficientDetail(metadata: Metadata, segmentId: number, preferredDetail: number | null) {
         let availDetails = meshSegmentDetails(metadata, segmentId);
-        if (preferredDetail !== null){
+        if (preferredDetail !== null) {
             availDetails = availDetails.filter(det => det <= preferredDetail);
         }
         return Math.max(...availDetails);
     }
-    export function annotationsBySegment(metadata: Metadata): {[id: number]: Segment}{
-        const result: {[id: number]: Segment} = {};
-        for (const segment of metadata.annotation.segment_list){
+    export function annotationsBySegment(metadata: Metadata): { [id: number]: Segment } {
+        const result: { [id: number]: Segment } = {};
+        for (const segment of metadata.annotation.segment_list) {
             if (segment.id in result) {
                 throw new Error(`Duplicate segment annotation for segment ${segment.id}`);
             }
@@ -60,6 +61,8 @@ namespace Metadata {
         }
     }
 }
+
+type DataSource = '' | 'xEmdb' | 'xBioimage' | 'xMeshes' | 'xMeshStreaming';
 
 export class AppModel {
     plugin: PluginUIContext = void 0 as any;
@@ -93,9 +96,9 @@ export class AppModel {
         });
 
         const entryFromURL = window.location.hash.replace('#', '') || undefined;
-    
+
         // setTimeout(() => this.load1832(), 50);
-        setTimeout(() => this.load10070(entryFromURL), 50);
+        setTimeout(() => this.loadExampleMeshes(entryFromURL), 50);
     }
 
     createFakeSegment(volume: Volume, level: number): Volume {
@@ -112,7 +115,7 @@ export class AppModel {
                     const v = (data[o] - mean) / sigma;
                     if (v > 2.5) newData[o] = 1;
                 }
-            }   
+            }
         }
 
         return {
@@ -143,7 +146,7 @@ export class AppModel {
                     const v = (data[o] - mean) / sigma;
                     if (v > threshold) newData[o] = 1;
                 }
-            }   
+            }
         }
 
         return {
@@ -174,7 +177,7 @@ export class AppModel {
                     const v = (data[o] - mean) / sigma;
                     if (v > threshold && v < -0.35) newData[o] = 1;
                 }
-            }   
+            }
         }
 
         return {
@@ -221,7 +224,7 @@ export class AppModel {
     private volume: Volume = undefined as any;
     private currentLevel: any[] = [];
 
-    async showSegments(segments: Segment[]) {        
+    async showSegments(segments: Segment[]) {
         if (segments.length === 1) {
             this.currentSegment.next(segments[0]);
         } else {
@@ -277,7 +280,7 @@ export class AppModel {
 
     private currentSegments: any[] = [];
 
-    async showSegment(volume: Volume, color: number[], opacity = 1) {     
+    async showSegment(volume: Volume, color: number[], opacity = 1) {
         const update = this.plugin.build();
         const root = update.toRoot().apply(CreateVolume, { volume });
         this.currentLevel.push(root.selector);
@@ -309,7 +312,7 @@ export class AppModel {
         return `${VOLUME_SERVER}/v1/${source}/${entryId}/box/${segmentation}/${a1}/${a2}/${a3}/${b1}/${b2}/${b3}/${maxPoints}`;
     }
     // Temporary solution
-    meshServerRequestUrl(source: string, entryId: string, segment: number, detailLevel: number): string{
+    meshServerRequestUrl(source: string, entryId: string, segment: number, detailLevel: number): string {
         return `${VOLUME_SERVER}/v1/${source}/${entryId}/mesh/${segment}/${detailLevel}`;
     }
 
@@ -317,24 +320,24 @@ export class AppModel {
         const response = await fetch(this.metadataUrl(source, entryId));
         return await response.json();
     }
-    async getMeshData_debugging(source: string, entryId: string, segment: number, detailLevel: number){
+    async getMeshData_debugging(source: string, entryId: string, segment: number, detailLevel: number) {
         const url = this.meshServerRequestUrl(source, entryId, segment, detailLevel);
         const response = await fetch(url);
         const data = await response.json();
         return data;
     }
 
-    logStuff(plugin: PluginUIContext, repr: StateBuilder.Root): void{
+    logStuff(plugin: PluginUIContext, repr: StateBuilder.Root): void {
         console.log('plugin:\n', plugin);
         console.log('repr:\n', repr);
         console.log('tree:\n', repr.currentTree);
         console.log('children:', repr.currentTree.children.size);
     }
-    
-    private metadata?: Metadata = undefined;
-    private meshSegmentNodes: {[segid: number]: any} = {};
 
-    async showMeshSegments(segments: Segment[], entryId: string){  
+    private metadata?: Metadata = undefined;
+    private meshSegmentNodes: { [segid: number]: any } = {};
+
+    async showMeshSegments(segments: Segment[], entryId: string) {
         if (segments.length === 1) {
             this.currentSegment.next(segments[0]);
         } else {
@@ -356,9 +359,8 @@ export class AppModel {
         }
     }
 
-    async load10070(entryId: string = 'empiar-10070') {
+    async loadExampleMeshes(entryId: string = 'empiar-10070', segments: 'fg'|'all' = 'fg') {
         const source = this.splitEntryId(entryId).source;
-        const segments = 'fg';
         let error = undefined;
 
         try {
@@ -375,19 +377,19 @@ export class AppModel {
             // Examples for mesh visualization - currently taking static data stored on a MetaCentrum VM
             // MeshExamples.runMeshExample(this.plugin, 'fg', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');
             // MeshExamples.runMultimeshExample(this.plugin, 'fg', 'worst', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');  // Multiple segments merged into 1 segment with multiple meshes
-            
+
             this.metadata = await this.getMetadata(source, entryId);
-            if (segments === 'fg'){
+            if (segments === 'fg') {
                 const bgSegments = [13, 15];
                 Metadata.dropSegments(this.metadata, bgSegments);
             }
-            
+
             for (let segment of this.metadata!.annotation.segment_list) {
                 const detail = Metadata.getSufficientDetail(this.metadata!, segment.id, DEFAULT_DETAIL);
                 // console.log(`Annotation: segment ${segment.id}. ${segment.biological_annotation.name} ${segment.colour} ${detail}`);
                 // QUESTION: hmm, shouldn't it be "color"?
             }
-            
+
             this.meshSegmentNodes = {};
             this.showMeshSegments(this.metadata!.annotation.segment_list, entryId);
         } catch (ex) {
@@ -398,12 +400,35 @@ export class AppModel {
             window.location.hash = entryId;
             this.entryId.next(entryId);
             this.annotation.next(this.metadata?.annotation);
-            this.dataSource.next('10070');  // This is not actual entry number just selector of example (10070 = mesh example)
+            this.dataSource.next('xMeshes');  // This is not actual entry number just selector of example (10070 = mesh example)
             this.error.next(error);
         }
     }
 
-    async load1832() {
+    async loadExampleMeshStreaming(entryId: string = 'empiar-10070') {
+        const source = this.splitEntryId(entryId).source as 'empiar'|'emdb';
+        let error = undefined;
+
+        try {
+            await this.plugin.clear();
+            this.metadata = await this.getMetadata(source, entryId);
+            MeshExamples.runMeshStreamingExample(this.plugin, source, entryId);
+            // this.meshSegmentNodes = {};
+            // this.showMeshSegments(this.metadata!.annotation.segment_list, entryId);
+        } catch (ex) {
+            this.metadata = undefined;
+            error = ex;
+            throw ex;
+        } finally {
+            window.location.hash = entryId;
+            this.entryId.next(entryId);
+            this.annotation.next(this.metadata?.annotation);
+            this.dataSource.next('xMeshStreaming');  // This is not actual entry number just selector of example (10070 = mesh example)
+            this.error.next(error);
+        }
+    }
+
+    async loadExampleEmdb() {
         const entryId = 'emd-1832';
         const isoLevel = 2.73;
         // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
@@ -446,10 +471,10 @@ export class AppModel {
 
         await this.showSegments(metadata.annotation.segment_list);
 
-        this.dataSource.next('1832');
+        this.dataSource.next('xEmdb');
     }
 
-    dataSource = new BehaviorSubject<string>('');
+    dataSource = new BehaviorSubject<DataSource>('');
 
     async setIsoValue(newValue: number, showSegmentation: boolean) {
         if (!this.repr) return;
@@ -478,7 +503,7 @@ export class AppModel {
     }
 
     private repr: any = undefined;
-    async load99999() {
+    async loadExampleBioimage() {
         const entryId = 'emd-99999';
         const url = this.volumeServerRequestUrl('emdb', entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
         // http://localhost:9000/v1/emdb/emd-99999/box/0/-10000/-10000/-10000/10000/10000/10000/10000000
@@ -510,20 +535,20 @@ export class AppModel {
         // await this.showSegment(segP, [0.3, 0.7, 0.1]);
         // await this.showSegment(segM, [0.1, 0.3, 0.7]);
 
-        this.dataSource.next('99999');
+        this.dataSource.next('xBioimage');
     }
 
 
-    splitEntryId(entryId: string){
-        const PREFIX_TO_SOURCE: {[prefix: string]: string} = {'empiar': 'empiar', 'emd': 'emdb'};
+    splitEntryId(entryId: string) {
+        const PREFIX_TO_SOURCE: { [prefix: string]: string } = { 'empiar': 'empiar', 'emd': 'emdb' };
         const [prefix, entry] = entryId.split('-');
         return {
-            source: PREFIX_TO_SOURCE[prefix], 
+            source: PREFIX_TO_SOURCE[prefix],
             entryNumber: entry
         };
     }
-    createEntryId(source: string, entryNumber: string|number){
-        const SOURCE_TO_PREFIX: {[prefix: string]: string} = {'empiar': 'empiar', 'emdb': 'emd'};
+    createEntryId(source: string, entryNumber: string | number) {
+        const SOURCE_TO_PREFIX: { [prefix: string]: string } = { 'empiar': 'empiar', 'emdb': 'emd' };
         return `${SOURCE_TO_PREFIX[source]}-${entryNumber}`;
     }
 

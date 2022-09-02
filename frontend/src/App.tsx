@@ -33,21 +33,23 @@ function Main() {
         <div style={{ display: 'flex', flexDirection: 'column', width: RightWidth, position: 'absolute', right: 0, top: 0, bottom: 0, padding: '8px 8px 8px 0', overflow: 'hidden', overflowY: 'auto' }}>
             <div style={{ marginBottom: 8 }}>
                 <ButtonGroup fullWidth>
-                    <Button variant={src === '1832' ? 'contained' : 'outlined'} onClick={() => model.load1832()}>EMDB SFF</Button>
-                    <Button variant={src === '99999' ? 'contained' : 'outlined'} onClick={() => model.load99999()}>BioImage Archive</Button>
-                    <Button variant={src === '10070' ? 'contained' : 'outlined'} onClick={() => model.load10070()}>Meshes</Button>
+                    <Button variant={src === 'xEmdb' ? 'contained' : 'outlined'} onClick={() => model.loadExampleEmdb()}>EMDB SFF</Button>
+                    <Button variant={src === 'xBioimage' ? 'contained' : 'outlined'} onClick={() => model.loadExampleBioimage()}>BioImage Archive</Button>
+                    <Button variant={src === 'xMeshes' ? 'contained' : 'outlined'} onClick={() => model.loadExampleMeshes()}>Meshes</Button>
+                    <Button variant={src === 'xMeshStreaming' ? 'contained' : 'outlined'} onClick={() => model.loadExampleMeshStreaming()}>Mesh Streaming</Button>
                 </ButtonGroup>
             </div>
-            {src === '1832' && <UI1832 model={model} />}
-            {src === '99999' && <UI99999 model={model} />}
-            {src === '10070' && <UI10070 model={model} />}
+            {src === 'xEmdb' && <UIExampleEmdb model={model} />}
+            {src === 'xBioimage' && <UIExampleBioimage model={model} />}
+            {src === 'xMeshes' && <UIExampleMeshes model={model} />}
+            {src === 'xMeshStreaming' && <UIExampleMeshStreaming model={model} />}
         </div>
-        {src === '99999' && <img src='/emd-99999.png' alt='' style={{ width: '33%', position: 'absolute', right: 8, bottom: 8, border: '1px solid #777' }} />}
+        {src === 'xBioimage' && <img src='/emd-99999.png' alt='' style={{ width: '33%', position: 'absolute', right: 8, bottom: 8, border: '1px solid #777' }} />}
         <MolStar model={model} />
     </>;
 }
 
-function UI10070({ model }: { model: AppModel }) {
+function UIExampleMeshes({ model }: { model: AppModel }) {
     const entryId = useBehavior(model.entryId);
     const annotation = useBehavior(model.annotation);
     const current = useBehavior(model.currentSegment);
@@ -56,7 +58,7 @@ function UI10070({ model }: { model: AppModel }) {
 
 
     return <>
-        <form onSubmit={(e) => { model.load10070(model.createEntryId(form.source, form.entryNumber)); e.preventDefault(); }} >
+        <form onSubmit={(e) => { model.loadExampleMeshes(model.createEntryId(form.source, form.entryNumber)); e.preventDefault(); }} >
             <InputLabel>Source</InputLabel>
             <Select id='input-source' label='Source' defaultValue={form.source} onChange={(e) => { form.source = e.target.value; }} size='small' fullWidth style={{ marginBottom: 8 }}>
                 <MenuItem value='empiar'>EMPIAR</MenuItem>
@@ -97,7 +99,43 @@ function UI10070({ model }: { model: AppModel }) {
     </>;
 }
 
-function UI1832({ model }: { model: AppModel }) {
+function UIExampleMeshStreaming({ model }: { model: AppModel }) {
+    const entryId = useBehavior(model.entryId);
+    const annotation = useBehavior(model.annotation);
+    const current = useBehavior(model.currentSegment);
+    const error = useBehavior(model.error);
+    let form = model.splitEntryId(entryId);
+
+    return <>
+        <form onSubmit={(e) => { model.loadExampleMeshStreaming(model.createEntryId(form.source, form.entryNumber)); e.preventDefault(); }} >
+            <InputLabel>Source</InputLabel>
+            <Select id='input-source' label='Source' defaultValue={form.source} onChange={(e) => { form.source = e.target.value; }} size='small' fullWidth style={{ marginBottom: 8 }}>
+                <MenuItem value='empiar'>EMPIAR</MenuItem>
+                <MenuItem value='emdb'>EMDB</MenuItem>
+            </Select>
+
+            <InputLabel>Entry ID</InputLabel>
+            <TextField id='input-entry-id' defaultValue={form.entryNumber} onChange={(e) => { form.entryNumber = e.target.value; }} size='small' fullWidth style={{ marginBottom: 8 }} />
+
+            <Button type='submit' variant='contained' fullWidth>Load</Button>
+        </form>
+        <Divider style={{ marginBlock: 16 }} />
+
+        <Typography variant='caption'>{entryId}</Typography>
+
+        {error && <>
+            <Typography variant='h6'>{'Error'}</Typography>
+            <Typography variant='body1'>
+                {error.toString()}
+            </Typography>
+        </> || <>
+            <Typography variant='h6'>{annotation?.name ?? 'Untitled'}</Typography>
+        </>}
+
+    </>;
+}
+
+function UIExampleEmdb({ model }: { model: AppModel }) {
     const entryId = useBehavior(model.entryId);
     const annotation = useBehavior(model.annotation);
     const current = useBehavior(model.currentSegment);
@@ -127,7 +165,7 @@ function UI1832({ model }: { model: AppModel }) {
     </>;
 }
 
-function UI99999({ model }: { model: AppModel }) {
+function UIExampleBioimage({ model }: { model: AppModel }) {
     const [iso, setIso] = useState(-0.55);
     const [segm, setSegm] = useState(false);
 
