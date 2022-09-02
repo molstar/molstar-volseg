@@ -104,11 +104,15 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
     return d
 
 
-def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path, params_for_storing: dict) -> None:
+async def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path, params_for_storing: dict) -> None:
     preprocessor_service = PreprocessorService([SFFPreprocessor()])
     files_dict = obtain_paths_to_all_files(raw_input_files_dir, hardcoded=False)
     for source_name, source_entries in files_dict.items():
         for entry in source_entries:
+            # check if entry exists
+            if await db.contains(namespace=source_name, key=entry['id']):
+                await db.delete(namespace=source_name, key=entry['id'])
+
             segm_file_type = preprocessor_service.get_raw_file_type(entry['segmentation_file_path'])
             file_preprocessor = preprocessor_service.get_preprocessor(segm_file_type)
             if entry['id'] == 'emd-99999' or entry['id'] == 'empiar-10070':
@@ -187,17 +191,17 @@ def create_dict_of_input_params_for_storing(chunking_mode: list, compressors: li
 def remove_temp_zarr_hierarchy_storage_folder(path: Path):
     shutil.rmtree(path, ignore_errors=True)
 
-def create_db(db_path: Path, params_for_storing: dict):
+async def create_db(db_path: Path, params_for_storing: dict):
     new_db_path = Path(db_path)
     if new_db_path.is_dir() == False:
         new_db_path.mkdir()
 
     remove_temp_zarr_hierarchy_storage_folder(TEMP_ZARR_HIERARCHY_STORAGE_PATH)
     db = LocalDiskPreprocessedDb(new_db_path, params_for_storing['store_type'])
-    db.remove_all_entries()
-    preprocess_everything(db, RAW_INPUT_FILES_DIR, params_for_storing=params_for_storing)
+    # db.remove_all_entries()
+    await preprocess_everything(db, RAW_INPUT_FILES_DIR, params_for_storing=params_for_storing)
 
-def main():
+async def main():
     args = parse_script_args()
     if args.create_parametrized_dbs:
         # TODO: add quantize here too
@@ -208,7 +212,7 @@ def main():
         )
         write_dict_to_txt(storing_params_dict, PARAMETRIZED_DBS_INPUT_PARAMS_FILEPATH)
         for db_id, param_set in storing_params_dict.items():
-            create_db(Path(f'db_{db_id}'), params_for_storing=param_set)
+            await create_db(Path(f'db_{db_id}'), params_for_storing=param_set)
     elif args.db_path:
         # print(args.quantize_volume_data_dtype_str)
         params_for_storing={
@@ -218,7 +222,7 @@ def main():
         }
         if args.quantize_volume_data_dtype_str:
             params_for_storing['quantize_dtype_str'] = args.quantize_volume_data_dtype_str
-        create_db(Path(args.db_path), params_for_storing=params_for_storing)
+        await create_db(Path(args.db_path), params_for_storing=params_for_storing)
     else:
         raise ValueError('No db path is provided as argument')
 
@@ -231,7 +235,7 @@ def parse_script_args():
     return args
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
 
 
     # uncomment to check read slice method
