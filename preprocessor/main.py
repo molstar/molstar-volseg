@@ -125,8 +125,7 @@ async def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path, 
                 volume_force_dtype=volume_force_dtype,
                 params_for_storing=params_for_storing
             )
-            async_to_sync(db.store)(namespace=source_name, key=entry['id'], temp_store_path=processed_data_temp_path)
-
+            await db.store(namespace=source_name, key=entry['id'], temp_store_path=processed_data_temp_path)
 
 async def check_read_slice(db: LocalDiskPreprocessedDb):
     box = ((0, 0, 0), (10, 10, 10), (10, 10, 10))
