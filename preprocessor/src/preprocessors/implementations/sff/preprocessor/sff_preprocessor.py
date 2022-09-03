@@ -47,8 +47,9 @@ class SFFPreprocessor(IDataPreprocessor):
             with mrcfile.mmap(str(volume_file_path.resolve())) as mrc_original:
                 data: np.memmap = mrc_original.data
                 # hack for emd-99999
-                if volume_force_dtype == np.uint8:
-                    data = data.astype(np.uint8)
+                # if volume_force_dtype == np.uint8:
+                #     data = data.astype(np.uint8)
+                data = data.astype(volume_force_dtype)
                 header = mrc_original.header
 
             dask_arr = da.from_array(data)
