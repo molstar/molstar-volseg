@@ -28,7 +28,8 @@ APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS = ['.am', '.mod', '.seg', '.surf', 
 
 def obtain_paths_to_single_entry_files(input_files_dir: Path) -> Dict:
     d = {}
-
+    segmentation_file_path: Path = None
+    
     if input_files_dir.is_dir():
         content = sorted(input_files_dir.glob('*'))
         for item in content:
