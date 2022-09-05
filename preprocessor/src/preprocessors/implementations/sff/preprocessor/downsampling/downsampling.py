@@ -193,7 +193,7 @@ def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: da.Arr
                                                         params_for_storing: dict,
                                                         force_dtype=np.float32):
     
-    if 'quantize_dtype_str' in params_for_storing and force_dtype != np.uint8:
+    if 'quantize_dtype_str' in params_for_storing:
         force_dtype = params_for_storing['quantize_dtype_str']
 
     zarr_arr = create_dataset_wrapper(
@@ -205,8 +205,8 @@ def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: da.Arr
         params_for_storing=params_for_storing,
         is_empty=True
     )
-    # np.uint8 - hack for emd-99999
-    if 'quantize_dtype_str' in params_for_storing and force_dtype != np.uint8:
+    
+    if 'quantize_dtype_str' in params_for_storing:
         quantized_data_dict = quantize_data(
             data=downsampled_data,
             output_dtype=params_for_storing['quantize_dtype_str'])

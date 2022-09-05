@@ -140,10 +140,8 @@ async def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path, 
 
             segm_file_type = preprocessor_service.get_raw_file_type(entry['segmentation_file_path'])
             file_preprocessor = preprocessor_service.get_preprocessor(segm_file_type)
-            if entry['id'] == 'emd-99999' or entry['id'] == 'empiar-10070':
-                volume_force_dtype = np.uint8
-            else:
-                volume_force_dtype = np.float32
+            # for now np.float32 by default, after mrcfile guys will confirm that map is read according to mode - could be None
+            volume_force_dtype = np.float32
             processed_data_temp_path = file_preprocessor.preprocess(
                 segm_file_path=entry['segmentation_file_path'],
                 volume_file_path=entry['volume_file_path'],

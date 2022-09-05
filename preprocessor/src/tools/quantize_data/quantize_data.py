@@ -15,9 +15,10 @@ def _convert_data_dict_to_python_dtypes(data_dict: dict) -> dict:
         if key != 'data' and (isinstance(data_dict[key], da.Array) or isinstance(data_dict[key], np.ndarray)):
             if isinstance(data_dict[key], da.Array):
                 data_dict[key] = data_dict[key].compute()
+            # TODO: check if there is a way to find corresponding dtype for any np float/np (u)int
             if data_dict[key].dtype in (np.float16, np.float32, np.float64):
                 data_dict[key] = float(str(data_dict[key]))
-            elif data_dict[key].dtype == np.uint8:
+            elif data_dict[key].dtype in (np.uint8, np.uint16, np.int8, np.int16, np.int32):
                 data_dict[key] = int(str(data_dict[key]))
             else:
                 raise Exception(f'dtype of quantized data_dict members is {data_dict[key].dtype} and is not supported')
