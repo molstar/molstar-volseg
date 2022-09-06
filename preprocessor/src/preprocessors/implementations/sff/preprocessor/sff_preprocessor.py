@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import Union
 import zarr
 import numpy as np
 from db.implementations.local_disk.local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
@@ -30,7 +31,7 @@ class SFFPreprocessor(IDataPreprocessor):
         self.magic_kernel = MagicKernel3dDownsampler()
         self.temp_zarr_structure_path = None
 
-    def preprocess(self, segm_file_path: Path, volume_file_path: Path, params_for_storing: dict, volume_force_dtype=np.float32):
+    def preprocess(self, segm_file_path: Path, volume_file_path: Path, params_for_storing: dict, volume_force_dtype: Union[np.dtype, None]):
         '''
         Returns path to temporary zarr structure that will be stored permanently using db.store
         '''
@@ -46,10 +47,11 @@ class SFFPreprocessor(IDataPreprocessor):
             # read map
             with mrcfile.mmap(str(volume_file_path.resolve())) as mrc_original:
                 data: np.memmap = mrc_original.data
-                # hack for emd-99999
-                # if volume_force_dtype == np.uint8:
-                #     data = data.astype(np.uint8)
-                data = data.astype(volume_force_dtype)
+                if volume_force_dtype is not None:
+                    data = data.astype(volume_force_dtype)
+                else:
+                    volume_force_dtype = data.dtype
+
                 header = mrc_original.header
 
             dask_arr = da.from_array(data)

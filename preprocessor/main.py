@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import logging
 from pprint import pprint
 import shutil
 from asgiref.sync import async_to_sync
@@ -7,7 +8,7 @@ import numpy as np
 
 from pathlib import Path
 from numcodecs import Blosc
-from typing import Dict
+from typing import Dict, Union
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 from preprocessor.params_for_storing_db import CHUNKING_MODES, COMPRESSORS
 from preprocessor.src.service.implementations.preprocessor_service import PreprocessorService
@@ -142,16 +143,15 @@ async def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path, 
             segm_file_type = preprocessor_service.get_raw_file_type(entry['segmentation_file_path'])
             file_preprocessor = preprocessor_service.get_preprocessor(segm_file_type)
             # for now np.float32 by default, after mrcfile guys will confirm that map is read according to mode - could be None
-            volume_force_dtype = np.float32
             processed_data_temp_path = file_preprocessor.preprocess(
                 segm_file_path=entry['segmentation_file_path'],
                 volume_file_path=entry['volume_file_path'],
-                volume_force_dtype=volume_force_dtype,
+                volume_force_dtype=None,
                 params_for_storing=params_for_storing
             )
             await db.store(namespace=source_name, key=entry['id'], temp_store_path=processed_data_temp_path)
 
-async def preprocess_single_entry(db: IPreprocessedDb, input_files_dir: Path, params_for_storing: dict, entry_id: str, source_db: str, force_volume_dtype: str) -> None:
+async def preprocess_single_entry(db: IPreprocessedDb, input_files_dir: Path, params_for_storing: dict, entry_id: str, source_db: str, force_volume_dtype: Union[str, None]) -> None:
     preprocessor_service = PreprocessorService([SFFPreprocessor()])
     if await db.contains(namespace=source_db, key=entry_id):
         await db.delete(namespace=source_db, key=entry_id)
@@ -161,11 +161,17 @@ async def preprocess_single_entry(db: IPreprocessedDb, input_files_dir: Path, pa
     segm_file_type = preprocessor_service.get_raw_file_type(files_dict['segmentation_file_path'])
     file_preprocessor = preprocessor_service.get_preprocessor(segm_file_type)
 
-    volume_force_dtype = np.dtype(force_volume_dtype)
+    if force_volume_dtype is not None:
+        try:
+            force_volume_dtype = np.dtype(force_volume_dtype)
+        except Exception as e:
+            logging.error(e, stack_info=True, exc_info=True)
+            raise e
+
     processed_data_temp_path = file_preprocessor.preprocess(
         segm_file_path=files_dict['segmentation_file_path'],
         volume_file_path=files_dict['volume_file_path'],
-        volume_force_dtype=volume_force_dtype,
+        volume_force_dtype=force_volume_dtype,
         params_for_storing=params_for_storing
     )
     await db.store(namespace=source_db, key=entry_id, temp_store_path=processed_data_temp_path)
@@ -243,7 +249,7 @@ async def create_db(db_path: Path, params_for_storing: dict):
     # db.remove_all_entries()
     await preprocess_everything(db, RAW_INPUT_FILES_DIR, params_for_storing=params_for_storing)
 
-async def add_entry_to_db(db_path: Path, params_for_storing: dict, input_files_dir: Path, entry_id: str, source_db: str, force_volume_dtype: str):
+async def add_entry_to_db(db_path: Path, params_for_storing: dict, input_files_dir: Path, entry_id: str, source_db: str, force_volume_dtype: Union[str, None]):
     '''
     By default, initializes db with store_type = "zip"
     '''
@@ -291,10 +297,8 @@ async def main():
 
                 if args.force_volume_dtype:
                     force_volume_dtype = args.force_volume_dtype
-                    
                 else:
-                    # for now np float 32
-                    force_volume_dtype = 'f4'
+                    force_volume_dtype = None
 
                 await add_entry_to_db(
                     Path(args.db_path),
