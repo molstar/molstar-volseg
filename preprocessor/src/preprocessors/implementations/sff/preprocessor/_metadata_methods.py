@@ -41,7 +41,7 @@ def extract_annotations(segm_file_path: Path) -> dict:
     return segm_dict
 
 
-def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, mesh_simplification_curve: list[tuple[int, float]]) -> dict:
+def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, mesh_simplification_curve: list[tuple[int, float]], volume_force_dtype: np.dtype) -> dict:
     root = zarr_structure
     details = ''
     if 'details' in root:
@@ -158,7 +158,8 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, m
             'mean': mean_dict,
             'std': std_dict,
             'max': max_dict,
-            'min': min_dict
+            'min': min_dict,
+            'volume_force_dtype': volume_force_dtype.str
         },
         'segmentation_lattices': {
             'segmentation_lattice_ids': lattice_ids,

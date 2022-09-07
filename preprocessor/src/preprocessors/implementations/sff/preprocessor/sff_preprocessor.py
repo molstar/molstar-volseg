@@ -66,7 +66,11 @@ class SFFPreprocessor(IDataPreprocessor):
 
             SFFPreprocessor.process_volume_data(zarr_structure=zarr_structure, dask_arr=dask_arr, params_for_storing=params_for_storing, force_dtype=volume_force_dtype)
 
-            grid_metadata = SFFPreprocessor.extract_metadata(zarr_structure, mrc_header=header, mesh_simplification_curve=mesh_simplification_curve)
+            grid_metadata = SFFPreprocessor.extract_metadata(
+                zarr_structure,
+                mrc_header=header,
+                mesh_simplification_curve=mesh_simplification_curve,
+                volume_force_dtype=volume_force_dtype)
             
             grid_dimensions: list = list(LocalDiskPreprocessedMetadata(grid_metadata).grid_dimensions())
             zarr_volume_arr_shape: list = list(get_volume_downsampling_from_zarr(1, zarr_structure).shape)
