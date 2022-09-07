@@ -5,7 +5,8 @@ testmodules = [
     "get_cell",
     "get_metadata",
     "get_volume",
-    "get_meshes"
+    "get_meshes",
+    "get_entries"
 ]
 
 suite = unittest.TestSuite()

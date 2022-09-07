@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 
 from math import ceil
@@ -9,6 +10,7 @@ from .i_volume_server import IVolumeServer
 from .preprocessed_volume_to_cif.i_volume_to_cif_converter import IVolumeToCifConverter
 from volume_server.src.requests.volume_request.i_volume_request import IVolumeRequest
 from .requests.cell_request.i_cell_request import ICellRequest
+from .requests.entries_request.i_entries_request import IEntriesRequest
 from .requests.mesh_request.i_mesh_request import IMeshRequest
 from .requests.metadata_request.i_metadata_request import IMetadataRequest
 
@@ -16,6 +18,42 @@ __MAX_DOWN_SAMPLING_VALUE__ = 1000000
 
 
 class VolumeServerV1(IVolumeServer):
+    async def _filter_entries_by_keyword(self, namespace: str, entries: list[str], keyword: str):
+        filtered = []
+        for entry in entries:
+            if keyword in entry:
+                filtered.append(entry)
+                continue
+
+            annotations = await self.db.read_annotations(namespace, entry)
+            if keyword.lower() in json.dumps(annotations).lower():
+                filtered.append(entry)
+                continue
+
+        return filtered
+
+    async def get_entries(self, req: IEntriesRequest) -> dict:
+        limit = req.limit()
+        entries = dict()
+        if limit == 0:
+            return entries
+
+        sources = await self.db.list_sources()
+        for source in sources:
+            retrieved = await self.db.list_entries(source, limit)
+            if req.keyword():
+                retrieved = await self._filter_entries_by_keyword(source, retrieved, req.keyword())
+
+            if len(retrieved) == 0:
+                continue
+
+            entries[source] = retrieved
+            limit -= len(retrieved)
+            if limit == 0:
+                break
+
+        return entries
+
     async def get_metadata(self, req: IMetadataRequest) -> Union[bytes, str]:
         grid = await self.db.read_metadata(req.source(), req.structure_id())
         try:
