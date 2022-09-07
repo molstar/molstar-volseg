@@ -53,3 +53,10 @@ class IPreprocessedDb(IReadOnlyPreprocessedDb, abc.ABC):
     @abc.abstractmethod
     async def store(self, namespace: str, key: str, temp_store_path: Path) -> bool:
         pass
+
+    @abc.abstractmethod
+    async def delete(self, namespace: str, key: str):
+        '''
+        Removes entry
+        '''
+        pass

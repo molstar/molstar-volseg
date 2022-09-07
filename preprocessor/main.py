@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import logging
 from pprint import pprint
 import shutil
 from asgiref.sync import async_to_sync
@@ -7,7 +8,7 @@ import numpy as np
 
 from pathlib import Path
 from numcodecs import Blosc
-from typing import Dict
+from typing import Dict, Union
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 from preprocessor.params_for_storing_db import CHUNKING_MODES, COMPRESSORS
 from preprocessor.src.service.implementations.preprocessor_service import PreprocessorService
@@ -25,6 +26,32 @@ RAW_INPUT_FILES_DIR = Path(__file__).parent / 'data/raw_input_files'
 DEFAULT_DB_PATH = Path(__file__).parent.parent/'db' 
 DEFAULT_QUANTIZE_DTYPE_STR = 'u1'
 APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS = ['.am', '.mod', '.seg', '.surf', '.stl']
+
+def obtain_paths_to_single_entry_files(input_files_dir: Path) -> Dict:
+    d = {}
+    segmentation_file_path: Path = None
+    
+    if input_files_dir.is_dir():
+        content = sorted(input_files_dir.glob('*'))
+        for item in content:
+            if item.is_file():
+                if item.suffix in APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS:
+                    sff_segmentation_hff_file = convert_app_specific_segm_to_sff(input_file=item)
+                    segmentation_file_path = sff_segmentation_hff_file
+                elif item.suffix == '.hff':
+                    segmentation_file_path = item
+                elif item.suffix == '.map' or item.suffix == '.ccp4' or item.suffix == '.mrc':
+                    volume_file_path: Path = item
+        
+        d = {
+                'volume_file_path': volume_file_path,
+                'segmentation_file_path': segmentation_file_path,
+            }
+
+        return d
+    else:
+        raise Exception('input files dir path is not directory')
+
 
 def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict:
     '''
@@ -104,26 +131,51 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
     return d
 
 
-def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path, params_for_storing: dict) -> None:
+async def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path, params_for_storing: dict) -> None:
     preprocessor_service = PreprocessorService([SFFPreprocessor()])
     files_dict = obtain_paths_to_all_files(raw_input_files_dir, hardcoded=False)
     for source_name, source_entries in files_dict.items():
         for entry in source_entries:
+            # check if entry exists
+            if await db.contains(namespace=source_name, key=entry['id']):
+                await db.delete(namespace=source_name, key=entry['id'])
+
             segm_file_type = preprocessor_service.get_raw_file_type(entry['segmentation_file_path'])
             file_preprocessor = preprocessor_service.get_preprocessor(segm_file_type)
-            if entry['id'] == 'emd-99999' or entry['id'] == 'empiar-10070':
-                volume_force_dtype = np.uint8
-            else:
-                volume_force_dtype = np.float32
+            # for now np.float32 by default, after mrcfile guys will confirm that map is read according to mode - could be None
             processed_data_temp_path = file_preprocessor.preprocess(
                 segm_file_path=entry['segmentation_file_path'],
                 volume_file_path=entry['volume_file_path'],
-                volume_force_dtype=volume_force_dtype,
+                volume_force_dtype=None,
                 params_for_storing=params_for_storing
             )
-            async_to_sync(db.store)(namespace=source_name, key=entry['id'], temp_store_path=processed_data_temp_path)
+            await db.store(namespace=source_name, key=entry['id'], temp_store_path=processed_data_temp_path)
 
+async def preprocess_single_entry(db: IPreprocessedDb, input_files_dir: Path, params_for_storing: dict, entry_id: str, source_db: str, force_volume_dtype: Union[str, None]) -> None:
+    preprocessor_service = PreprocessorService([SFFPreprocessor()])
+    if await db.contains(namespace=source_db, key=entry_id):
+        await db.delete(namespace=source_db, key=entry_id)
 
+    files_dict = obtain_paths_to_single_entry_files(input_files_dir)
+
+    segm_file_type = preprocessor_service.get_raw_file_type(files_dict['segmentation_file_path'])
+    file_preprocessor = preprocessor_service.get_preprocessor(segm_file_type)
+
+    if force_volume_dtype is not None:
+        try:
+            force_volume_dtype = np.dtype(force_volume_dtype)
+        except Exception as e:
+            logging.error(e, stack_info=True, exc_info=True)
+            raise e
+
+    processed_data_temp_path = file_preprocessor.preprocess(
+        segm_file_path=files_dict['segmentation_file_path'],
+        volume_file_path=files_dict['volume_file_path'],
+        volume_force_dtype=force_volume_dtype,
+        params_for_storing=params_for_storing
+    )
+    await db.store(namespace=source_db, key=entry_id, temp_store_path=processed_data_temp_path)
+    
 async def check_read_slice(db: LocalDiskPreprocessedDb):
     box = ((0, 0, 0), (10, 10, 10), (10, 10, 10))
     
@@ -187,17 +239,35 @@ def create_dict_of_input_params_for_storing(chunking_mode: list, compressors: li
 def remove_temp_zarr_hierarchy_storage_folder(path: Path):
     shutil.rmtree(path, ignore_errors=True)
 
-def create_db(db_path: Path, params_for_storing: dict):
+async def create_db(db_path: Path, params_for_storing: dict):
     new_db_path = Path(db_path)
     if new_db_path.is_dir() == False:
         new_db_path.mkdir()
 
     remove_temp_zarr_hierarchy_storage_folder(TEMP_ZARR_HIERARCHY_STORAGE_PATH)
     db = LocalDiskPreprocessedDb(new_db_path, params_for_storing['store_type'])
-    db.remove_all_entries()
-    preprocess_everything(db, RAW_INPUT_FILES_DIR, params_for_storing=params_for_storing)
+    # db.remove_all_entries()
+    await preprocess_everything(db, RAW_INPUT_FILES_DIR, params_for_storing=params_for_storing)
 
-def main():
+async def add_entry_to_db(db_path: Path, params_for_storing: dict, input_files_dir: Path, entry_id: str, source_db: str, force_volume_dtype: Union[str, None]):
+    '''
+    By default, initializes db with store_type = "zip"
+    '''
+    new_db_path = Path(db_path)
+    if new_db_path.is_dir() == False:
+        new_db_path.mkdir()
+
+    remove_temp_zarr_hierarchy_storage_folder(TEMP_ZARR_HIERARCHY_STORAGE_PATH)
+    db = LocalDiskPreprocessedDb(new_db_path, store_type='zip')
+    await preprocess_single_entry(
+        db=db,
+        input_files_dir=input_files_dir,
+        params_for_storing=params_for_storing,
+        entry_id=entry_id,
+        source_db=source_db,
+        force_volume_dtype=force_volume_dtype)
+
+async def main():
     args = parse_script_args()
     if args.create_parametrized_dbs:
         # TODO: add quantize here too
@@ -208,7 +278,7 @@ def main():
         )
         write_dict_to_txt(storing_params_dict, PARAMETRIZED_DBS_INPUT_PARAMS_FILEPATH)
         for db_id, param_set in storing_params_dict.items():
-            create_db(Path(f'db_{db_id}'), params_for_storing=param_set)
+            await create_db(Path(f'db_{db_id}'), params_for_storing=param_set)
     elif args.db_path:
         # print(args.quantize_volume_data_dtype_str)
         params_for_storing={
@@ -218,7 +288,30 @@ def main():
         }
         if args.quantize_volume_data_dtype_str:
             params_for_storing['quantize_dtype_str'] = args.quantize_volume_data_dtype_str
-        create_db(Path(args.db_path), params_for_storing=params_for_storing)
+
+        if args.single_entry:
+            if args.entry_id and args.source_db:
+                single_entry_folder_path = args.single_entry
+                single_entry_id = args.entry_id
+                single_entry_source_db = args.source_db
+
+                if args.force_volume_dtype:
+                    force_volume_dtype = args.force_volume_dtype
+                else:
+                    force_volume_dtype = None
+
+                await add_entry_to_db(
+                    Path(args.db_path),
+                    params_for_storing=params_for_storing,
+                    input_files_dir=single_entry_folder_path,
+                    entry_id=single_entry_id,
+                    source_db=single_entry_source_db,
+                    force_volume_dtype=force_volume_dtype
+                    )
+            else:
+                raise ValueError('entry_id and source_db args are required for single entry mode')
+        else:
+            await create_db(Path(args.db_path), params_for_storing=params_for_storing)
     else:
         raise ValueError('No db path is provided as argument')
 
@@ -227,11 +320,15 @@ def parse_script_args():
     parser.add_argument("--db_path", type=Path, default=DEFAULT_DB_PATH, help='path to db folder')
     parser.add_argument("--create_parametrized_dbs", action='store_true')
     parser.add_argument("--quantize_volume_data_dtype_str", action="store", choices=['u1', 'u2'])
+    parser.add_argument('--single_entry', type=Path, help='path to folder with MAP and segmentation files')
+    parser.add_argument('--entry_id', type=str, help='entry id')
+    parser.add_argument('--source_db', type=str, help='source database name')
+    parser.add_argument('--force_volume_dtype', type=str, help='dtype of volume data to be used')
     args=parser.parse_args()
     return args
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
 
 
     # uncomment to check read slice method

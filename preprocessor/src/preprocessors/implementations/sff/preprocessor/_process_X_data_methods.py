@@ -19,7 +19,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.numpy_metho
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._zarr_methods import create_dataset_wrapper
 import dask.array as da
 
-def process_volume_data(zarr_structure: zarr.hierarchy.group, dask_arr: da.Array, params_for_storing: dict, force_dtype=np.float32):
+def process_volume_data(zarr_structure: zarr.hierarchy.group, dask_arr: da.Array, params_for_storing: dict, force_dtype: np.dtype):
     '''
     Takes read map object, extracts volume data, downsamples it, stores to zarr_structure
     '''
