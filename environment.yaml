@@ -34,7 +34,7 @@ dependencies:
   - pip:
     # - -r requirements.txt
     - git+https://github.com/molstar/ciftools-python.git@e20b6a69d3895deaa83b564cc1cdfc2c95215cab#egg=ciftools
-    - sfftk==0.6.1.dev0
+    - sfftk==0.5.5.dev1
     - sfftk-rw==0.7.1
     - SimpleParse @ git+https://github.com/mcfletch/simpleparse.git@57c8d734bdc165581fbacfeecabe25a66c3452a4
     - tensorstore==0.1.18
