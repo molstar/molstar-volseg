@@ -57,8 +57,8 @@ class SFFPreprocessor(IDataPreprocessor):
             if (volume_force_dtype in (np.uint8, np.int8)) or (
                     (volume_force_dtype in (np.uint16, np.int16)) and (params_for_storing['quantize_dtype_str'] in ['u2', '|u2', '>u2', '<u2'] )
                 ):
-                del params_for_storing['quantize_dtype_str']
                 print(f'Quantization is skipped because input volume dtype is {volume_force_dtype} and requested quantization dtype is {params_for_storing["quantize_dtype_str"]}')
+                del params_for_storing['quantize_dtype_str']
 
             dask_arr = da.from_array(data)
             # this one just swaps x to z as mrcfile writes it in specific order
