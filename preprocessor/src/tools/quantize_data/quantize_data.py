@@ -36,12 +36,13 @@ def quantize_data(data: Union[da.Array, np.ndarray], output_dtype: Union[str, ty
     num_steps = 2**bits_in_dtype - 1
     src_data_type = data.dtype.str
     original_min = data.min()
-    to_remove_negatives = original_min - 1.0
-    to_remove_negatives = to_remove_negatives.astype(data.dtype)
+    to_remove_negatives = original_min
 
     # remove negatives
     # here it is subtracting from original downsampled_data if out=downsampled data
     data = da.subtract(data, to_remove_negatives)
+    one = np.array([1], dtype=data.dtype)[0]
+    data = da.add(data, one)
     # log transform
     data = da.log(data)
 
