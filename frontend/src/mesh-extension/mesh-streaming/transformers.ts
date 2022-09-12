@@ -1,4 +1,3 @@
-
 import * as MS from '../molstar-lib-imports';
 import PD = MS.ParamDefinition;
 
@@ -115,7 +114,7 @@ export const MeshVisualTransformer = CellStarTransform({
         ref: PD.Text('', { isHidden: true, isEssential: true }), // QUESTION what is isEssential
         /** Identification of the mesh visual, e.g. 'low-2' */
         tag: PD.Text('', { isHidden: true, isEssential: true }),
-        /** Opacity of the visual (not to be set directly, but controlled by the opacity of the parent Group) */
+        /** Opacity of the visual (not to be set directly, but controlled by the opacity of the parent Group, and by VisualInfo.visible) */
         opacity: PD.Numeric(-1, { min: 0, max: 1, step: 0.01 }, { isHidden: true }),
     }
 })({
@@ -124,14 +123,12 @@ export const MeshVisualTransformer = CellStarTransform({
             const visualInfo: MeshStreaming.VisualInfo = a.data.visuals![params.tag];
             if (!visualInfo) throw new Error(`VisualInfo with tag '${params.tag}' is missing.`);
             const groupData = spine.getAncestorOfType(MS.PluginStateObject.Group)?.data as MeshVisualGroupData | undefined;
-            if (groupData) {
-                params.opacity = groupData.opacity;
-            }
-            const props = { ...PD.getDefaultValues(MS.Mesh.Params), flatShaded: true }; // `flatShaded: true` is to see the real mesh vertices and triangles (default: false)
+            params.opacity = visualInfo.visible ? (groupData?.opacity ?? FOREROUND_OPACITY) : 0.0;
+            const props = PD.getDefaultValues(MS.Mesh.Params);
+            props.flatShaded = true; // `flatShaded: true` is to see the real mesh vertices and triangles (default: false)
             props.alpha = params.opacity;
             const repr = MS.ShapeRepresentation((ctx, meshlist: MeshlistData) => MeshlistData.getShape(meshlist, visualInfo.color), MS.Mesh.Utils);
             await repr.createOrUpdate(props, visualInfo.data ?? MeshlistData.Empty).runInContext(ctx);
-            setNodeVisibility(plugin, params.ref, visualInfo.visible);
             return new MS.PluginStateObject.Shape.Representation3D({ repr, sourceData: visualInfo.data }, { label: 'Mesh Visual', description: params.tag });
         });
     },
@@ -145,11 +142,10 @@ export const MeshVisualTransformer = CellStarTransform({
             if (visualInfo.data?.detail !== oldData?.detail) {
                 return MS.StateTransformer.UpdateResult.Recreate;
             }
-            setNodeVisibility(plugin, newParams.ref, visualInfo.visible);
-            // TODO solve issue with inheriting parent visibility
             const groupData = spine.getAncestorOfType(MS.PluginStateObject.Group)?.data as MeshVisualGroupData | undefined;
-            if (groupData && groupData.opacity !== oldParams.opacity) { // oldParams and newParams might point to the same object!
-                newParams.opacity = groupData.opacity;
+            const newOpacity = visualInfo.visible ? (groupData?.opacity ?? FOREROUND_OPACITY) : 0.0; // do not store to newParams directly, because oldParams and newParams might point to the same object!
+            if (newOpacity !== oldParams.opacity) {
+                newParams.opacity = newOpacity;
                 await b.data.repr.createOrUpdate({ alpha: newParams.opacity }).runInContext(ctx);
                 return MS.StateTransformer.UpdateResult.Updated;
             } else {
@@ -164,10 +160,6 @@ export const MeshVisualTransformer = CellStarTransform({
         b?.data.repr.destroy(); // QUESTION is this correct?
     },
 });
-
-function setNodeVisibility(plugin: MS.PluginContext, ref: string, visible: boolean) {
-    MS.setSubtreeVisibility(plugin.state.data, ref, !visible); // for setSubtreeVisibility true means hidden
-}
 
 // // // // // // // // // // // // // // // // // // // // // // // //
 
