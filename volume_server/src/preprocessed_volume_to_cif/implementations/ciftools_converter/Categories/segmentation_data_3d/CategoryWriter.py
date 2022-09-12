@@ -3,7 +3,10 @@ from ciftools.binary.encoding.impl.binary_cif_encoder import BinaryCIFEncoder
 from ciftools.binary.encoding.data_types import DataType, DataTypeEnum
 from ciftools.binary.encoding.base.cif_encoder_base import CIFEncoderBase
 from ciftools.binary.encoding.impl.encoders.byte_array import ByteArrayCIFEncoder
+from ciftools.binary.encoding.impl.encoders.delta import DeltaCIFEncoder
+from ciftools.binary.encoding.impl.encoders.integer_packing import IntegerPackingCIFEncoder
 from ciftools.binary.encoding.impl.encoders.interval_quantization import IntervalQuantizationCIFEncoder
+from ciftools.binary.encoding.impl.encoders.run_length import RunLengthCIFEncoder
 from ciftools.writer.base import CategoryWriter, CategoryWriterProvider, FieldDesc
 
 from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories._writer import CategoryDesc, \
@@ -25,14 +28,19 @@ class CategoryWriterProvider_SegmentationData3d(CategoryWriterProvider):
 
         encoders: list[CIFEncoderBase] = [ByteArrayCIFEncoder()]
 
-        if data_type == DataTypeEnum.Float32 or data_type == DataTypeEnum.Int16:
+        if data_type == DataTypeEnum.Float32 or data_type == DataTypeEnum.Float64:
+            print("Encoder for SegmentationData3d was chosen as IntervalQuantizationCIFEncoder for dataType = " + str(data_type))
             data_min: int = ctx.min(initial=ctx[0])
             data_max: int = ctx.max(initial=ctx[0])
             interval_quantization = IntervalQuantizationCIFEncoder(data_min, data_max, 255, DataTypeEnum.Uint8)
             encoders.insert(0, interval_quantization)
-            typed_array = DataType.to_dtype(DataTypeEnum.Float32)
+        elif data_type == DataTypeEnum.Uint8:
+            print("Encoder for SegmentationData3d was chosen as ByteArrayCIFEncoder for dataType = " + str(data_type))
         else:
-            typed_array = DataType.to_dtype(DataTypeEnum.Int32)
+            print("Encoder for SegmentationData3d was chosen as RunLengthCIFEncoder for dataType = " + str(data_type))
+            encoders.insert(0, RunLengthCIFEncoder())
+
+        typed_array = DataType.to_dtype(data_type)
 
         return BinaryCIFEncoder(encoders), typed_array
 

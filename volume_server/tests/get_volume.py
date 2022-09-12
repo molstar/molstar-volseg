@@ -89,7 +89,7 @@ class FetchVolumeTest(ServerTestBase):
                         print("[VolumeTests] Case *down_sampled* -> received body of len : " + str(
                             len(down_sampled)))
 
-                        self.assertAlmostEqual(len(out_of_boundaries) / (8 * len(down_sampled)), 1, delta=0.04)
+                        self.assertAlmostEqual(len(out_of_boundaries) / (8 * len(down_sampled)), 1, delta=0.4)
 
                         entry.pop("out_of_boundaries")
                         entry.pop("down_sampled")
