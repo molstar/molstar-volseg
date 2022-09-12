@@ -32,8 +32,6 @@ class CategoryWriterProvider_VolumeData3d(CategoryWriterProvider):
             data_max: int = ctx.max(initial=ctx[0])
             interval_quantization = IntervalQuantizationCIFEncoder(data_min, data_max, 255, DataTypeEnum.Uint8)
             encoders.insert(0, interval_quantization)
-        elif data_type == DataTypeEnum.Uint8:
-            print("Encoder for VolumeData3d was chosen as ByteArrayCIFEncoder for dataType = " + str(data_type))
         else:
             print("Encoder for VolumeData3d was chosen as RunLengthCIFEncoder for dataType = " + str(data_type))
             encoders.insert(0, RunLengthCIFEncoder())
