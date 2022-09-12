@@ -54,8 +54,10 @@ class SFFPreprocessor(IDataPreprocessor):
 
                 header = mrc_original.header
 
-            if (volume_force_dtype in (np.uint8, np.int8)) or (
-                    (volume_force_dtype in (np.uint16, np.int16)) and (params_for_storing['quantize_dtype_str'] in ['u2', '|u2', '>u2', '<u2'] )
+            if ('quantize_dtype_str' in params_for_storing) and \
+                (
+                    (volume_force_dtype in (np.uint8, np.int8)) or \
+                    ((volume_force_dtype in (np.uint16, np.int16)) and (params_for_storing['quantize_dtype_str'] in ['u2', '|u2', '>u2', '<u2'] ))
                 ):
                 print(f'Quantization is skipped because input volume dtype is {volume_force_dtype} and requested quantization dtype is {params_for_storing["quantize_dtype_str"]}')
                 del params_for_storing['quantize_dtype_str']
