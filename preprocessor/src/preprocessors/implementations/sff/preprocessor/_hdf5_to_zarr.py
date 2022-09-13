@@ -8,12 +8,12 @@ import zarr
 temp_zarr_structure_path = None
 
 
-def hdf5_to_zarr(temp_root_path: Path, file_path: Path) -> Path:
+def hdf5_to_zarr(temp_root_path: Path, file_path: Path, entry_id: str) -> Path:
     '''
     Creates temp zarr structure mirroring that of hdf5
     '''
     global temp_zarr_structure_path
-    temp_zarr_structure_path = temp_root_path / file_path.stem
+    temp_zarr_structure_path = temp_root_path / entry_id
     try:
         assert temp_zarr_structure_path.exists() == False, \
             f'temp_zarr_structure_path: {temp_zarr_structure_path} already exists'
