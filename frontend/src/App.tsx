@@ -33,7 +33,7 @@ function Main() {
         <div style={{ display: 'flex', flexDirection: 'column', width: RightWidth, position: 'absolute', right: 0, top: 0, bottom: 0, padding: '8px 8px 8px 0', overflow: 'hidden', overflowY: 'auto' }}>
             <div style={{ marginBottom: 8 }}>
                 <ButtonGroup fullWidth>
-                    <Button variant={src === 'xEmdb' ? 'contained' : 'outlined'} onClick={() => model.loadExampleEmdb()}>EMDB SFF</Button>
+                    <Button variant={src === 'xEmdb' ? 'contained' : 'outlined'} onClick={() => model.loadExampleEmdb('empiar-10070')}>EMDB SFF</Button>
                     <Button variant={src === 'xBioimage' ? 'contained' : 'outlined'} onClick={() => model.loadExampleBioimage()}>BioImage Archive</Button>
                     <Button variant={src === 'xMeshes' ? 'contained' : 'outlined'} onClick={() => model.loadExampleMeshes()}>Meshes</Button>
                     <Button variant={src === 'xMeshStreaming' ? 'contained' : 'outlined'} onClick={() => model.loadExampleMeshStreaming()}>Mesh Streaming</Button>

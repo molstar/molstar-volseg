@@ -428,11 +428,11 @@ export class AppModel {
         }
     }
 
-    async loadExampleEmdb() {
-        const entryId = 'emd-1832';
+    async loadExampleEmdb(entryId: string = 'emd-1832') {
         const isoLevel = 2.73;
+        const source = this.splitEntryId(entryId).source as 'empiar'|'emdb';
         // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
-        const url = this.volumeServerRequestUrl('emdb', entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
+        const url = this.volumeServerRequestUrl(source, entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
         const { plugin } = this;
 
         await plugin.clear();
