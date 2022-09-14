@@ -17,7 +17,7 @@ STATIC_INPUT_FILES_DIR = Path('temp/temp_static_entry_files_dir')
 CSV_WITH_ENTRY_IDS_FILE = Path('preprocessor/data/entry_ids.csv')
 TEST_RAW_INPUT_FILES_DIR = Path('temp/test_raw_input_files_dir')
 
-def _csv_to_config_list_of_dicts(csv_file_path: Path) -> list[dict]:
+def csv_to_config_list_of_dicts(csv_file_path: Path) -> list[dict]:
     df = pd.read_csv(
         str(csv_file_path.resolve()),
         converters={
@@ -32,7 +32,7 @@ def _csv_to_config_list_of_dicts(csv_file_path: Path) -> list[dict]:
 
     
 
-def prepare_input_for_preprocessor(config: list[dict], output_dir: Path):
+def prepare_input_for_preprocessor(config: list[dict], output_dir: Path) -> list[dict]:
     for entry in config:
         db = re.split('-|_', entry['entry_id'])[0].lower()
         id = re.split('-|_', entry['entry_id'])[-1]
@@ -122,9 +122,11 @@ def prepare_input_for_preprocessor(config: list[dict], output_dir: Path):
         # any API?
 
         # 1. 2 empiar VB entries with same ID
-    # return entry_ids
+
+        # updated config list of dicts
+    return config
         
 
 if __name__ == '__main__':
-    config = _csv_to_config_list_of_dicts(CSV_WITH_ENTRY_IDS_FILE)
-    prepare_input_for_preprocessor(config=config, output_dir=TEST_RAW_INPUT_FILES_DIR)
+    config = csv_to_config_list_of_dicts(CSV_WITH_ENTRY_IDS_FILE)
+    updated_config = prepare_input_for_preprocessor(config=config, output_dir=TEST_RAW_INPUT_FILES_DIR)
