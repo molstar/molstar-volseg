@@ -111,3 +111,7 @@ class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
 
     def convert_metadata(self, metadata: IPreprocessedMetadata) -> object:  # TODO: add binary cif to the project
         return metadata.json_metadata()
+
+    def convert_meshes(self, preprocessed_volume: ProcessedVolumeSliceData, metadata: IPreprocessedMetadata, downsampling: int,
+                grid_size: list[int]) -> Union[bytes, str]:
+        pass
