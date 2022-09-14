@@ -24,10 +24,10 @@ class CategoryWriterProvider_SegmentationDataTable(CategoryWriterProvider):
 
         encoders: list[CIFEncoderBase] = [ByteArrayCIFEncoder()]
 
-        # if data_type != DataTypeEnum.Uint8:
-        #     error = "Invalid data type for segmentation table: Expected Uint8 and received " + data_type.name
-        #     print(error)
-        #     raise AttributeError(error)
+        #if data_type == DataTypeEnum.Float32 or data_type == DataTypeEnum.Float64:
+        #    error = "Invalid data type for segmentation table: Expected not float and received " + data_type.name
+        #    print(error)
+        #    raise AttributeError(error)
 
         return BinaryCIFEncoder(encoders), DataType.to_dtype(DataTypeEnum.Int32)
 

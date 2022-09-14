@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 
 from math import ceil
@@ -9,6 +10,7 @@ from .i_volume_server import IVolumeServer
 from .preprocessed_volume_to_cif.i_volume_to_cif_converter import IVolumeToCifConverter
 from volume_server.src.requests.volume_request.i_volume_request import IVolumeRequest
 from .requests.cell_request.i_cell_request import ICellRequest
+from .requests.entries_request.i_entries_request import IEntriesRequest
 from .requests.mesh_request.i_mesh_request import IMeshRequest
 from .requests.metadata_request.i_metadata_request import IMetadataRequest
 
@@ -16,6 +18,42 @@ __MAX_DOWN_SAMPLING_VALUE__ = 1000000
 
 
 class VolumeServerV1(IVolumeServer):
+    async def _filter_entries_by_keyword(self, namespace: str, entries: list[str], keyword: str):
+        filtered = []
+        for entry in entries:
+            if keyword in entry:
+                filtered.append(entry)
+                continue
+
+            annotations = await self.db.read_annotations(namespace, entry)
+            if keyword.lower() in json.dumps(annotations).lower():
+                filtered.append(entry)
+                continue
+
+        return filtered
+
+    async def get_entries(self, req: IEntriesRequest) -> dict:
+        limit = req.limit()
+        entries = dict()
+        if limit == 0:
+            return entries
+
+        sources = await self.db.list_sources()
+        for source in sources:
+            retrieved = await self.db.list_entries(source, limit)
+            if req.keyword():
+                retrieved = await self._filter_entries_by_keyword(source, retrieved, req.keyword())
+
+            if len(retrieved) == 0:
+                continue
+
+            entries[source] = retrieved
+            limit -= len(retrieved)
+            if limit == 0:
+                break
+
+        return entries
+
     async def get_metadata(self, req: IMetadataRequest) -> Union[bytes, str]:
         grid = await self.db.read_metadata(req.source(), req.structure_id())
         try:
@@ -38,7 +76,10 @@ class VolumeServerV1(IVolumeServer):
                 lattice_id=1,
                 down_sampling_ratio=1)  # TODO: parse params from request + metadata
 
-        cif = self.volume_to_cif.convert(db_slice, metadata, 1, [10, 10, 10])  # TODO: replace 10,10,10 with cell size
+        grid = self.decide_grid(req, metadata)
+        print("Converted grid to: " + str(grid))
+
+        cif = self.volume_to_cif.convert(db_slice, metadata, 1, self.grid_size(grid))  # TODO: replace 10,10,10 with cell size
         return cif
 
     async def get_volume(self, req: IVolumeRequest) -> bytes:  # TODO: add binary cif to the project
@@ -77,13 +118,16 @@ class VolumeServerV1(IVolumeServer):
     async def get_meshes(self, req: IMeshRequest) -> list[object]:
         with self.db.read(req.source(), req.id()) as context:
             try:
-                return await context.read_meshes(req.segment_id(), req.detail_lvl())
+                meshes = await context.read_meshes(req.segment_id(), req.detail_lvl())
             except KeyError as e:
                 print("Exception in get_meshes: " + str(e))
                 meta = await self.db.read_metadata(req.source(), req.id())
                 segments_levels = self._extract_segments_detail_levels(meta)
                 error_msg = f'Invalid segment_id={req.segment_id()} or detail_lvl={req.detail_lvl()} (available segment_ids and detail_lvls: {segments_levels})'
                 raise error_msg
+
+        return meshes
+        # cif = self.volume_to_cif.convert_meshes(meshes, metadata, req.detail_lvl(), [10, 10, 10])  # TODO: replace 10,10,10 with cell size
 
     def _extract_segments_detail_levels(self, meta: IPreprocessedMetadata) -> dict[int, list[int]]:
         '''Extract available segment_ids and detail_lvls for each segment_id'''

@@ -11,6 +11,15 @@ from ...interface.i_preprocessed_medatada import IPreprocessedMetadata
 
 
 class FakePreprocessedDb(IPreprocessedDb):
+    async def read_annotations(self, namespace: str, key: str) -> Dict:
+        return dict()
+
+    async def list_sources(self) -> list[str]:
+        return []
+
+    async def list_entries(self, source: str, limit: int) -> list[str]:
+        return []
+
     async def read_slice(self, namespace: str, key: str, lattice_id: int, down_sampling_ratio: int,
                          box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask') -> Dict:
         return dict()

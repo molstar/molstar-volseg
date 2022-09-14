@@ -5,6 +5,7 @@ from fastapi import FastAPI, Response
 from starlette.responses import JSONResponse
 
 from volume_server.src.i_volume_server import IVolumeServer
+from volume_server.src.requests.entries_request.entries_request import EntriesRequest
 from volume_server.src.requests.mesh_request.mesh_request import MeshRequest
 from volume_server.src.requests.metadata_request.metadata_request import MetadataRequest
 from volume_server.src.requests.volume_request.volume_request import VolumeRequest
@@ -14,6 +15,25 @@ HTTP_CODE_UNPROCESSABLE_ENTITY = 422
 
 
 def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
+    @app.get("/v1/list_entries/{limit}")
+    async def get_entries(
+            limit: int = 100
+    ):
+        request = EntriesRequest(limit, "")
+        response = await volume_server.get_entries(request)
+
+        return response
+
+    @app.get("/v1/list_entries/{limit}/{keyword}")
+    async def get_entries_keyword(
+            keyword: str,
+            limit: int = 100
+    ):
+        request = EntriesRequest(limit, keyword)
+        response = await volume_server.get_entries(request)
+
+        return response
+
     @app.get("/v1/{source}/{id}/box/{segmentation}/{a1}/{a2}/{a3}/{b1}/{b2}/{b3}/{max_points}")
     async def get_volume(
             source: str,
@@ -38,15 +58,9 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
             source: str,
             id: str,
             segmentation: int,
-            a1: float,
-            a2: float,
-            a3: float,
-            b1: float,
-            b2: float,
-            b3: float,
             max_points: Optional[int] = 0
     ):
-        request = VolumeRequest(source, id, segmentation, a1, a2, a3, b1, b2, b3, max_points)
+        request = VolumeRequest(source, id, segmentation, -100000, -100000, -100000, 100000, 100000, 100000, max_points)
         response = await volume_server.get_volume(request)
 
         # return {}

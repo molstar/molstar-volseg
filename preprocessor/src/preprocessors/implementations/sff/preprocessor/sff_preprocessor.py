@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import Union
 import zarr
 import numpy as np
 from db.implementations.local_disk.local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
@@ -30,7 +31,7 @@ class SFFPreprocessor(IDataPreprocessor):
         self.magic_kernel = MagicKernel3dDownsampler()
         self.temp_zarr_structure_path = None
 
-    def preprocess(self, segm_file_path: Path, volume_file_path: Path, params_for_storing: dict, volume_force_dtype=np.float32):
+    def preprocess(self, segm_file_path: Path, volume_file_path: Path, params_for_storing: dict, volume_force_dtype: Union[np.dtype, None]):
         '''
         Returns path to temporary zarr structure that will be stored permanently using db.store
         '''
@@ -46,10 +47,20 @@ class SFFPreprocessor(IDataPreprocessor):
             # read map
             with mrcfile.mmap(str(volume_file_path.resolve())) as mrc_original:
                 data: np.memmap = mrc_original.data
-                # hack for emd-99999
-                if volume_force_dtype == np.uint8:
-                    data = data.astype(np.uint8)
+                if volume_force_dtype is not None:
+                    data = data.astype(volume_force_dtype)
+                else:
+                    volume_force_dtype = data.dtype
+
                 header = mrc_original.header
+
+            if ('quantize_dtype_str' in params_for_storing) and \
+                (
+                    (volume_force_dtype in (np.uint8, np.int8)) or \
+                    ((volume_force_dtype in (np.uint16, np.int16)) and (params_for_storing['quantize_dtype_str'] in ['u2', '|u2', '>u2', '<u2'] ))
+                ):
+                print(f'Quantization is skipped because input volume dtype is {volume_force_dtype} and requested quantization dtype is {params_for_storing["quantize_dtype_str"]}')
+                del params_for_storing['quantize_dtype_str']
 
             dask_arr = da.from_array(data)
             # this one just swaps x to z as mrcfile writes it in specific order
@@ -63,7 +74,11 @@ class SFFPreprocessor(IDataPreprocessor):
 
             SFFPreprocessor.process_volume_data(zarr_structure=zarr_structure, dask_arr=dask_arr, params_for_storing=params_for_storing, force_dtype=volume_force_dtype)
 
-            grid_metadata = SFFPreprocessor.extract_metadata(zarr_structure, mrc_header=header, mesh_simplification_curve=mesh_simplification_curve)
+            grid_metadata = SFFPreprocessor.extract_metadata(
+                zarr_structure,
+                mrc_header=header,
+                mesh_simplification_curve=mesh_simplification_curve,
+                volume_force_dtype=volume_force_dtype)
             
             grid_dimensions: list = list(LocalDiskPreprocessedMetadata(grid_metadata).grid_dimensions())
             zarr_volume_arr_shape: list = list(get_volume_downsampling_from_zarr(1, zarr_structure).shape)

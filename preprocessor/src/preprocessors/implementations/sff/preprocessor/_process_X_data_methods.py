@@ -19,7 +19,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.numpy_metho
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._zarr_methods import create_dataset_wrapper
 import dask.array as da
 
-def process_volume_data(zarr_structure: zarr.hierarchy.group, dask_arr: da.Array, params_for_storing: dict, force_dtype=np.float32):
+def process_volume_data(zarr_structure: zarr.hierarchy.group, dask_arr: da.Array, params_for_storing: dict, force_dtype: np.dtype):
     '''
     Takes read map object, extracts volume data, downsamples it, stores to zarr_structure
     '''
@@ -144,5 +144,15 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, zarr_stru
             mesh_data_dict = simplify_meshes(original_detail_lvl_mesh_list_group, ratio=new_ratio, segment_id=segment_name_id)
             # TODO: potentially simplify meshes may output mesh with 0 vertices, normals, triangles
             # it should not be stored?
+            # check each mesh in mesh_data_dict if it contains 0 vertices
+            # remove all such meshes from dict
+            for mesh_id in list(mesh_data_dict.keys()):
+                if mesh_data_dict[mesh_id]['attrs']['num_vertices'] == 0:
+                    del mesh_data_dict[mesh_id]
+
+            # if there is no meshes left in dict - break from while loop
+            if not bool(mesh_data_dict):
+                break
+            
             group_ref = _store_mesh_data_in_zarr(mesh_data_dict, segment, ratio=new_detail_lvl, params_for_storing=params_for_storing)
             i = i + 1

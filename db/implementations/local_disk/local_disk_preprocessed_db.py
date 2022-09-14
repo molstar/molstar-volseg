@@ -1,3 +1,4 @@
+import os
 from argparse import ArgumentError
 import logging
 import shutil
@@ -11,15 +12,19 @@ import dask.array as da
 from timeit import default_timer as timer
 import tensorstore as ts
 
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DB_NAMESPACES, QUANTIZATION_DATA_DICT_ATTR_NAME, SEGMENTATION_DATA_GROUPNAME, \
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DB_NAMESPACES, \
+    QUANTIZATION_DATA_DICT_ATTR_NAME, SEGMENTATION_DATA_GROUPNAME, \
     VOLUME_DATA_GROUPNAME, ZIP_STORE_DATA_ZIP_NAME
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import ANNOTATION_METADATA_FILENAME, GRID_METADATA_FILENAME
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import open_zarr_structure_from_path
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import \
+    ANNOTATION_METADATA_FILENAME, GRID_METADATA_FILENAME
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import \
+    open_zarr_structure_from_path
 from preprocessor.src.tools.quantize_data.quantize_data import decode_quantized_data
 
 from .local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
 from db.interface.i_preprocessed_db import IPreprocessedDb, ProcessedVolumeSliceData
 from ...interface.i_preprocessed_medatada import IPreprocessedMetadata
+
 
 class ReadContext():
     async def read(self, lattice_id: int, down_sampling_ratio: int) -> Dict:
@@ -32,14 +37,14 @@ class ReadContext():
         print('This method is deprecated, please use read_slice method instead')
         try:
             root: zarr.hierarchy.group = zarr.group(self.store)
-            
+
             segm_arr = None
             segm_dict = None
             if SEGMENTATION_DATA_GROUPNAME in root:
                 segm_arr = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].grid
                 segm_dict = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].set_table[0]
             volume_arr: zarr.core.Array = root[VOLUME_DATA_GROUPNAME][down_sampling_ratio]
-            
+
             if segm_arr:
                 d = {
                     "segmentation_arr": {
@@ -63,7 +68,9 @@ class ReadContext():
 
         return d
 
-    async def read_slice(self, lattice_id: int, down_sampling_ratio: int, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask', timer_printout=False) -> ProcessedVolumeSliceData:
+    async def read_slice(self, lattice_id: int, down_sampling_ratio: int,
+                         box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask',
+                         timer_printout=False) -> ProcessedVolumeSliceData:
         '''
         Reads a slice from a specific (down)sampling of segmentation and volume data
         from specific entry from DB based on key (e.g. EMD-1111), lattice_id (e.g. 0),
@@ -84,12 +91,12 @@ class ReadContext():
                     f'requested box {box} does not correspond to arr dimensions'
                 segm_dict = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].set_table[0]
             volume_arr: zarr.core.Array = root[VOLUME_DATA_GROUPNAME][down_sampling_ratio]
-            
+
             assert (np.array(box[0]) >= np.array([0, 0, 0])).all(), \
                 f'requested box {box} does not correspond to arr dimensions'
             assert (np.array(box[1]) <= np.array(volume_arr.shape)).all(), \
                 f'requested box {box} does not correspond to arr dimensions'
-            
+
             segm_slice: np.ndarray
             volume_slice: np.ndarray
             start = timer()
@@ -113,7 +120,7 @@ class ReadContext():
                 # it can be 'view' or np array etc.
                 if segm_arr: segm_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=segm_arr, box=box)
                 volume_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=volume_arr, box=box)
-            
+
             end = timer()
 
             # check if volume_arr was originally quantized data (e.g. some attr on array, e.g. data_dict attr with data_dict)
@@ -172,19 +179,21 @@ class ReadContext():
 
         return mesh_list
 
-    def __get_slice_from_zarr_three_d_arr(self, arr: zarr.core.Array, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
+    def __get_slice_from_zarr_three_d_arr(self, arr: zarr.core.Array,
+                                          box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
         '''
         Based on (vec3, vec3) tuple (coordinates of corners of the box)
         returns a slice of 3d array
         '''
         sliced = arr[
-            box[0][0] : box[1][0] + 1,
-            box[0][1] : box[1][1] + 1,
-            box[0][2] : box[1][2] + 1
-        ]
+                 box[0][0]: box[1][0] + 1,
+                 box[0][1]: box[1][1] + 1,
+                 box[0][2]: box[1][2] + 1
+                 ]
         return sliced
 
-    def __get_slice_from_zarr_three_d_arr_gbs(self, arr: zarr.core.Array, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
+    def __get_slice_from_zarr_three_d_arr_gbs(self, arr: zarr.core.Array,
+                                              box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
         # TODO: check if slice is correct and equal to : notation slice
         sliced = arr.get_basic_selection(
             (
@@ -195,27 +204,30 @@ class ReadContext():
         )
         return sliced
 
-    def __get_slice_from_zarr_three_d_arr_dask(self, arr: zarr.core.Array, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
+    def __get_slice_from_zarr_three_d_arr_dask(self, arr: zarr.core.Array,
+                                               box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
         # TODO: check if slice is correct and equal to : notation slice
         # 4: dask slicing: https://github.com/zarr-developers/zarr-python/issues/478#issuecomment-531148674
         zd = da.from_array(arr, chunks=arr.chunks)
         sliced = zd[
-            box[0][0] : box[1][0] + 1,
-            box[0][1] : box[1][1] + 1,
-            box[0][2] : box[1][2] + 1
-        ]
+                 box[0][0]: box[1][0] + 1,
+                 box[0][1]: box[1][1] + 1,
+                 box[0][2]: box[1][2] + 1
+                 ]
         return sliced.compute()
 
-    def __get_slice_from_zarr_three_d_arr_dask_from_zarr(self, arr: zarr.core.Array, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
+    def __get_slice_from_zarr_three_d_arr_dask_from_zarr(self, arr: zarr.core.Array,
+                                                         box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
         zd = da.from_zarr(arr, chunks=arr.chunks)
         sliced = zd[
-            box[0][0] : box[1][0] + 1,
-            box[0][1] : box[1][1] + 1,
-            box[0][2] : box[1][2] + 1
-        ]
+                 box[0][0]: box[1][0] + 1,
+                 box[0][1]: box[1][1] + 1,
+                 box[0][2]: box[1][2] + 1
+                 ]
         return sliced.compute()
 
-    def __get_slice_from_zarr_three_d_arr_tensorstore(self, arr: zarr.core.Array, box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
+    def __get_slice_from_zarr_three_d_arr_tensorstore(self, arr: zarr.core.Array,
+                                                      box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
         # TODO: check if slice is correct and equal to : notation slice
         # TODO: await? # store - future object, result - ONE of the ways how to get it sync (can be async)
         # store.read() - returns everything as future object. again result() or other methods
@@ -233,10 +245,10 @@ class ReadContext():
             read=True
         ).result()
         sliced = store[
-            box[0][0] : box[1][0] + 1,
-            box[0][1] : box[1][1] + 1,
-            box[0][2] : box[1][2] + 1
-        ].read().result()
+                 box[0][0]: box[1][0] + 1,
+                 box[0][1]: box[1][1] + 1,
+                 box[0][2]: box[1][2] + 1
+                 ].read().result()
         return sliced
 
     def __get_path_to_zarr_object(self, zarr_obj: Union[zarr.hierarchy.Group, zarr.core.Array]) -> Path:
@@ -260,7 +272,7 @@ class ReadContext():
             self.store.close()
         else:
             pass
-    
+
     async def __aenter__(self):
         return self
 
@@ -272,7 +284,6 @@ class ReadContext():
         else:
             pass
 
-
     def __init__(self, db: IPreprocessedDb, namespace: str, key: str):
         self.db = db
         self.path = db.path_to_zarr_root_data(namespace=namespace, key=key)
@@ -283,15 +294,37 @@ class ReadContext():
             self.store = zarr.DirectoryStore(path=self.path)
         elif self.db.store_type == 'zip':
             self.store = zarr.ZipStore(
-                    path=self.path,
-                    compression=0,
-                    allowZip64=True,
-                    mode='r'
-                )    
-
+                path=self.path,
+                compression=0,
+                allowZip64=True,
+                mode='r'
+            )
 
 
 class LocalDiskPreprocessedDb(IPreprocessedDb):
+    async def list_sources(self) -> list[str]:
+        sources: list[str] = []
+        for file in os.listdir(self.folder):
+            d = os.path.join(self.folder, file)
+            if os.path.isdir(d):
+                if file == "interface" or file == "implementations" or file.startswith("_"):
+                    continue
+
+                sources.append(str(file))
+
+        return sources
+
+    async def list_entries(self, source: str, limit: int) -> list[str]:
+        entries: list[str] = []
+        source_path = os.path.join(self.folder, source)
+        for file in os.listdir(source_path):
+            entries.append(file)
+            limit -= 1
+            if limit == 0:
+                break
+
+        return entries
+
     def __init__(self, folder: Path, store_type: str = 'zip'):
         # either create of say it doesn't exist
         if not folder.is_dir():
@@ -309,7 +342,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         Returns path to DB entry based on namespace and key
         '''
         return self.folder / namespace / key
-    
+
     def path_to_zarr_root_data(self, namespace: str, key: str) -> Path:
         '''
         Returns path to actual zarr structure root depending on store type
@@ -320,13 +353,23 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             return self._path_to_object(namespace=namespace, key=key) / ZIP_STORE_DATA_ZIP_NAME
         else:
             raise ValueError(f'store type is not supported: {self.store_type}')
-        
+
     async def contains(self, namespace: str, key: str) -> bool:
         '''
         Checks if DB entry exists
         '''
         return self._path_to_object(namespace, key).is_dir()
     
+    async def delete(self, namespace: str, key: str):
+        '''
+        Removes entry
+        '''
+        path = self._path_to_object(namespace=namespace, key=key)
+        if path.is_dir():
+            shutil.rmtree(path, ignore_errors=True)
+        else:
+            raise Exception(f'Entry path {path} does not exists or is not a dir')
+
     def remove_all_entries(self):
         '''
         Removes all entries from db
@@ -353,13 +396,10 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         # ZIP_LZMA = 1
         # close store after writing, or use 'with' https://zarr.readthedocs.io/en/stable/api/storage.html#zarr.storage.ZipStore
         temp_store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(temp_store_path))
-        
-        
-        
-        
+
         # WHAT NEEDS TO BE CHANGED
         # perm_store = zarr.ZipStore(self._path_to_object(namespace, key) + '.zip', mode='w', compression=12)
-        
+
         if self.store_type == 'directory':
             perm_store = zarr.DirectoryStore(str(self._path_to_object(namespace, key)))
             zarr.copy_store(temp_store, perm_store, log=stdout)
@@ -371,7 +411,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
                 compression=0,
                 allowZip64=True,
                 mode='w'
-                )
+            )
             zarr.copy_store(temp_store, perm_store, log=stdout)
         else:
             raise ArgumentError('store type is wrong: {self.store_type}')
@@ -380,21 +420,21 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
         print("A: " + str(temp_store_path))
         print("B: " + GRID_METADATA_FILENAME)
 
-        shutil.copy2(temp_store_path / GRID_METADATA_FILENAME, self._path_to_object(namespace, key) / GRID_METADATA_FILENAME)
+        shutil.copy2(temp_store_path / GRID_METADATA_FILENAME,
+                     self._path_to_object(namespace, key) / GRID_METADATA_FILENAME)
         if (temp_store_path / ANNOTATION_METADATA_FILENAME).exists():
-            shutil.copy2(temp_store_path / ANNOTATION_METADATA_FILENAME, self._path_to_object(namespace, key) / ANNOTATION_METADATA_FILENAME)
+            shutil.copy2(temp_store_path / ANNOTATION_METADATA_FILENAME,
+                         self._path_to_object(namespace, key) / ANNOTATION_METADATA_FILENAME)
         else:
             print('no annotation metadata file found, continuing without copying it')
 
         if self.store_type == 'zip':
             perm_store.close()
-            
+
         temp_store.rmdir()
         # TODO: check if copied and store closed properly
         return True
 
-    
-    
     def read(self, namespace: str, key: str) -> ReadContext:
         return ReadContext(db=self, namespace=namespace, key=key)
 
@@ -404,7 +444,7 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             # reads into dict
             read_json_of_metadata: Dict = json.load(f)
         return LocalDiskPreprocessedMetadata(read_json_of_metadata)
-    
+
     async def read_annotations(self, namespace: str, key: str) -> Dict:
         path: Path = self._path_to_object(namespace=namespace, key=key) / ANNOTATION_METADATA_FILENAME
         with open(path.resolve(), 'r', encoding='utf-8') as f:
@@ -412,8 +452,9 @@ class LocalDiskPreprocessedDb(IPreprocessedDb):
             read_json_of_metadata: Dict = json.load(f)
         return read_json_of_metadata
 
-    
-def normalize_box(box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]) -> Tuple[Tuple[int, int, int], Tuple[int, int, int]]:
+
+def normalize_box(box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]) -> Tuple[
+    Tuple[int, int, int], Tuple[int, int, int]]:
     '''Normalizes box so that first point is less than 2nd with respect to X, Y, Z'''
     p1 = box[0]
     p2 = box[1]
@@ -425,4 +466,3 @@ def normalize_box(box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]) -> Tup
         new_p1,
         new_p2
     )
-

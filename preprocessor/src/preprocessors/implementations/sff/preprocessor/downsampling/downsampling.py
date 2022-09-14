@@ -125,7 +125,7 @@ def simplify_meshes(mesh_list_group: zarr.hierarchy.Group, ratio: float, segment
 
 
 
-def compute_number_of_downsampling_steps(min_grid_size: int, input_grid_size: int, force_dtype: type, factor: int,
+def compute_number_of_downsampling_steps(min_grid_size: int, input_grid_size: int, force_dtype: np.dtype, factor: int,
                                          min_downsampled_file_size_bytes: int = 5 * 10 ** 6) -> int:
     if input_grid_size <= min_grid_size:
         return 1
@@ -141,7 +141,7 @@ def compute_number_of_downsampling_steps(min_grid_size: int, input_grid_size: in
 
 
 def create_volume_downsamplings(original_data: da.Array, downsampling_steps: int,
-                                downsampled_data_group: zarr.hierarchy.Group, params_for_storing: dict, force_dtype=np.float32):
+                                downsampled_data_group: zarr.hierarchy.Group, params_for_storing: dict, force_dtype: np.dtype):
     '''
     Take original volume data, do all downsampling levels and store in zarr struct one by one
     '''
@@ -191,9 +191,9 @@ def create_category_set_downsamplings(
 def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: da.Array,
                                                         downsampled_data_group: zarr.hierarchy.Group, ratio: int,
                                                         params_for_storing: dict,
-                                                        force_dtype=np.float32):
+                                                        force_dtype: np.dtype):
     
-    if 'quantize_dtype_str' in params_for_storing and force_dtype != np.uint8:
+    if 'quantize_dtype_str' in params_for_storing:
         force_dtype = params_for_storing['quantize_dtype_str']
 
     zarr_arr = create_dataset_wrapper(
@@ -205,8 +205,8 @@ def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: da.Arr
         params_for_storing=params_for_storing,
         is_empty=True
     )
-    # np.uint8 - hack for emd-99999
-    if 'quantize_dtype_str' in params_for_storing and force_dtype != np.uint8:
+    
+    if 'quantize_dtype_str' in params_for_storing:
         quantized_data_dict = quantize_data(
             data=downsampled_data,
             output_dtype=params_for_storing['quantize_dtype_str'])
