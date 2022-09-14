@@ -1,3 +1,4 @@
+from pprint import pprint
 from typing import Callable, Optional, Union
 
 import numpy as np
@@ -46,6 +47,7 @@ class Fields_VolumeData3dInfo:
             number_field_volume3d_info(name="axis_order[1]", value=lambda d, i: 1, encoder=byte_array, dtype='i4'),
             number_field_volume3d_info(name="axis_order[2]", value=lambda d, i: 2, encoder=byte_array, dtype='i4'),
 
+            # TODO: origin/dimensions are currently incorrect, need to update VolumeInfo for this to work
             # origin
             number_field_volume3d_info(name="origin[0]", value=lambda d, i: _d.metadata.origin()[0] / _d.cell_size[0], encoder=byte_array, dtype='f4'),
             number_field_volume3d_info(name="origin[1]", value=lambda d, i: _d.metadata.origin()[1] / _d.cell_size[1], encoder=byte_array, dtype='f4'),
@@ -58,9 +60,10 @@ class Fields_VolumeData3dInfo:
 
             # sampling
             number_field_volume3d_info(name="sample_rate", value=lambda d, i: _d.downsampling, encoder=byte_array, dtype='i4'),
-            number_field_volume3d_info(name="sample_count[0]", value=lambda d, i: _d.grid_size[0], encoder=byte_array, dtype='i4'),
-            number_field_volume3d_info(name="sample_count[1]", value=lambda d, i: _d.grid_size[1], encoder=byte_array, dtype='i4'),
-            number_field_volume3d_info(name="sample_count[2]", value=lambda d, i: _d.grid_size[2], encoder=byte_array, dtype='i4'),
+            # NOTE: currently need to do +1 on the grid size as it is "inclusive"
+            number_field_volume3d_info(name="sample_count[0]", value=lambda d, i: _d.grid_size[0] + 1, encoder=byte_array, dtype='i4'),
+            number_field_volume3d_info(name="sample_count[1]", value=lambda d, i: _d.grid_size[1] + 1 , encoder=byte_array, dtype='i4'),
+            number_field_volume3d_info(name="sample_count[2]", value=lambda d, i: _d.grid_size[2] + 1, encoder=byte_array, dtype='i4'),
 
             # spacegroup
             number_field_volume3d_info(name="spacegroup_number", value=lambda d, i: 1, encoder=byte_array, dtype='i4'),

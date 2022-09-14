@@ -22,6 +22,8 @@ class VolumeInfo:
 
 
         # NOTE: this isn't accurate, but should be good enough for the prototype
+        # TODO: need to pass top level query box to this (and not just grid size)
+        #       to correctly determine origin and cell_size
         self.downsampled_grid_size = metadata.sampled_grid_dimensions(downsampling)
         dx, dy, dz = self.downsampled_grid_size
         self.dimensions = self.metadata.voxel_size(downsampling)

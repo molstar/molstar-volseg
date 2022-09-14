@@ -92,10 +92,10 @@ export class AppModel {
             ],
         });
 
-        const entryFromURL = window.location.hash.replace('#', '') || undefined;
+        // const entryFromURL = window.location.hash.replace('#', '') || undefined;
     
-        // setTimeout(() => this.load1832(), 50);
-        setTimeout(() => this.load10070(entryFromURL), 50);
+        setTimeout(() => this.load1832(), 50);
+        // setTimeout(() => this.load10070(entryFromURL), 50);
     }
 
     createFakeSegment(volume: Volume, level: number): Volume {
@@ -199,7 +199,7 @@ export class AppModel {
         const newData = new Float32Array(data.length);
 
         for (let i = 0; i < data.length; i++) {
-            newData[i] = segmentation[i] === segId ? 1 : 0;
+            newData[i] = this.segmentMap.get(segmentation[i])?.has(segId) ? 1 : 0;
         }
 
         return {
@@ -295,6 +295,7 @@ export class AppModel {
     }
 
     private segmentation: number[] = [];
+    private segmentMap = new Map<number, Set<number>>();
     entryId = new BehaviorSubject<string>('');
     annotation = new BehaviorSubject<Annotation | undefined>(undefined);
     currentSegment = new BehaviorSubject<Segment | undefined>(undefined);
@@ -420,8 +421,22 @@ export class AppModel {
 
         const cif = await plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
         const segmentation = cif.data!.blocks[2];
+        
+        // For debugging
+        // const info = cif.data!.blocks[1].categories['volume_data_3d_info'];
+        // const fields = info.fieldNames.map(f => [f, info.getField(f)?.str(0)]);
+        // console.log(fields);
 
         const values = segmentation.categories['segmentation_data_3d'].getField('values')?.toIntArray();
+
+
+        // NOTE: quickly getting this working
+        const setId = segmentation.categories['segmentation_data_table'].getField('set_id')?.toIntArray()!; 
+        const segmentId = segmentation.categories['segmentation_data_table'].getField('segment_id')?.toIntArray()!;
+        const segmentMap = new Map<number, Set<number>>(Array.from(setId).map(s => [s, new Set()]));
+        for (let i = 0; i < segmentId.length; i++) {
+            segmentMap.get(setId[i])!.add(segmentId[i]);
+        }
 
         const metadata: Metadata = await (await fetch(`http://localhost:9000/v1/emdb/${entryId}/metadata`)).json();
 
@@ -430,6 +445,7 @@ export class AppModel {
         this.entryId.next(entryId);
         this.annotation.next(metadata.annotation);
         this.segmentation = values as any;
+        this.segmentMap = segmentMap;
 
         const repr = plugin.build();
 
