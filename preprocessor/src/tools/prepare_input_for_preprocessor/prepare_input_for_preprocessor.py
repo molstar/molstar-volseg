@@ -11,10 +11,11 @@ import csv
 import pandas as pd
 import numpy as np
 
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE
+
 # TODO: change based on Lukas response
 STATIC_INPUT_FILES_DIR = Path('temp/temp_static_entry_files_dir')
 
-CSV_WITH_ENTRY_IDS_FILE = Path('preprocessor/data/entry_ids.csv')
 TEST_RAW_INPUT_FILES_DIR = Path('temp/test_raw_input_files_dir')
 
 def csv_to_config_list_of_dicts(csv_file_path: Path) -> list[dict]:
