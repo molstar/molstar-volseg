@@ -28,3 +28,8 @@ DB_NAMESPACES = ('emdb', 'empiar')
 PARAMETRIZED_DBS_INPUT_PARAMS_FILEPATH = Path('parametrized_dbs_input_params.txt')
 
 QUANTIZATION_DATA_DICT_ATTR_NAME = 'quantization_data_dict'
+
+RAW_INPUT_FILES_DIR = Path('preprocessor/data/raw_input_files')
+DEFAULT_DB_PATH = Path('db') 
+DEFAULT_QUANTIZE_DTYPE_STR = 'u1'
+APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS = ['.am', '.mod', '.seg', '.surf', '.stl']
