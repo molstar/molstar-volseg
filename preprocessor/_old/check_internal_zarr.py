@@ -5,6 +5,7 @@ from itertools import product
 from typing import Dict
 import zarr
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import open_zarr_structure_from_path
+from preprocessor.src.tools.open_zarr_zip.open_zarr_zip import open_zarr_zip
 
 
 def plot_3d_array_grayscale(arr: np.ndarray, arr_name: str):
@@ -222,7 +223,7 @@ if __name__ == '__main__':
     PATH_TO_DB_ENTRY = Path(args.path)
     print(f'Plotting data from {PATH_TO_DB_ENTRY.resolve()}')
 
-    root = open_zarr_structure_from_path(PATH_TO_DB_ENTRY)
+    root = open_zarr_zip(PATH_TO_DB_ENTRY)
     volume_data = root._volume_data
     if '_segmentation_data' in root:
         segm_data = root._segmentation_data
