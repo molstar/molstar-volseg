@@ -33,23 +33,20 @@ class ConverterOutputStream(OutputStream):
 
 
 class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
-    def _add_slice_volume_info(self, writer: BinaryCIFWriter, volume: np.ndarray, metadata: IPreprocessedMetadata, downsampling: int, grid_size: list[int]):
-        
+    def _add_slice_volume_info(self, writer: BinaryCIFWriter, volume: np.ndarray, metadata: IPreprocessedMetadata, downsampling: int, grid_size: list[int]):       
         volume_info_category = CategoryWriterProvider_VolumeData3dInfo()
 
-        # TODO: optimize, volume was already flatenned in another piece of code
-        flattened = np.ravel(volume)
-        min_downsampling = flattened.min(initial=flattened[0])
-        max_downsampling = flattened.max(initial=flattened[0])
 
-        # TODO: missing min_source and max_source
-        min_source = min_downsampling
-        max_source = max_downsampling
+        min_downsampling = metadata.min(downsampling)
+        max_downsampling = metadata.max(downsampling)
+        min_source = metadata.min(1)
+        max_source = metadata.max(1)
 
         volume_info = VolumeInfo("em", metadata, downsampling, min_downsampling, max_downsampling, min_source, max_source, grid_size)
 
         # TODO: this should have it's own data and required here as Mol* uses it to determine CIF variant
         # wont be needed in the final version
+        # TODO: remove and update frontend
         writer.start_data_block("SERVER") 
         writer.write_category(volume_info_category, [volume_info])
 
@@ -58,10 +55,7 @@ class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
 
         data_category = CategoryWriterProvider_VolumeData3d()
 
-        # TODO: transpose is a temp hack until proper ordering is figured
-        # to_export = volume.transpose().flatten()
-        to_export = volume.flatten()
-
+        to_export = np.ravel(volume)
         writer.write_category(data_category, [to_export])
 
     def _add_slice_segmentation(self, writer: BinaryCIFWriter, segmentation: SegmentationSliceData):
@@ -70,22 +64,23 @@ class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
         # table
         set_dict = segmentation["category_set_dict"]
 
-        segmentation_table = []
+        set_ids, segment_ids = [], []
         for k in set_dict.keys():
-            values = set_dict[k]
-            for v in values:
-                segmentation_table.append(k)
-                segmentation_table.append(v)
+            for v in set_dict[k]:
+                set_ids.append(k)
+                segment_ids.append(v)
 
         table_writer_provider = CategoryWriterProvider_SegmentationDataTable()
-        writer.write_category(table_writer_provider, [np.asarray(segmentation_table, dtype="i4")])
+        writer.write_category(table_writer_provider, [{
+            "set_id": set_ids,
+            "segment_id": segment_ids,
+            "size": len(set_ids)
+        }])
 
         # 3d_ids
         # uint32
-        set_ids = segmentation["category_set_ids"]
-
         ids_writer_provider = CategoryWriterProvider_SegmentationData3d()
-        writer.write_category(ids_writer_provider, [set_ids])
+        writer.write_category(ids_writer_provider, [segmentation["category_set_ids"]])
 
     def _finalize(self, writer: BinaryCIFWriter, binary: bool = True):
         writer.encode()
@@ -102,8 +97,8 @@ class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
         self._add_slice_volume_info(writer, volume, metadata, downsampling, grid_size)
 
         # segmentation
-        # TODO: hack...
-        if slice["segmentation_slice"]["category_set_ids"] is not None:
+        # TODO: hack... need to improve more?
+        if "segmentation_slice" in slice and slice["segmentation_slice"]["category_set_ids"] is not None:
             segmentation: SegmentationSliceData = slice["segmentation_slice"]
             self._add_slice_segmentation(writer, segmentation)
 

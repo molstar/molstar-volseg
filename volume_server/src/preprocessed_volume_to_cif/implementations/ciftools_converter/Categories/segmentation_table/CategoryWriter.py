@@ -12,16 +12,17 @@ from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_conve
 
 
 class CategoryWriter_SegmentationDataTable(CategoryWriter):
-    def __init__(self, ctx: np.ndarray, count: int, category_desc: CategoryDesc):
+    def __init__(self, ctx, count: int, category_desc: CategoryDesc):
         self.data = ctx
         self.count = count
         self.desc = category_desc
 
 
 class CategoryWriterProvider_SegmentationDataTable(CategoryWriterProvider):
-    def _decide_encoder(self, ctx: np.ndarray) -> tuple[BinaryCIFEncoder, np.dtype]:
-        data_type = DataType.from_dtype(ctx.dtype)
+    def _decide_encoder(self, ctx) -> tuple[BinaryCIFEncoder, np.dtype]:
+        # data_type = DataType.from_dtype(ctx.dtype)
 
+        # TODO: determine proper encoding
         encoders: list[CIFEncoderBase] = [ByteArrayCIFEncoder()]
 
         #if data_type == DataTypeEnum.Float32 or data_type == DataTypeEnum.Float64:
@@ -31,6 +32,6 @@ class CategoryWriterProvider_SegmentationDataTable(CategoryWriterProvider):
 
         return BinaryCIFEncoder(encoders), DataType.to_dtype(DataTypeEnum.Int32)
 
-    def category_writer(self, ctx: np.ndarray) -> CategoryWriter:
+    def category_writer(self, ctx) -> CategoryWriter:
         field_desc: list[FieldDesc] = Fields_SegmentationDataTable(*self._decide_encoder(ctx)).fields
-        return CategoryWriter_SegmentationDataTable(ctx, ctx.size, CategoryDescImpl("segmentation_data_table", field_desc))
+        return CategoryWriter_SegmentationDataTable(ctx, ctx["size"], CategoryDescImpl("segmentation_data_table", field_desc))
