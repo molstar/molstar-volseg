@@ -95,9 +95,10 @@ export class AppModel {
             ],
         });
 
-        // const entryFromURL = window.location.hash.replace('#', '') || undefined;
-    
+        
         setTimeout(() => this.loadExampleEmdb(), 50);
+        
+        // const entryFromURL = window.location.hash.replace('#', '') || undefined;
         // setTimeout(() => this.loadExampleMeshes(entryFromURL), 50);
     }
 
