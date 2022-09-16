@@ -179,6 +179,60 @@ class ReadContext():
 
         return mesh_list
 
+    async def read_volume_slice(self, down_sampling_ratio: int,
+                         box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask',
+                         timer_printout=False) -> np.ndarray:
+        try:
+
+            box = normalize_box(box)
+
+            root: zarr.hierarchy.group = zarr.group(self.store)
+
+            volume_arr: zarr.core.Array = root[VOLUME_DATA_GROUPNAME][down_sampling_ratio]
+
+            assert (np.array(box[0]) >= np.array([0, 0, 0])).all(), \
+                f'requested box {box} does not correspond to arr dimensions'
+            assert (np.array(box[1]) <= np.array(volume_arr.shape)).all(), \
+                f'requested box {box} does not correspond to arr dimensions'
+
+            volume_slice: np.ndarray
+            start = timer()
+            if mode == 'zarr_colon':
+                # 2: zarr slicing via : notation
+                volume_slice = self.__get_slice_from_zarr_three_d_arr(arr=volume_arr, box=box)
+            elif mode == 'zarr_gbs':
+                # 3: zarr slicing via get_basic_selection and python slices
+                volume_slice = self.__get_slice_from_zarr_three_d_arr_gbs(arr=volume_arr, box=box)
+            elif mode == 'dask':
+                # 4: dask slicing: https://github.com/zarr-developers/zarr-python/issues/478#issuecomment-531148674
+                volume_slice = self.__get_slice_from_zarr_three_d_arr_dask(arr=volume_arr, box=box)
+            elif mode == 'dask_from_zarr':
+                volume_slice = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=volume_arr, box=box)
+            elif mode == 'tensorstore':
+                volume_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=volume_arr, box=box)
+
+            end = timer()
+
+            # check if volume_arr was originally quantized data (e.g. some attr on array, e.g. data_dict attr with data_dict)
+            # if yes, decode volume_slice (reassamble data dict from data_dict attr, just add 'data' key with volume_slice)
+            # do .compute on output of decode_quantized_data function if output is da.Array
+
+            if QUANTIZATION_DATA_DICT_ATTR_NAME in volume_arr.attrs:
+                data_dict = volume_arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME]
+                data_dict['data'] = volume_slice
+                volume_slice = decode_quantized_data(data_dict)
+                if isinstance(volume_slice, da.Array):
+                    volume_slice = volume_slice.compute()
+
+            if timer_printout == True:
+                print(f'read_slice with mode {mode}: {end - start}')
+
+        except Exception as e:
+            logging.error(e, stack_info=True, exc_info=True)
+            raise e
+
+        return volume_slice
+
     def __get_slice_from_zarr_three_d_arr(self, arr: zarr.core.Array,
                                           box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
         '''
