@@ -68,9 +68,9 @@ class ReadContext():
 
         return d
 
-    async def read_slice(self, lattice_id: int, down_sampling_ratio: int,
+    async def read_slice(self, down_sampling_ratio: int,
                          box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask',
-                         timer_printout=False) -> ProcessedVolumeSliceData:
+                         timer_printout=False, lattice_id: int = 0) -> ProcessedVolumeSliceData:
         '''
         Reads a slice from a specific (down)sampling of segmentation and volume data
         from specific entry from DB based on key (e.g. EMD-1111), lattice_id (e.g. 0),
@@ -85,7 +85,7 @@ class ReadContext():
 
             segm_arr = None
             segm_dict = None
-            if SEGMENTATION_DATA_GROUPNAME in root:
+            if SEGMENTATION_DATA_GROUPNAME in root and (lattice_id in root[SEGMENTATION_DATA_GROUPNAME]):
                 segm_arr = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].grid
                 assert (np.array(box[1]) <= np.array(segm_arr.shape)).all(), \
                     f'requested box {box} does not correspond to arr dimensions'
