@@ -22,7 +22,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preproc
 from preprocessor.src.tools.quantize_data.quantize_data import decode_quantized_data
 
 from .local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
-from db.interface.i_preprocessed_db import IPreprocessedDb, ProcessedOnlyVolumeSliceData, ProcessedVolumeSliceData
+from db.interface.i_preprocessed_db import IPreprocessedDb, ProcessedOnlyVolumeSliceData, ProcessedVolumeSliceData, SegmentationSliceData
 from ...interface.i_preprocessed_medatada import IPreprocessedMetadata
 
 
@@ -120,6 +120,8 @@ class ReadContext():
                 # it can be 'view' or np array etc.
                 if segm_arr: segm_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=segm_arr, box=box)
                 volume_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=volume_arr, box=box)
+            else:
+                raise Exception(f'Slicing mode is not supported: {mode}')
 
             end = timer()
 
@@ -210,7 +212,8 @@ class ReadContext():
                 volume_slice = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=volume_arr, box=box)
             elif mode == 'tensorstore':
                 volume_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=volume_arr, box=box)
-
+            else:
+                raise Exception('Slicing mode is not supported: {mode}')
             end = timer()
 
             # check if volume_arr was originally quantized data (e.g. some attr on array, e.g. data_dict attr with data_dict)
@@ -225,12 +228,64 @@ class ReadContext():
                     volume_slice = volume_slice.compute()
 
             if timer_printout == True:
-                print(f'read_slice with mode {mode}: {end - start}')
+                print(f'read_volume_slice with mode {mode}: {end - start}')
 
             d = {
                 "volume_slice": volume_slice
                 }
 
+        except Exception as e:
+            logging.error(e, stack_info=True, exc_info=True)
+            raise e
+
+        return d
+
+    async def read_segmentation_slice(self, lattice_id: int, down_sampling_ratio: int,
+                         box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask',
+                         timer_printout=False) -> SegmentationSliceData:
+        try:
+
+            box = normalize_box(box)
+
+            root: zarr.hierarchy.group = zarr.group(self.store)
+
+            segm_arr = None
+            segm_dict = None
+            if SEGMENTATION_DATA_GROUPNAME in root and (lattice_id is not None):
+                segm_arr = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].grid
+                assert (np.array(box[1]) <= np.array(segm_arr.shape)).all(), \
+                    f'requested box {box} does not correspond to arr dimensions'
+                segm_dict = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].set_table[0]
+            else:
+                raise Exception('No segmentation data is available for the the given entry or lattice_id is None')
+
+            segm_slice: np.ndarray
+            start = timer()
+            if mode == 'zarr_colon':
+                # 2: zarr slicing via : notation
+                segm_slice = self.__get_slice_from_zarr_three_d_arr(arr=segm_arr, box=box)
+            elif mode == 'zarr_gbs':
+                segm_slice = self.__get_slice_from_zarr_three_d_arr_gbs(arr=segm_arr, box=box)
+            elif mode == 'dask':
+                segm_slice = self.__get_slice_from_zarr_three_d_arr_dask(arr=segm_arr, box=box)
+            elif mode == 'dask_from_zarr':
+                segm_slice = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=segm_arr, box=box)
+            elif mode == 'tensorstore':
+                segm_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=segm_arr, box=box)
+            else:
+                raise Exception('Slicing mode is not supported: {mode}')
+                
+            end = timer()
+
+            if timer_printout == True:
+                print(f'read_segmentation_slice with mode {mode}: {end - start}')
+            d = {
+                "segmentation_slice": {
+                    "category_set_ids": segm_slice,
+                    "category_set_dict": segm_dict
+                }
+            }
+            
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)
             raise e
