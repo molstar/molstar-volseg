@@ -13,8 +13,9 @@ import numpy as np
 
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE
 
-# TODO: change based on Lukas response
-STATIC_INPUT_FILES_DIR = Path('temp/temp_static_entry_files_dir')
+# TODO: check if it works with abs path (starting with /)
+# TODO: changed based on Lukas response
+STATIC_INPUT_FILES_DIR = Path('/data/temp_static_entry_files_dir')
 
 TEST_RAW_INPUT_FILES_DIR = Path('temp/test_raw_input_files_dir')
 
