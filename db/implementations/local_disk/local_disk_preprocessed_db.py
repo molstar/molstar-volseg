@@ -22,7 +22,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preproc
 from preprocessor.src.tools.quantize_data.quantize_data import decode_quantized_data
 
 from .local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
-from db.interface.i_preprocessed_db import IPreprocessedDb, ProcessedVolumeSliceData
+from db.interface.i_preprocessed_db import IPreprocessedDb, ProcessedOnlyVolumeSliceData, ProcessedVolumeSliceData
 from ...interface.i_preprocessed_medatada import IPreprocessedMetadata
 
 
@@ -181,7 +181,7 @@ class ReadContext():
 
     async def read_volume_slice(self, down_sampling_ratio: int,
                          box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask',
-                         timer_printout=False) -> np.ndarray:
+                         timer_printout=False) -> ProcessedOnlyVolumeSliceData:
         try:
 
             box = normalize_box(box)
@@ -227,11 +227,15 @@ class ReadContext():
             if timer_printout == True:
                 print(f'read_slice with mode {mode}: {end - start}')
 
+            d = {
+                "volume_slice": volume_slice
+                }
+
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)
             raise e
 
-        return volume_slice
+        return d
 
     def __get_slice_from_zarr_three_d_arr(self, arr: zarr.core.Array,
                                           box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
