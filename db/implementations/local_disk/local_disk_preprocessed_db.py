@@ -85,7 +85,7 @@ class ReadContext():
 
             segm_arr = None
             segm_dict = None
-            if SEGMENTATION_DATA_GROUPNAME in root and (lattice_id in root[SEGMENTATION_DATA_GROUPNAME]):
+            if SEGMENTATION_DATA_GROUPNAME in root and (lattice_id is not None):
                 segm_arr = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].grid
                 assert (np.array(box[1]) <= np.array(segm_arr.shape)).all(), \
                     f'requested box {box} does not correspond to arr dimensions'
