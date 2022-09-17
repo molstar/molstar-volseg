@@ -99,30 +99,10 @@ class ReadContext():
 
             segm_slice: np.ndarray
             volume_slice: np.ndarray
+            
             start = timer()
-            if mode == 'zarr_colon':
-                # 2: zarr slicing via : notation
-                if segm_arr: segm_slice = self.__get_slice_from_zarr_three_d_arr(arr=segm_arr, box=box)
-                volume_slice = self.__get_slice_from_zarr_three_d_arr(arr=volume_arr, box=box)
-            elif mode == 'zarr_gbs':
-                # 3: zarr slicing via get_basic_selection and python slices
-                if segm_arr: segm_slice = self.__get_slice_from_zarr_three_d_arr_gbs(arr=segm_arr, box=box)
-                volume_slice = self.__get_slice_from_zarr_three_d_arr_gbs(arr=volume_arr, box=box)
-            elif mode == 'dask':
-                # 4: dask slicing: https://github.com/zarr-developers/zarr-python/issues/478#issuecomment-531148674
-                if segm_arr: segm_slice = self.__get_slice_from_zarr_three_d_arr_dask(arr=segm_arr, box=box)
-                volume_slice = self.__get_slice_from_zarr_three_d_arr_dask(arr=volume_arr, box=box)
-            elif mode == 'dask_from_zarr':
-                if segm_arr: segm_slice = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=segm_arr, box=box)
-                volume_slice = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=volume_arr, box=box)
-            elif mode == 'tensorstore':
-                # TODO: figure out variable types https://stackoverflow.com/questions/64924224/getting-a-view-of-a-zarr-array-slice
-                # it can be 'view' or np array etc.
-                if segm_arr: segm_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=segm_arr, box=box)
-                volume_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=volume_arr, box=box)
-            else:
-                raise Exception(f'Slicing mode is not supported: {mode}')
-
+            volume_slice = self._do_slicing(arr=volume_arr, box=box, mode=mode)
+            if segm_arr: segm_slice = self._do_slicing(arr=segm_arr, box=box, mode=mode)                
             end = timer()
 
             # check if volume_arr was originally quantized data (e.g. some attr on array, e.g. data_dict attr with data_dict)
@@ -197,23 +177,8 @@ class ReadContext():
             assert (np.array(box[1]) <= np.array(volume_arr.shape)).all(), \
                 f'requested box {box} does not correspond to arr dimensions'
 
-            volume_slice: np.ndarray
             start = timer()
-            if mode == 'zarr_colon':
-                # 2: zarr slicing via : notation
-                volume_slice = self.__get_slice_from_zarr_three_d_arr(arr=volume_arr, box=box)
-            elif mode == 'zarr_gbs':
-                # 3: zarr slicing via get_basic_selection and python slices
-                volume_slice = self.__get_slice_from_zarr_three_d_arr_gbs(arr=volume_arr, box=box)
-            elif mode == 'dask':
-                # 4: dask slicing: https://github.com/zarr-developers/zarr-python/issues/478#issuecomment-531148674
-                volume_slice = self.__get_slice_from_zarr_three_d_arr_dask(arr=volume_arr, box=box)
-            elif mode == 'dask_from_zarr':
-                volume_slice = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=volume_arr, box=box)
-            elif mode == 'tensorstore':
-                volume_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=volume_arr, box=box)
-            else:
-                raise Exception('Slicing mode is not supported: {mode}')
+            volume_slice = self._do_slicing(arr=volume_arr, box=box, mode=mode)
             end = timer()
 
             # check if volume_arr was originally quantized data (e.g. some attr on array, e.g. data_dict attr with data_dict)
@@ -259,22 +224,8 @@ class ReadContext():
             else:
                 raise Exception('No segmentation data is available for the the given entry or lattice_id is None')
 
-            segm_slice: np.ndarray
             start = timer()
-            if mode == 'zarr_colon':
-                # 2: zarr slicing via : notation
-                segm_slice = self.__get_slice_from_zarr_three_d_arr(arr=segm_arr, box=box)
-            elif mode == 'zarr_gbs':
-                segm_slice = self.__get_slice_from_zarr_three_d_arr_gbs(arr=segm_arr, box=box)
-            elif mode == 'dask':
-                segm_slice = self.__get_slice_from_zarr_three_d_arr_dask(arr=segm_arr, box=box)
-            elif mode == 'dask_from_zarr':
-                segm_slice = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=segm_arr, box=box)
-            elif mode == 'tensorstore':
-                segm_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=segm_arr, box=box)
-            else:
-                raise Exception('Slicing mode is not supported: {mode}')
-                
+            segm_slice = self._do_slicing(arr=segm_arr, box=box, mode=mode)                
             end = timer()
 
             if timer_printout == True:
@@ -291,6 +242,25 @@ class ReadContext():
             raise e
 
         return d
+
+    def _do_slicing(self, arr: zarr.core.Array,
+        box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str) -> np.ndarray:
+
+        if mode == 'zarr_colon':
+            # 2: zarr slicing via : notation
+            arr_slice = self.__get_slice_from_zarr_three_d_arr(arr=arr, box=box)
+        elif mode == 'zarr_gbs':
+            arr_slice = self.__get_slice_from_zarr_three_d_arr_gbs(arr=arr, box=box)
+        elif mode == 'dask':
+            arr_slice = self.__get_slice_from_zarr_three_d_arr_dask(arr=arr, box=box)
+        elif mode == 'dask_from_zarr':
+            arr_slice = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=arr, box=box)
+        elif mode == 'tensorstore':
+            arr_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=arr, box=box)
+        else:
+            raise Exception('Slicing mode is not supported: {mode}')
+
+        return arr_slice
 
     def __get_slice_from_zarr_three_d_arr(self, arr: zarr.core.Array,
                                           box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):
