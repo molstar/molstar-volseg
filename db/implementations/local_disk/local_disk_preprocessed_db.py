@@ -22,7 +22,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preproc
 from preprocessor.src.tools.quantize_data.quantize_data import decode_quantized_data
 
 from .local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
-from db.interface.i_preprocessed_db import IPreprocessedDb, ProcessedVolumeSliceData
+from db.interface.i_preprocessed_db import IPreprocessedDb, ProcessedOnlyVolumeSliceData, ProcessedVolumeSliceData, SegmentationSliceData
 from ...interface.i_preprocessed_medatada import IPreprocessedMetadata
 
 
@@ -99,28 +99,10 @@ class ReadContext():
 
             segm_slice: np.ndarray
             volume_slice: np.ndarray
+            
             start = timer()
-            if mode == 'zarr_colon':
-                # 2: zarr slicing via : notation
-                if segm_arr: segm_slice = self.__get_slice_from_zarr_three_d_arr(arr=segm_arr, box=box)
-                volume_slice = self.__get_slice_from_zarr_three_d_arr(arr=volume_arr, box=box)
-            elif mode == 'zarr_gbs':
-                # 3: zarr slicing via get_basic_selection and python slices
-                if segm_arr: segm_slice = self.__get_slice_from_zarr_three_d_arr_gbs(arr=segm_arr, box=box)
-                volume_slice = self.__get_slice_from_zarr_three_d_arr_gbs(arr=volume_arr, box=box)
-            elif mode == 'dask':
-                # 4: dask slicing: https://github.com/zarr-developers/zarr-python/issues/478#issuecomment-531148674
-                if segm_arr: segm_slice = self.__get_slice_from_zarr_three_d_arr_dask(arr=segm_arr, box=box)
-                volume_slice = self.__get_slice_from_zarr_three_d_arr_dask(arr=volume_arr, box=box)
-            elif mode == 'dask_from_zarr':
-                if segm_arr: segm_slice = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=segm_arr, box=box)
-                volume_slice = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=volume_arr, box=box)
-            elif mode == 'tensorstore':
-                # TODO: figure out variable types https://stackoverflow.com/questions/64924224/getting-a-view-of-a-zarr-array-slice
-                # it can be 'view' or np array etc.
-                if segm_arr: segm_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=segm_arr, box=box)
-                volume_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=volume_arr, box=box)
-
+            volume_slice = self._do_slicing(arr=volume_arr, box=box, mode=mode)
+            if segm_arr: segm_slice = self._do_slicing(arr=segm_arr, box=box, mode=mode)                
             end = timer()
 
             # check if volume_arr was originally quantized data (e.g. some attr on array, e.g. data_dict attr with data_dict)
@@ -178,6 +160,107 @@ class ReadContext():
             raise e
 
         return mesh_list
+
+    async def read_volume_slice(self, down_sampling_ratio: int,
+                         box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask',
+                         timer_printout=False) -> ProcessedOnlyVolumeSliceData:
+        try:
+
+            box = normalize_box(box)
+
+            root: zarr.hierarchy.group = zarr.group(self.store)
+
+            volume_arr: zarr.core.Array = root[VOLUME_DATA_GROUPNAME][down_sampling_ratio]
+
+            assert (np.array(box[0]) >= np.array([0, 0, 0])).all(), \
+                f'requested box {box} does not correspond to arr dimensions'
+            assert (np.array(box[1]) <= np.array(volume_arr.shape)).all(), \
+                f'requested box {box} does not correspond to arr dimensions'
+
+            start = timer()
+            volume_slice = self._do_slicing(arr=volume_arr, box=box, mode=mode)
+            end = timer()
+
+            # check if volume_arr was originally quantized data (e.g. some attr on array, e.g. data_dict attr with data_dict)
+            # if yes, decode volume_slice (reassamble data dict from data_dict attr, just add 'data' key with volume_slice)
+            # do .compute on output of decode_quantized_data function if output is da.Array
+
+            if QUANTIZATION_DATA_DICT_ATTR_NAME in volume_arr.attrs:
+                data_dict = volume_arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME]
+                data_dict['data'] = volume_slice
+                volume_slice = decode_quantized_data(data_dict)
+                if isinstance(volume_slice, da.Array):
+                    volume_slice = volume_slice.compute()
+
+            if timer_printout == True:
+                print(f'read_volume_slice with mode {mode}: {end - start}')
+
+            d = {
+                "volume_slice": volume_slice
+                }
+
+        except Exception as e:
+            logging.error(e, stack_info=True, exc_info=True)
+            raise e
+
+        return d
+
+    async def read_segmentation_slice(self, lattice_id: int, down_sampling_ratio: int,
+                         box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask',
+                         timer_printout=False) -> SegmentationSliceData:
+        try:
+
+            box = normalize_box(box)
+
+            root: zarr.hierarchy.group = zarr.group(self.store)
+
+            segm_arr = None
+            segm_dict = None
+            if SEGMENTATION_DATA_GROUPNAME in root and (lattice_id is not None):
+                segm_arr = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].grid
+                assert (np.array(box[1]) <= np.array(segm_arr.shape)).all(), \
+                    f'requested box {box} does not correspond to arr dimensions'
+                segm_dict = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][down_sampling_ratio].set_table[0]
+            else:
+                raise Exception('No segmentation data is available for the the given entry or lattice_id is None')
+
+            start = timer()
+            segm_slice = self._do_slicing(arr=segm_arr, box=box, mode=mode)                
+            end = timer()
+
+            if timer_printout == True:
+                print(f'read_segmentation_slice with mode {mode}: {end - start}')
+            d = {
+                "segmentation_slice": {
+                    "category_set_ids": segm_slice,
+                    "category_set_dict": segm_dict
+                }
+            }
+            
+        except Exception as e:
+            logging.error(e, stack_info=True, exc_info=True)
+            raise e
+
+        return d
+
+    def _do_slicing(self, arr: zarr.core.Array,
+        box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str) -> np.ndarray:
+
+        if mode == 'zarr_colon':
+            # 2: zarr slicing via : notation
+            arr_slice = self.__get_slice_from_zarr_three_d_arr(arr=arr, box=box)
+        elif mode == 'zarr_gbs':
+            arr_slice = self.__get_slice_from_zarr_three_d_arr_gbs(arr=arr, box=box)
+        elif mode == 'dask':
+            arr_slice = self.__get_slice_from_zarr_three_d_arr_dask(arr=arr, box=box)
+        elif mode == 'dask_from_zarr':
+            arr_slice = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(arr=arr, box=box)
+        elif mode == 'tensorstore':
+            arr_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(arr=arr, box=box)
+        else:
+            raise Exception('Slicing mode is not supported: {mode}')
+
+        return arr_slice
 
     def __get_slice_from_zarr_three_d_arr(self, arr: zarr.core.Array,
                                           box: Tuple[Tuple[int, int, int], Tuple[int, int, int]]):

@@ -7,13 +7,13 @@ from pathlib import Path
 
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 
-KEYS = ['emd-9199']
+KEYS = ['emd-1832']
 BOX_CHOICES = ['random_static_region_small', 'random_static_region_big']
 # DB_PATHES_FULL = glob('db_*/')
 # DB_PATHES_FULL.remove('db_11\\')
 # DB_PATHES_FULL.remove('db_12\\')
 # DB_PATHS = DB_PATHES_FULL
-DB_PATHS = ['db_quantized_u1', 'db_quantized_u2', 'db_not_quantized']
+DB_PATHS = ['db']
 
 def generate_random_3d_point_coords(min: tuple[int, int, int], max: tuple[int, int, int]) -> tuple[int, int, int]:
     '''Both min and max are inclusive'''
@@ -27,7 +27,7 @@ async def compute_random_static_box(db: LocalDiskPreprocessedDb, namespace: str,
     metadata = await db.read_metadata(namespace, key)
     dims: tuple = metadata.grid_dimensions()
     if key == 'emd-1832':
-        box_size = box / 10
+        box_size = int(box / 10)
     else:
         box_size = box
 
@@ -132,6 +132,19 @@ async def test_t(aio_benchmark, key, box_choice, db_path):
                 box=box,
                 mode='zarr_colon'
             )
+
+            # result_segm = await reader.read_segmentation_slice(
+            #     lattice_id=0,
+            #     down_sampling_ratio=1,
+            #     box=box,
+            #     mode='zarr_colon'
+            # )
+
+            # result_volume = await reader.read_volume_slice(
+            #     down_sampling_ratio=1,
+            #     box=box,
+            #     mode='zarr_colon'
+            # )
 
         
     
