@@ -2,11 +2,11 @@
 
 
 import argparse
-from asyncio import subprocess
+import subprocess
 from pathlib import Path
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DEFAULT_DB_PATH, RAW_INPUT_FILES_DIR
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE, DEFAULT_DB_PATH, RAW_INPUT_FILES_DIR
 
-from preprocessor.src.tools.prepare_input_for_preprocessor.prepare_input_for_preprocessor import CSV_WITH_ENTRY_IDS_FILE, csv_to_config_list_of_dicts, prepare_input_for_preprocessor
+from preprocessor.src.tools.prepare_input_for_preprocessor.prepare_input_for_preprocessor import csv_to_config_list_of_dicts, prepare_input_for_preprocessor
 
 DEFAULT_HOST = '0.0.0.0'  # 0.0.0.0 = localhost
 DEFAULT_PORT = 9000
@@ -16,8 +16,8 @@ def parse_script_args():
     parser.add_argument('--csv_with_entry_ids', type=Path, default=CSV_WITH_ENTRY_IDS_FILE, help='csv with entry ids and info for preprocessor')
     parser.add_argument('--raw_input_files_dir', type=Path, default=RAW_INPUT_FILES_DIR, help='dir with raw input files')
     parser.add_argument("--db_path", type=Path, default=DEFAULT_DB_PATH, help='path to db folder')
-    parser.add_argument("--api_port", type=str, default=DEFAULT_HOST, help='default port')
-    parser.add_argument("--api_hostname", type=str, default=DEFAULT_PORT, help='default host')
+    parser.add_argument("--api_port", type=str, default=str(DEFAULT_PORT), help='default port')
+    parser.add_argument("--api_hostname", type=str, default=DEFAULT_HOST, help='default host')
     parser.add_argument("--quantize_volume_data_dtype_str", action="store", choices=['u1', 'u2'])
 
     args=parser.parse_args()
@@ -56,9 +56,8 @@ def run_frontend():
     # yarn
     # yarn start
     # ?
-    # subprocess.call(["yarn", "--cwd", "frontend"])
-    # subprocess.call(["yarn", "--cwd", "frontend", "start"])
-    pass
+    subprocess.call(["yarn", "--cwd", "frontend"])
+    subprocess.call(["yarn", "--cwd", "frontend", "start"])
 
 def deploy_db(args):
 
@@ -68,9 +67,7 @@ def deploy_db(args):
     _preprocessor_wrapper(updated_config, args)
     run_api(args)
     run_frontend()
-    
-    # run frontend similar to build_test_db.py
 
-# if name main:
-# parse args
-# run deploy_db with args
+if __name__ == '__main__':
+    args = parse_script_args()
+    deploy_db(args)

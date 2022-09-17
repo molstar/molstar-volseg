@@ -28,6 +28,7 @@ def csv_to_config_list_of_dicts(csv_file_path: Path) -> list[dict]:
         )
 
     df = df.replace({np.nan: None})
+    df['entry_id'] = df['entry_id'].str.lower()
     list_of_dicts = df.to_dict('records')
 
     return list_of_dicts
