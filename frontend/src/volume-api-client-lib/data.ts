@@ -33,7 +33,7 @@ export interface SegmentationLattices {
 
 export interface SegmentationMeshes {
     mesh_component_numbers: {
-        segment_ids: {
+        segment_ids?: {
             [segId: number]: {
                 detail_lvls: {
                     [detail: number]: {
