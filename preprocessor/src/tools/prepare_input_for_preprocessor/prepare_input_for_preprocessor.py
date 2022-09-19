@@ -73,7 +73,7 @@ def prepare_input_for_preprocessor(config: list[dict], output_dir: Path) -> list
 
             if static_segmentation_file_path:
                 static_sff_output_path = entry_folder / static_segmentation_file_path.name
-                shutil.copy2(static_volume_file_path, static_sff_output_path)
+                shutil.copy2(static_segmentation_file_path, static_sff_output_path)
             
         else:
             if db == 'emd':
