@@ -354,7 +354,7 @@ export class AppModel {
             if (!node) {
                 const detail = Metadata.getSufficientDetail(this.metadata!, seg.id, DEFAULT_DETAIL);
                 const color = seg.colour.length >= 3 ? Color.fromNormalizedArray(seg.colour, 0) : ColorNames.gray;
-                node = await MeshExamples.createMeshFromUrl(this.plugin, this.meshServerRequestUrl(this.splitEntryId(entryId).source, entryId, seg.id, detail), seg.id, detail, true, false, color);
+                node = await MeshExamples.createMeshFromUrl(this.plugin, this.meshServerRequestUrl(AppModel.splitEntryId(entryId).source, entryId, seg.id, detail), seg.id, detail, true, false, color);
                 this.meshSegmentNodes[seg.id] = node;
             }
             setSubtreeVisibility(node.state!, node.ref, false);  // show
@@ -362,7 +362,7 @@ export class AppModel {
     }
 
     async loadExampleMeshes(entryId: string = 'empiar-10070', segments: 'fg'|'all' = 'fg') {
-        const source = this.splitEntryId(entryId).source;
+        const source = AppModel.splitEntryId(entryId).source;
         let error = undefined;
 
         try {
@@ -408,7 +408,7 @@ export class AppModel {
     }
 
     async loadExampleMeshStreaming(entryId: string = 'empiar-10070') {
-        const source = this.splitEntryId(entryId).source as 'empiar'|'emdb';
+        const source = AppModel.splitEntryId(entryId).source as 'empiar'|'emdb';
         let error = undefined;
 
         try {
@@ -432,7 +432,7 @@ export class AppModel {
 
     async loadExampleEmdb(entryId: string = 'emd-1832') {
         const isoLevel = 2.73;
-        const source = this.splitEntryId(entryId).source as 'empiar'|'emdb';
+        const source = AppModel.splitEntryId(entryId).source as 'empiar'|'emdb';
         // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
         const url = this.volumeServerRequestUrl(source, entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
         const { plugin } = this;
@@ -556,7 +556,7 @@ export class AppModel {
     }
 
 
-    splitEntryId(entryId: string) {
+    static splitEntryId(entryId: string) {
         const PREFIX_TO_SOURCE: { [prefix: string]: string } = { 'empiar': 'empiar', 'emd': 'emdb' };
         const [prefix, entry] = entryId.split('-');
         return {
@@ -564,7 +564,7 @@ export class AppModel {
             entryNumber: entry
         };
     }
-    createEntryId(source: string, entryNumber: string | number) {
+    static createEntryId(source: string, entryNumber: string | number) {
         const SOURCE_TO_PREFIX: { [prefix: string]: string } = { 'empiar': 'empiar', 'emdb': 'emd' };
         return `${SOURCE_TO_PREFIX[source]}-${entryNumber}`;
     }
