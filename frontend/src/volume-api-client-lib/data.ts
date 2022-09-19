@@ -1,30 +1,34 @@
 
 // METADATA
 
-// partial model
 export interface Metadata {
     grid: { 
+        general: { 
+            details: string ,
+        },
+        volumes: Volumes,
+        segmentation_lattices: SegmentationLattices,
         segmentation_meshes: SegmentationMeshes,
-        // TODO more stuff is there
     },
     annotation: Annotation,
 }
 
-export interface Annotation {
-    name: string,
-    details: string,
-    segment_list: Segment[],
+export interface Volumes {
+    volume_downsamplings: number[],
+    voxel_size: { [downsampling: number]: Vector3 },
+    origin: Vector3,
+    grid_dimensions: Vector3,
+    sampled_grid_dimensions: { [downsampling: number]: Vector3 },
+    mean: { [downsampling: number]: string }, // this should be encoded as number, IMHO
+    std: { [downsampling: number]: string }, // this should be encoded as number, IMHO
+    min: { [downsampling: number]: string }, // this should be encoded as number, IMHO
+    max: { [downsampling: number]: string }, // this should be encoded as number, IMHO
+    volume_force_dtype: string,
 }
 
-export interface Segment {
-    id: number,
-    colour: number[],
-    biological_annotation: BiologicalAnnotation,
-}
-
-export interface BiologicalAnnotation {
-    name: string,
-    external_references: { id: number, resource: string, accession: string, label: string, description: string }[]
+export interface SegmentationLattices {
+    segmentation_lattice_ids: number[],
+    segmentation_downsamplings: { [lattice: number]: number[] },
 }
 
 export interface SegmentationMeshes {
@@ -48,6 +52,25 @@ export interface SegmentationMeshes {
         [lvl: number]: number 
     }
 }
+
+export interface Annotation {
+    name: string,
+    details: string,
+    segment_list: Segment[],
+}
+
+export interface Segment {
+    id: number,
+    colour: number[],
+    biological_annotation: BiologicalAnnotation,
+}
+
+export interface BiologicalAnnotation {
+    name: string,
+    external_references: { id: number, resource: string, accession: string, label: string, description: string }[]
+}
+
+type Vector3 = [number, number, number];
 
 
 // MESH DATA

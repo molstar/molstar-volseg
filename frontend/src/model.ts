@@ -430,6 +430,31 @@ export class AppModel {
         }
     }
 
+    async loadExampleAuto(entryId: string = 'emd-1832') {
+        const source = AppModel.splitEntryId(entryId).source as 'empiar'|'emdb';
+        let error = undefined;
+
+        try {
+            await this.plugin.clear();
+            this.metadata = await this.getMetadata(source, entryId);
+            console.log(this.metadata.grid);
+            // MeshExamples.runMeshStreamingExample(this.plugin, source, entryId);
+            // this.meshSegmentNodes = {};
+            // this.showMeshSegments(this.metadata!.annotation.segment_list, entryId);
+        } catch (ex) {
+            this.metadata = undefined;
+            error = ex;
+            throw ex;
+        } finally {
+            window.location.hash = entryId;
+            this.entryId.next(entryId);
+            this.annotation.next(this.metadata?.annotation);
+            this.dataSource.next('xMeshStreaming');  // This is not actual entry number just selector of example (10070 = mesh example)
+            this.error.next(error);
+        }
+
+    }
+
     async loadExampleEmdb(entryId: string = 'emd-1832') {
         const isoLevel = 2.73;
         const source = AppModel.splitEntryId(entryId).source as 'empiar'|'emdb';
