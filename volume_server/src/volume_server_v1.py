@@ -9,6 +9,7 @@ from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 from .i_volume_server import IVolumeServer
 from .preprocessed_volume_to_cif.i_volume_to_cif_converter import IVolumeToCifConverter
 from volume_server.src.requests.volume_request.i_volume_request import IVolumeRequest
+from volume_server.src.requests.request_box import RequestBox, calc_request_box
 from .requests.cell_request.i_cell_request import ICellRequest
 from .requests.entries_request.i_entries_request import IEntriesRequest
 from .requests.mesh_request.i_mesh_request import IMeshRequest
@@ -68,52 +69,50 @@ class VolumeServerV1(IVolumeServer):
         self.db = db
         self.volume_to_cif = volume_to_cif
 
-    async def get_cell(self, req: ICellRequest) -> bytes:  # TODO: add binary cif to the project
-        metadata = await self.db.read_metadata(req.source(), req.structure_id())
-
-        with self.db.read(namespace=req.source(), key=req.structure_id()) as reader:
-            db_slice = await reader.read(
-                lattice_id=1,
-                down_sampling_ratio=1)  # TODO: parse params from request + metadata
-
-        grid = self.decide_grid(req, metadata)
-        print("Converted grid to: " + str(grid))
-
-        cif = self.volume_to_cif.convert(db_slice, metadata, 1, self.grid_size(grid))  # TODO: replace 10,10,10 with cell size
-        return cif
-
-    async def get_volume(self, req: IVolumeRequest) -> bytes:  # TODO: add binary cif to the project
-        metadata = await self.db.read_metadata(req.source(), req.structure_id())
-
-        print(metadata)
-
-        lattice = self.decide_lattice(req, metadata)
-        grid = self.decide_grid(req, metadata)
-        print("Converted grid to: " + str(grid))
-
-        down_sampling = self.decide_down_sampling(grid, req, metadata)
-        print("Decided down_sampling to be: " + str(down_sampling))
-
-        grid = self.down_sampled_grid(down_sampling, grid)
-
-        print("Converted grid (down sampled) to: " + str(grid))
-
-        print("Making request to read slice:\n" \
-              "  source: " + str(req.source()) + "\n" +
-              "  id: " + str(req.structure_id()) + "\n" +
-              "  lattice: " + str(lattice) + "\n" +
-              "  down_sampling: " + str(down_sampling) + "\n" +
-              "  grid: " + str(grid))
+    async def read_box(self, *, req: Union[IVolumeRequest, ICellRequest], metadata: IPreprocessedMetadata, lattice_id: int, box: RequestBox) -> bytes:
+        print(f"Request Box")
+        print(f"  Downsampling: {box.downsampling_rate}")
+        print(f"  Bottom Left: {box.bottom_left}")
+        print(f"  Top Right: {box.top_right}")
+        print(f"  Volume: {box.volume}")
 
         with self.db.read(namespace=req.source(), key=req.structure_id()) as reader:
             db_slice = await reader.read_slice(
-                lattice_id=lattice,
-                down_sampling_ratio=down_sampling,
-                box=grid,
+                lattice_id=lattice_id,
+                down_sampling_ratio=box.downsampling_rate,
+                box=(box.bottom_left, box.top_right),
             )
 
-        cif = self.volume_to_cif.convert(db_slice, metadata, down_sampling, self.grid_size(grid))
+        cif = self.volume_to_cif.convert(db_slice, metadata, box)
         return cif
+
+    async def get_cell(self, req: ICellRequest) -> bytes:
+        metadata = await self.db.read_metadata(req.source(), req.structure_id())
+        lattice_id = self.decide_lattice(req, metadata)
+        box = self.decide_cell_downsampling(req, metadata)
+                
+        return await self.read_box(
+            req=req,
+            metadata=metadata,
+            lattice_id=lattice_id,
+            box=box,
+        )
+
+    async def get_volume(self, req: IVolumeRequest) -> bytes:  # TODO: add binary cif to the project
+        metadata = await self.db.read_metadata(req.source(), req.structure_id())
+        lattice_id = self.decide_lattice(req, metadata)
+        box = self.decide_downsampling(req, metadata)
+
+        if box is None:
+            # TODO: return empty result instead of exception?
+            raise RuntimeError("No data for request box")
+        
+        return await self.read_box(
+            req=req,
+            metadata=metadata,
+            lattice_id=lattice_id,
+            box=box,
+        )
 
     async def get_meshes(self, req: IMeshRequest) -> list[object]:
         with self.db.read(req.source(), req.id()) as context:
@@ -141,88 +140,32 @@ class VolumeServerV1(IVolumeServer):
         sorted_result = {seg: sorted(result[seg]) for seg in sorted(result.keys())}
         return sorted_result
 
-    def decide_lattice(self, req: IVolumeRequest, metadata: IPreprocessedMetadata) -> Optional[int]:
+    def decide_lattice(self, req: Union[ICellRequest, IVolumeRequest], metadata: IPreprocessedMetadata) -> Optional[int]:
         ids = metadata.segmentation_lattice_ids() or []
         if req.segmentation_id() not in ids:
             return ids[0] if len(ids) > 0 else None
         return req.segmentation_id()
 
-    def decide_down_sampling(self, original_grid: tuple[tuple[int, int, int], tuple[int, int, int]],
-                             req: IVolumeRequest, metadata: IPreprocessedMetadata) -> int:
+    def decide_downsampling(self, req: IVolumeRequest, metadata: IPreprocessedMetadata) -> Optional[RequestBox]:
+        box = None
+        
+        for downsampling_rate in metadata.volume_downsamplings():
+            box = calc_request_box(req, metadata, downsampling_rate)
+            if box is None:
+                return None
+            if box.volume < req.max_points():
+                return box
 
-        down_samplings = metadata.volume_downsamplings()
-        print("[Downsampling] Available downsamplings: " + str(down_samplings))
-        print("[Downsampling] Max points: " + str(req.max_points()))
-        if not req.max_points():
-            print("[Downsampling] req.max_points() is false -> returning instead downsampling = " + str(
-                int(down_samplings[0])))
-            return 1 if '1' in down_samplings else int(down_samplings[0])
+        return box
 
-        size = 1
-        for i in self.grid_size(original_grid):
-            size *= i
+    def decide_cell_downsampling(self, req: ICellRequest, metadata: IPreprocessedMetadata) -> RequestBox:
+        for downsampling_rate in metadata.volume_downsamplings():
+            box = RequestBox(
+                downsampling_rate=downsampling_rate,
+                bottom_left=(0, 0, 0),
+                top_right=tuple(d - 1 for d in metadata.sampled_grid_dimensions(downsampling_rate))
+            )
+            if box.volume < req.max_points():
+                return box
 
-        print("[Downsampling] Original grid size: " + str(size))
-
-        # TODO: improve rounding depending on conservative, strict, etc approach
-        desired_down_sampling = ceil(size / req.max_points())
-        print("[Downsampling] Computed desired downsampling: " + str(desired_down_sampling))
-
-        decided = False
-        decided_down_sampling = __MAX_DOWN_SAMPLING_VALUE__  # max_value
-        highest_down_sampling = 0
-        for ds in down_samplings:
-            if int(ds) > highest_down_sampling:
-                highest_down_sampling = int(ds)
-
-            if desired_down_sampling <= int(ds) < decided_down_sampling:
-                decided_down_sampling = int(ds)
-                decided = True
-
-        if decided:
-            print("[Downsampling] Decided (A): " + str(decided_down_sampling))
-            return decided_down_sampling
-
-        print("[Downsampling] Decided (B): " + str(highest_down_sampling))
-        return highest_down_sampling
-
-    def grid_size(self, grid: tuple[tuple[int, int, int], tuple[int, int, int]]) -> list[int]:
-        print("[Downsampling] Computing grid")
-        grid_x = grid[1][0] - grid[0][0]
-        grid_y = grid[1][1] - grid[0][1]
-        grid_z = grid[1][2] - grid[0][2]
-
-        print("[Downsampling] Computing grid (x,y,z): (" + str(grid_x) + "," + str(grid_y) + "," + str(grid_z) + ")")
-        return [grid_x, grid_y, grid_z]
-
-    def decide_grid(self, req: IVolumeRequest, meta: IPreprocessedMetadata) \
-            -> tuple[tuple[int, int, int], tuple[int, int, int]]:
-        return (
-            (self._float_to_grid(meta.origin()[0], meta.voxel_size(1)[0], meta.grid_dimensions()[0], req.x_min()),
-             self._float_to_grid(meta.origin()[1], meta.voxel_size(1)[1], meta.grid_dimensions()[1], req.y_min()),
-             self._float_to_grid(meta.origin()[2], meta.voxel_size(1)[2], meta.grid_dimensions()[2], req.z_min())),
-            (self._float_to_grid(meta.origin()[0], meta.voxel_size(1)[0], meta.grid_dimensions()[0], req.x_max()),
-             self._float_to_grid(meta.origin()[1], meta.voxel_size(1)[1], meta.grid_dimensions()[1], req.y_max()),
-             self._float_to_grid(meta.origin()[2], meta.voxel_size(1)[2], meta.grid_dimensions()[2], req.z_max())))
-
-    def down_sampled_grid(self, down_sampling: int, original_grid: tuple[tuple[int, int, int], tuple[int, int, int]]) \
-            -> tuple[tuple[int, int, int], tuple[int, int, int]]:
-        if down_sampling == 1:
-            return original_grid
-
-        result: list[list] = []
-        for i in range(2):
-            result.append([])
-            for j in range(3):
-                result[i].append(round(original_grid[i][j] / down_sampling))
-
-        return result
-
-    def _float_to_grid(self, origin: float, step: float, grid_size: int, to_convert: float) -> int:
-        if to_convert < origin:
-            return 0
-
-        if to_convert > origin + step * (grid_size - 1):
-            return grid_size - 1
-
-        return round((to_convert - origin) / step)
+        return box

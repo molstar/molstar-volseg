@@ -47,11 +47,10 @@ class Fields_VolumeData3dInfo:
             number_field_volume3d_info(name="axis_order[1]", value=lambda d, i: 1, encoder=byte_array, dtype='i4'),
             number_field_volume3d_info(name="axis_order[2]", value=lambda d, i: 2, encoder=byte_array, dtype='i4'),
 
-            # TODO: origin/dimensions are currently incorrect, need to update VolumeInfo for this to work
             # origin
-            number_field_volume3d_info(name="origin[0]", value=lambda d, i: _d.metadata.origin()[0] / _d.cell_size[0], encoder=byte_array, dtype='f4'),
-            number_field_volume3d_info(name="origin[1]", value=lambda d, i: _d.metadata.origin()[1] / _d.cell_size[1], encoder=byte_array, dtype='f4'),
-            number_field_volume3d_info(name="origin[2]", value=lambda d, i: _d.metadata.origin()[2] / _d.cell_size[2], encoder=byte_array, dtype='f4'),
+            number_field_volume3d_info(name="origin[0]", value=lambda d, i: _d.origin[0], encoder=byte_array, dtype='f4'),
+            number_field_volume3d_info(name="origin[1]", value=lambda d, i: _d.origin[1], encoder=byte_array, dtype='f4'),
+            number_field_volume3d_info(name="origin[2]", value=lambda d, i: _d.origin[2], encoder=byte_array, dtype='f4'),
 
             # dimensions
             number_field_volume3d_info(name="dimensions[0]", value=lambda d, i: _d.dimensions[0], encoder=byte_array, dtype='f4'),
@@ -59,11 +58,10 @@ class Fields_VolumeData3dInfo:
             number_field_volume3d_info(name="dimensions[2]", value=lambda d, i: _d.dimensions[2], encoder=byte_array, dtype='f4'),
 
             # sampling
-            number_field_volume3d_info(name="sample_rate", value=lambda d, i: _d.downsampling, encoder=byte_array, dtype='i4'),
-            # NOTE: currently need to do +1 on the grid size as it is "inclusive"
-            number_field_volume3d_info(name="sample_count[0]", value=lambda d, i: _d.grid_size[0] + 1, encoder=byte_array, dtype='i4'),
-            number_field_volume3d_info(name="sample_count[1]", value=lambda d, i: _d.grid_size[1] + 1 , encoder=byte_array, dtype='i4'),
-            number_field_volume3d_info(name="sample_count[2]", value=lambda d, i: _d.grid_size[2] + 1, encoder=byte_array, dtype='i4'),
+            number_field_volume3d_info(name="sample_rate", value=lambda d, i: _d.box.downsampling_rate, encoder=byte_array, dtype='i4'),
+            number_field_volume3d_info(name="sample_count[0]", value=lambda d, i: _d.grid_size[0], encoder=byte_array, dtype='i4'),
+            number_field_volume3d_info(name="sample_count[1]", value=lambda d, i: _d.grid_size[1], encoder=byte_array, dtype='i4'),
+            number_field_volume3d_info(name="sample_count[2]", value=lambda d, i: _d.grid_size[2], encoder=byte_array, dtype='i4'),
 
             # spacegroup
             number_field_volume3d_info(name="spacegroup_number", value=lambda d, i: 1, encoder=byte_array, dtype='i4'),
@@ -76,12 +74,12 @@ class Fields_VolumeData3dInfo:
 
             # misc
             number_field_volume3d_info(name="mean_source", value=lambda d, i: _d.metadata.mean(1), encoder=byte_array, dtype='f8'),
-            number_field_volume3d_info(name="mean_sampled", value=lambda d, i: _d.metadata.mean(_d.downsampling), encoder=byte_array, dtype='f8'),
+            number_field_volume3d_info(name="mean_sampled", value=lambda d, i: _d.metadata.mean(_d.box.downsampling_rate), encoder=byte_array, dtype='f8'),
             number_field_volume3d_info(name="sigma_source", value=lambda d, i: _d.metadata.std(1), encoder=byte_array, dtype='f8'),
-            number_field_volume3d_info(name="sigma_sampled", value=lambda d, i: _d.metadata.std(_d.downsampling), encoder=byte_array, dtype='f8'),
+            number_field_volume3d_info(name="sigma_sampled", value=lambda d, i: _d.metadata.std(_d.box.downsampling_rate), encoder=byte_array, dtype='f8'),
 
-            number_field_volume3d_info(name="min_source", value=lambda d, i: _d.min_source, encoder=byte_array, dtype='f8'),
-            number_field_volume3d_info(name="min_sampled", value=lambda d, i: _d.min_downsampled, encoder=byte_array, dtype='f8'),
-            number_field_volume3d_info(name="max_source", value=lambda d, i: _d.max_source, encoder=byte_array, dtype='f8'),
-            number_field_volume3d_info(name="max_sampled", value=lambda d, i: _d.max_downsampled, encoder=byte_array, dtype='f8'),
+            number_field_volume3d_info(name="min_source", value=lambda d, i: _d.metadata.min(1), encoder=byte_array, dtype='f8'),
+            number_field_volume3d_info(name="min_sampled", value=lambda d, i: _d.metadata.min(_d.box.downsampling_rate), encoder=byte_array, dtype='f8'),
+            number_field_volume3d_info(name="max_source", value=lambda d, i: _d.metadata.max(1), encoder=byte_array, dtype='f8'),
+            number_field_volume3d_info(name="max_sampled", value=lambda d, i: _d.metadata.max(_d.box.downsampling_rate), encoder=byte_array, dtype='f8'),
         ]
