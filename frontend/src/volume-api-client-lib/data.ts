@@ -19,10 +19,10 @@ export interface Volumes {
     origin: Vector3,
     grid_dimensions: Vector3,
     sampled_grid_dimensions: { [downsampling: number]: Vector3 },
-    mean: { [downsampling: number]: string }, // this should be encoded as number, IMHO
-    std: { [downsampling: number]: string }, // this should be encoded as number, IMHO
-    min: { [downsampling: number]: string }, // this should be encoded as number, IMHO
-    max: { [downsampling: number]: string }, // this should be encoded as number, IMHO
+    mean: { [downsampling: number]: number },
+    std: { [downsampling: number]: number },
+    min: { [downsampling: number]: number },
+    max: { [downsampling: number]: number },
     volume_force_dtype: string,
 }
 
