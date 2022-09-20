@@ -69,10 +69,10 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, m
             if isinstance(arr_view, da.Array):
                 arr_view = arr_view.compute()
 
-        mean_val = str(np.mean(arr_view))
-        std_val = str(np.std(arr_view))
-        max_val = str(arr_view.max())
-        min_val = str(arr_view.min())
+        mean_val = float(str(np.mean(arr_view)))
+        std_val = float(str(np.std(arr_view)))
+        max_val = float(str(arr_view.max()))
+        min_val = float(str(arr_view.min()))
         grid_dimensions_val: tuple[int, int, int] = arr.shape
 
         mean_dict[str(arr_name)] = mean_val
