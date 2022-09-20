@@ -18,9 +18,11 @@ import * as MeshExamples from './mesh-extension/examples'
 import { ColorNames, Mesh } from './mesh-extension/molstar-lib-imports';
 import { type Metadata, Annotation, Segment } from './volume-api-client-lib/data';
 
+
 const VOLUME_SERVER = 'http://localhost:9000';
 const DEFAULT_DETAIL: number | null = null;  // null means worst
 
+const USE_GHOST_NODES = false;
 
 
 namespace Metadata {
@@ -65,10 +67,32 @@ namespace Metadata {
     }
 }
 
+
 type DataSource = '' | 'xEmdb' | 'xBioimage' | 'xMeshes' | 'xMeshStreaming' | 'xAuto';
 
+
 export class AppModel {
-    plugin: PluginUIContext = void 0 as any;
+    public entryId = new BehaviorSubject<string>('');
+    public annotation = new BehaviorSubject<Annotation | undefined>(undefined);
+    public currentSegment = new BehaviorSubject<Segment | undefined>(undefined);
+    public error = new BehaviorSubject<any>(undefined);
+    public dataSource = new BehaviorSubject<DataSource>('');
+
+    private plugin: PluginUIContext = undefined as any;
+
+    private volume: Volume = undefined as any;
+    private currentLevel: any[] = [];
+
+    private segmentation: ReadonlyArray<number> = [];  // TODO factor out with segmentMap to one object
+    private segmentMap = new Map<number, Set<number>>();
+
+    private metadata?: Metadata = undefined;
+    private meshSegmentNodes: { [segid: number]: any } = {};
+
+    private currentSegments: any[] = [];
+    private volumeRepr: any = undefined;
+
+
 
     async init(target: HTMLElement) {
         const defaultSpec = DefaultPluginUISpec();
@@ -106,263 +130,82 @@ export class AppModel {
         // setTimeout(() => this.loadExampleMeshes(entryFromURL), 50);
     }
 
-    createFakeSegment(volume: Volume, level: number): Volume {
-        const { mean, sigma } = volume.grid.stats;
-        const { data, space } = volume.grid.cells;
-        const newData = new Float32Array(data.length);
+    async loadExampleEmdb(entryId: string = 'emd-1832') {
+        const isoLevel = 2.73;
+        const source = AppModel.splitEntryId(entryId).source as 'empiar'|'emdb';
+        // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
+        const url = this.volumeServerRequestUrl(source, entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
+        const { plugin } = this;
 
-        for (let i = 0; i < space.dimensions[0]; i++) {
-            if (Math.floor(10 * i / space.dimensions[0]) !== level) continue;
+        await plugin.clear();
 
-            for (let j = 0; j < space.dimensions[1]; j++) {
-                for (let k = 0; k < space.dimensions[2]; k++) {
-                    const o = space.dataOffset(i, j, k);
-                    const v = (data[o] - mean) / sigma;
-                    if (v > 2.5) newData[o] = 1;
-                }
-            }
-        }
+        const data = await plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+        const parsed = await plugin.dataFormats.get('dscif')!.parse(plugin, data, { entryId });
+        const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
+        const volumeData = volume.cell!.obj!.data;
+        this.volume = volumeData;
 
-        return {
-            sourceData: { kind: 'custom', name: 'test', data: newData as any },
-            customProperties: new CustomProperties(),
-            _propertyData: {},
-            grid: {
-                ...volume.grid,
-                //stats: { min: 0, max: 1, mean: newMean, sigma: arrayRms(newData) },
-                stats: { min: 0, max: 1, mean: 0, sigma: 1 },
-                cells: {
-                    ...volume.grid.cells,
-                    data: newData as any,
-                }
-            }
-        };
-    }
+        const cif = await plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
+        const segmentationBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
 
-    createSegment99999Plus(volume: Volume, threshold: number): Volume {
-        const { mean, sigma } = volume.grid.stats;
-        const { data, space } = volume.grid.cells;
-        const newData = new Float32Array(data.length);
+        this.metadata = await this.getMetadata(source, entryId);
 
-        for (let i = 0; i < space.dimensions[0]; i++) {
-            for (let j = 0; j < space.dimensions[1]; j++) {
-                for (let k = 0; k < space.dimensions[2]; k++) {
-                    const o = space.dataOffset(i, j, k);
-                    const v = (data[o] - mean) / sigma;
-                    if (v > threshold) newData[o] = 1;
-                }
-            }
-        }
+        console.log('annotation:', this.metadata.annotation);
 
-        return {
-            sourceData: { kind: 'custom', name: 'test', data: newData as any },
-            customProperties: new CustomProperties(),
-            _propertyData: {},
-            grid: {
-                ...volume.grid,
-                //stats: { min: 0, max: 1, mean: newMean, sigma: arrayRms(newData) },
-                stats: { min: 0, max: 1, mean: 0, sigma: 1 },
-                cells: {
-                    ...volume.grid.cells,
-                    data: newData as any,
-                }
-            }
-        };
-    }
+        this.entryId.next(entryId);
+        this.annotation.next(this.metadata.annotation);
+        this.segmentation = segmentationBlock!.categories['segmentation_data_3d'].getField('values')?.toIntArray()!;
+        this.segmentMap = AppModel.makeSegmentMap(segmentationBlock!);
 
-    createSegment99999Minus(volume: Volume, threshold: number): Volume {
-        const { mean, sigma } = volume.grid.stats;
-        const { data, space } = volume.grid.cells;
-        const newData = new Float32Array(data.length);
+        const repr = plugin.build();
 
-        for (let i = 0; i < space.dimensions[0]; i++) {
-            for (let j = 0; j < space.dimensions[1]; j++) {
-                for (let k = 0; k < space.dimensions[2]; k++) {
-                    const o = space.dataOffset(i, j, k);
-                    const v = (data[o] - mean) / sigma;
-                    if (v > threshold && v < -0.35) newData[o] = 1;
-                }
-            }
-        }
-
-        return {
-            sourceData: { kind: 'custom', name: 'test', data: newData as any },
-            customProperties: new CustomProperties(),
-            _propertyData: {},
-            grid: {
-                ...volume.grid,
-                //stats: { min: 0, max: 1, mean: newMean, sigma: arrayRms(newData) },
-                stats: { min: 0, max: 1, mean: 0, sigma: 1 },
-                cells: {
-                    ...volume.grid.cells,
-                    data: newData as any,
-                }
-            }
-        };
-    }
-
-    createSegment(volume: Volume, segmentation: ReadonlyArray<number>, segId: number): Volume {
-        const { mean, sigma } = volume.grid.stats;
-        const { data, space } = volume.grid.cells;
-        const newData = new Float32Array(data.length);
-
-        for (let i = 0; i < data.length; i++) {
-            newData[i] = this.segmentMap.get(segmentation[i])?.has(segId) ? 1 : 0;
-        }
-
-        return {
-            sourceData: { kind: 'custom', name: 'test', data: newData as any },
-            customProperties: new CustomProperties(),
-            _propertyData: {},
-            grid: {
-                ...volume.grid,
-                //stats: { min: 0, max: 1, mean: newMean, sigma: arrayRms(newData) },
-                stats: { min: 0, max: 1, mean: 0, sigma: 1 },
-                cells: {
-                    ...volume.grid.cells,
-                    data: newData as any,
-                }
-            }
-        };
-    }
-
-    private volume: Volume = undefined as any;
-    private currentLevel: any[] = [];
-
-    async showSegments(segments: Segment[]) {
-        if (segments.length === 1) {
-            this.currentSegment.next(segments[0]);
-        } else {
-            this.currentSegment.next(undefined);
-        }
-
-        const update = this.plugin.build();
-
-        for (const l of this.currentLevel) update.delete(l);
-        this.currentLevel = [];
-
-        for (const s of segments) {
-            const volume = this.createSegment(this.volume, this.segmentation, s.id);
-            const root = update.toRoot().apply(CreateVolume, { volume });
-            this.currentLevel.push(root.selector);
-
-            root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
+        repr
+            .to(volume)
+            .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
                 type: 'isosurface',
-                typeParams: { alpha: 1, isoValue: Volume.IsoValue.absolute(0.95) },
+                typeParams: { alpha: 0.2, isoValue: Volume.adjustedIsoValue(volumeData, isoLevel, 'relative') },
                 color: 'uniform',
-                colorParams: { value: Color.fromNormalizedArray(s.colour, 0) }
+                colorParams: { value: Color(0x121212) }
             }));
-        }
 
-        // const controlPoints: Vec2[] = [
-        //     Vec2.create(0, 0),
-        //     Vec2.create(0.5, 0),
-        //     Vec2.create(0.98, 1),
-        //     Vec2.create(1.1, 1),
-        // ]
+        await repr.commit();
 
-        // // const list = {
-        // //     kind: 'interpolate' as const,
-        // //     colors: [
-        // //         [Color(0x0), 0]
-        // //     ]
-        // // }
+        await this.showSegments(this.metadata.annotation.segment_list);
 
-        // root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
-        //     type: 'direct-volume',
-        //     typeParams: { 
-        //         ignoreLight: true,
-        //         stepsPerCell: 1,
-        //         controlPoints,
-        //         xrayShaded: false,
-        //     },
-        //     color: 'uniform',
-        //     colorParams: { value: Color(Math.round(Math.random() * 0xffffff)) }
-        // }));
-
-        await update.commit();
+        this.dataSource.next('xEmdb');
     }
 
-    private currentSegments: any[] = [];
+    async loadExampleBioimage() {
+        const entryId = 'emd-99999';
+        const url = this.volumeServerRequestUrl('emdb', entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
+        // http://localhost:9000/v1/emdb/emd-99999/box/0/-10000/-10000/-10000/10000/10000/10000/10000000
+        const { plugin } = this;
 
-    async showSegment(volume: Volume, color: number[], opacity = 1) {
-        const update = this.plugin.build();
-        const root = update.toRoot().apply(CreateVolume, { volume });
-        this.currentLevel.push(root.selector);
+        await plugin.clear();
 
-        const seg = root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
-            type: 'isosurface',
-            typeParams: { alpha: opacity, isoValue: Volume.IsoValue.absolute(0.95), transparentBackfaces: 'off', doubleSided: false, flatShaded: true },
-            color: 'uniform',
-            colorParams: { value: Color.fromNormalizedArray(color, 0) }
-        }));
+        const data = await plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+        const parsed = await plugin.dataFormats.get('dscif')!.parse(plugin, data);
+        const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
+        const volumeData = volume.cell!.obj!.data;
+        this.volume = volumeData;
 
-        this.currentSegments.push(seg.selector);
+        this.volumeRepr = plugin.build()
+            .to(volume)
+            .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
+                type: 'isosurface',
+                typeParams: { alpha: 1.0, isoValue: Volume.IsoValue.relative(-0.55) },
+                color: 'uniform',
+                colorParams: { value: Color(0x224899) }
+            }));
+        await this.volumeRepr.commit();
 
-        await update.commit();
-    }
+        this.currentSegments = [];
+        // const segP = this.createSegment99999Plus(volumeData, 0);
+        // const segM = this.createSegment99999Minus(volumeData, -0.55);
+        // await this.showSegment(segP, [0.3, 0.7, 0.1]);
+        // await this.showSegment(segM, [0.1, 0.3, 0.7]);
 
-    private segmentation: ReadonlyArray<number> = [];
-    private segmentMap = new Map<number, Set<number>>();
-    entryId = new BehaviorSubject<string>('');
-    annotation = new BehaviorSubject<Annotation | undefined>(undefined);
-    currentSegment = new BehaviorSubject<Segment | undefined>(undefined);
-    error = new BehaviorSubject<any>(undefined);
-
-
-    metadataUrl(source: string, entryId: string): string {
-        return `http://localhost:9000/v1/${source}/${entryId}/metadata`;
-    }
-    volumeServerRequestUrl(source: string, entryId: string, segmentation: number, box: [[number, number, number], [number, number, number]], maxPoints: number): string {
-        const [[a1, a2, a3], [b1, b2, b3]] = box;
-        return `${VOLUME_SERVER}/v1/${source}/${entryId}/box/${segmentation}/${a1}/${a2}/${a3}/${b1}/${b2}/${b3}/${maxPoints}`;
-    }
-    // Temporary solution
-    meshServerRequestUrl(source: string, entryId: string, segment: number, detailLevel: number): string {
-        return `${VOLUME_SERVER}/v1/${source}/${entryId}/mesh/${segment}/${detailLevel}`;
-    }
-
-    async getMetadata(source: string, entryId: string): Promise<Metadata> {
-        const response = await fetch(this.metadataUrl(source, entryId));
-        return await response.json();
-    }
-    async getMeshData_debugging(source: string, entryId: string, segment: number, detailLevel: number) {
-        const url = this.meshServerRequestUrl(source, entryId, segment, detailLevel);
-        const response = await fetch(url);
-        const data = await response.json();
-        return data;
-    }
-
-    logStuff(plugin: PluginUIContext, repr: StateBuilder.Root): void {
-        console.log('plugin:\n', plugin);
-        console.log('repr:\n', repr);
-        console.log('tree:\n', repr.currentTree);
-        console.log('children:', repr.currentTree.children.size);
-    }
-
-    private metadata?: Metadata = undefined;
-    private meshSegmentNodes: { [segid: number]: any } = {};
-
-    async showMeshSegments(segments: Segment[], entryId: string) {
-        if (segments.length === 1) {
-            this.currentSegment.next(segments[0]);
-        } else {
-            this.currentSegment.next(undefined);
-        }
-
-        for (const node of Object.values(this.meshSegmentNodes)) {
-            setSubtreeVisibility(node.state!, node.ref, true);  // hide
-        }
-        for (const seg of segments) {
-            let node = this.meshSegmentNodes[seg.id];
-            if (!node) {
-                const detail = Metadata.getSufficientDetail(this.metadata!, seg.id, DEFAULT_DETAIL);
-                const color = seg.colour.length >= 3 ? Color.fromNormalizedArray(seg.colour, 0) : ColorNames.gray;
-                node = await MeshExamples.createMeshFromUrl(this.plugin, this.meshServerRequestUrl(AppModel.splitEntryId(entryId).source, entryId, seg.id, detail), seg.id, detail, true, false, color);
-                this.meshSegmentNodes[seg.id] = node;
-            }
-            setSubtreeVisibility(node.state!, node.ref, false);  // show
-        }
+        this.dataSource.next('xBioimage');
     }
 
     async loadExampleMeshes(entryId: string = 'empiar-10070', segments: 'fg'|'all' = 'fg') {
@@ -434,25 +277,6 @@ export class AppModel {
         }
     }
 
-    logCifOverview(cifData: CifFile): void {
-        const MAX_VALUES = 5;
-        console.log('cifData.name:', cifData.name);
-        cifData.blocks.forEach(block => {
-            console.log(`    ${block.header}`);
-            block.categoryNames.forEach(catName => {
-                const category = block.categories[catName];
-                const nRows = category.rowCount;
-                console.log(`        _${catName} [${nRows} rows]`);
-                category.fieldNames.forEach(fieldName => {
-                    const field = category.getField(fieldName);
-                    let values = field?.toStringArray().slice(0, MAX_VALUES).join(', ');
-                    if (nRows > MAX_VALUES) values += '...';
-                    console.log(`            .${fieldName}:  ${values}`);
-                });
-            });
-        });
-    }
-
     async loadExampleAuto(entryId: string = 'emd-1832') {
         const source = AppModel.splitEntryId(entryId).source as 'empiar'|'emdb';
         let error = undefined;
@@ -477,7 +301,7 @@ export class AppModel {
             if (hasVolumes) {
                 const isoLevel = 2.73; // TODO choose isoLevel smartly (2.73 is OK for emd-1832)
                 const url = this.volumeServerRequestUrl(source, entryId, 0, BOX, MAX_VOXELS);
-                const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: true } });
+                const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
                 const parsed = await this.plugin.dataFormats.get('dscif')!.parse(this.plugin, data, { entryId });
                 const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
                 const volumeData = volume.cell!.obj!.data;
@@ -494,13 +318,13 @@ export class AppModel {
             }
             if (hasLattices) {
                 const url = this.volumeServerRequestUrl(source, entryId, 0, BOX, MAX_VOXELS);
-                const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: true } });
+                const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
                 const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
-                this.logCifOverview(cif.data!); // TODO when could cif.data be undefined?
+                AppModel.logCifOverview(cif.data!); // TODO when could cif.data be undefined?
                 const latticeBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
                 if (latticeBlock){
                     this.segmentation = latticeBlock.categories['segmentation_data_3d']?.getField('values')?.toIntArray()!;
-                    this.segmentMap = this.makeSegmentMap(latticeBlock);
+                    this.segmentMap = AppModel.makeSegmentMap(latticeBlock);
                     await this.showSegments(this.metadata.annotation.segment_list);
                 } else {
                     console.log('WARNING: Block SEGMENTATION_DATA is missing. Not showing segmentations.');
@@ -524,71 +348,90 @@ export class AppModel {
 
     }
 
-    makeSegmentMap(segmentationDataBlock: CifBlock): Map<number, Set<number>> {
-        const setId = segmentationDataBlock.categories['segmentation_data_table'].getField('set_id')?.toIntArray()!; 
-        const segmentId = segmentationDataBlock.categories['segmentation_data_table'].getField('segment_id')?.toIntArray()!;
-        const map = new Map<number, Set<number>>();
-        for (let i = 0; i < segmentId.length; i++) {
-            if (!map.has(setId[i])) {
-                map.set(setId[i], new Set());
-            }
-            map.get(setId[i])!.add(segmentId[i]);
+    /** Make visible the specified set of lattice segments */
+    async showSegments(segments: Segment[]) {
+        if (segments.length === 1) {
+            this.currentSegment.next(segments[0]);
+        } else {
+            this.currentSegment.next(undefined);
         }
-        return map;
-    }
 
-    async loadExampleEmdb(entryId: string = 'emd-1832') {
-        const isoLevel = 2.73;
-        const source = AppModel.splitEntryId(entryId).source as 'empiar'|'emdb';
-        // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
-        const url = this.volumeServerRequestUrl(source, entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
-        const { plugin } = this;
+        const update = this.plugin.build();
 
-        await plugin.clear();
+        for (const l of this.currentLevel) update.delete(l);
+        this.currentLevel = [];
 
-        const data = await plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: true } });
-        const parsed = await plugin.dataFormats.get('dscif')!.parse(plugin, data, { entryId });
-        const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
-        const volumeData = volume.cell!.obj!.data;
-        this.volume = volumeData;
+        for (const s of segments) {
+            const volume = this.createSegment(this.volume, this.segmentation, s.id);
+            const root = update.toRoot().apply(CreateVolume, { volume });
+            this.currentLevel.push(root.selector);
 
-        const cif = await plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
-        const segmentationBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
-
-        const metadata: Metadata = await (await fetch(`http://localhost:9000/v1/emdb/${entryId}/metadata`)).json();
-
-        console.log('annotation:', metadata.annotation);
-
-        this.entryId.next(entryId);
-        this.annotation.next(metadata.annotation);
-        this.segmentation = segmentationBlock!.categories['segmentation_data_3d'].getField('values')?.toIntArray()!;
-        this.segmentMap = this.makeSegmentMap(segmentationBlock!);
-
-        const repr = plugin.build();
-
-        repr
-            .to(volume)
-            .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
+            root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
                 type: 'isosurface',
-                typeParams: { alpha: 0.2, isoValue: Volume.adjustedIsoValue(volumeData, isoLevel, 'relative') },
+                typeParams: { alpha: 1, isoValue: Volume.IsoValue.absolute(0.95) },
                 color: 'uniform',
-                colorParams: { value: Color(0x121212) }
+                colorParams: { value: Color.fromNormalizedArray(s.colour, 0) }
             }));
+        }
 
-        await repr.commit();
+        // const controlPoints: Vec2[] = [
+        //     Vec2.create(0, 0),
+        //     Vec2.create(0.5, 0),
+        //     Vec2.create(0.98, 1),
+        //     Vec2.create(1.1, 1),
+        // ]
 
-        await this.showSegments(metadata.annotation.segment_list);
+        // // const list = {
+        // //     kind: 'interpolate' as const,
+        // //     colors: [
+        // //         [Color(0x0), 0]
+        // //     ]
+        // // }
 
-        this.dataSource.next('xEmdb');
+        // root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
+        //     type: 'direct-volume',
+        //     typeParams: { 
+        //         ignoreLight: true,
+        //         stepsPerCell: 1,
+        //         controlPoints,
+        //         xrayShaded: false,
+        //     },
+        //     color: 'uniform',
+        //     colorParams: { value: Color(Math.round(Math.random() * 0xffffff)) }
+        // }));
+
+        await update.commit();
     }
 
-    dataSource = new BehaviorSubject<DataSource>('');
+    /** Make visible the specified set of mesh segments */
+    async showMeshSegments(segments: Segment[], entryId: string) {
+        if (segments.length === 1) {
+            this.currentSegment.next(segments[0]);
+        } else {
+            this.currentSegment.next(undefined);
+        }
 
+        for (const node of Object.values(this.meshSegmentNodes)) {
+            setSubtreeVisibility(node.state!, node.ref, true);  // hide
+        }
+        for (const seg of segments) {
+            let node = this.meshSegmentNodes[seg.id];
+            if (!node) {
+                const detail = Metadata.getSufficientDetail(this.metadata!, seg.id, DEFAULT_DETAIL);
+                const color = seg.colour.length >= 3 ? Color.fromNormalizedArray(seg.colour, 0) : ColorNames.gray;
+                node = await MeshExamples.createMeshFromUrl(this.plugin, this.meshServerRequestUrl(AppModel.splitEntryId(entryId).source, entryId, seg.id, detail), seg.id, detail, true, false, color);
+                this.meshSegmentNodes[seg.id] = node;
+            }
+            setSubtreeVisibility(node.state!, node.ref, false);  // show
+        }
+    }
+
+    /** Change isovalue for existing volume representation (in Bioimage example) */
     async setIsoValue(newValue: number, showSegmentation: boolean) {
-        if (!this.repr) return;
+        if (!this.volumeRepr) return;
 
         const { plugin } = this;
-        await plugin.build().to(this.repr).update(createVolumeRepresentationParams(this.plugin, this.volume, {
+        await plugin.build().to(this.volumeRepr).update(createVolumeRepresentationParams(this.plugin, this.volume, {
             type: 'isosurface',
             typeParams: { alpha: showSegmentation ? 0.0 : 1, isoValue: Volume.IsoValue.relative(newValue) },
             color: 'uniform',
@@ -610,43 +453,7 @@ export class AppModel {
 
     }
 
-    private repr: any = undefined;
-    async loadExampleBioimage() {
-        const entryId = 'emd-99999';
-        const url = this.volumeServerRequestUrl('emdb', entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
-        // http://localhost:9000/v1/emdb/emd-99999/box/0/-10000/-10000/-10000/10000/10000/10000/10000000
-        const { plugin } = this;
-
-        await plugin.clear();
-
-        const data = await plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: true } });
-        const parsed = await plugin.dataFormats.get('dscif')!.parse(plugin, data);
-        const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
-        const volumeData = volume.cell!.obj!.data;
-        this.volume = volumeData;
-        const repr = plugin.build();
-
-        this.repr = repr
-            .to(volume)
-            .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
-                type: 'isosurface',
-                typeParams: { alpha: 1.0, isoValue: Volume.IsoValue.relative(-0.55) },
-                color: 'uniform',
-                colorParams: { value: Color(0x224899) }
-            }));
-
-        await repr.commit();
-
-        this.currentSegments = [];
-        // const segP = this.createSegment99999Plus(volumeData, 0);
-        // const segM = this.createSegment99999Minus(volumeData, -0.55);
-        // await this.showSegment(segP, [0.3, 0.7, 0.1]);
-        // await this.showSegment(segM, [0.1, 0.3, 0.7]);
-
-        this.dataSource.next('xBioimage');
-    }
-
-
+    /** Split entry ID (e.g. 'emd-1832') into source ('emdb') and number ('1832') */
     static splitEntryId(entryId: string) {
         const PREFIX_TO_SOURCE: { [prefix: string]: string } = { 'empiar': 'empiar', 'emd': 'emdb' };
         const [prefix, entry] = entryId.split('-');
@@ -655,12 +462,211 @@ export class AppModel {
             entryNumber: entry
         };
     }
+
+    /** Create entry ID (e.g. 'emd-1832') for a combination of source ('emdb') and number ('1832') */
     static createEntryId(source: string, entryNumber: string | number) {
         const SOURCE_TO_PREFIX: { [prefix: string]: string } = { 'empiar': 'empiar', 'emdb': 'emd' };
         return `${SOURCE_TO_PREFIX[source]}-${entryNumber}`;
     }
 
+
+
+    private createFakeSegment(volume: Volume, level: number): Volume {
+        const { mean, sigma } = volume.grid.stats;
+        const { data, space } = volume.grid.cells;
+        const newData = new Float32Array(data.length);
+
+        for (let i = 0; i < space.dimensions[0]; i++) {
+            if (Math.floor(10 * i / space.dimensions[0]) !== level) continue;
+
+            for (let j = 0; j < space.dimensions[1]; j++) {
+                for (let k = 0; k < space.dimensions[2]; k++) {
+                    const o = space.dataOffset(i, j, k);
+                    const v = (data[o] - mean) / sigma;
+                    if (v > 2.5) newData[o] = 1;
+                }
+            }
+        }
+
+        return {
+            sourceData: { kind: 'custom', name: 'test', data: newData as any },
+            customProperties: new CustomProperties(),
+            _propertyData: {},
+            grid: {
+                ...volume.grid,
+                //stats: { min: 0, max: 1, mean: newMean, sigma: arrayRms(newData) },
+                stats: { min: 0, max: 1, mean: 0, sigma: 1 },
+                cells: {
+                    ...volume.grid.cells,
+                    data: newData as any,
+                }
+            }
+        };
+    }
+
+    private createSegment99999Plus(volume: Volume, threshold: number): Volume {
+        const { mean, sigma } = volume.grid.stats;
+        const { data, space } = volume.grid.cells;
+        const newData = new Float32Array(data.length);
+
+        for (let i = 0; i < space.dimensions[0]; i++) {
+            for (let j = 0; j < space.dimensions[1]; j++) {
+                for (let k = 0; k < space.dimensions[2]; k++) {
+                    const o = space.dataOffset(i, j, k);
+                    const v = (data[o] - mean) / sigma;
+                    if (v > threshold) newData[o] = 1;
+                }
+            }
+        }
+
+        return {
+            sourceData: { kind: 'custom', name: 'test', data: newData as any },
+            customProperties: new CustomProperties(),
+            _propertyData: {},
+            grid: {
+                ...volume.grid,
+                //stats: { min: 0, max: 1, mean: newMean, sigma: arrayRms(newData) },
+                stats: { min: 0, max: 1, mean: 0, sigma: 1 },
+                cells: {
+                    ...volume.grid.cells,
+                    data: newData as any,
+                }
+            }
+        };
+    }
+
+    private createSegment99999Minus(volume: Volume, threshold: number): Volume {
+        const { mean, sigma } = volume.grid.stats;
+        const { data, space } = volume.grid.cells;
+        const newData = new Float32Array(data.length);
+
+        for (let i = 0; i < space.dimensions[0]; i++) {
+            for (let j = 0; j < space.dimensions[1]; j++) {
+                for (let k = 0; k < space.dimensions[2]; k++) {
+                    const o = space.dataOffset(i, j, k);
+                    const v = (data[o] - mean) / sigma;
+                    if (v > threshold && v < -0.35) newData[o] = 1;
+                }
+            }
+        }
+
+        return {
+            sourceData: { kind: 'custom', name: 'test', data: newData as any },
+            customProperties: new CustomProperties(),
+            _propertyData: {},
+            grid: {
+                ...volume.grid,
+                //stats: { min: 0, max: 1, mean: newMean, sigma: arrayRms(newData) },
+                stats: { min: 0, max: 1, mean: 0, sigma: 1 },
+                cells: {
+                    ...volume.grid.cells,
+                    data: newData as any,
+                }
+            }
+        };
+    }
+
+    private createSegment(volume: Volume, segmentation: ReadonlyArray<number>, segId: number): Volume {
+        const { mean, sigma } = volume.grid.stats;
+        const { data, space } = volume.grid.cells;
+        const newData = new Float32Array(data.length);
+
+        for (let i = 0; i < data.length; i++) {
+            newData[i] = this.segmentMap.get(segmentation[i])?.has(segId) ? 1 : 0;
+        }
+
+        return {
+            sourceData: { kind: 'custom', name: 'test', data: newData as any },
+            customProperties: new CustomProperties(),
+            _propertyData: {},
+            grid: {
+                ...volume.grid,
+                //stats: { min: 0, max: 1, mean: newMean, sigma: arrayRms(newData) },
+                stats: { min: 0, max: 1, mean: 0, sigma: 1 },
+                cells: {
+                    ...volume.grid.cells,
+                    data: newData as any,
+                }
+            }
+        };
+    }
+
+    private async showSegment(volume: Volume, color: number[], opacity = 1) {
+        const update = this.plugin.build();
+        const root = update.toRoot().apply(CreateVolume, { volume });
+        this.currentLevel.push(root.selector);
+
+        const seg = root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
+            type: 'isosurface',
+            typeParams: { alpha: opacity, isoValue: Volume.IsoValue.absolute(0.95), transparentBackfaces: 'off', doubleSided: false, flatShaded: true },
+            color: 'uniform',
+            colorParams: { value: Color.fromNormalizedArray(color, 0) }
+        }));
+
+        this.currentSegments.push(seg.selector);
+
+        await update.commit();
+    }
+
+
+    private metadataUrl(source: string, entryId: string): string {
+        return `${VOLUME_SERVER}/v1/${source}/${entryId}/metadata`;
+    }
+    private volumeServerRequestUrl(source: string, entryId: string, segmentation: number, box: [[number, number, number], [number, number, number]], maxPoints: number): string {
+        const [[a1, a2, a3], [b1, b2, b3]] = box;
+        return `${VOLUME_SERVER}/v1/${source}/${entryId}/box/${segmentation}/${a1}/${a2}/${a3}/${b1}/${b2}/${b3}/${maxPoints}`;
+    }
+    // Temporary solution
+    private meshServerRequestUrl(source: string, entryId: string, segment: number, detailLevel: number): string {
+        return `${VOLUME_SERVER}/v1/${source}/${entryId}/mesh/${segment}/${detailLevel}`;
+    }
+
+    private async getMetadata(source: string, entryId: string): Promise<Metadata> {
+        const response = await fetch(this.metadataUrl(source, entryId));
+        return await response.json();
+    }
+
+    private logStuff(plugin: PluginUIContext, repr: StateBuilder.Root): void {
+        console.log('plugin:\n', plugin);
+        console.log('repr:\n', repr);
+        console.log('tree:\n', repr.currentTree);
+        console.log('children:', repr.currentTree.children.size);
+    }
+
+    private static logCifOverview(cifData: CifFile): void {
+        const MAX_VALUES = 5;
+        console.log('cifData.name:', cifData.name);
+        cifData.blocks.forEach(block => {
+            console.log(`    ${block.header}`);
+            block.categoryNames.forEach(catName => {
+                const category = block.categories[catName];
+                const nRows = category.rowCount;
+                console.log(`        _${catName} [${nRows} rows]`);
+                category.fieldNames.forEach(fieldName => {
+                    const field = category.getField(fieldName);
+                    let values = field?.toStringArray().slice(0, MAX_VALUES).join(', ');
+                    if (nRows > MAX_VALUES) values += '...';
+                    console.log(`            .${fieldName}:  ${values}`);
+                });
+            });
+        });
+    }
+
+    private static makeSegmentMap(segmentationDataBlock: CifBlock): Map<number, Set<number>> {
+        const setId = segmentationDataBlock.categories['segmentation_data_table'].getField('set_id')?.toIntArray()!; 
+        const segmentId = segmentationDataBlock.categories['segmentation_data_table'].getField('segment_id')?.toIntArray()!;
+        const map = new Map<number, Set<number>>();
+        for (let i = 0; i < segmentId.length; i++) {
+            if (!map.has(setId[i])) {
+                map.set(setId[i], new Set());
+            }
+            map.get(setId[i])!.add(segmentId[i]);
+        }
+        return map;
+    }
+
 }
+
 
 
 const CreateTransformer = StateTransformer.builderFactory('cellstar');
