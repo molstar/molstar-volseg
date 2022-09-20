@@ -38,3 +38,4 @@ dependencies:
     - sfftk-rw==0.7.1
     - SimpleParse @ git+https://github.com/mcfletch/simpleparse.git@57c8d734bdc165581fbacfeecabe25a66c3452a4
     - tensorstore==0.1.18
+    - killport
