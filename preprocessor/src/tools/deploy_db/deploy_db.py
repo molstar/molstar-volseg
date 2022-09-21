@@ -24,12 +24,12 @@ def parse_script_args():
     parser.add_argument("--api_hostname", type=str, default=DEFAULT_HOST, help='default host')
     # NOTE: this will quantize everything (except u2/u1 thing), not what we need
     # parser.add_argument("--quantize_volume_data_dtype_str", action="store", choices=['u1', 'u2'])
-    parser.add_argument("--frontend_port", type=int, default=str(DEFAULT_FRONTEND_PORT), help='default frontend port')
+    parser.add_argument("--frontend_port", type=str, default=str(DEFAULT_FRONTEND_PORT), help='default frontend port')
 
     args=parser.parse_args()
     return args
 
-def _free_port(port_number: int):
+def _free_port(port_number: str):
     lst = ['killport', str(port_number)]
     subprocess.call(lst)
 
