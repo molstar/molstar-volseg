@@ -92,6 +92,8 @@ def decode_quantized_data(data_dict: dict) -> Union[da.Array, np.ndarray]:
     da.add(log_data, data_dict["min"], out=log_data)
 
     original_data = da.exp(log_data)
+    one = np.array([1], dtype=original_data.dtype)[0]
+    original_data = da.subtract(original_data, one)
     da.add(original_data, data_dict["to_remove_negatives"], out=original_data)
 
     return original_data
