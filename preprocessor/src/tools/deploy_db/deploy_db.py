@@ -30,7 +30,7 @@ def parse_script_args():
     return args
 
 def _free_port(port_number: int):
-    lst = ['killport', port_number]
+    lst = ['killport', str(port_number)]
     subprocess.call(lst)
 
 def _preprocessor_wrapper(config: list[dict], args):
@@ -67,9 +67,10 @@ def run_frontend(args):
     lst = [
         "serve",
         "-s", "frontend/build",
-        "-l", args.frontend_port
+        "-l", str(args.frontend_port)
     ]
-    subprocess.Popen(lst)
+    # subprocess.Popen(lst)
+    subprocess.call(lst)
 
 def shut_down_ports(args):
     _free_port(args.frontend_port)
