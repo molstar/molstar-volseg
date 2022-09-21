@@ -1,30 +1,25 @@
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
-
+from volume_server.src.requests.request_box import RequestBox
 
 class VolumeInfo:
-    def __init__(self,
-                 name: str,
-                 metadata: IPreprocessedMetadata,
-                 downsampling: int,
-                 min_downsampled: float,
-                 max_downsampled: float,
-                 min_source: float,
-                 max_source: float,
-                 grid_size: list[int]):
+    def __init__(
+        self,
+        name: str,
+        metadata: IPreprocessedMetadata,
+        box: RequestBox,
+    ):
         self.name = name
         self.metadata = metadata
-        self.downsampling = downsampling
-        self.min_downsampled = min_downsampled
-        self.max_downsampled = max_downsampled
-        self.min_source = min_source
-        self.max_source = max_source
-        self.grid_size = grid_size
+        self.box = box
+        
+        self.grid_size = box.dimensions
 
+        downsampling_rate = box.downsampling_rate
+        voxel_size = metadata.voxel_size(downsampling_rate)
+        full_grid_size = metadata.sampled_grid_dimensions(downsampling_rate)
 
-        # NOTE: this isn't accurate, but should be good enough for the prototype
-        # TODO: need to pass top level query box to this (and not just grid size)
-        #       to correctly determine origin and cell_size
-        self.downsampled_grid_size = metadata.sampled_grid_dimensions(downsampling)
-        dx, dy, dz = self.downsampled_grid_size
-        self.dimensions = self.metadata.voxel_size(downsampling)
-        self.cell_size = [dx * self.dimensions[0], dy * self.dimensions[1], dz * self.dimensions[2]]
+        cartn_origin = metadata.origin()
+
+        self.cell_size = [voxel_size[i] * full_grid_size[i] for i in range(3)]
+        self.origin = [cartn_origin[i] / self.cell_size[i] for i in range(3)]
+        self.dimensions = [self.grid_size[i] * voxel_size[i] / self.cell_size[i] for i in range(3)]

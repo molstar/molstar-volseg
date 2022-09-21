@@ -14,6 +14,7 @@ class IVolumeRequest(abc.ABC):
     def segmentation_id(self) -> int:
         pass
 
+    # TODO: replace x/y/z_min/max with bottom_left/top_right tuples
     @abc.abstractmethod
     def x_min(self) -> float:
         pass

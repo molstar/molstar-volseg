@@ -435,6 +435,8 @@ export class AppModel {
         const source = this.splitEntryId(entryId).source as 'empiar'|'emdb';
         // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
         const url = this.volumeServerRequestUrl(source, entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
+        // Slice test with downsamling
+        // const url = this.volumeServerRequestUrl(source, entryId, 0, [[-30, -30, -30], [30, 30, 30]], 1000);
         const { plugin } = this;
 
         await plugin.clear();

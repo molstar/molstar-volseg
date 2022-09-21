@@ -9,6 +9,7 @@ from volume_server.src.requests.entries_request.entries_request import EntriesRe
 from volume_server.src.requests.mesh_request.mesh_request import MeshRequest
 from volume_server.src.requests.metadata_request.metadata_request import MetadataRequest
 from volume_server.src.requests.volume_request.volume_request import VolumeRequest
+from volume_server.src.requests.cell_request.cell_request import CellRequest
 from .json_numpy_response import JSONNumpyResponse
 
 HTTP_CODE_UNPROCESSABLE_ENTITY = 422
@@ -48,6 +49,8 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
             max_points: Optional[int] = 0
     ):
         request = VolumeRequest(source, id, segmentation, a1, a2, a3, b1, b2, b3, max_points)
+        # TODO: validate request box and raise HTTP 400 if error
+        
         response = await volume_server.get_volume(request)
 
         # return {}
@@ -60,8 +63,9 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
             segmentation: int,
             max_points: Optional[int] = 0
     ):
-        request = VolumeRequest(source, id, segmentation, -100000, -100000, -100000, 100000, 100000, 100000, max_points)
-        response = await volume_server.get_volume(request)
+
+        request = CellRequest(source, id, segmentation, max_points)
+        response = await volume_server.get_cell(request)
 
         # return {}
         return Response(response, headers={"Content-Disposition": f'attachment;filename="{id}.bcif"'})
