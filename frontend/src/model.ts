@@ -17,14 +17,15 @@ import { CifBlock, CifFile } from 'molstar/lib/mol-io/reader/cif';
 import * as MeshExamples from './mesh-extension/examples'
 import { ColorNames, Mesh } from './mesh-extension/molstar-lib-imports';
 import { type Metadata, Annotation, Segment } from './volume-api-client-lib/data';
-import { VolumeApiV1 } from './volume-api-client-lib/volume-api';
+import { VolumeApiV1, VolumeApiV2 } from './volume-api-client-lib/volume-api';
 
 
 const DEFAULT_DETAIL: number | null = null;  // null means worst
 
 const USE_GHOST_NODES = false;
 
-const API = new VolumeApiV1();
+const API1 = new VolumeApiV1();
+const API2 = new VolumeApiV2();
 
 
 namespace Metadata {
@@ -124,34 +125,65 @@ export class AppModel {
             ],
         });
 
+        // this.testApiV2();
+        // return;
+
         const fragment = UrlFragmentInfo.get();
         switch (fragment.example) {
-            case 'xEmdb': 
-                setTimeout(() => this.loadExampleEmdb(fragment.entry), 50); 
+            case 'xEmdb':
+                setTimeout(() => this.loadExampleEmdb(fragment.entry), 50);
                 break;
-            case 'xBioimage': 
-                setTimeout(() => this.loadExampleBioimage(fragment.entry), 50); 
+            case 'xBioimage':
+                setTimeout(() => this.loadExampleBioimage(fragment.entry), 50);
                 break;
-            case 'xMeshes': 
-                setTimeout(() => this.loadExampleMeshes(fragment.entry), 50); 
+            case 'xMeshes':
+                setTimeout(() => this.loadExampleMeshes(fragment.entry), 50);
                 break;
-            case 'xMeshStreaming': 
-                setTimeout(() => this.loadExampleMeshStreaming(fragment.entry), 50); 
+            case 'xMeshStreaming':
+                setTimeout(() => this.loadExampleMeshStreaming(fragment.entry), 50);
                 break;
-            case 'xAuto': 
-                setTimeout(() => this.loadExampleAuto(fragment.entry), 50); 
+            case 'xAuto':
+                setTimeout(() => this.loadExampleAuto(fragment.entry), 50);
                 break;
-            default: 
-                setTimeout(() => this.loadExampleAuto(fragment.entry), 50); 
+            default:
+                setTimeout(() => this.loadExampleAuto(fragment.entry), 50);
                 break;
         }
     }
 
+    async testApiV2() {
+        const A = 10 ** 5;
+        const BOX: [[number, number, number], [number, number, number]] = [[-A, -A, -A], [A, A, A]];
+        const MAX_VOXELS = 10 ** 7;
+        const urls: { [name: string]: string } = {
+            'VOLUME BOX EMD-1832': API2.volumeUrl('emdb', 'emd-1832', BOX, MAX_VOXELS),
+            'LATTICE BOX EMD-1832': API2.latticeUrl('emdb', 'emd-1832', 0, BOX, MAX_VOXELS),
+            'VOLUME CELL EMD-1832': API2.volumeUrl('emdb', 'emd-1832', null, MAX_VOXELS),
+            'LATTICE CELL EMD-1832': API2.latticeUrl('emdb', 'emd-1832', 0, null, MAX_VOXELS),
+            'VOLUME BOX EMPIAR-10070': API2.volumeUrl('empiar', 'empiar-10070', BOX, MAX_VOXELS),
+            'LATTICE BOX EMPIAR-10070': API2.latticeUrl('empiar', 'empiar-10070', 0, BOX, MAX_VOXELS),
+            'VOLUME CELL EMPIAR-10070': API2.volumeUrl('empiar', 'empiar-10070', null, MAX_VOXELS),
+            'LATTICE CELL EMPIAR-10070': API2.latticeUrl('empiar', 'empiar-10070', 0, null, MAX_VOXELS),
+        };
+        for (const name in urls) {
+            console.log(`\n<<< ${name} >>>`);
+            console.log(urls[name]);
+            try {
+                const data = await this.plugin.builders.data.download({ url: urls[name], isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+                const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
+                AppModel.logCifOverview(cif.data!);
+            } catch (err) {
+                console.error('Failed', err);
+            }
+        }
+    }
+
     async loadExampleEmdb(entryId: string = 'emd-1832') {
-        const isoLevel = 2.73;  // relative
+        // const isoLevel = { kind: 'relative', value: 2.73};
+        const isoLevel = await AppModel.getIsovalue(entryId);
         const source = AppModel.splitEntryId(entryId).source as 'empiar' | 'emdb';
         // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
-        const url = API.volumeServerRequestUrl(source, entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
+        const url = API1.volumeAndLatticeUrl(source, entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
         const { plugin } = this;
 
         await plugin.clear();
@@ -165,7 +197,7 @@ export class AppModel {
         const cif = await plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
         const segmentationBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
 
-        this.metadata = await API.getMetadata(source, entryId);
+        this.metadata = await API1.getMetadata(source, entryId);
 
         console.log('annotation:', this.metadata.annotation);
 
@@ -179,7 +211,7 @@ export class AppModel {
             .to(volume)
             .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
                 type: 'isosurface',
-                typeParams: { alpha: 0.2, isoValue: Volume.adjustedIsoValue(volumeData, isoLevel, 'relative') },
+                typeParams: { alpha: 0.2, isoValue: Volume.adjustedIsoValue(volumeData, isoLevel.value, isoLevel.kind) },
                 color: 'uniform',
                 colorParams: { value: Color(0x121212) }
             }));
@@ -193,7 +225,7 @@ export class AppModel {
     }
 
     async loadExampleBioimage(entryId: string = 'emd-99999') {
-        const url = API.volumeServerRequestUrl('emdb', entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
+        const url = API1.volumeAndLatticeUrl('emdb', entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
         // http://localhost:9000/v1/emdb/emd-99999/box/0/-10000/-10000/-10000/10000/10000/10000/10000000
         const { plugin } = this;
 
@@ -244,7 +276,7 @@ export class AppModel {
             // MeshExamples.runMeshExample(this.plugin, 'fg', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');
             // MeshExamples.runMultimeshExample(this.plugin, 'fg', 'worst', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');  // Multiple segments merged into 1 segment with multiple meshes
 
-            this.metadata = await API.getMetadata(source, entryId);
+            this.metadata = await API2.getMetadata(source, entryId);
             if (segments === 'fg') {
                 const bgSegments = [13, 15];
                 Metadata.dropSegments(this.metadata, bgSegments);
@@ -277,7 +309,7 @@ export class AppModel {
 
         try {
             await this.plugin.clear();
-            this.metadata = await API.getMetadata(source, entryId);
+            this.metadata = await API2.getMetadata(source, entryId);
             MeshExamples.runMeshStreamingExample(this.plugin, source, entryId);
         } catch (ex) {
             this.metadata = undefined;
@@ -298,24 +330,26 @@ export class AppModel {
 
         try {
             await this.plugin.clear();
-            this.metadata = await API.getMetadata(source, entryId);
+            this.metadata = await API2.getMetadata(source, entryId);
             console.log(this.metadata.grid);
 
             let hasVolumes = this.metadata.grid.volumes.volume_downsamplings.length > 0;
             const hasLattices = this.metadata.grid.segmentation_lattices.segmentation_lattice_ids.length > 0;
             const hasMeshes = this.metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids !== undefined;
-            if (hasVolumes && !hasLattices) {
-                // TODO skip this tweak once the API is ready
-                console.log('WARNING: No lattices available, ignoring volume (waiting for API changes)');
-                hasVolumes = false;
-            }
+            // if (hasVolumes && !hasLattices) {
+            //     console.log('WARNING: No lattices available, ignoring volume (waiting for API changes)');
+            //     hasVolumes = false;
+            // }
 
-            const BOX: [[number, number, number], [number, number, number]] = [[-1000, -1000, -1000], [1000, 1000, 1000]];
-            const MAX_VOXELS = 100_000_000;
+            // const A = 10 ** 4;
+            // const BOX: [[number, number, number], [number, number, number]] = [[-A, -A, -A], [A, A, A]];
+            const BOX = null;
+            const MAX_VOXELS = 10 ** 7;
 
             if (hasVolumes) {
-                const isoLevel = 2.73; // TODO choose isoLevel smartly (2.73 is OK for emd-1832)
-                const url = API.volumeServerRequestUrl(source, entryId, 0, BOX, MAX_VOXELS);
+                // const isoLevel = { kind: 'relative', value: 2.73}; // rel 2.73 (abs 0.42) is OK for emd-1832
+                const isoLevel = await AppModel.getIsovalue(entryId);
+                const url = API2.volumeUrl(source, entryId, BOX, MAX_VOXELS);
                 const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
                 const parsed = await this.plugin.dataFormats.get('dscif')!.parse(this.plugin, data, { entryId });
                 const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
@@ -325,14 +359,14 @@ export class AppModel {
                     .to(volume)
                     .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
                         type: 'isosurface',
-                        typeParams: { alpha: 0.2, isoValue: Volume.adjustedIsoValue(volumeData, isoLevel, 'relative') },
+                        typeParams: { alpha: 0.2, isoValue: Volume.adjustedIsoValue(volumeData, isoLevel.value, isoLevel.kind) },
                         color: 'uniform',
                         colorParams: { value: Color(0x121212) }
                     }))
                     .commit();
             }
             if (hasLattices) {
-                const url = API.volumeServerRequestUrl(source, entryId, 0, BOX, MAX_VOXELS);
+                const url = API2.latticeUrl(source, entryId, 0, BOX, MAX_VOXELS);
                 const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
                 const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
                 AppModel.logCifOverview(cif.data!); // TODO when could cif.data be undefined?
@@ -434,7 +468,7 @@ export class AppModel {
             if (!node) {
                 const detail = Metadata.getSufficientDetail(this.metadata!, seg.id, DEFAULT_DETAIL);
                 const color = seg.colour.length >= 3 ? Color.fromNormalizedArray(seg.colour, 0) : ColorNames.gray;
-                node = await MeshExamples.createMeshFromUrl(this.plugin, API.meshServerRequestUrl(AppModel.splitEntryId(entryId).source, entryId, seg.id, detail), seg.id, detail, true, false, color);
+                node = await MeshExamples.createMeshFromUrl(this.plugin, API2.meshUrl(AppModel.splitEntryId(entryId).source, entryId, seg.id, detail), seg.id, detail, true, false, color);
                 this.meshSegmentNodes[seg.id] = node;
             }
             setSubtreeVisibility(node.state!, node.ref, false);  // show
@@ -624,6 +658,25 @@ export class AppModel {
                 });
             });
         });
+    }
+
+    /** Try to get author-defined contour value for isosurface from EMDB API. Return relative value 1.0, if not applicable or fails.  */
+    private static async getIsovalue(entryId: string): Promise<{ kind: 'absolute' | 'relative', value: number }> {
+        const split = AppModel.splitEntryId(entryId);
+        if (split.source === 'emdb') {
+            try {
+                const response = await fetch(`https://www.ebi.ac.uk/emdb/api/entry/map/${split.entryNumber}`);
+                const json = await response.json();
+                const contours: any[] = json?.map?.contour_list?.contour;
+                if (contours && contours.length > 0) {
+                    const theContour = contours.find(c => c.primary) || contours[0];
+                    return { kind: 'absolute', value: theContour.level };
+                }
+            } catch {
+                // do nothing
+            }
+        }
+        return { kind: 'relative', value: 1.0 };
     }
 
 }
