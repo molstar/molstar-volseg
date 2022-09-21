@@ -73,6 +73,7 @@ namespace Metadata {
 type DataSource = '' | 'xEmdb' | 'xBioimage' | 'xMeshes' | 'xMeshStreaming' | 'xAuto';
 
 
+
 export class AppModel {
     public entryId = new BehaviorSubject<string>('');
     public annotation = new BehaviorSubject<Annotation | undefined>(undefined);
@@ -123,17 +124,32 @@ export class AppModel {
             ],
         });
 
-        
-        // setTimeout(() => this.loadExampleEmdb(), 50);
-        setTimeout(() => this.loadExampleAuto(), 50);
-        
-        // const entryFromURL = window.location.hash.replace('#', '') || undefined;
-        // setTimeout(() => this.loadExampleMeshes(entryFromURL), 50);
+        const fragment = UrlFragmentInfo.get();
+        switch (fragment.example) {
+            case 'xEmdb': 
+                setTimeout(() => this.loadExampleEmdb(fragment.entry), 50); 
+                break;
+            case 'xBioimage': 
+                setTimeout(() => this.loadExampleBioimage(fragment.entry), 50); 
+                break;
+            case 'xMeshes': 
+                setTimeout(() => this.loadExampleMeshes(fragment.entry), 50); 
+                break;
+            case 'xMeshStreaming': 
+                setTimeout(() => this.loadExampleMeshStreaming(fragment.entry), 50); 
+                break;
+            case 'xAuto': 
+                setTimeout(() => this.loadExampleAuto(fragment.entry), 50); 
+                break;
+            default: 
+                setTimeout(() => this.loadExampleAuto(fragment.entry), 50); 
+                break;
+        }
     }
 
     async loadExampleEmdb(entryId: string = 'emd-1832') {
-        const isoLevel = 2.73;
-        const source = AppModel.splitEntryId(entryId).source as 'empiar'|'emdb';
+        const isoLevel = 2.73;  // relative
+        const source = AppModel.splitEntryId(entryId).source as 'empiar' | 'emdb';
         // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
         const url = API.volumeServerRequestUrl(source, entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
         const { plugin } = this;
@@ -172,11 +188,11 @@ export class AppModel {
 
         await this.showSegments(this.metadata.annotation.segment_list);
 
+        UrlFragmentInfo.set({ example: 'xEmdb', entry: entryId });
         this.dataSource.next('xEmdb');
     }
 
-    async loadExampleBioimage() {
-        const entryId = 'emd-99999';
+    async loadExampleBioimage(entryId: string = 'emd-99999') {
         const url = API.volumeServerRequestUrl('emdb', entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
         // http://localhost:9000/v1/emdb/emd-99999/box/0/-10000/-10000/-10000/10000/10000/10000/10000000
         const { plugin } = this;
@@ -205,10 +221,11 @@ export class AppModel {
         // await this.showSegment(segP, [0.3, 0.7, 0.1]);
         // await this.showSegment(segM, [0.1, 0.3, 0.7]);
 
+        UrlFragmentInfo.set({ example: 'xBioimage', entry: entryId });
         this.dataSource.next('xBioimage');
     }
 
-    async loadExampleMeshes(entryId: string = 'empiar-10070', segments: 'fg'|'all' = 'fg') {
+    async loadExampleMeshes(entryId: string = 'empiar-10070', segments: 'fg' | 'all' = 'fg') {
         const source = AppModel.splitEntryId(entryId).source;
         let error = undefined;
 
@@ -246,7 +263,7 @@ export class AppModel {
             error = ex;
             throw ex;
         } finally {
-            window.location.hash = entryId;
+            UrlFragmentInfo.set({ example: 'xMeshes', entry: entryId });
             this.entryId.next(entryId);
             this.annotation.next(this.metadata?.annotation);
             this.dataSource.next('xMeshes');
@@ -255,7 +272,7 @@ export class AppModel {
     }
 
     async loadExampleMeshStreaming(entryId: string = 'empiar-10070') {
-        const source = AppModel.splitEntryId(entryId).source as 'empiar'|'emdb';
+        const source = AppModel.splitEntryId(entryId).source as 'empiar' | 'emdb';
         let error = undefined;
 
         try {
@@ -267,7 +284,7 @@ export class AppModel {
             error = ex;
             throw ex;
         } finally {
-            window.location.hash = entryId;
+            UrlFragmentInfo.set({ example: 'xMeshStreaming', entry: entryId });
             this.entryId.next(entryId);
             this.annotation.next(this.metadata?.annotation);
             this.dataSource.next('xMeshStreaming');
@@ -276,7 +293,7 @@ export class AppModel {
     }
 
     async loadExampleAuto(entryId: string = 'emd-1832') {
-        const source = AppModel.splitEntryId(entryId).source as 'empiar'|'emdb';
+        const source = AppModel.splitEntryId(entryId).source as 'empiar' | 'emdb';
         let error = undefined;
 
         try {
@@ -287,7 +304,7 @@ export class AppModel {
             let hasVolumes = this.metadata.grid.volumes.volume_downsamplings.length > 0;
             const hasLattices = this.metadata.grid.segmentation_lattices.segmentation_lattice_ids.length > 0;
             const hasMeshes = this.metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids !== undefined;
-            if (hasVolumes && !hasLattices){
+            if (hasVolumes && !hasLattices) {
                 // TODO skip this tweak once the API is ready
                 console.log('WARNING: No lattices available, ignoring volume (waiting for API changes)');
                 hasVolumes = false;
@@ -320,7 +337,7 @@ export class AppModel {
                 const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
                 AppModel.logCifOverview(cif.data!); // TODO when could cif.data be undefined?
                 const latticeBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
-                if (latticeBlock){
+                if (latticeBlock) {
                     if (!this.volume) throw new Error('Volume data must be present to create lattice segmentation'); // TODO create grid without volume data
                     this.segmentation = new LatticeSegmentation(latticeBlock, this.volume.grid);
                     await this.showSegments(this.metadata.annotation.segment_list);
@@ -337,7 +354,7 @@ export class AppModel {
             error = ex;
             throw ex;
         } finally {
-            window.location.hash = entryId;
+            UrlFragmentInfo.set({ example: 'xAuto', entry: entryId });
             this.entryId.next(entryId);
             this.annotation.next(this.metadata?.annotation);
             this.dataSource.next('xAuto');
@@ -611,6 +628,8 @@ export class AppModel {
 
 }
 
+
+
 class LatticeSegmentation {
     private segmentationValues: ReadonlyArray<number>;
     private segmentMap;
@@ -648,7 +667,7 @@ class LatticeSegmentation {
     }
 
     private static makeSegmentMap(segmentationDataBlock: CifBlock): Map<number, Set<number>> {
-        const setId = segmentationDataBlock.categories['segmentation_data_table'].getField('set_id')?.toIntArray()!; 
+        const setId = segmentationDataBlock.categories['segmentation_data_table'].getField('set_id')?.toIntArray()!;
         const segmentId = segmentationDataBlock.categories['segmentation_data_table'].getField('segment_id')?.toIntArray()!;
         const map = new Map<number, Set<number>>();
         for (let i = 0; i < segmentId.length; i++) {
@@ -661,6 +680,22 @@ class LatticeSegmentation {
     }
 }
 
+
+
+interface UrlFragmentInfo {
+    example?: DataSource,
+    entry?: string,
+}
+namespace UrlFragmentInfo {
+    export function get(): UrlFragmentInfo {
+        const fragment = window.location.hash.replace('#', '');
+        return Object.fromEntries(new URLSearchParams(fragment).entries())
+    }
+    export function set(urlFragmentInfo: UrlFragmentInfo): void {
+        const fragment = new URLSearchParams(urlFragmentInfo).toString();
+        window.location.hash = fragment;
+    }
+}
 
 
 
