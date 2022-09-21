@@ -22,6 +22,9 @@ class ProcessedVolumeSliceData(TypedDict):
     segmentation_slice: SegmentationSliceData
     volume_slice: np.ndarray
 
+class ProcessedOnlyVolumeSliceData(TypedDict):
+    volume_slice: np.ndarray
+
 
 class IReadOnlyPreprocessedDb(abc.ABC):
     @abc.abstractmethod
