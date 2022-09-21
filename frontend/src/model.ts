@@ -6,7 +6,7 @@ import { StateBuilder, StateObjectSelector, StateTransform, StateTransformer } f
 import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
 import { StateTransforms } from 'molstar/lib/mol-plugin-state/transforms';
 import { createVolumeRepresentationParams } from 'molstar/lib/mol-plugin-state/helpers/volume-representation-params';
-import { Volume } from 'molstar/lib/mol-model/volume';
+import { Grid, Volume } from 'molstar/lib/mol-model/volume';
 import { Color } from 'molstar/lib/mol-util/color';
 import { ParamDefinition as PD } from 'molstar/lib/mol-util/param-definition';
 import { CustomProperties } from 'molstar/lib/mol-model/custom-property';
@@ -17,12 +17,14 @@ import { CifBlock, CifFile } from 'molstar/lib/mol-io/reader/cif';
 import * as MeshExamples from './mesh-extension/examples'
 import { ColorNames, Mesh } from './mesh-extension/molstar-lib-imports';
 import { type Metadata, Annotation, Segment } from './volume-api-client-lib/data';
+import { VolumeApiV1 } from './volume-api-client-lib/volume-api';
 
 
-const VOLUME_SERVER = 'http://localhost:9000';
 const DEFAULT_DETAIL: number | null = null;  // null means worst
 
 const USE_GHOST_NODES = false;
+
+const API = new VolumeApiV1();
 
 
 namespace Metadata {
@@ -80,11 +82,10 @@ export class AppModel {
 
     private plugin: PluginUIContext = undefined as any;
 
-    private volume: Volume = undefined as any;
+    private volume?: Volume;  // TODO optional
     private currentLevel: any[] = [];
 
-    private segmentation: ReadonlyArray<number> = [];  // TODO factor out with segmentMap to one object
-    private segmentMap = new Map<number, Set<number>>();
+    private segmentation?: LatticeSegmentation;
 
     private metadata?: Metadata = undefined;
     private meshSegmentNodes: { [segid: number]: any } = {};
@@ -134,7 +135,7 @@ export class AppModel {
         const isoLevel = 2.73;
         const source = AppModel.splitEntryId(entryId).source as 'empiar'|'emdb';
         // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
-        const url = this.volumeServerRequestUrl(source, entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
+        const url = API.volumeServerRequestUrl(source, entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
         const { plugin } = this;
 
         await plugin.clear();
@@ -148,14 +149,13 @@ export class AppModel {
         const cif = await plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
         const segmentationBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
 
-        this.metadata = await this.getMetadata(source, entryId);
+        this.metadata = await API.getMetadata(source, entryId);
 
         console.log('annotation:', this.metadata.annotation);
 
         this.entryId.next(entryId);
         this.annotation.next(this.metadata.annotation);
-        this.segmentation = segmentationBlock!.categories['segmentation_data_3d'].getField('values')?.toIntArray()!;
-        this.segmentMap = AppModel.makeSegmentMap(segmentationBlock!);
+        this.segmentation = new LatticeSegmentation(segmentationBlock!, this.volume.grid);
 
         const repr = plugin.build();
 
@@ -177,7 +177,7 @@ export class AppModel {
 
     async loadExampleBioimage() {
         const entryId = 'emd-99999';
-        const url = this.volumeServerRequestUrl('emdb', entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
+        const url = API.volumeServerRequestUrl('emdb', entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
         // http://localhost:9000/v1/emdb/emd-99999/box/0/-10000/-10000/-10000/10000/10000/10000/10000000
         const { plugin } = this;
 
@@ -227,7 +227,7 @@ export class AppModel {
             // MeshExamples.runMeshExample(this.plugin, 'fg', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');
             // MeshExamples.runMultimeshExample(this.plugin, 'fg', 'worst', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');  // Multiple segments merged into 1 segment with multiple meshes
 
-            this.metadata = await this.getMetadata(source, entryId);
+            this.metadata = await API.getMetadata(source, entryId);
             if (segments === 'fg') {
                 const bgSegments = [13, 15];
                 Metadata.dropSegments(this.metadata, bgSegments);
@@ -260,10 +260,8 @@ export class AppModel {
 
         try {
             await this.plugin.clear();
-            this.metadata = await this.getMetadata(source, entryId);
+            this.metadata = await API.getMetadata(source, entryId);
             MeshExamples.runMeshStreamingExample(this.plugin, source, entryId);
-            // this.meshSegmentNodes = {};
-            // this.showMeshSegments(this.metadata!.annotation.segment_list, entryId);
         } catch (ex) {
             this.metadata = undefined;
             error = ex;
@@ -283,7 +281,7 @@ export class AppModel {
 
         try {
             await this.plugin.clear();
-            this.metadata = await this.getMetadata(source, entryId);
+            this.metadata = await API.getMetadata(source, entryId);
             console.log(this.metadata.grid);
 
             let hasVolumes = this.metadata.grid.volumes.volume_downsamplings.length > 0;
@@ -300,7 +298,7 @@ export class AppModel {
 
             if (hasVolumes) {
                 const isoLevel = 2.73; // TODO choose isoLevel smartly (2.73 is OK for emd-1832)
-                const url = this.volumeServerRequestUrl(source, entryId, 0, BOX, MAX_VOXELS);
+                const url = API.volumeServerRequestUrl(source, entryId, 0, BOX, MAX_VOXELS);
                 const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
                 const parsed = await this.plugin.dataFormats.get('dscif')!.parse(this.plugin, data, { entryId });
                 const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
@@ -317,14 +315,14 @@ export class AppModel {
                     .commit();
             }
             if (hasLattices) {
-                const url = this.volumeServerRequestUrl(source, entryId, 0, BOX, MAX_VOXELS);
+                const url = API.volumeServerRequestUrl(source, entryId, 0, BOX, MAX_VOXELS);
                 const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
                 const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
                 AppModel.logCifOverview(cif.data!); // TODO when could cif.data be undefined?
                 const latticeBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
                 if (latticeBlock){
-                    this.segmentation = latticeBlock.categories['segmentation_data_3d']?.getField('values')?.toIntArray()!;
-                    this.segmentMap = AppModel.makeSegmentMap(latticeBlock);
+                    if (!this.volume) throw new Error('Volume data must be present to create lattice segmentation'); // TODO create grid without volume data
+                    this.segmentation = new LatticeSegmentation(latticeBlock, this.volume.grid);
                     await this.showSegments(this.metadata.annotation.segment_list);
                 } else {
                     console.log('WARNING: Block SEGMENTATION_DATA is missing. Not showing segmentations.');
@@ -362,7 +360,7 @@ export class AppModel {
         this.currentLevel = [];
 
         for (const s of segments) {
-            const volume = this.createSegment(this.volume, this.segmentation, s.id);
+            const volume = this.segmentation?.createSegment(s.id);
             const root = update.toRoot().apply(CreateVolume, { volume });
             this.currentLevel.push(root.selector);
 
@@ -419,7 +417,7 @@ export class AppModel {
             if (!node) {
                 const detail = Metadata.getSufficientDetail(this.metadata!, seg.id, DEFAULT_DETAIL);
                 const color = seg.colour.length >= 3 ? Color.fromNormalizedArray(seg.colour, 0) : ColorNames.gray;
-                node = await MeshExamples.createMeshFromUrl(this.plugin, this.meshServerRequestUrl(AppModel.splitEntryId(entryId).source, entryId, seg.id, detail), seg.id, detail, true, false, color);
+                node = await MeshExamples.createMeshFromUrl(this.plugin, API.meshServerRequestUrl(AppModel.splitEntryId(entryId).source, entryId, seg.id, detail), seg.id, detail, true, false, color);
                 this.meshSegmentNodes[seg.id] = node;
             }
             setSubtreeVisibility(node.state!, node.ref, false);  // show
@@ -445,8 +443,8 @@ export class AppModel {
         await update.commit();
 
         if (showSegmentation) {
-            const segP = this.createSegment99999Plus(this.volume, -0.35);
-            const segM = this.createSegment99999Minus(this.volume, newValue);
+            const segP = this.createSegment99999Plus(this.volume!, -0.35);
+            const segM = this.createSegment99999Minus(this.volume!, newValue);
             await this.showSegment(segP, [0.3, 0.7, 0.6], 0.5);
             await this.showSegment(segM, [0.1, 0.3, 0.7]);
         }
@@ -566,31 +564,6 @@ export class AppModel {
         };
     }
 
-    private createSegment(volume: Volume, segmentation: ReadonlyArray<number>, segId: number): Volume {
-        const { mean, sigma } = volume.grid.stats;
-        const { data, space } = volume.grid.cells;
-        const newData = new Float32Array(data.length);
-
-        for (let i = 0; i < data.length; i++) {
-            newData[i] = this.segmentMap.get(segmentation[i])?.has(segId) ? 1 : 0;
-        }
-
-        return {
-            sourceData: { kind: 'custom', name: 'test', data: newData as any },
-            customProperties: new CustomProperties(),
-            _propertyData: {},
-            grid: {
-                ...volume.grid,
-                //stats: { min: 0, max: 1, mean: newMean, sigma: arrayRms(newData) },
-                stats: { min: 0, max: 1, mean: 0, sigma: 1 },
-                cells: {
-                    ...volume.grid.cells,
-                    data: newData as any,
-                }
-            }
-        };
-    }
-
     private async showSegment(volume: Volume, color: number[], opacity = 1) {
         const update = this.plugin.build();
         const root = update.toRoot().apply(CreateVolume, { volume });
@@ -609,22 +582,6 @@ export class AppModel {
     }
 
 
-    private metadataUrl(source: string, entryId: string): string {
-        return `${VOLUME_SERVER}/v1/${source}/${entryId}/metadata`;
-    }
-    private volumeServerRequestUrl(source: string, entryId: string, segmentation: number, box: [[number, number, number], [number, number, number]], maxPoints: number): string {
-        const [[a1, a2, a3], [b1, b2, b3]] = box;
-        return `${VOLUME_SERVER}/v1/${source}/${entryId}/box/${segmentation}/${a1}/${a2}/${a3}/${b1}/${b2}/${b3}/${maxPoints}`;
-    }
-    // Temporary solution
-    private meshServerRequestUrl(source: string, entryId: string, segment: number, detailLevel: number): string {
-        return `${VOLUME_SERVER}/v1/${source}/${entryId}/mesh/${segment}/${detailLevel}`;
-    }
-
-    private async getMetadata(source: string, entryId: string): Promise<Metadata> {
-        const response = await fetch(this.metadataUrl(source, entryId));
-        return await response.json();
-    }
 
     private logStuff(plugin: PluginUIContext, repr: StateBuilder.Root): void {
         console.log('plugin:\n', plugin);
@@ -652,6 +609,44 @@ export class AppModel {
         });
     }
 
+}
+
+class LatticeSegmentation {
+    private segmentationValues: ReadonlyArray<number>;
+    private segmentMap;
+    private grid: Grid;
+
+    public constructor(segmentationDataBlock: CifBlock, grid: Grid) {
+        this.segmentationValues = segmentationDataBlock!.categories['segmentation_data_3d'].getField('values')?.toIntArray()!;
+        this.segmentMap = LatticeSegmentation.makeSegmentMap(segmentationDataBlock);
+        this.grid = grid;
+    }
+
+    public createSegment(segId: number): Volume {
+        const { mean, sigma } = this.grid.stats;
+        const { data, space } = this.grid.cells;
+        const newData = new Float32Array(data.length);
+
+        for (let i = 0; i < data.length; i++) {
+            newData[i] = this.segmentMap.get(this.segmentationValues[i])?.has(segId) ? 1 : 0;
+        }
+
+        return {
+            sourceData: { kind: 'custom', name: 'test', data: newData as any },
+            customProperties: new CustomProperties(),
+            _propertyData: {},
+            grid: {
+                ...this.grid,
+                //stats: { min: 0, max: 1, mean: newMean, sigma: arrayRms(newData) },
+                stats: { min: 0, max: 1, mean: 0, sigma: 1 },
+                cells: {
+                    ...this.grid.cells,
+                    data: newData as any,
+                }
+            }
+        };
+    }
+
     private static makeSegmentMap(segmentationDataBlock: CifBlock): Map<number, Set<number>> {
         const setId = segmentationDataBlock.categories['segmentation_data_table'].getField('set_id')?.toIntArray()!; 
         const segmentId = segmentationDataBlock.categories['segmentation_data_table'].getField('segment_id')?.toIntArray()!;
@@ -664,8 +659,8 @@ export class AppModel {
         }
         return map;
     }
-
 }
+
 
 
 
