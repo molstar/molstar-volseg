@@ -18,6 +18,8 @@ from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_conve
 from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.volume_data_3d_info.volume_info import \
     VolumeInfo
 
+from volume_server.src.requests.request_box import RequestBox
+
 
 class ConverterOutputStream(OutputStream):
     result_binary: bytes = None
@@ -33,22 +35,15 @@ class ConverterOutputStream(OutputStream):
 
 
 class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
-    def _add_slice_volume_info(self, writer: BinaryCIFWriter, volume: np.ndarray, metadata: IPreprocessedMetadata, downsampling: int, grid_size: list[int]):       
+    def _add_slice_volume_info(self, writer: BinaryCIFWriter, volume: np.ndarray, metadata: IPreprocessedMetadata, box: RequestBox):       
         volume_info_category = CategoryWriterProvider_VolumeData3dInfo()
 
+        volume_info = VolumeInfo(name="em", metadata=metadata, box=box)
 
-        min_downsampling = metadata.min(downsampling)
-        max_downsampling = metadata.max(downsampling)
-        min_source = metadata.min(1)
-        max_source = metadata.max(1)
-
-        volume_info = VolumeInfo("em", metadata, downsampling, min_downsampling, max_downsampling, min_source, max_source, grid_size)
-
-        # TODO: this should have it's own data and required here as Mol* uses it to determine CIF variant
-        # wont be needed in the final version
-        # TODO: remove and update frontend
         writer.start_data_block("SERVER") 
-        writer.write_category(volume_info_category, [volume_info])
+        # NOTE: the SERVER category left empty for now
+        # TODO: create new category with request and responce info (e.g. query region, timing info, etc.)
+        # writer.write_category(volume_info_category, [volume_info])
 
         writer.start_data_block("EM")
         writer.write_category(volume_info_category, [volume_info])
@@ -88,13 +83,13 @@ class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
         writer.flush(output_stream)
         return output_stream.result_binary if binary else output_stream.result_text
 
-    def convert(self, slice: ProcessedVolumeSliceData, metadata: IPreprocessedMetadata, downsampling: int, grid_size: list[int]) -> Union[bytes, str]:  # TODO: add binary cif to the project
+    def convert(self, slice: ProcessedVolumeSliceData, metadata: IPreprocessedMetadata, box: RequestBox) -> Union[bytes, str]:  # TODO: add binary cif to the project
         volume: np.ndarray = slice["volume_slice"]
         
         writer = BinaryCIFWriter("volume_server")
 
         # volume
-        self._add_slice_volume_info(writer, volume, metadata, downsampling, grid_size)
+        self._add_slice_volume_info(writer, volume, metadata, box)
 
         # segmentation
         # TODO: hack... need to improve more?
