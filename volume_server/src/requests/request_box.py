@@ -28,11 +28,8 @@ def calc_request_box(req: IVolumeRequest, meta: IPreprocessedMetadata, downsampl
     req_min = (req.x_min(), req.y_min(), req.z_min())
     req_max = (req.x_max(), req.y_max(), req.z_max())
 
-    bottom_left_cartn = tuple(map(min, zip(req_min, req_max)))
-    top_right_cartn = tuple(map(max, zip(req_min, req_max)))
-
-    bottom_left = tuple(max(0, floor((bottom_left_cartn[i] - origin[i]) / voxel_size[i] )) for i in range(3))
-    top_right = tuple(min(grid_dimensions[i] - 1, ceil((top_right_cartn[i] - origin[i]) / voxel_size[i] )) for i in range(3))
+    bottom_left = tuple(max(0, floor((req_min[i] - origin[i]) / voxel_size[i] )) for i in range(3))
+    top_right = tuple(min(grid_dimensions[i] - 1, ceil((req_max[i] - origin[i]) / voxel_size[i] )) for i in range(3))
 
     # Check if the box is outside the available data
     if any(bottom_left[i] >= grid_dimensions[i] for i in range(3)) or any(top_right[i] < 0 for i in range(3)):

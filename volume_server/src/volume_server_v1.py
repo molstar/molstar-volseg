@@ -148,24 +148,30 @@ class VolumeServerV1(IVolumeServer):
 
     def decide_downsampling(self, req: IVolumeRequest, metadata: IPreprocessedMetadata) -> Optional[RequestBox]:
         box = None
-        
-        for downsampling_rate in metadata.volume_downsamplings():
+        max_points = req.max_points()
+
+        for downsampling_rate in sorted(metadata.volume_downsamplings()):
             box = calc_request_box(req, metadata, downsampling_rate)
             if box is None:
                 return None
-            if box.volume < req.max_points():
+            # TODO: decide what to do when max_points is 0
+            # e.g. whether to return the lowest downsampling or highest
+            if box.volume < max_points:
                 return box
 
         return box
 
     def decide_cell_downsampling(self, req: ICellRequest, metadata: IPreprocessedMetadata) -> RequestBox:
-        for downsampling_rate in metadata.volume_downsamplings():
+        max_points = req.max_points()
+
+        for downsampling_rate in sorted(metadata.volume_downsamplings()):
             box = RequestBox(
                 downsampling_rate=downsampling_rate,
                 bottom_left=(0, 0, 0),
                 top_right=tuple(d - 1 for d in metadata.sampled_grid_dimensions(downsampling_rate))
             )
-            if box.volume < req.max_points():
+            # TODO: decide what to do when max_points is 0
+            if box.volume < max_points:
                 return box
 
         return box
