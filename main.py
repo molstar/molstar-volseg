@@ -5,7 +5,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from api import v1 as api
+from api import v1 as api_v1
+from api import v2 as api_v2
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 
 # initialized msg pack for numpy
@@ -44,7 +45,8 @@ def prepare_fastapi_app():
     # initialize server
     volume_server = VolumeServerV1(db, volume_to_cif_converter)
 
-    api.configure_endpoints(app, volume_server)
+    api_v1.configure_endpoints(app, volume_server)
+    api_v2.configure_endpoints(app, volume_server)
 
     return app
 
