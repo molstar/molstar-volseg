@@ -24,7 +24,7 @@ def parse_script_args():
     parser.add_argument("--api_hostname", type=str, default=DEFAULT_HOST, help='default host')
     # NOTE: this will quantize everything (except u2/u1 thing), not what we need
     # parser.add_argument("--quantize_volume_data_dtype_str", action="store", choices=['u1', 'u2'])
-    parser.add_argument("--frontend_port", type=str, default=str(DEFAULT_FRONTEND_PORT), help='default frontend port')
+    parser.add_argument("--frontend_port", type=int, default=str(DEFAULT_FRONTEND_PORT), help='default frontend port')
 
     args=parser.parse_args()
     return args
@@ -62,9 +62,14 @@ def run_api(args):
 
 def run_frontend(args):
     # TODO: check if this works in debug mode emd-1832
-    subprocess.call(["export", f"PORT={args.frontend_port}"])
     subprocess.call(["yarn", "--cwd", "frontend"])
-    subprocess.call(["yarn", "--cwd", "frontend", "start"])
+    subprocess.call(["yarn", "--cwd", "frontend", "build"])
+    lst = [
+        "serve",
+        "-s", "frontend/build",
+        "-l", args.frontend_port
+    ]
+    subprocess.Popen(lst)
 
 def shut_down_ports(args):
     _free_port(args.frontend_port)
