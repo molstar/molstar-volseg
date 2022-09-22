@@ -56,7 +56,8 @@ def run_api(args):
     lst = [
         "python", "main.py",
         '--host', args.api_hostname,
-        '--port', args.api_port
+        '--port', args.api_port,
+        '--db_path', args.db_path
     ]
     subprocess.Popen(lst)
 
