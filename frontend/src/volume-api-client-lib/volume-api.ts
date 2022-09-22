@@ -42,17 +42,17 @@ export class VolumeApiV2 {
     public volumeUrl(source: string, entryId: string, box: [[number, number, number], [number, number, number]] | null, maxPoints: number): string {
         if (box) {
             const [[a1, a2, a3], [b1, b2, b3]] = box;
-            return `${this.volumeServerUrl}/${source}/${entryId}/volume/box/${a1}/${a2}/${a3}/${b1}/${b2}/${b3}/${maxPoints}`;
+            return `${this.volumeServerUrl}/${source}/${entryId}/volume/box/${a1}/${a2}/${a3}/${b1}/${b2}/${b3}?max_points=${maxPoints}`;
         } else {
-            return `${this.volumeServerUrl}/${source}/${entryId}/volume/cell/${maxPoints}`;
+            return `${this.volumeServerUrl}/${source}/${entryId}/volume/cell?max_points=${maxPoints}`;
         }
     }
     public latticeUrl(source: string, entryId: string, segmentation: number, box: [[number, number, number], [number, number, number]] | null, maxPoints: number): string {
         if (box){
             const [[a1, a2, a3], [b1, b2, b3]] = box;
-            return `${this.volumeServerUrl}/${source}/${entryId}/segmentation/box/${segmentation}/${a1}/${a2}/${a3}/${b1}/${b2}/${b3}/${maxPoints}`;
+            return `${this.volumeServerUrl}/${source}/${entryId}/segmentation/box/${segmentation}/${a1}/${a2}/${a3}/${b1}/${b2}/${b3}?max_points=${maxPoints}`;
         } else {
-            return `${this.volumeServerUrl}/${source}/${entryId}/segmentation/cell/${segmentation}/${maxPoints}`;
+            return `${this.volumeServerUrl}/${source}/${entryId}/segmentation/cell/${segmentation}?max_points=${maxPoints}`;
         }
     }
     public meshUrl(source: string, entryId: string, segment: number, detailLevel: number): string {

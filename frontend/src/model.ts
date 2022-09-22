@@ -183,7 +183,8 @@ export class AppModel {
         const isoLevel = await AppModel.getIsovalue(entryId);
         const source = AppModel.splitEntryId(entryId).source as 'empiar' | 'emdb';
         // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
-        const url = API1.volumeAndLatticeUrl(source, entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
+        const segmentationId = 0
+        const url = API1.volumeAndLatticeUrl(source, entryId, segmentationId, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
         const { plugin } = this;
 
         await plugin.clear();
@@ -225,7 +226,8 @@ export class AppModel {
     }
 
     async loadExampleBioimage(entryId: string = 'emd-99999') {
-        const url = API1.volumeAndLatticeUrl('emdb', entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
+        const segmentationId = 0;
+        const url = API1.volumeAndLatticeUrl('emdb', entryId, segmentationId, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
         // http://localhost:9000/v1/emdb/emd-99999/box/0/-10000/-10000/-10000/10000/10000/10000/10000000
         const { plugin } = this;
 
