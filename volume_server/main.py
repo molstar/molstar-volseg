@@ -31,7 +31,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(GZipMiddleware, minimum_size=1000)
+app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=3)  # Default compresslevel=9 is veeery slow
 
 # initialize dependencies
 db = LocalDiskPreprocessedDb(folder=settings.DB_PATH)
