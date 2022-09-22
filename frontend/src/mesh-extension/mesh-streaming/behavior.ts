@@ -106,6 +106,7 @@ export namespace MeshStreaming {
         private ref: string = '';
         private parentData: MeshServerInfo.Data;
         private metadata?: Metadata;
+        public transform?: MS.Mat4;
         public visuals?: { [tag: string]: VisualInfo };
         public backgroundSegments: { [segmentId: number]: boolean } = {};
         private focusObservable = this.plugin.behaviors.interaction.click.pipe( // QUESTION is this OK way to get focused segment?
@@ -155,6 +156,15 @@ export namespace MeshStreaming {
             if (!this.metadata) {
                 const response = await fetch(this.getMetadataUrl());
                 this.metadata = await response.json();
+
+                // TODO obtain the following transform from CIF, including spacegroup_cell_angles!!! (this should be done when parsing the mesh data)
+                const voxelSize = this.metadata?.grid.volumes.voxel_size[1];
+                const origin = this.metadata?.grid.volumes.origin;
+                if (voxelSize && origin) {
+                    const [vx, vy, vz] = voxelSize;
+                    const [x0, y0, z0] = origin;
+                    this.transform = MS.Mat4.ofRows([[vx, 0, 0, x0], [0, vy, 0, y0], [0, 0, vz, z0], [0, 0, 0, 1]]);
+                }
             }
 
             if (!this.visuals) {

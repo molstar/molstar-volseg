@@ -353,6 +353,8 @@ export class AppModel {
                 const isoLevel = await AppModel.getIsovalue(entryId);
                 const url = API2.volumeUrl(source, entryId, BOX, MAX_VOXELS);
                 const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+                // const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit(); // DEBUG
+                // AppModel.logCifOverview(cif.data!); // DEBUG
                 const parsed = await this.plugin.dataFormats.get('dscif')!.parse(this.plugin, data, { entryId });
                 const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
                 const volumeData = volume.cell!.obj!.data;

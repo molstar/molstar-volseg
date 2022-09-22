@@ -129,6 +129,9 @@ export const MeshVisualTransformer = CellStarTransform({
             props.alpha = params.opacity;
             const repr = MS.ShapeRepresentation((ctx, meshlist: MeshlistData) => MeshlistData.getShape(meshlist, visualInfo.color), MS.Mesh.Utils);
             await repr.createOrUpdate(props, visualInfo.data ?? MeshlistData.Empty).runInContext(ctx);
+            if (a.data.transform) {
+                repr.setState({ transform: a.data.transform });
+            }
             return new MS.PluginStateObject.Shape.Representation3D({ repr, sourceData: visualInfo.data }, { label: 'Mesh Visual', description: params.tag });
         });
     },

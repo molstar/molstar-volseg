@@ -1,15 +1,36 @@
 import * as MS from './molstar-lib-imports';
 
+
 // TODO unify with Metadata in CellStar
 
-
-// partial model
 export interface Metadata {
-    grid: {
+    grid: { 
+        general: { 
+            details: string ,
+        },
+        volumes: Volumes,
+        segmentation_lattices: SegmentationLattices,
         segmentation_meshes: SegmentationMeshes,
-        // TODO more stuff is there
     },
     annotation: Annotation,
+}
+
+export interface Volumes {
+    volume_downsamplings: number[],
+    voxel_size: { [downsampling: number]: Vector3 },
+    origin: Vector3,
+    grid_dimensions: Vector3,
+    sampled_grid_dimensions: { [downsampling: number]: Vector3 },
+    mean: { [downsampling: number]: number },
+    std: { [downsampling: number]: number },
+    min: { [downsampling: number]: number },
+    max: { [downsampling: number]: number },
+    volume_force_dtype: string,
+}
+
+export interface SegmentationLattices {
+    segmentation_lattice_ids: number[],
+    segmentation_downsamplings: { [lattice: number]: number[] },
 }
 
 export interface Annotation {
@@ -31,7 +52,7 @@ export interface BiologicalAnnotation {
 
 export interface SegmentationMeshes {
     mesh_component_numbers: {
-        segment_ids: {
+        segment_ids?: {
             [segId: number]: {
                 detail_lvls: {
                     [detail: number]: {
@@ -46,18 +67,25 @@ export interface SegmentationMeshes {
             }
         }
     }
-    detail_lvl_to_fraction: {
-        [lvl: number]: number
+    detail_lvl_to_fraction: { 
+        [lvl: number]: number 
     }
 }
+
+type Vector3 = [number, number, number];
+
+
 
 export namespace Metadata {
     export function meshSegments(metadata: Metadata): number[] {
         const segmentIds = metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids;
+        if (segmentIds === undefined) return [];
         return Object.keys(segmentIds).map(s => parseInt(s));
     }
     export function meshSegmentDetails(metadata: Metadata, segmentId: number): number[] {
-        const details = metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids[segmentId].detail_lvls;
+        const segmentIds = metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids;
+        if (segmentIds === undefined) return [];
+        const details = segmentIds[segmentId].detail_lvls;
         return Object.keys(details).map(s => parseInt(s));
     }
     /** Get the worst available detail level that is not worse than preferredDetail.
@@ -81,6 +109,7 @@ export namespace Metadata {
         return result;
     }
     export function dropSegments(metadata: Metadata, segments: number[]): void {
+        if (metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids === undefined) return;
         const dropSet = new Set(segments);
         metadata.annotation.segment_list = metadata.annotation.segment_list.filter(seg => !dropSet.has(seg.id));
         for (const seg of segments) {

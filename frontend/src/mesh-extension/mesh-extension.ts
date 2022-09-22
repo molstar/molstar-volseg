@@ -165,10 +165,10 @@ export const ParseMeshlistTransformer = CellStarTransform({
     from: MS.PluginStateObject.Data.String,
     to: MeshlistStateObject,
     params: {
-        label: PD.Text(MeshlistStateObject.type.name, { 'isHidden': true }), // QUESTION: Is this the right way to pass a value to apply() without exposing it in GUI?
-        segmentId: PD.Numeric(1, {}, { 'isHidden': true }),
+        label: PD.Text(MeshlistStateObject.type.name, { isHidden: true }), // QUESTION: Is this the right way to pass a value to apply() without exposing it in GUI?
+        segmentId: PD.Numeric(1, {}, { isHidden: true }),
         segmentName: PD.Text('Segment'),
-        detail: PD.Numeric(1, {}, { 'isHidden': true }),
+        detail: PD.Numeric(1, {}, { isHidden: true }),
     }
 })({
     apply({ a, params }, globalCtx) { // `a` is the parent node, params are 2nd argument to To.apply(), `globalCtx` is the plugin
