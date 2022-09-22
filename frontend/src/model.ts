@@ -309,9 +309,12 @@ export class AppModel {
     metadataUrl(source: string, entryId: string): string {
         return `http://localhost:9000/v1/${source}/${entryId}/metadata`;
     }
-    volumeServerRequestUrl(source: string, entryId: string, segmentation: number, box: [[number, number, number], [number, number, number]], maxPoints: number): string {
+    volumeServerRequestBoxUrl(source: string, entryId: string, segmentation: number, box: [[number, number, number], [number, number, number]], maxPoints: number): string {
         const [[a1, a2, a3], [b1, b2, b3]] = box;
         return `${VOLUME_SERVER}/v1/${source}/${entryId}/box/${segmentation}/${a1}/${a2}/${a3}/${b1}/${b2}/${b3}/${maxPoints}`;
+    }
+    volumeServerRequestCellUrl(source: string, entryId: string, segmentation: number, maxPoints: number): string {
+        return `${VOLUME_SERVER}/v1/${source}/${entryId}/cell/${segmentation}/${maxPoints}`;
     }
     // Temporary solution
     meshServerRequestUrl(source: string, entryId: string, segment: number, detailLevel: number): string {
@@ -434,7 +437,10 @@ export class AppModel {
         const isoLevel = 2.73;
         const source = this.splitEntryId(entryId).source as 'empiar'|'emdb';
         // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
-        const url = this.volumeServerRequestUrl(source, entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
+        const url = this.volumeServerRequestBoxUrl(source, entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
+        // TODO: the 0 for segmentation id should come from the metadata
+        // TEST cell
+        // const url = this.volumeServerRequestCellUrl(source, entryId, 0, 100000000);
         // Slice test with downsamling
         // const url = this.volumeServerRequestUrl(source, entryId, 0, [[-30, -30, -30], [30, 30, 30]], 1000);
         const { plugin } = this;
@@ -524,7 +530,7 @@ export class AppModel {
     private repr: any = undefined;
     async loadExampleBioimage() {
         const entryId = 'emd-99999';
-        const url = this.volumeServerRequestUrl('emdb', entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
+        const url = this.volumeServerRequestBoxUrl('emdb', entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
         // http://localhost:9000/v1/emdb/emd-99999/box/0/-10000/-10000/-10000/10000/10000/10000/10000000
         const { plugin } = this;
 

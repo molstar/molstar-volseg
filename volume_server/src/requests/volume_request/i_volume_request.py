@@ -1,7 +1,12 @@
 import abc
+from typing import Literal
 
 
 class IVolumeRequest(abc.ABC):
+    @abc.abstractmethod
+    def request_kind() -> Literal["volume", "segmentation", "all"]:
+        pass
+
     @abc.abstractmethod
     def source(self) -> str:
         pass

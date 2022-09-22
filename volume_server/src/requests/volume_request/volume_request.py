@@ -1,3 +1,4 @@
+from typing import Literal
 from volume_server.src.requests.volume_request.i_volume_request import IVolumeRequest
 
 
@@ -12,7 +13,7 @@ class VolumeRequest(IVolumeRequest):
                  x_max: float,
                  y_max: float,
                  z_max: float,
-                 max_points: int
+                 max_points: int,
                  ):
         self._source = source
         self._structure_id = structure_id

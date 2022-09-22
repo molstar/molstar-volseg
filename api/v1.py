@@ -8,9 +8,9 @@ from volume_server.src.i_volume_server import IVolumeServer
 from volume_server.src.requests.entries_request.entries_request import EntriesRequest
 from volume_server.src.requests.mesh_request.mesh_request import MeshRequest
 from volume_server.src.requests.metadata_request.metadata_request import MetadataRequest
-from volume_server.src.requests.volume_request.volume_request import VolumeRequest
-from volume_server.src.requests.cell_request.cell_request import CellRequest
 from .json_numpy_response import JSONNumpyResponse
+
+from volume_server.src.requests.volume import VolumeRequestInfo, VolumeRequestBox
 
 HTTP_CODE_UNPROCESSABLE_ENTITY = 422
 
@@ -47,13 +47,12 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
             b2: float,
             b3: float,
             max_points: Optional[int] = 0
-    ):
-        request = VolumeRequest(source, id, segmentation, a1, a2, a3, b1, b2, b3, max_points)
-        # TODO: validate request box and raise HTTP 400 if error
-        
-        response = await volume_server.get_volume(request)
+    ):      
+        response = await volume_server.get_volume_data(
+            req=VolumeRequestInfo(source=source, structure_id=id, segmentation_id=segmentation, max_points=max_points, data_kind="all"),
+            req_box=VolumeRequestBox(bottom_left=(a1, a2, a3), top_right=(b1, b2, b3))
+        )
 
-        # return {}
         return Response(response, headers={"Content-Disposition": f'attachment;filename="{id}.bcif"'})
 
     @app.get("/v1/{source}/{id}/cell/{segmentation}/{max_points}")
@@ -63,11 +62,10 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
             segmentation: int,
             max_points: Optional[int] = 0
     ):
+        response = await volume_server.get_volume_data(
+            req=VolumeRequestInfo(source=source, structure_id=id, segmentation_id=segmentation, max_points=max_points, data_kind="all")
+        )
 
-        request = CellRequest(source, id, segmentation, max_points)
-        response = await volume_server.get_cell(request)
-
-        # return {}
         return Response(response, headers={"Content-Disposition": f'attachment;filename="{id}.bcif"'})
 
     @app.get("/v1/{source}/{id}/metadata")

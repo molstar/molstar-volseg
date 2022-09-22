@@ -11,6 +11,9 @@ from volume_server.src.requests.metadata_request.metadata_request import Metadat
 from volume_server.src.requests.volume_request.volume_request import VolumeRequest
 from .json_numpy_response import JSONNumpyResponse
 
+
+from volume_server.src.requests.volume import VolumeRequestInfo, VolumeRequestBox
+
 HTTP_CODE_UNPROCESSABLE_ENTITY = 422
 
 
@@ -47,10 +50,11 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
             b3: float,
             max_points: Optional[int] = 0
     ):
-        request = VolumeRequest(source, id, segmentation, a1, a2, a3, b1, b2, b3, max_points)
-        response = await volume_server.get_volume(request)
+        response = await volume_server.get_volume_data(
+            req=VolumeRequestInfo(source=source, structure_id=id, segmentation_id=segmentation, max_points=max_points, data_kind="segmentation"),
+            req_box=VolumeRequestBox(bottom_left=(a1, a2, a3), top_right=(b1, b2, b3))
+        )
 
-        # return {}
         return Response(response, headers={"Content-Disposition": f'attachment;filename="{id}.bcif"'})
 
     @app.get("/v2/{source}/{id}/volume/box/{a1}/{a2}/{a3}/{b1}/{b2}/{b3}/{max_points}")
@@ -65,12 +69,11 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
             b3: float,
             max_points: Optional[int] = 0
     ):
-        # TODO: not sure if trying to get segment 0 is enough or if this code should pass None/-1 to be parsed downstream
-        # TODO: check with aliaksey
-        request = VolumeRequest(source, id, 0, a1, a2, a3, b1, b2, b3, max_points)
-        response = await volume_server.get_volume(request)
+        response = await volume_server.get_volume_data(
+            req=VolumeRequestInfo(source=source, structure_id=id, max_points=max_points, data_kind="volume"),
+            req_box=VolumeRequestBox(bottom_left=(a1, a2, a3), top_right=(b1, b2, b3))
+        )
 
-        # return {}
         return Response(response, headers={"Content-Disposition": f'attachment;filename="{id}.bcif"'})
 
     @app.get("/v2/{source}/{id}/segmentation/cell/{segmentation}/{max_points}")
@@ -80,10 +83,10 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
             segmentation: int,
             max_points: Optional[int] = 0
     ):
-        request = VolumeRequest(source, id, segmentation, -100000, -100000, -100000, 100000, 100000, 100000, max_points)
-        response = await volume_server.get_volume(request)
+        response = await volume_server.get_volume_data(
+            req=VolumeRequestInfo(source=source, structure_id=id, segmentation_id=segmentation, max_points=max_points, data_kind="segmentation"),
+        )
 
-        # return {}
         return Response(response, headers={"Content-Disposition": f'attachment;filename="{id}.bcif"'})
 
     @app.get("/v2/{source}/{id}/volume/cell/{max_points}")
@@ -92,12 +95,10 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
             id: str,
             max_points: Optional[int] = 0
     ):
-        #TODO: not sure if trying to get segment 0 is enough or if this code should pass None/-1 to be parsed downstream
-        #TODO: check with aliaksey
-        request = VolumeRequest(source, id, 0, -100000, -100000, -100000, 100000, 100000, 100000, max_points)
-        response = await volume_server.get_volume(request)
+        response = await volume_server.get_volume_data(
+            req=VolumeRequestInfo(source=source, structure_id=id, max_points=max_points, data_kind="volume"),
+        )
 
-        # return {}
         return Response(response, headers={"Content-Disposition": f'attachment;filename="{id}.bcif"'})
 
     @app.get("/v2/{source}/{id}/metadata")

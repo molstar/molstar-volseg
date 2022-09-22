@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from math import floor, ceil
-from typing import Optional
+from typing import Optional, Tuple
 
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 from volume_server.src.requests.volume_request.i_volume_request import IVolumeRequest
@@ -22,11 +22,8 @@ class RequestBox:
         return nx * ny * nz
 
 
-def calc_request_box(req: IVolumeRequest, meta: IPreprocessedMetadata, downsampling_rate: int) -> Optional[RequestBox]:
+def calc_request_box(req_min: Tuple[float, float, float], req_max: Tuple[float, float, float], meta: IPreprocessedMetadata, downsampling_rate: int) -> Optional[RequestBox]:
     origin, voxel_size, grid_dimensions = meta.origin(), meta.voxel_size(downsampling_rate), meta.sampled_grid_dimensions(downsampling_rate)
-
-    req_min = (req.x_min(), req.y_min(), req.z_min())
-    req_max = (req.x_max(), req.y_max(), req.z_max())
 
     bottom_left = tuple(max(0, floor((req_min[i] - origin[i]) / voxel_size[i] )) for i in range(3))
     top_right = tuple(min(grid_dimensions[i] - 1, ceil((req_max[i] - origin[i]) / voxel_size[i] )) for i in range(3))

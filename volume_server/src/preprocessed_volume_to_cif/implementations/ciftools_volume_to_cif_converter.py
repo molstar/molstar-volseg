@@ -35,69 +35,58 @@ class ConverterOutputStream(OutputStream):
 
 
 class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
-    def _add_slice_volume_info(self, writer: BinaryCIFWriter, volume: np.ndarray, metadata: IPreprocessedMetadata, box: RequestBox):       
-        volume_info_category = CategoryWriterProvider_VolumeData3dInfo()
-
-        volume_info = VolumeInfo(name="em", metadata=metadata, box=box)
+    def convert(self, slice: ProcessedVolumeSliceData, metadata: IPreprocessedMetadata, box: RequestBox) -> Union[bytes, str]:  # TODO: add binary cif to the project
+        writer = BinaryCIFWriter("volume_server")
 
         writer.start_data_block("SERVER") 
         # NOTE: the SERVER category left empty for now
         # TODO: create new category with request and responce info (e.g. query region, timing info, etc.)
         # writer.write_category(volume_info_category, [volume_info])
 
-        writer.start_data_block("EM")
-        writer.write_category(volume_info_category, [volume_info])
+        volume_info = VolumeInfo(name="volume", metadata=metadata, box=box)
+        volume_info_category = CategoryWriterProvider_VolumeData3dInfo()
 
-        data_category = CategoryWriterProvider_VolumeData3d()
+        # volume
+        if "volume_slice" in slice:
+            writer.start_data_block("EM")  # Currently needs to be EM for 
+            writer.write_category(volume_info_category, [volume_info])
 
-        to_export = np.ravel(volume)
-        writer.write_category(data_category, [to_export])
+            data_category = CategoryWriterProvider_VolumeData3d()
+            writer.write_category(data_category, [np.ravel(slice["volume_slice"])])
 
-    def _add_slice_segmentation(self, writer: BinaryCIFWriter, segmentation: SegmentationSliceData):
-        writer.start_data_block("segmentation_data")
+        # segmentation
+        if "segmentation_slice" in slice and slice["segmentation_slice"]["category_set_ids"] is not None:
+            writer.start_data_block("segmentation_data")
+            writer.write_category(volume_info_category, [volume_info])
 
-        # table
-        set_dict = segmentation["category_set_dict"]
+            segmentation = slice["segmentation_slice"]
 
-        set_ids, segment_ids = [], []
-        for k in set_dict.keys():
-            for v in set_dict[k]:
-                set_ids.append(k)
-                segment_ids.append(v)
+            # table
+            set_dict = segmentation["category_set_dict"]
 
-        table_writer_provider = CategoryWriterProvider_SegmentationDataTable()
-        writer.write_category(table_writer_provider, [{
-            "set_id": set_ids,
-            "segment_id": segment_ids,
-            "size": len(set_ids)
-        }])
+            set_ids, segment_ids = [], []
+            for k in set_dict.keys():
+                for v in set_dict[k]:
+                    set_ids.append(k)
+                    segment_ids.append(v)
 
-        # 3d_ids
-        # uint32
-        ids_writer_provider = CategoryWriterProvider_SegmentationData3d()
-        writer.write_category(ids_writer_provider, [segmentation["category_set_ids"]])
+            table_writer_provider = CategoryWriterProvider_SegmentationDataTable()
+            writer.write_category(table_writer_provider, [{
+                "set_id": set_ids,
+                "segment_id": segment_ids,
+                "size": len(set_ids)
+            }])
 
-    def _finalize(self, writer: BinaryCIFWriter, binary: bool = True):
+            # 3d_ids
+            # uint32
+            ids_writer_provider = CategoryWriterProvider_SegmentationData3d()
+            writer.write_category(ids_writer_provider, [segmentation["category_set_ids"]])
+
+        binary = True
         writer.encode()
         output_stream = ConverterOutputStream()
         writer.flush(output_stream)
         return output_stream.result_binary if binary else output_stream.result_text
-
-    def convert(self, slice: ProcessedVolumeSliceData, metadata: IPreprocessedMetadata, box: RequestBox) -> Union[bytes, str]:  # TODO: add binary cif to the project
-        volume: np.ndarray = slice["volume_slice"]
-        
-        writer = BinaryCIFWriter("volume_server")
-
-        # volume
-        self._add_slice_volume_info(writer, volume, metadata, box)
-
-        # segmentation
-        # TODO: hack... need to improve more?
-        if "segmentation_slice" in slice and slice["segmentation_slice"]["category_set_ids"] is not None:
-            segmentation: SegmentationSliceData = slice["segmentation_slice"]
-            self._add_slice_segmentation(writer, segmentation)
-
-        return self._finalize(writer)
 
     def convert_metadata(self, metadata: IPreprocessedMetadata) -> object:  # TODO: add binary cif to the project
         return metadata.json_metadata()
