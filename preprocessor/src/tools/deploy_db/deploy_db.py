@@ -2,6 +2,7 @@
 
 
 import argparse
+import os
 import subprocess
 from pathlib import Path
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE, DEFAULT_DB_PATH, RAW_INPUT_FILES_DIR
@@ -53,13 +54,16 @@ def _preprocessor_wrapper(config: list[dict], args):
         subprocess.call(lst)
 
 def run_api(args):
+    deploy_env = {
+        **os.environ,
+        'DB_PATH': args.db_path,
+        'HOST': args.api_hostname,
+        'PORT': args.api_port
+        }
     lst = [
-        "python", "main.py",
-        '--host', args.api_hostname,
-        '--port', args.api_port,
-        '--db_path', args.db_path
+        "python", "main.py"
     ]
-    subprocess.Popen(lst)
+    subprocess.Popen(lst, env=deploy_env)
 
 def run_frontend(args):
     # TODO: check if this works in debug mode emd-1832
