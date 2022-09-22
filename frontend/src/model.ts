@@ -309,9 +309,14 @@ export class AppModel {
     metadataUrl(source: string, entryId: string): string {
         return `http://localhost:9000/v1/${source}/${entryId}/metadata`;
     }
-    volumeServerRequestUrl(source: string, entryId: string, segmentation: number, box: [[number, number, number], [number, number, number]], maxPoints: number): string {
+    volumeServerRequestBoxUrl(source: string, entryId: string, segmentation: number, box: [[number, number, number], [number, number, number]], maxPoints: number): string {
         const [[a1, a2, a3], [b1, b2, b3]] = box;
+        // NOTE: in v2 api, maxPoints is passed as a query ?max_points=....;
         return `${VOLUME_SERVER}/v1/${source}/${entryId}/box/${segmentation}/${a1}/${a2}/${a3}/${b1}/${b2}/${b3}/${maxPoints}`;
+    }
+    volumeServerRequestCellUrl(source: string, entryId: string, segmentation: number, maxPoints: number): string {
+        // NOTE: in v2 api, maxPoints is passed as a query ?max_points=....;
+        return `${VOLUME_SERVER}/v1/${source}/${entryId}/cell/${segmentation}/${maxPoints}`;
     }
     // Temporary solution
     meshServerRequestUrl(source: string, entryId: string, segment: number, detailLevel: number): string {
@@ -434,9 +439,13 @@ export class AppModel {
         const isoLevel = 2.73;
         const source = this.splitEntryId(entryId).source as 'empiar'|'emdb';
         // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
-        const url = this.volumeServerRequestUrl(source, entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
+        // TODO: segmentation id should come from the metadata! (in "v2" api, segm id is no longer required for volume)
+        const segmentationId = 0;
+        const url = this.volumeServerRequestBoxUrl(source, entryId, segmentationId, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
+        // TEST cell
+        // const url = this.volumeServerRequestCellUrl(source, entryId, segmentationId, 100000000);
         // Slice test with downsamling
-        // const url = this.volumeServerRequestUrl(source, entryId, 0, [[-30, -30, -30], [30, 30, 30]], 1000);
+        // const url = this.volumeServerRequestUrl(source, entryId, segmentationId, [[-30, -30, -30], [30, 30, 30]], 1000);
         const { plugin } = this;
 
         await plugin.clear();
@@ -524,7 +533,7 @@ export class AppModel {
     private repr: any = undefined;
     async loadExampleBioimage() {
         const entryId = 'emd-99999';
-        const url = this.volumeServerRequestUrl('emdb', entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
+        const url = this.volumeServerRequestBoxUrl('emdb', entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
         // http://localhost:9000/v1/emdb/emd-99999/box/0/-10000/-10000/-10000/10000/10000/10000/10000000
         const { plugin } = this;
 

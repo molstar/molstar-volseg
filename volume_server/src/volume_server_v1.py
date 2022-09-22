@@ -1,19 +1,18 @@
 import json
 from collections import defaultdict
 
-from math import ceil
-from typing import Optional, Union
+from math import floor, ceil
+from typing import Optional, Tuple, Union
 
 from db.interface.i_preprocessed_db import IReadOnlyPreprocessedDb
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 from .i_volume_server import IVolumeServer
 from .preprocessed_volume_to_cif.i_volume_to_cif_converter import IVolumeToCifConverter
-from volume_server.src.requests.volume_request.i_volume_request import IVolumeRequest
-from volume_server.src.requests.request_box import RequestBox, calc_request_box
-from .requests.cell_request.i_cell_request import ICellRequest
 from .requests.entries_request.i_entries_request import IEntriesRequest
 from .requests.mesh_request.i_mesh_request import IMeshRequest
 from .requests.metadata_request.i_metadata_request import IMetadataRequest
+
+from volume_server.src.requests.volume import VolumeRequestInfo, VolumeRequestBox, GridSliceBox, VolumeRequestDataKind
 
 __MAX_DOWN_SAMPLING_VALUE__ = 1000000
 
@@ -69,50 +68,50 @@ class VolumeServerV1(IVolumeServer):
         self.db = db
         self.volume_to_cif = volume_to_cif
 
-    async def read_box(self, *, req: Union[IVolumeRequest, ICellRequest], metadata: IPreprocessedMetadata, lattice_id: int, box: RequestBox) -> bytes:
-        print(f"Request Box")
-        print(f"  Downsampling: {box.downsampling_rate}")
-        print(f"  Bottom Left: {box.bottom_left}")
-        print(f"  Top Right: {box.top_right}")
-        print(f"  Volume: {box.volume}")
+    async def get_volume_data(self, req: VolumeRequestInfo, req_box: Optional[VolumeRequestBox] = None) -> bytes:
+        metadata = await self.db.read_metadata(req.source, req.structure_id)
+        
+        lattice_ids = metadata.segmentation_lattice_ids() or []
+        if req.segmentation_id not in lattice_ids:
+            lattice_id = lattice_ids[0] if len(lattice_ids) > 0 else None
+        else:
+            lattice_id = req.segmentation_id
 
-        with self.db.read(namespace=req.source(), key=req.structure_id()) as reader:
-            db_slice = await reader.read_slice(
-                lattice_id=lattice_id,
-                down_sampling_ratio=box.downsampling_rate,
-                box=(box.bottom_left, box.top_right),
-            )
+        slice_box = self._decide_slice_box(req, req_box, metadata)
 
-        cif = self.volume_to_cif.convert(db_slice, metadata, box)
-        return cif
-
-    async def get_cell(self, req: ICellRequest) -> bytes:
-        metadata = await self.db.read_metadata(req.source(), req.structure_id())
-        lattice_id = self.decide_lattice(req, metadata)
-        box = self.decide_cell_downsampling(req, metadata)
-                
-        return await self.read_box(
-            req=req,
-            metadata=metadata,
-            lattice_id=lattice_id,
-            box=box,
-        )
-
-    async def get_volume(self, req: IVolumeRequest) -> bytes:  # TODO: add binary cif to the project
-        metadata = await self.db.read_metadata(req.source(), req.structure_id())
-        lattice_id = self.decide_lattice(req, metadata)
-        box = self.decide_downsampling(req, metadata)
-
-        if box is None:
+        if slice_box is None:
             # TODO: return empty result instead of exception?
             raise RuntimeError("No data for request box")
-        
-        return await self.read_box(
-            req=req,
-            metadata=metadata,
-            lattice_id=lattice_id,
-            box=box,
-        )
+
+        print(f"Request Box")
+        print(f"  Downsampling: {slice_box.downsampling_rate}")
+        print(f"  Bottom Left: {slice_box.bottom_left}")
+        print(f"  Top Right: {slice_box.top_right}")
+        print(f"  Volume: {slice_box.volume}")
+
+        with self.db.read(namespace=req.source, key=req.structure_id) as reader:
+            if req.data_kind == VolumeRequestDataKind.all:
+                db_slice = await reader.read_slice(
+                    lattice_id=lattice_id,
+                    down_sampling_ratio=slice_box.downsampling_rate,
+                    box=(slice_box.bottom_left, slice_box.top_right),
+                )
+            elif req.data_kind == VolumeRequestDataKind.volume:
+                db_slice = await reader.read_volume_slice(
+                    down_sampling_ratio=slice_box.downsampling_rate,
+                    box=(slice_box.bottom_left, slice_box.top_right),
+                ) 
+            elif req.data_kind == VolumeRequestDataKind.segmentation:
+                db_slice = await reader.read_segmentation_slice(
+                    lattice_id=lattice_id,
+                    down_sampling_ratio=slice_box.downsampling_rate,
+                    box=(slice_box.bottom_left, slice_box.top_right),
+                )
+            else:
+                # This should be validated on the Pydantic data model level, but one never knows...
+                raise RuntimeError(f"{req.data_kind} is not a valid request data kind")
+
+        return self.volume_to_cif.convert(db_slice, metadata, slice_box)
 
     async def get_meshes(self, req: IMeshRequest) -> list[object]:
         with self.db.read(req.source(), req.id()) as context:
@@ -140,20 +139,20 @@ class VolumeServerV1(IVolumeServer):
         sorted_result = {seg: sorted(result[seg]) for seg in sorted(result.keys())}
         return sorted_result
 
-    def decide_lattice(self, req: Union[ICellRequest, IVolumeRequest], metadata: IPreprocessedMetadata) -> Optional[int]:
-        ids = metadata.segmentation_lattice_ids() or []
-        if req.segmentation_id() not in ids:
-            return ids[0] if len(ids) > 0 else None
-        return req.segmentation_id()
-
-    def decide_downsampling(self, req: IVolumeRequest, metadata: IPreprocessedMetadata) -> Optional[RequestBox]:
+    def _decide_slice_box(self, req: VolumeRequestInfo, req_box: Optional[VolumeRequestBox], metadata: IPreprocessedMetadata) -> Optional[GridSliceBox]:
         box = None
-        max_points = req.max_points()
+        max_points = req.max_points
 
         for downsampling_rate in sorted(metadata.volume_downsamplings()):
-            box = calc_request_box(req, metadata, downsampling_rate)
-            if box is None:
-                return None
+            if req_box:
+                box = calc_slice_box(req_box.bottom_left, req_box.top_right, metadata, downsampling_rate) 
+            else:
+                box = GridSliceBox(
+                    downsampling_rate=downsampling_rate,
+                    bottom_left=(0, 0, 0),
+                    top_right=tuple(d - 1 for d in metadata.sampled_grid_dimensions(downsampling_rate))
+                )
+
             # TODO: decide what to do when max_points is 0
             # e.g. whether to return the lowest downsampling or highest
             if box.volume < max_points:
@@ -161,17 +160,20 @@ class VolumeServerV1(IVolumeServer):
 
         return box
 
-    def decide_cell_downsampling(self, req: ICellRequest, metadata: IPreprocessedMetadata) -> RequestBox:
-        max_points = req.max_points()
 
-        for downsampling_rate in sorted(metadata.volume_downsamplings()):
-            box = RequestBox(
-                downsampling_rate=downsampling_rate,
-                bottom_left=(0, 0, 0),
-                top_right=tuple(d - 1 for d in metadata.sampled_grid_dimensions(downsampling_rate))
-            )
-            # TODO: decide what to do when max_points is 0
-            if box.volume < max_points:
-                return box
 
-        return box
+def calc_slice_box(req_min: Tuple[float, float, float], req_max: Tuple[float, float, float], meta: IPreprocessedMetadata, downsampling_rate: int) -> Optional[GridSliceBox]:
+    origin, voxel_size, grid_dimensions = meta.origin(), meta.voxel_size(downsampling_rate), meta.sampled_grid_dimensions(downsampling_rate)
+
+    bottom_left = tuple(max(0, floor((req_min[i] - origin[i]) / voxel_size[i] )) for i in range(3))
+    top_right = tuple(min(grid_dimensions[i] - 1, ceil((req_max[i] - origin[i]) / voxel_size[i] )) for i in range(3))
+
+    # Check if the box is outside the available data
+    if any(bottom_left[i] >= grid_dimensions[i] for i in range(3)) or any(top_right[i] < 0 for i in range(3)):
+        return None
+
+    return GridSliceBox(
+        downsampling_rate=downsampling_rate,
+        bottom_left=bottom_left,
+        top_right=top_right
+    )
