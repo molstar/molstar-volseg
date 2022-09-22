@@ -18,7 +18,7 @@ from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_conve
 from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.volume_data_3d_info.volume_info import \
     VolumeInfo
 
-from volume_server.src.requests.volume import SliceBox
+from volume_server.src.requests.volume import GridSliceBox
 
 
 class ConverterOutputStream(OutputStream):
@@ -35,7 +35,7 @@ class ConverterOutputStream(OutputStream):
 
 
 class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
-    def convert(self, slice: ProcessedVolumeSliceData, metadata: IPreprocessedMetadata, box: SliceBox) -> Union[bytes, str]:  # TODO: add binary cif to the project
+    def convert(self, slice: ProcessedVolumeSliceData, metadata: IPreprocessedMetadata, box: GridSliceBox) -> Union[bytes, str]:  # TODO: add binary cif to the project
         writer = BinaryCIFWriter("volume_server")
 
         writer.start_data_block("SERVER") 

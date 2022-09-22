@@ -12,7 +12,7 @@ from .requests.entries_request.i_entries_request import IEntriesRequest
 from .requests.mesh_request.i_mesh_request import IMeshRequest
 from .requests.metadata_request.i_metadata_request import IMetadataRequest
 
-from volume_server.src.requests.volume import VolumeRequestInfo, VolumeRequestBox, SliceBox
+from volume_server.src.requests.volume import VolumeRequestInfo, VolumeRequestBox, GridSliceBox, VolumeRequestDataKind
 
 __MAX_DOWN_SAMPLING_VALUE__ = 1000000
 
@@ -90,18 +90,18 @@ class VolumeServerV1(IVolumeServer):
         print(f"  Volume: {slice_box.volume}")
 
         with self.db.read(namespace=req.source, key=req.structure_id) as reader:
-            if req.data_kind == "all":
+            if req.data_kind == VolumeRequestDataKind.all:
                 db_slice = await reader.read_slice(
                     lattice_id=lattice_id,
                     down_sampling_ratio=slice_box.downsampling_rate,
                     box=(slice_box.bottom_left, slice_box.top_right),
                 )
-            elif req.data_kind == "volume":
+            elif req.data_kind == VolumeRequestDataKind.volume:
                 db_slice = await reader.read_volume_slice(
                     down_sampling_ratio=slice_box.downsampling_rate,
                     box=(slice_box.bottom_left, slice_box.top_right),
                 ) 
-            elif req.data_kind == "segmentation":
+            elif req.data_kind == VolumeRequestDataKind.segmentation:
                 db_slice = await reader.read_segmentation_slice(
                     lattice_id=lattice_id,
                     down_sampling_ratio=slice_box.downsampling_rate,
@@ -139,7 +139,7 @@ class VolumeServerV1(IVolumeServer):
         sorted_result = {seg: sorted(result[seg]) for seg in sorted(result.keys())}
         return sorted_result
 
-    def _decide_slice_box(self, req: VolumeRequestInfo, req_box: Optional[VolumeRequestBox], metadata: IPreprocessedMetadata) -> Optional[SliceBox]:
+    def _decide_slice_box(self, req: VolumeRequestInfo, req_box: Optional[VolumeRequestBox], metadata: IPreprocessedMetadata) -> Optional[GridSliceBox]:
         box = None
         max_points = req.max_points
 
@@ -147,7 +147,7 @@ class VolumeServerV1(IVolumeServer):
             if req_box:
                 box = calc_slice_box(req_box.bottom_left, req_box.top_right, metadata, downsampling_rate) 
             else:
-                box = SliceBox(
+                box = GridSliceBox(
                     downsampling_rate=downsampling_rate,
                     bottom_left=(0, 0, 0),
                     top_right=tuple(d - 1 for d in metadata.sampled_grid_dimensions(downsampling_rate))
@@ -162,7 +162,7 @@ class VolumeServerV1(IVolumeServer):
 
 
 
-def calc_slice_box(req_min: Tuple[float, float, float], req_max: Tuple[float, float, float], meta: IPreprocessedMetadata, downsampling_rate: int) -> Optional[SliceBox]:
+def calc_slice_box(req_min: Tuple[float, float, float], req_max: Tuple[float, float, float], meta: IPreprocessedMetadata, downsampling_rate: int) -> Optional[GridSliceBox]:
     origin, voxel_size, grid_dimensions = meta.origin(), meta.voxel_size(downsampling_rate), meta.sampled_grid_dimensions(downsampling_rate)
 
     bottom_left = tuple(max(0, floor((req_min[i] - origin[i]) / voxel_size[i] )) for i in range(3))
@@ -172,7 +172,7 @@ def calc_slice_box(req_min: Tuple[float, float, float], req_max: Tuple[float, fl
     if any(bottom_left[i] >= grid_dimensions[i] for i in range(3)) or any(top_right[i] < 0 for i in range(3)):
         return None
 
-    return SliceBox(
+    return GridSliceBox(
         downsampling_rate=downsampling_rate,
         bottom_left=bottom_left,
         top_right=top_right

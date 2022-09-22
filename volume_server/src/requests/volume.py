@@ -1,16 +1,19 @@
 from dataclasses import dataclass
 from pydantic import BaseModel, root_validator, validator
 from typing import Literal, Optional, Tuple
-from math import floor, ceil
+from enum import Enum
 
-from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
+class VolumeRequestDataKind(str, Enum):
+    volume = "volume"
+    segmentation = "segmentation"
+    all = "all"
 
 class VolumeRequestInfo(BaseModel):
     source: str
     structure_id: str
     segmentation_id: Optional[int] = None
-    max_points: int  # = 0 ?
-    data_kind: Literal["volume", "segmentation", "all"] = "all"  # TODO: use enum
+    max_points: int
+    data_kind: VolumeRequestDataKind = VolumeRequestDataKind.all
 
     @validator("segmentation_id")
     def _validate_segmentation_ui(cls, id: Optional[int], values):
@@ -29,10 +32,10 @@ class VolumeRequestBox(BaseModel):
         return values
 
 @dataclass
-class SliceBox:
+class GridSliceBox:
     downsampling_rate: int
     bottom_left: tuple[int, int, int] # inclusive
-    top_right: tuple[int, int, int]  # inclusive
+    top_right: tuple[int, int, int] # inclusive
 
     @property
     def dimensions(self) -> tuple[int, int, int]:

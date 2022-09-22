@@ -11,7 +11,7 @@ from volume_server.src.requests.metadata_request.metadata_request import Metadat
 from .json_numpy_response import JSONNumpyResponse
 
 
-from volume_server.src.requests.volume import VolumeRequestInfo, VolumeRequestBox
+from volume_server.src.requests.volume import VolumeRequestInfo, VolumeRequestBox, VolumeRequestDataKind
 
 HTTP_CODE_UNPROCESSABLE_ENTITY = 422
 
@@ -50,7 +50,7 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
             max_points: Optional[int] = Query(0)
     ):
         response = await volume_server.get_volume_data(
-            req=VolumeRequestInfo(source=source, structure_id=id, segmentation_id=segmentation, max_points=max_points, data_kind="segmentation"),
+            req=VolumeRequestInfo(source=source, structure_id=id, segmentation_id=segmentation, max_points=max_points, data_kind=VolumeRequestDataKind.segmentation),
             req_box=VolumeRequestBox(bottom_left=(a1, a2, a3), top_right=(b1, b2, b3))
         )
 
@@ -69,7 +69,7 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
             max_points: Optional[int] = Query(0)
     ):
         response = await volume_server.get_volume_data(
-            req=VolumeRequestInfo(source=source, structure_id=id, max_points=max_points, data_kind="volume"),
+            req=VolumeRequestInfo(source=source, structure_id=id, max_points=max_points, data_kind=VolumeRequestDataKind.volume),
             req_box=VolumeRequestBox(bottom_left=(a1, a2, a3), top_right=(b1, b2, b3))
         )
 
@@ -83,7 +83,7 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
             max_points: Optional[int] = Query(0)
     ):
         response = await volume_server.get_volume_data(
-            req=VolumeRequestInfo(source=source, structure_id=id, segmentation_id=segmentation, max_points=max_points, data_kind="segmentation"),
+            req=VolumeRequestInfo(source=source, structure_id=id, segmentation_id=segmentation, max_points=max_points, data_kind=VolumeRequestDataKind.segmentation),
         )
 
         return Response(response, headers={"Content-Disposition": f'attachment;filename="{id}.bcif"'})
@@ -95,7 +95,7 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
             max_points: Optional[int] = Query(0)
     ):
         response = await volume_server.get_volume_data(
-            req=VolumeRequestInfo(source=source, structure_id=id, max_points=max_points, data_kind="volume"),
+            req=VolumeRequestInfo(source=source, structure_id=id, max_points=max_points, data_kind=VolumeRequestDataKind.volume),
         )
 
         return Response(response, headers={"Content-Disposition": f'attachment;filename="{id}.bcif"'})
