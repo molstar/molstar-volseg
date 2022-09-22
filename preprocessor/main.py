@@ -13,7 +13,7 @@ from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPr
 from preprocessor.params_for_storing_db import CHUNKING_MODES, COMPRESSORS
 from preprocessor.src.service.implementations.preprocessor_service import PreprocessorService
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import \
-    OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH, PARAMETRIZED_DBS_INPUT_PARAMS_FILEPATH, TEMP_ZARR_HIERARCHY_STORAGE_PATH
+    APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS, DEFAULT_DB_PATH, OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH, PARAMETRIZED_DBS_INPUT_PARAMS_FILEPATH, RAW_INPUT_FILES_DIR, TEMP_ZARR_HIERARCHY_STORAGE_PATH
 
 from db.interface.i_preprocessed_db import IPreprocessedDb
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import SFFPreprocessor
@@ -21,11 +21,6 @@ from preprocessor.src.tools.convert_app_specific_segm_to_sff.convert_app_specifi
 from preprocessor.src.tools.remove_files_or_folders_by_pattern.remove_files_or_folders_by_pattern import remove_files_or_folders_by_pattern
 from preprocessor.src.tools.write_dict_to_file.write_dict_to_json import write_dict_to_json
 from preprocessor.src.tools.write_dict_to_file.write_dict_to_txt import write_dict_to_txt
-
-RAW_INPUT_FILES_DIR = Path(__file__).parent / 'data/raw_input_files'
-DEFAULT_DB_PATH = Path(__file__).parent.parent/'db' 
-DEFAULT_QUANTIZE_DTYPE_STR = 'u1'
-APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS = ['.am', '.mod', '.seg', '.surf', '.stl']
 
 def obtain_paths_to_single_entry_files(input_files_dir: Path) -> Dict:
     d = {}
@@ -147,7 +142,8 @@ async def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path, 
                 segm_file_path=entry['segmentation_file_path'],
                 volume_file_path=entry['volume_file_path'],
                 volume_force_dtype=None,
-                params_for_storing=params_for_storing
+                params_for_storing=params_for_storing,
+                entry_id=entry['id']
             )
             await db.store(namespace=source_name, key=entry['id'], temp_store_path=processed_data_temp_path)
 
@@ -172,7 +168,8 @@ async def preprocess_single_entry(db: IPreprocessedDb, input_files_dir: Path, pa
         segm_file_path=files_dict['segmentation_file_path'],
         volume_file_path=files_dict['volume_file_path'],
         volume_force_dtype=force_volume_dtype,
-        params_for_storing=params_for_storing
+        params_for_storing=params_for_storing,
+        entry_id=entry_id
     )
     await db.store(namespace=source_db, key=entry_id, temp_store_path=processed_data_temp_path)
     
@@ -239,7 +236,7 @@ def create_dict_of_input_params_for_storing(chunking_mode: list, compressors: li
 def remove_temp_zarr_hierarchy_storage_folder(path: Path):
     shutil.rmtree(path, ignore_errors=True)
 
-async def create_db(db_path: Path, params_for_storing: dict):
+async def create_db(db_path: Path, params_for_storing: dict, raw_input_files_dir_path: Path):
     new_db_path = Path(db_path)
     if new_db_path.is_dir() == False:
         new_db_path.mkdir()
@@ -247,7 +244,7 @@ async def create_db(db_path: Path, params_for_storing: dict):
     remove_temp_zarr_hierarchy_storage_folder(TEMP_ZARR_HIERARCHY_STORAGE_PATH)
     db = LocalDiskPreprocessedDb(new_db_path, params_for_storing['store_type'])
     # db.remove_all_entries()
-    await preprocess_everything(db, RAW_INPUT_FILES_DIR, params_for_storing=params_for_storing)
+    await preprocess_everything(db, raw_input_files_dir_path, params_for_storing=params_for_storing)
 
 async def add_entry_to_db(db_path: Path, params_for_storing: dict, input_files_dir: Path, entry_id: str, source_db: str, force_volume_dtype: Union[str, None]):
     '''
@@ -269,8 +266,13 @@ async def add_entry_to_db(db_path: Path, params_for_storing: dict, input_files_d
 
 async def main():
     args = parse_script_args()
+    if args.raw_input_files_dir_path:
+        raw_input_files_dir_path = args.raw_input_files_dir_path
+    else:
+        raise ValueError('No raw input files dir path is provided as argument')
+    
     if args.create_parametrized_dbs:
-        # TODO: add quantize here too
+        # TODO: add quantize and raw input files dir path here too
         remove_files_or_folders_by_pattern('db_*/')
         storing_params_dict = create_dict_of_input_params_for_storing(
             chunking_mode=CHUNKING_MODES,
@@ -311,13 +313,14 @@ async def main():
             else:
                 raise ValueError('entry_id and source_db args are required for single entry mode')
         else:
-            await create_db(Path(args.db_path), params_for_storing=params_for_storing)
+            await create_db(Path(args.db_path), params_for_storing=params_for_storing, raw_input_files_dir_path=raw_input_files_dir_path)
     else:
         raise ValueError('No db path is provided as argument')
 
 def parse_script_args():
     parser=argparse.ArgumentParser()
     parser.add_argument("--db_path", type=Path, default=DEFAULT_DB_PATH, help='path to db folder')
+    parser.add_argument("--raw_input_files_dir_path", type=Path, default=RAW_INPUT_FILES_DIR, help='path to directory with input files (maps and sff)')
     parser.add_argument("--create_parametrized_dbs", action='store_true')
     parser.add_argument("--quantize_volume_data_dtype_str", action="store", choices=['u1', 'u2'])
     parser.add_argument('--single_entry', type=Path, help='path to folder with MAP and segmentation files')

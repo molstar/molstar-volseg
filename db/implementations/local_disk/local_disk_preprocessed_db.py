@@ -22,7 +22,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preproc
 from preprocessor.src.tools.quantize_data.quantize_data import decode_quantized_data
 
 from .local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
-from db.interface.i_preprocessed_db import IPreprocessedDb, ProcessedOnlyVolumeSliceData, ProcessedVolumeSliceData, SegmentationSliceData
+from db.interface.i_preprocessed_db import IPreprocessedDb, ProcessedVolumeSliceData
 from ...interface.i_preprocessed_medatada import IPreprocessedMetadata
 
 
@@ -163,7 +163,7 @@ class ReadContext():
 
     async def read_volume_slice(self, down_sampling_ratio: int,
                          box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask',
-                         timer_printout=False) -> ProcessedOnlyVolumeSliceData:
+                         timer_printout=False) -> ProcessedVolumeSliceData:
         try:
 
             box = normalize_box(box)
@@ -195,19 +195,17 @@ class ReadContext():
             if timer_printout == True:
                 print(f'read_volume_slice with mode {mode}: {end - start}')
 
-            d = {
+            return {
                 "volume_slice": volume_slice
-                }
+            }
 
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)
             raise e
 
-        return d
-
     async def read_segmentation_slice(self, lattice_id: int, down_sampling_ratio: int,
                          box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str = 'dask',
-                         timer_printout=False) -> SegmentationSliceData:
+                         timer_printout=False) -> ProcessedVolumeSliceData:
         try:
 
             box = normalize_box(box)
@@ -230,7 +228,8 @@ class ReadContext():
 
             if timer_printout == True:
                 print(f'read_segmentation_slice with mode {mode}: {end - start}')
-            d = {
+            
+            return {
                 "segmentation_slice": {
                     "category_set_ids": segm_slice,
                     "category_set_dict": segm_dict
@@ -240,8 +239,6 @@ class ReadContext():
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)
             raise e
-
-        return d
 
     def _do_slicing(self, arr: zarr.core.Array,
         box: Tuple[Tuple[int, int, int], Tuple[int, int, int]], mode: str) -> np.ndarray:

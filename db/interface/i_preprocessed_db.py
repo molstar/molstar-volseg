@@ -1,6 +1,6 @@
 import abc
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Tuple, TypedDict
+from typing import TYPE_CHECKING, Dict, TypedDict, Optional
 
 import numpy as np
 
@@ -17,13 +17,11 @@ class SegmentationSliceData(TypedDict):
     category_set_dict: Dict
 
 
+
 class ProcessedVolumeSliceData(TypedDict):
     # changed segm slice to another typeddict
-    segmentation_slice: SegmentationSliceData
-    volume_slice: np.ndarray
-
-class ProcessedOnlyVolumeSliceData(TypedDict):
-    volume_slice: np.ndarray
+    segmentation_slice: Optional[SegmentationSliceData]
+    volume_slice: Optional[np.ndarray]
 
 
 class IReadOnlyPreprocessedDb(abc.ABC):

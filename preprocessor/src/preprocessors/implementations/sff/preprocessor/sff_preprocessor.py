@@ -31,13 +31,13 @@ class SFFPreprocessor(IDataPreprocessor):
         self.magic_kernel = MagicKernel3dDownsampler()
         self.temp_zarr_structure_path = None
 
-    def preprocess(self, segm_file_path: Path, volume_file_path: Path, params_for_storing: dict, volume_force_dtype: Union[np.dtype, None]):
+    def preprocess(self, segm_file_path: Path, volume_file_path: Path, params_for_storing: dict, volume_force_dtype: Union[np.dtype, None], entry_id: str):
         '''
         Returns path to temporary zarr structure that will be stored permanently using db.store
         '''
         try:
             if segm_file_path is not None:
-                self.temp_zarr_structure_path = SFFPreprocessor.hdf5_to_zarr(self.temp_root_path, segm_file_path)
+                self.temp_zarr_structure_path = SFFPreprocessor.hdf5_to_zarr(self.temp_root_path, segm_file_path, entry_id)
             else:
                 self.__init_empty_zarr_structure(volume_file_path)
             # Re-create zarr hierarchy
