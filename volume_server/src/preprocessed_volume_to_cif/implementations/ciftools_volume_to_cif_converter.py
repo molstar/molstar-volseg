@@ -18,7 +18,7 @@ from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_conve
 from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.volume_data_3d_info.volume_info import \
     VolumeInfo
 
-from volume_server.src.requests.request_box import RequestBox
+from volume_server.src.requests.volume import SliceBox
 
 
 class ConverterOutputStream(OutputStream):
@@ -35,7 +35,7 @@ class ConverterOutputStream(OutputStream):
 
 
 class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
-    def convert(self, slice: ProcessedVolumeSliceData, metadata: IPreprocessedMetadata, box: RequestBox) -> Union[bytes, str]:  # TODO: add binary cif to the project
+    def convert(self, slice: ProcessedVolumeSliceData, metadata: IPreprocessedMetadata, box: SliceBox) -> Union[bytes, str]:  # TODO: add binary cif to the project
         writer = BinaryCIFWriter("volume_server")
 
         writer.start_data_block("SERVER") 
@@ -48,7 +48,7 @@ class CifToolsVolumeToCifConverter(IVolumeToCifConverter):
 
         # volume
         if "volume_slice" in slice:
-            writer.start_data_block("EM")  # Currently needs to be EM for 
+            writer.start_data_block("volume")  # Currently needs to be EM for 
             writer.write_category(volume_info_category, [volume_info])
 
             data_category = CategoryWriterProvider_VolumeData3d()

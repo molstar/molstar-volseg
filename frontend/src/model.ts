@@ -311,9 +311,11 @@ export class AppModel {
     }
     volumeServerRequestBoxUrl(source: string, entryId: string, segmentation: number, box: [[number, number, number], [number, number, number]], maxPoints: number): string {
         const [[a1, a2, a3], [b1, b2, b3]] = box;
+        // NOTE: in v2 api, maxPoints is passed as a query ?max_points=....;
         return `${VOLUME_SERVER}/v1/${source}/${entryId}/box/${segmentation}/${a1}/${a2}/${a3}/${b1}/${b2}/${b3}/${maxPoints}`;
     }
     volumeServerRequestCellUrl(source: string, entryId: string, segmentation: number, maxPoints: number): string {
+        // NOTE: in v2 api, maxPoints is passed as a query ?max_points=....;
         return `${VOLUME_SERVER}/v1/${source}/${entryId}/cell/${segmentation}/${maxPoints}`;
     }
     // Temporary solution
@@ -437,12 +439,13 @@ export class AppModel {
         const isoLevel = 2.73;
         const source = this.splitEntryId(entryId).source as 'empiar'|'emdb';
         // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
-        const url = this.volumeServerRequestBoxUrl(source, entryId, 0, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
-        // TODO: the 0 for segmentation id should come from the metadata
+        // TODO: segmentation id should come from the metadata! (in "v2" api, segm id is no longer required for volume)
+        const segmentationId = 0;
+        const url = this.volumeServerRequestBoxUrl(source, entryId, segmentationId, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
         // TEST cell
-        // const url = this.volumeServerRequestCellUrl(source, entryId, 0, 100000000);
+        // const url = this.volumeServerRequestCellUrl(source, entryId, segmentationId, 100000000);
         // Slice test with downsamling
-        // const url = this.volumeServerRequestUrl(source, entryId, 0, [[-30, -30, -30], [30, 30, 30]], 1000);
+        // const url = this.volumeServerRequestUrl(source, entryId, segmentationId, [[-30, -30, -30], [30, 30, 30]], 1000);
         const { plugin } = this;
 
         await plugin.clear();

@@ -1,12 +1,12 @@
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
-from volume_server.src.requests.request_box import RequestBox
+from volume_server.src.requests.volume import SliceBox
 
 class VolumeInfo:
     def __init__(
         self,
         name: str,
         metadata: IPreprocessedMetadata,
-        box: RequestBox,
+        box: SliceBox,
     ):
         self.name = name
         self.metadata = metadata
