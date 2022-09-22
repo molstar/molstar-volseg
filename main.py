@@ -18,9 +18,9 @@ from volume_server.src.volume_server_v1 import VolumeServerV1
 
 DEFAULT_HOST = '0.0.0.0'  # 0.0.0.0 = localhost
 DEFAULT_PORT = 9000
-DEFAULT_DB_PATH = 'db'
+DEFAULT_DB_PATH = Path('db')
 
-def prepare_fastapi_app(db_path: str):
+def prepare_fastapi_app(db_path: Path):
     app = FastAPI()
 
     # origins = [
@@ -38,7 +38,7 @@ def prepare_fastapi_app(db_path: str):
     app.add_middleware(GZipMiddleware, minimum_size=1000)
 
     # initialize dependencies
-    db = LocalDiskPreprocessedDb(folder=Path(db_path))
+    db = LocalDiskPreprocessedDb(folder=db_path)
     volume_to_cif_converter = CifToolsVolumeToCifConverter()
 
     # initialize server
@@ -49,7 +49,7 @@ def prepare_fastapi_app(db_path: str):
     return app
 
 
-def initialize_server(*, host: str = DEFAULT_HOST, port: int = DEFAULT_PORT, db_path: str = DEFAULT_DB_PATH):
+def initialize_server(*, host: str = DEFAULT_HOST, port: int = DEFAULT_PORT, db_path: Path = DEFAULT_DB_PATH):
     '''Initialize and run API server'''
     m.patch()
 
@@ -63,7 +63,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Run Volume Server API')
     parser.add_argument('--host', type=str, default=DEFAULT_HOST, help=f'Set API IP (default: {DEFAULT_HOST} (localhost))')
     parser.add_argument('--port', type=int, default=DEFAULT_PORT, help=f'Set API port (default: {DEFAULT_PORT})')
-    parser.add_argument('--db_path', type=str, default=DEFAULT_DB_PATH, help=f'Path to db (default: {DEFAULT_DB_PATH})')
+    parser.add_argument('--db_path', type=Path, default=DEFAULT_DB_PATH, help=f'Path to db (default: {DEFAULT_DB_PATH})')
     return parser.parse_args()
 
 
