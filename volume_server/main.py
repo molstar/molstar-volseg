@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from api import v1 as api_v1
-from api import v2 as api_v2
+import volume_server.src.api.v1 as api_v1
+import volume_server.src.api.v2 as api_v2
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 
 # TODO: this should not be required as we should not be serializing MSGPACK to JSON at all
