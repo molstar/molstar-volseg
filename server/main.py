@@ -7,7 +7,7 @@ from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPr
 
 from app.preprocessed_volume_to_cif.implementations.ciftools_volume_to_cif_converter import \
     CifToolsVolumeToCifConverter
-from app.volume_server_v1 import VolumeServerV1
+from app.api.service import VolumeServerService
 
 from app.settings import settings
 
@@ -34,7 +34,7 @@ db = LocalDiskPreprocessedDb(folder=settings.DB_PATH)
 volume_to_cif_converter = CifToolsVolumeToCifConverter()
 
 # initialize server
-volume_server = VolumeServerV1(db, volume_to_cif_converter)
+volume_server = VolumeServerService(db, volume_to_cif_converter)
 
 api_v1.configure_endpoints(app, volume_server)
 api_v2.configure_endpoints(app, volume_server)

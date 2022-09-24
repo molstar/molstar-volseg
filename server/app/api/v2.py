@@ -4,11 +4,11 @@ from typing import Optional
 from fastapi import FastAPI, Response, Query
 from starlette.responses import JSONResponse
 
-from app.i_volume_server import IVolumeServer
+from app.api.service import VolumeServerService
 from app.requests.entries_request.entries_request import EntriesRequest
 from app.requests.mesh_request.mesh_request import MeshRequest
 from app.requests.metadata_request.metadata_request import MetadataRequest
-from .json_numpy_response import JSONNumpyResponse
+from app.api.json_numpy_response import JSONNumpyResponse
 
 
 from app.requests.volume import VolumeRequestInfo, VolumeRequestBox, VolumeRequestDataKind
@@ -16,7 +16,7 @@ from app.requests.volume import VolumeRequestInfo, VolumeRequestBox, VolumeReque
 HTTP_CODE_UNPROCESSABLE_ENTITY = 422
 
 
-def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
+def configure_endpoints(app: FastAPI, volume_server: VolumeServerService):
     @app.get("/v2/list_entries/{limit}")
     async def get_entries(
             limit: int = 100
@@ -37,7 +37,7 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
         return response
 
     @app.get("/v2/{source}/{id}/segmentation/box/{segmentation}/{a1}/{a2}/{a3}/{b1}/{b2}/{b3}")
-    async def get_volume(
+    async def get_segmentation_box(
             source: str,
             id: str,
             segmentation: int,
@@ -57,7 +57,7 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
         return Response(response, headers={"Content-Disposition": f'attachment;filename="{id}.bcif"'})
 
     @app.get("/v2/{source}/{id}/volume/box/{a1}/{a2}/{a3}/{b1}/{b2}/{b3}")
-    async def get_volume(
+    async def get_volume_box(
             source: str,
             id: str,
             a1: float,
@@ -76,7 +76,7 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
         return Response(response, headers={"Content-Disposition": f'attachment;filename="{id}.bcif"'})
 
     @app.get("/v2/{source}/{id}/segmentation/cell/{segmentation}")
-    async def get_cell(
+    async def get_segmentation_cell(
             source: str,
             id: str,
             segmentation: int,
@@ -89,7 +89,7 @@ def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
         return Response(response, headers={"Content-Disposition": f'attachment;filename="{id}.bcif"'})
 
     @app.get("/v2/{source}/{id}/volume/cell")
-    async def get_cell(
+    async def get_volume_cell(
             source: str,
             id: str,
             max_points: Optional[int] = Query(0)

@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import FastAPI, Response
 from starlette.responses import JSONResponse
 
-from app.i_volume_server import IVolumeServer
+from app.api.service import VolumeServerService
 from app.requests.entries_request.entries_request import EntriesRequest
 from app.requests.mesh_request.mesh_request import MeshRequest
 from app.requests.metadata_request.metadata_request import MetadataRequest
@@ -15,7 +15,7 @@ from app.requests.volume import VolumeRequestInfo, VolumeRequestBox
 HTTP_CODE_UNPROCESSABLE_ENTITY = 422
 
 
-def configure_endpoints(app: FastAPI, volume_server: IVolumeServer):
+def configure_endpoints(app: FastAPI, volume_server: VolumeServerService):
     @app.get("/v1/list_entries/{limit}")
     async def get_entries(
             limit: int = 100
