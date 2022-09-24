@@ -1,6 +1,6 @@
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 
-from app.api.requests import GridSliceBox
+from app.core.models import GridSliceBox
 
 
 class VolumeInfo:

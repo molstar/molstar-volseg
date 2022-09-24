@@ -4,7 +4,7 @@ from fastapi import FastAPI, Response
 from starlette.responses import JSONResponse
 
 from app.api.requests import EntriesRequest, MeshRequest, MetadataRequest, VolumeRequestBox, VolumeRequestInfo
-from app.api.service import VolumeServerService
+from app.core.service import VolumeServerService
 from app.serialization.json_numpy_response import JSONNumpyResponse
 
 HTTP_CODE_UNPROCESSABLE_ENTITY = 422

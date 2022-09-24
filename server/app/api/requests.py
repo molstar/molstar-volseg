@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Tuple
 
@@ -34,24 +33,6 @@ class VolumeRequestBox(BaseModel):
         if any(bl[i] >= tr[i] for i in range(3)):
             raise ValueError(f"{bl}, {tr} is not a valid request box")
         return values
-
-
-# TODO: find a better home for this class??
-@dataclass
-class GridSliceBox:
-    downsampling_rate: int
-    bottom_left: tuple[int, int, int]  # inclusive
-    top_right: tuple[int, int, int]  # inclusive
-
-    @property
-    def dimensions(self) -> tuple[int, int, int]:
-        """Number of datapoints in each dimensions"""
-        return tuple(self.top_right[i] - self.bottom_left[i] + 1 for i in range(3))
-
-    @property
-    def volume(self):
-        nx, ny, nz = self.dimensions
-        return nx * ny * nz
 
 
 class EntriesRequest(BaseModel):

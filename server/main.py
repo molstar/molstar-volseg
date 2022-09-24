@@ -5,7 +5,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 
 import app.api.v1 as api_v1
 import app.api.v2 as api_v2
-from app.api.service import VolumeServerService
+from app.core.service import VolumeServerService
 from app.settings import settings
 
 print("Server Settings: ", settings.dict())

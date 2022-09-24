@@ -11,7 +11,7 @@ from app.api.requests import (
     VolumeRequestDataKind,
     VolumeRequestInfo,
 )
-from app.api.service import VolumeServerService
+from app.core.service import VolumeServerService
 from app.serialization.json_numpy_response import JSONNumpyResponse
 
 HTTP_CODE_UNPROCESSABLE_ENTITY = 422

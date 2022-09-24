@@ -8,13 +8,13 @@ from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 
 from app.api.requests import (
     EntriesRequest,
-    GridSliceBox,
     MeshRequest,
     MetadataRequest,
     VolumeRequestBox,
     VolumeRequestDataKind,
     VolumeRequestInfo,
 )
+from app.core.models import GridSliceBox
 from app.serialization.cif import serialize_volume_slice
 
 __MAX_DOWN_SAMPLING_VALUE__ = 1000000
