@@ -4,13 +4,13 @@ from typing import Optional
 from fastapi import FastAPI, Response
 from starlette.responses import JSONResponse
 
-from volume_server.src.i_volume_server import IVolumeServer
-from volume_server.src.requests.entries_request.entries_request import EntriesRequest
-from volume_server.src.requests.mesh_request.mesh_request import MeshRequest
-from volume_server.src.requests.metadata_request.metadata_request import MetadataRequest
+from app.i_volume_server import IVolumeServer
+from app.requests.entries_request.entries_request import EntriesRequest
+from app.requests.mesh_request.mesh_request import MeshRequest
+from app.requests.metadata_request.metadata_request import MetadataRequest
 from .json_numpy_response import JSONNumpyResponse
 
-from volume_server.src.requests.volume import VolumeRequestInfo, VolumeRequestBox
+from app.requests.volume import VolumeRequestInfo, VolumeRequestBox
 
 HTTP_CODE_UNPROCESSABLE_ENTITY = 422
 

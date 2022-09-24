@@ -1,4 +1,4 @@
-from volume_server.src.requests.metadata_request.i_metadata_request import IMetadataRequest
+from app.requests.metadata_request.i_metadata_request import IMetadataRequest
 
 
 class MetadataRequest(IMetadataRequest):

@@ -1,5 +1,5 @@
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
-from volume_server.src.requests.volume import GridSliceBox
+from app.requests.volume import GridSliceBox
 
 class VolumeInfo:
     def __init__(

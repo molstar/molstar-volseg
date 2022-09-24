@@ -1,4 +1,4 @@
-from volume_server.src.requests.mesh_request.i_mesh_request import IMeshRequest
+from app.requests.mesh_request.i_mesh_request import IMeshRequest
 
 
 class MeshRequest(IMeshRequest):

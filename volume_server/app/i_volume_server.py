@@ -1,11 +1,11 @@
 import abc
 from typing import Optional
 
-from volume_server.src.requests.entries_request.i_entries_request import IEntriesRequest
-from volume_server.src.requests.mesh_request.i_mesh_request import IMeshRequest
-from volume_server.src.requests.metadata_request.i_metadata_request import IMetadataRequest
+from app.requests.entries_request.i_entries_request import IEntriesRequest
+from app.requests.mesh_request.i_mesh_request import IMeshRequest
+from app.requests.metadata_request.i_metadata_request import IMetadataRequest
 
-from volume_server.src.requests.volume import VolumeRequestInfo, VolumeRequestBox
+from app.requests.volume import VolumeRequestInfo, VolumeRequestBox
 
 
 class IVolumeServer(abc.ABC):

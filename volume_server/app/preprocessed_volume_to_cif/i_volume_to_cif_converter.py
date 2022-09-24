@@ -4,7 +4,7 @@ from typing import Union
 from db.interface.i_preprocessed_db import ProcessedVolumeSliceData
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 
-from volume_server.src.requests.volume import GridSliceBox
+from app.requests.volume import GridSliceBox
 
 class IVolumeToCifConverter(abc.ABC):
     @abc.abstractmethod

@@ -14,7 +14,6 @@ dependencies:
   - h5py==3.6.0
   - matplotlib==3.5.1
   - mrcfile==1.4.0
-  - msgpack-numpy==0.4.8
   - numcodecs==0.9.1
   - numpy
   - pytest==7.1.2

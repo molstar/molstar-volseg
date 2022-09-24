@@ -9,13 +9,15 @@ zarr package (a requirement for this project) requires C++ dev-kit in order to i
 
 
 ```
+cd volume_server
 python main.py
 ```
 
 or 
 
 ```
-uvicorn volume_server.main:app --port 9000 --reload  # other params
+cd volume_server
+uvicorn server:app --port 9000 --reload  # other params
 ```
 
 ## Settings
@@ -30,12 +32,14 @@ Environment variables (with defaults):
 Linux/Mac
 
 ```
+cd volume_server
 DEV_MODE=True python main.py
 ```
 
 Windows
 
 ```
+cd volume_server
 set DEV_MODE=True && python main.py
 ```
 

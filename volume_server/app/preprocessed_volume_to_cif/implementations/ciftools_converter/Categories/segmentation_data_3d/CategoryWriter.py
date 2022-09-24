@@ -9,9 +9,9 @@ from ciftools.binary.encoding.impl.encoders.interval_quantization import Interva
 from ciftools.binary.encoding.impl.encoders.run_length import RunLengthCIFEncoder
 from ciftools.writer.base import CategoryWriter, CategoryWriterProvider, FieldDesc
 
-from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories._writer import CategoryDesc, \
+from app.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories._writer import CategoryDesc, \
     CategoryDescImpl
-from volume_server.src.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.segmentation_data_3d.Fields import \
+from app.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.segmentation_data_3d.Fields import \
     Fields_SegmentationData3d
 
 

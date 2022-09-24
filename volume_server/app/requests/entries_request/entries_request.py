@@ -1,4 +1,4 @@
-from volume_server.src.requests.entries_request.i_entries_request import IEntriesRequest
+from app.requests.entries_request.i_entries_request import IEntriesRequest
 
 
 class EntriesRequest(IEntriesRequest):

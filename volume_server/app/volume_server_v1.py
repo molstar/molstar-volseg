@@ -12,7 +12,7 @@ from .requests.entries_request.i_entries_request import IEntriesRequest
 from .requests.mesh_request.i_mesh_request import IMeshRequest
 from .requests.metadata_request.i_metadata_request import IMetadataRequest
 
-from volume_server.src.requests.volume import VolumeRequestInfo, VolumeRequestBox, GridSliceBox, VolumeRequestDataKind
+from app.requests.volume import VolumeRequestInfo, VolumeRequestBox, GridSliceBox, VolumeRequestDataKind
 
 __MAX_DOWN_SAMPLING_VALUE__ = 1000000
 
