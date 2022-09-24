@@ -15,7 +15,7 @@ test_configs = {
                 "x_max": 100000,
                 "y_max": 100000,
                 "z_max": 100000,
-                "max_points": 100000000
+                "max_points": 100000000,
             },
             "down_sampled": {
                 "segmentation": 0,
@@ -25,7 +25,7 @@ test_configs = {
                 "x_max": 100000,
                 "y_max": 100000,
                 "z_max": 100000,
-                "max_points": 10
+                "max_points": 10,
             },
             "8": {
                 "segmentation": 0,
@@ -35,7 +35,7 @@ test_configs = {
                 "x_max": 20,
                 "y_max": 20,
                 "z_max": 20,
-                "max_points": 100000000
+                "max_points": 100000000,
             },
             "4": {
                 "segmentation": 0,
@@ -45,7 +45,7 @@ test_configs = {
                 "x_max": 20,
                 "y_max": 20,
                 "z_max": 20,
-                "max_points": 100000000
+                "max_points": 100000000,
             },
             "2": {
                 "segmentation": 0,
@@ -55,8 +55,8 @@ test_configs = {
                 "x_max": 20,
                 "y_max": 20,
                 "z_max": 20,
-                "max_points": 100000000
-            }
+                "max_points": 100000000,
+            },
         }
     }
 }
@@ -64,10 +64,12 @@ test_configs = {
 
 class FetchVolumeTest(ServerTestBase):
     def __fetch_for_test(self, db: str, entry: str, params: dict) -> str:
-        r = requests.get(f'{self.serverUrl()}/v1/{db}/{entry}/box/{params.get("segmentation")}'
-                         f'/{params.get("x_min")}/{params.get("y_min")}/{params.get("z_min")}'
-                         f'/{params.get("x_max")}/{params.get("y_max")}/{params.get("z_max")}'
-                         f'&max_points={params.get("max_points")}')
+        r = requests.get(
+            f'{self.serverUrl()}/v1/{db}/{entry}/box/{params.get("segmentation")}'
+            f'/{params.get("x_min")}/{params.get("y_min")}/{params.get("z_min")}'
+            f'/{params.get("x_max")}/{params.get("y_max")}/{params.get("z_max")}'
+            f'&max_points={params.get("max_points")}'
+        )
         self.assertEqual(r.status_code, 200)
         body = r.text
         self.assertIsNotNone(body)
@@ -82,12 +84,13 @@ class FetchVolumeTest(ServerTestBase):
                         entry = entries.get(entry_id)
 
                         out_of_boundaries = self.__fetch_for_test(db, entry_id, entry.get("out_of_boundaries"))
-                        print("[VolumeTests] Case *out_of_boundaries* -> received body of len : " + str(
-                            len(out_of_boundaries)))
+                        print(
+                            "[VolumeTests] Case *out_of_boundaries* -> received body of len : "
+                            + str(len(out_of_boundaries))
+                        )
 
                         down_sampled = self.__fetch_for_test(db, entry_id, entry.get("down_sampled"))
-                        print("[VolumeTests] Case *down_sampled* -> received body of len : " + str(
-                            len(down_sampled)))
+                        print("[VolumeTests] Case *down_sampled* -> received body of len : " + str(len(down_sampled)))
 
                         self.assertAlmostEqual(len(out_of_boundaries) / (8 * len(down_sampled)), 1, delta=0.4)
 
@@ -112,5 +115,5 @@ class FetchVolumeTest(ServerTestBase):
             pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

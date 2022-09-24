@@ -1,6 +1,6 @@
 import contextlib
-import time
 import threading
+import time
 import unittest
 from abc import ABC
 
@@ -33,10 +33,12 @@ class ServerTestBase(ABC, unittest.TestCase):
 
     @staticmethod
     def serverUrl():
-        return f'http://{ServerTestBase.ip}:{str(ServerTestBase.port)}'
+        return f"http://{ServerTestBase.ip}:{str(ServerTestBase.port)}"
 
     @classmethod
     def setUpClass(cls):
         ServerTestBase.app = app
-        config = Config(ServerTestBase.app, host=ServerTestBase.ip, port=ServerTestBase.port, log_level="info", loop="asyncio")
+        config = Config(
+            ServerTestBase.app, host=ServerTestBase.ip, port=ServerTestBase.port, log_level="info", loop="asyncio"
+        )
         ServerTestBase.server = TestServerRunner(config=config)

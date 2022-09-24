@@ -1,11 +1,11 @@
+from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+
 import app.api.v1 as api_v1
 import app.api.v2 as api_v2
-from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
 from app.api.service import VolumeServerService
-
 from app.settings import settings
 
 print("Server Settings: ", settings.dict())

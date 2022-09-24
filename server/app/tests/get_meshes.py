@@ -5,25 +5,15 @@ import requests
 from app.tests._test_server_runner import ServerTestBase
 
 test_configs = {
-    "empiar": {
-        "empiar-10070": {
-            "2": {
-                "segmentation": 1,
-                "detail_lvl": 2
-            },
-            "1": {
-                "segmentation": 1,
-                "detail_lvl": 1
-            }
-        }
-    }
+    "empiar": {"empiar-10070": {"2": {"segmentation": 1, "detail_lvl": 2}, "1": {"segmentation": 1, "detail_lvl": 1}}}
 }
 
 
 class FetchMeshesTest(ServerTestBase):
     def __fetch_for_test(self, db: str, entry: str, params: dict) -> str:
         r = requests.get(
-            f'{self.serverUrl()}/v1/{db}/{entry}/mesh/{params.get("segmentation")}/{params.get("detail_lvl")}')
+            f'{self.serverUrl()}/v1/{db}/{entry}/mesh/{params.get("segmentation")}/{params.get("detail_lvl")}'
+        )
         self.assertEqual(r.status_code, 200)
         body = r.text
         self.assertIsNotNone(body)
@@ -55,5 +45,5 @@ class FetchMeshesTest(ServerTestBase):
             pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

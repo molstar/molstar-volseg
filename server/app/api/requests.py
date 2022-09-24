@@ -1,12 +1,15 @@
 from dataclasses import dataclass
-from pydantic import BaseModel, root_validator, validator
-from typing import Optional, Tuple
 from enum import Enum
+from typing import Optional, Tuple
+
+from pydantic import BaseModel, root_validator, validator
+
 
 class VolumeRequestDataKind(str, Enum):
     volume = "volume"
     segmentation = "segmentation"
     all = "all"
+
 
 class VolumeRequestInfo(BaseModel):
     source: str
@@ -20,6 +23,7 @@ class VolumeRequestInfo(BaseModel):
         if id is None and values["data_kind"] != "volume":
             raise ValueError("segmentation_id must be defined for segmentation/all queries")
 
+
 class VolumeRequestBox(BaseModel):
     bottom_left: Tuple[float, float, float]
     top_right: Tuple[float, float, float]
@@ -31,12 +35,13 @@ class VolumeRequestBox(BaseModel):
             raise ValueError(f"{bl}, {tr} is not a valid request box")
         return values
 
+
 # TODO: find a better home for this class??
 @dataclass
 class GridSliceBox:
     downsampling_rate: int
-    bottom_left: tuple[int, int, int] # inclusive
-    top_right: tuple[int, int, int] # inclusive
+    bottom_left: tuple[int, int, int]  # inclusive
+    top_right: tuple[int, int, int]  # inclusive
 
     @property
     def dimensions(self) -> tuple[int, int, int]:
@@ -48,9 +53,11 @@ class GridSliceBox:
         nx, ny, nz = self.dimensions
         return nx * ny * nz
 
+
 class EntriesRequest(BaseModel):
     limit: int
     keyword: str
+
 
 class MeshRequest(BaseModel):
     source: str

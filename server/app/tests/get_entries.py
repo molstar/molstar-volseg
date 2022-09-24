@@ -11,7 +11,7 @@ class FetchEntriesTest(ServerTestBase):
             with self.server.run_in_thread():
                 # test limits
                 for limit in range(0, 3):
-                    r = requests.get(f'{self.serverUrl()}/v1/list_entries/{limit}')
+                    r = requests.get(f"{self.serverUrl()}/v1/list_entries/{limit}")
                     self.assertEqual(r.status_code, 200)
                     body: dict = dict(r.json())
                     self.assertIsNotNone(body)
@@ -24,7 +24,7 @@ class FetchEntriesTest(ServerTestBase):
                 # test keywords
                 # test annotation keyword
                 keyword = "Drosophila"
-                r = requests.get(f'{self.serverUrl()}/v1/list_entries/1/{keyword}')
+                r = requests.get(f"{self.serverUrl()}/v1/list_entries/1/{keyword}")
                 self.assertEqual(r.status_code, 200)
                 body: dict = dict(r.json())
                 self.assertIsNotNone(body)
@@ -36,7 +36,7 @@ class FetchEntriesTest(ServerTestBase):
 
                 # test annotation keyword wrong case
                 keyword = "drosophila"
-                r = requests.get(f'{self.serverUrl()}/v1/list_entries/1/{keyword}')
+                r = requests.get(f"{self.serverUrl()}/v1/list_entries/1/{keyword}")
                 self.assertEqual(r.status_code, 200)
                 body: dict = dict(r.json())
                 self.assertIsNotNone(body)
@@ -48,7 +48,7 @@ class FetchEntriesTest(ServerTestBase):
 
                 # test entry keyword
                 keyword = "emd"
-                r = requests.get(f'{self.serverUrl()}/v1/list_entries/1/{keyword}')
+                r = requests.get(f"{self.serverUrl()}/v1/list_entries/1/{keyword}")
                 self.assertEqual(r.status_code, 200)
                 body: dict = dict(r.json())
                 self.assertIsNotNone(body)
@@ -58,10 +58,9 @@ class FetchEntriesTest(ServerTestBase):
 
                 self.assertEqual(1, count)
 
-
         finally:
             pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

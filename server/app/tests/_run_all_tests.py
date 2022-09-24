@@ -1,13 +1,6 @@
 import unittest
 
-testmodules = [
-    "start_server",
-    "get_cell",
-    "get_metadata",
-    "get_volume",
-    "get_meshes",
-    "get_entries"
-]
+testmodules = ["start_server", "get_cell", "get_metadata", "get_volume", "get_meshes", "get_entries"]
 
 suite = unittest.TestSuite()
 
@@ -21,7 +14,5 @@ for t in testmodules:
         # else, just load all the test cases from the module.
         suite.addTest(unittest.defaultTestLoader.loadTestsFromName(t))
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.TextTestRunner().run(suite)
-
-

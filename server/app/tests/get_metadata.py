@@ -1,4 +1,3 @@
-import json
 import unittest
 
 import requests
@@ -10,7 +9,7 @@ class FetchMetadataTest(ServerTestBase):
     def test(self):
         try:
             with self.server.run_in_thread():
-                r = requests.get(f'{self.serverUrl()}/v1/emdb/emd-1832/metadata/')
+                r = requests.get(f"{self.serverUrl()}/v1/emdb/emd-1832/metadata/")
                 self.assertEqual(r.status_code, 200)
                 body: dict = dict(r.json())
                 self.assertIsNotNone(body)
@@ -46,7 +45,8 @@ class FetchMetadataTest(ServerTestBase):
                 self.assertIsNotNone(segmentation_downsamplings_dict)
                 for i in range(0, len(segmentation_lattices)):
                     segmentation_downsamplings: list = segmentation_downsamplings_dict.get(
-                        str(segmentation_lattices[i]))
+                        str(segmentation_lattices[i])
+                    )
                     self.assertIsNotNone(segmentation_downsamplings)
                     self.assertTrue(volume_downsamplings == segmentation_downsamplings)
                     previous_downsampling = segmentation_downsamplings[0]
@@ -62,7 +62,7 @@ class FetchMetadataTest(ServerTestBase):
                 for downsampling in volume_downsamplings:
                     self.assertTrue(str(downsampling) in voxel_sizes_dict.keys())
 
-                previous_voxel_size: list = voxel_sizes_dict.get('1')
+                previous_voxel_size: list = voxel_sizes_dict.get("1")
                 self.assertIsNotNone(previous_voxel_size)
                 self.assertEqual(len(previous_voxel_size), 3)
                 for i in range(1, len(volume_downsamplings)):
@@ -90,7 +90,7 @@ class FetchMetadataTest(ServerTestBase):
                 for downsampling in volume_downsamplings:
                     self.assertTrue(str(downsampling) in downsampled_grid_dict.keys())
 
-                previous_downsampled_grid: list = downsampled_grid_dict.get('1')
+                previous_downsampled_grid: list = downsampled_grid_dict.get("1")
                 self.assertIsNotNone(previous_downsampled_grid)
                 self.assertEqual(len(previous_downsampled_grid), 3)
                 for i in range(1, len(volume_downsamplings)):
@@ -109,7 +109,7 @@ class FetchMetadataTest(ServerTestBase):
                 for downsampling in volume_downsamplings:
                     self.assertTrue(str(downsampling) in mean_dict.keys())
 
-                previous_mean = mean_dict.get('1')
+                previous_mean = mean_dict.get("1")
                 self.assertIsNotNone(previous_mean)
                 previous_mean = float(previous_mean)
                 for i in range(1, len(volume_downsamplings)):
@@ -126,7 +126,7 @@ class FetchMetadataTest(ServerTestBase):
                 for downsampling in volume_downsamplings:
                     self.assertTrue(str(downsampling) in min_dict.keys())
 
-                previous_min = min_dict.get('1')
+                previous_min = min_dict.get("1")
                 self.assertIsNotNone(previous_min)
                 previous_min = float(previous_min)
                 for i in range(1, len(volume_downsamplings)):
@@ -143,7 +143,7 @@ class FetchMetadataTest(ServerTestBase):
                 for downsampling in volume_downsamplings:
                     self.assertTrue(str(downsampling) in max_dict.keys())
 
-                previous_max = max_dict.get('1')
+                previous_max = max_dict.get("1")
                 self.assertIsNotNone(previous_max)
                 previous_max = float(previous_max)
                 for i in range(1, len(volume_downsamplings)):
@@ -160,7 +160,7 @@ class FetchMetadataTest(ServerTestBase):
                 for downsampling in volume_downsamplings:
                     self.assertTrue(str(downsampling) in std_dict.keys())
 
-                previous_std = std_dict.get('1')
+                previous_std = std_dict.get("1")
                 self.assertIsNotNone(previous_std)
                 previous_std = float(previous_std)
                 for i in range(1, len(volume_downsamplings)):
@@ -177,5 +177,5 @@ class FetchMetadataTest(ServerTestBase):
             pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -1,13 +1,20 @@
 import json
 from collections import defaultdict
-
-from math import floor, ceil
+from math import ceil, floor
 from typing import Optional, Tuple, Union
 
 from db.interface.i_preprocessed_db import IReadOnlyPreprocessedDb
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 
-from app.api.requests import EntriesRequest, MeshRequest, MetadataRequest, VolumeRequestInfo, VolumeRequestBox, GridSliceBox, VolumeRequestDataKind
+from app.api.requests import (
+    EntriesRequest,
+    GridSliceBox,
+    MeshRequest,
+    MetadataRequest,
+    VolumeRequestBox,
+    VolumeRequestDataKind,
+    VolumeRequestInfo,
+)
 from app.serialization.cif import serialize_volume_slice
 
 __MAX_DOWN_SAMPLING_VALUE__ = 1000000
@@ -57,14 +64,14 @@ class VolumeServerService:
         grid = await self.db.read_metadata(req.source, req.structure_id)
         try:
             annotation = await self.db.read_annotations(req.source, req.structure_id)
-        except Exception as e:
+        except Exception:
             annotation = None
 
         return {"grid": grid.json_metadata(), "annotation": annotation}
 
     async def get_volume_data(self, req: VolumeRequestInfo, req_box: Optional[VolumeRequestBox] = None) -> bytes:
         metadata = await self.db.read_metadata(req.source, req.structure_id)
-        
+
         lattice_ids = metadata.segmentation_lattice_ids() or []
         if req.segmentation_id not in lattice_ids:
             lattice_id = lattice_ids[0] if len(lattice_ids) > 0 else None
@@ -94,7 +101,7 @@ class VolumeServerService:
                 db_slice = await reader.read_volume_slice(
                     down_sampling_ratio=slice_box.downsampling_rate,
                     box=(slice_box.bottom_left, slice_box.top_right),
-                ) 
+                )
             elif req.data_kind == VolumeRequestDataKind.segmentation:
                 db_slice = await reader.read_segmentation_slice(
                     lattice_id=lattice_id,
@@ -115,36 +122,39 @@ class VolumeServerService:
                 print("Exception in get_meshes: " + str(e))
                 meta = await self.db.read_metadata(req.source, req.structure_id)
                 segments_levels = self._extract_segments_detail_levels(meta)
-                error_msg = f'Invalid segment_id={req.segment_id} or detail_lvl={req.detail_lvl} (available segment_ids and detail_lvls: {segments_levels})'
+                error_msg = f"Invalid segment_id={req.segment_id} or detail_lvl={req.detail_lvl} (available segment_ids and detail_lvls: {segments_levels})"
                 raise error_msg
 
         return meshes
         # cif = convert_meshes(meshes, metadata, req.detail_lvl(), [10, 10, 10])  # TODO: replace 10,10,10 with cell size
 
     def _extract_segments_detail_levels(self, meta: IPreprocessedMetadata) -> dict[int, list[int]]:
-        '''Extract available segment_ids and detail_lvls for each segment_id'''
+        """Extract available segment_ids and detail_lvls for each segment_id"""
         meta_js = meta.json_metadata()
-        segments_levels = meta_js.get('segmentation_meshes', {}).get('mesh_component_numbers', {}).get('segment_ids',
-                                                                                                       {})
+        segments_levels = (
+            meta_js.get("segmentation_meshes", {}).get("mesh_component_numbers", {}).get("segment_ids", {})
+        )
         result: dict[int, list[int]] = defaultdict(list)
         for seg, obj in segments_levels.items():
-            for lvl in obj.get('detail_lvls', {}).keys():
+            for lvl in obj.get("detail_lvls", {}).keys():
                 result[int(seg)].append(int(lvl))
         sorted_result = {seg: sorted(result[seg]) for seg in sorted(result.keys())}
         return sorted_result
 
-    def _decide_slice_box(self, req: VolumeRequestInfo, req_box: Optional[VolumeRequestBox], metadata: IPreprocessedMetadata) -> Optional[GridSliceBox]:
+    def _decide_slice_box(
+        self, req: VolumeRequestInfo, req_box: Optional[VolumeRequestBox], metadata: IPreprocessedMetadata
+    ) -> Optional[GridSliceBox]:
         box = None
         max_points = req.max_points
 
         for downsampling_rate in sorted(metadata.volume_downsamplings()):
             if req_box:
-                box = calc_slice_box(req_box.bottom_left, req_box.top_right, metadata, downsampling_rate) 
+                box = calc_slice_box(req_box.bottom_left, req_box.top_right, metadata, downsampling_rate)
             else:
                 box = GridSliceBox(
                     downsampling_rate=downsampling_rate,
                     bottom_left=(0, 0, 0),
-                    top_right=tuple(d - 1 for d in metadata.sampled_grid_dimensions(downsampling_rate))
+                    top_right=tuple(d - 1 for d in metadata.sampled_grid_dimensions(downsampling_rate)),
                 )
 
             # TODO: decide what to do when max_points is 0
@@ -155,19 +165,23 @@ class VolumeServerService:
         return box
 
 
+def calc_slice_box(
+    req_min: Tuple[float, float, float],
+    req_max: Tuple[float, float, float],
+    meta: IPreprocessedMetadata,
+    downsampling_rate: int,
+) -> Optional[GridSliceBox]:
+    origin, voxel_size, grid_dimensions = (
+        meta.origin(),
+        meta.voxel_size(downsampling_rate),
+        meta.sampled_grid_dimensions(downsampling_rate),
+    )
 
-def calc_slice_box(req_min: Tuple[float, float, float], req_max: Tuple[float, float, float], meta: IPreprocessedMetadata, downsampling_rate: int) -> Optional[GridSliceBox]:
-    origin, voxel_size, grid_dimensions = meta.origin(), meta.voxel_size(downsampling_rate), meta.sampled_grid_dimensions(downsampling_rate)
-
-    bottom_left = tuple(max(0, floor((req_min[i] - origin[i]) / voxel_size[i] )) for i in range(3))
-    top_right = tuple(min(grid_dimensions[i] - 1, ceil((req_max[i] - origin[i]) / voxel_size[i] )) for i in range(3))
+    bottom_left = tuple(max(0, floor((req_min[i] - origin[i]) / voxel_size[i])) for i in range(3))
+    top_right = tuple(min(grid_dimensions[i] - 1, ceil((req_max[i] - origin[i]) / voxel_size[i])) for i in range(3))
 
     # Check if the box is outside the available data
     if any(bottom_left[i] >= grid_dimensions[i] for i in range(3)) or any(top_right[i] < 0 for i in range(3)):
         return None
 
-    return GridSliceBox(
-        downsampling_rate=downsampling_rate,
-        bottom_left=bottom_left,
-        top_right=top_right
-    )
+    return GridSliceBox(downsampling_rate=downsampling_rate, bottom_left=bottom_left, top_right=top_right)

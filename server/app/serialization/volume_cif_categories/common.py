@@ -1,5 +1,6 @@
 from ciftools.writer.base import CategoryDesc, FieldDesc
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
+
 from app.api.requests import GridSliceBox
 
 
@@ -20,7 +21,7 @@ class VolumeInfo:
         self.name = name
         self.metadata = metadata
         self.box = box
-        
+
         self.grid_size = box.dimensions
 
         downsampling_rate = box.downsampling_rate

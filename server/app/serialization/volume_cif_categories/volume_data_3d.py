@@ -1,18 +1,14 @@
-import numpy as np
-from ciftools.binary.encoding.impl.binary_cif_encoder import BinaryCIFEncoder
-from ciftools.binary.encoding.data_types import DataType, DataTypeEnum
-from ciftools.binary.encoding.base.cif_encoder_base import CIFEncoderBase
-from ciftools.binary.encoding.impl.encoders.byte_array import ByteArrayCIFEncoder
-from ciftools.binary.encoding.impl.encoders.interval_quantization import IntervalQuantizationCIFEncoder
-from ciftools.binary.encoding.impl.encoders.run_length import RunLengthCIFEncoder
-from ciftools.writer.base import CategoryWriter, CategoryWriterProvider, FieldDesc
-
 from typing import Callable, Optional, Union
 
 import numpy as np
+from ciftools.binary.encoding.base.cif_encoder_base import CIFEncoderBase
+from ciftools.binary.encoding.data_types import DataType, DataTypeEnum
 from ciftools.binary.encoding.impl.binary_cif_encoder import BinaryCIFEncoder
+from ciftools.binary.encoding.impl.encoders.byte_array import ByteArrayCIFEncoder
+from ciftools.binary.encoding.impl.encoders.interval_quantization import IntervalQuantizationCIFEncoder
+from ciftools.binary.encoding.impl.encoders.run_length import RunLengthCIFEncoder
 from ciftools.cif_format import ValuePresenceEnum
-from ciftools.writer.base import FieldDesc
+from ciftools.writer.base import CategoryWriter, CategoryWriterProvider, FieldDesc
 from ciftools.writer.fields import number_field
 
 from app.serialization.volume_cif_categories.common import CategoryDesc, CategoryDescImpl
@@ -32,8 +28,9 @@ class CategoryWriterProvider_VolumeData3d(CategoryWriterProvider):
         encoders: list[CIFEncoderBase] = [ByteArrayCIFEncoder()]
 
         if data_type == DataTypeEnum.Float32 or data_type == DataTypeEnum.Float64:
-            print("Encoder for VolumeData3d was chosen as IntervalQuantizationCIFEncoder for dataType = " + str(
-                data_type))
+            print(
+                "Encoder for VolumeData3d was chosen as IntervalQuantizationCIFEncoder for dataType = " + str(data_type)
+            )
             data_min: int = ctx.min(initial=ctx[0])
             data_max: int = ctx.max(initial=ctx[0])
             interval_quantization = IntervalQuantizationCIFEncoder(data_min, data_max, 255, DataTypeEnum.Uint8)
@@ -61,6 +58,7 @@ def number_field_volume3d(
     presence: Optional[Callable[[np.ndarray, int], Optional[ValuePresenceEnum]]] = None,
 ) -> FieldDesc:
     return number_field(name=name, value=value, dtype=dtype, encoder=encoder, presence=presence)
+
 
 class Fields_VolumeData3d:
     def _value(self, volume: np.ndarray, index: int):
