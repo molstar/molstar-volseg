@@ -4,9 +4,6 @@ from fastapi.middleware.gzip import GZipMiddleware
 import app.api.v1 as api_v1
 import app.api.v2 as api_v2
 from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
-
-from app.preprocessed_volume_to_cif.implementations.ciftools_volume_to_cif_converter import \
-    CifToolsVolumeToCifConverter
 from app.api.service import VolumeServerService
 
 from app.settings import settings
@@ -31,10 +28,9 @@ app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=3)  # Defaul
 
 # initialize dependencies
 db = LocalDiskPreprocessedDb(folder=settings.DB_PATH)
-volume_to_cif_converter = CifToolsVolumeToCifConverter()
 
 # initialize server
-volume_server = VolumeServerService(db, volume_to_cif_converter)
+volume_server = VolumeServerService(db)
 
 api_v1.configure_endpoints(app, volume_server)
 api_v2.configure_endpoints(app, volume_server)

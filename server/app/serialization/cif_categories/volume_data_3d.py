@@ -7,9 +7,15 @@ from ciftools.binary.encoding.impl.encoders.interval_quantization import Interva
 from ciftools.binary.encoding.impl.encoders.run_length import RunLengthCIFEncoder
 from ciftools.writer.base import CategoryWriter, CategoryWriterProvider, FieldDesc
 
-from app.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories._writer import CategoryDesc, \
-    CategoryDescImpl
-from app.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.volume_data_3d.Fields import Fields_VolumeData3d
+from typing import Callable, Optional, Union
+
+import numpy as np
+from ciftools.binary.encoding.impl.binary_cif_encoder import BinaryCIFEncoder
+from ciftools.cif_format import ValuePresenceEnum
+from ciftools.writer.base import FieldDesc
+from ciftools.writer.fields import number_field
+
+from app.serialization.cif_categories.common import CategoryDesc, CategoryDescImpl
 
 
 class CategoryWriter_VolumeData3d(CategoryWriter):
@@ -44,3 +50,23 @@ class CategoryWriterProvider_VolumeData3d(CategoryWriterProvider):
         ctx = np.ravel(ctx)
         field_desc: list[FieldDesc] = Fields_VolumeData3d(*self._decide_encoder(ctx)).fields
         return CategoryWriter_VolumeData3d(ctx, ctx.size, CategoryDescImpl("volume_data_3d", field_desc))
+
+
+def number_field_volume3d(
+    *,
+    name: str,
+    value: Callable[[np.ndarray, int], Optional[Union[int, float]]],
+    dtype: np.dtype,
+    encoder: Callable[[np.ndarray], BinaryCIFEncoder],
+    presence: Optional[Callable[[np.ndarray, int], Optional[ValuePresenceEnum]]] = None,
+) -> FieldDesc:
+    return number_field(name=name, value=value, dtype=dtype, encoder=encoder, presence=presence)
+
+class Fields_VolumeData3d:
+    def _value(self, volume: np.ndarray, index: int):
+        return volume[index]
+
+    def __init__(self, encoder: BinaryCIFEncoder, dtype: np.dtype):
+        self.fields: list[FieldDesc] = [
+            number_field_volume3d(name="values", value=self._value, encoder=lambda _: encoder, dtype=dtype)
+        ]

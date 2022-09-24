@@ -5,10 +5,16 @@ from ciftools.binary.encoding.base.cif_encoder_base import CIFEncoderBase
 from ciftools.binary.encoding.impl.encoders.byte_array import ByteArrayCIFEncoder
 from ciftools.writer.base import CategoryWriter, CategoryWriterProvider, FieldDesc
 
-from app.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories._writer import CategoryDesc, \
-    CategoryDescImpl
-from app.preprocessed_volume_to_cif.implementations.ciftools_converter.Categories.segmentation_table.Fields import \
-    Fields_SegmentationDataTable
+from typing import Callable, Optional, Union
+
+import numpy as np
+from ciftools.binary.encoding.impl.binary_cif_encoder import BinaryCIFEncoder
+from ciftools.cif_format import ValuePresenceEnum
+from ciftools.writer.base import FieldDesc
+from ciftools.writer.fields import number_field
+
+
+from app.serialization.cif_categories.common import CategoryDesc, CategoryDescImpl
 
 
 class CategoryWriter_SegmentationDataTable(CategoryWriter):
@@ -35,3 +41,10 @@ class CategoryWriterProvider_SegmentationDataTable(CategoryWriterProvider):
     def category_writer(self, ctx) -> CategoryWriter:
         field_desc: list[FieldDesc] = Fields_SegmentationDataTable(*self._decide_encoder(ctx)).fields
         return CategoryWriter_SegmentationDataTable(ctx, ctx["size"], CategoryDescImpl("segmentation_data_table", field_desc))
+
+class Fields_SegmentationDataTable:
+    def __init__(self, encoder: BinaryCIFEncoder, dtype: np.dtype):
+        self.fields: list[FieldDesc] = [
+            number_field(name="set_id", value=lambda d, i: d["set_id"][i], dtype=dtype, encoder=lambda d: encoder),
+            number_field(name="segment_id", value=lambda d, i: d["segment_id"][i], dtype=dtype, encoder=lambda d: encoder),
+        ]

@@ -6,20 +6,19 @@ from typing import Optional, Tuple, Union
 
 from db.interface.i_preprocessed_db import IReadOnlyPreprocessedDb
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
-from app.preprocessed_volume_to_cif.i_volume_to_cif_converter import IVolumeToCifConverter
 from app.requests.entries_request.i_entries_request import IEntriesRequest
 from app.requests.mesh_request.i_mesh_request import IMeshRequest
 from app.requests.metadata_request.i_metadata_request import IMetadataRequest
 
 from app.requests.volume import VolumeRequestInfo, VolumeRequestBox, GridSliceBox, VolumeRequestDataKind
+from app.serialization.cif import serialize_volume_slice
 
 __MAX_DOWN_SAMPLING_VALUE__ = 1000000
 
 
 class VolumeServerService:
-    def __init__(self, db: IReadOnlyPreprocessedDb, volume_to_cif: IVolumeToCifConverter):
+    def __init__(self, db: IReadOnlyPreprocessedDb):
         self.db = db
-        self.volume_to_cif = volume_to_cif
 
     async def _filter_entries_by_keyword(self, namespace: str, entries: list[str], keyword: str):
         filtered = []
@@ -64,7 +63,6 @@ class VolumeServerService:
         except Exception as e:
             annotation = None
 
-        # converted = self.volume_to_cif.convert_metadata(grid_metadata)
         return {"grid": grid.json_metadata(), "annotation": annotation}
 
     async def get_volume_data(self, req: VolumeRequestInfo, req_box: Optional[VolumeRequestBox] = None) -> bytes:
@@ -110,7 +108,7 @@ class VolumeServerService:
                 # This should be validated on the Pydantic data model level, but one never knows...
                 raise RuntimeError(f"{req.data_kind} is not a valid request data kind")
 
-        return self.volume_to_cif.convert(db_slice, metadata, slice_box)
+        return serialize_volume_slice(db_slice, metadata, slice_box)
 
     async def get_meshes(self, req: IMeshRequest) -> list[object]:
         with self.db.read(req.source(), req.id()) as context:
