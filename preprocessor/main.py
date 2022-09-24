@@ -254,7 +254,8 @@ async def add_entry_to_db(db_path: Path, params_for_storing: dict, input_files_d
     if new_db_path.is_dir() == False:
         new_db_path.mkdir()
 
-    remove_temp_zarr_hierarchy_storage_folder(TEMP_ZARR_HIERARCHY_STORAGE_PATH)
+    # NOTE: with this multiprocessing in deployement script may not work, so commented
+    # remove_temp_zarr_hierarchy_storage_folder(TEMP_ZARR_HIERARCHY_STORAGE_PATH)
     db = LocalDiskPreprocessedDb(new_db_path, store_type='zip')
     await preprocess_single_entry(
         db=db,
