@@ -14,7 +14,7 @@ from ciftools.writer.base import FieldDesc
 from ciftools.writer.fields import number_field
 
 
-from app.serialization.cif_categories.common import CategoryDesc, CategoryDescImpl
+from app.serialization.volume_cif_categories.common import CategoryDesc, CategoryDescImpl
 
 
 class CategoryWriter_SegmentationDataTable(CategoryWriter):

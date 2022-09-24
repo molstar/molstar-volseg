@@ -5,7 +5,7 @@ from ciftools.binary.encoding.base.cif_encoder_base import CIFEncoderBase
 from ciftools.binary.encoding.impl.encoders.byte_array import ByteArrayCIFEncoder
 from ciftools.writer.base import CategoryWriter, CategoryWriterProvider, FieldDesc
 
-from app.serialization.cif_categories.common import CategoryDesc, CategoryDescImpl, VolumeInfo
+from app.serialization.volume_cif_categories.common import CategoryDesc, CategoryDescImpl, VolumeInfo
 
 
 from typing import Callable, Optional, Union

@@ -6,11 +6,8 @@ from typing import Optional, Tuple, Union
 
 from db.interface.i_preprocessed_db import IReadOnlyPreprocessedDb
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
-from app.requests.entries_request.i_entries_request import IEntriesRequest
-from app.requests.mesh_request.i_mesh_request import IMeshRequest
-from app.requests.metadata_request.i_metadata_request import IMetadataRequest
 
-from app.requests.volume import VolumeRequestInfo, VolumeRequestBox, GridSliceBox, VolumeRequestDataKind
+from app.api.requests import EntriesRequest, MeshRequest, MetadataRequest, VolumeRequestInfo, VolumeRequestBox, GridSliceBox, VolumeRequestDataKind
 from app.serialization.cif import serialize_volume_slice
 
 __MAX_DOWN_SAMPLING_VALUE__ = 1000000
@@ -34,8 +31,8 @@ class VolumeServerService:
 
         return filtered
 
-    async def get_entries(self, req: IEntriesRequest) -> dict:
-        limit = req.limit()
+    async def get_entries(self, req: EntriesRequest) -> dict:
+        limit = req.limit
         entries = dict()
         if limit == 0:
             return entries
@@ -43,8 +40,8 @@ class VolumeServerService:
         sources = await self.db.list_sources()
         for source in sources:
             retrieved = await self.db.list_entries(source, limit)
-            if req.keyword():
-                retrieved = await self._filter_entries_by_keyword(source, retrieved, req.keyword())
+            if req.keyword:
+                retrieved = await self._filter_entries_by_keyword(source, retrieved, req.keyword)
 
             if len(retrieved) == 0:
                 continue
@@ -56,10 +53,10 @@ class VolumeServerService:
 
         return entries
 
-    async def get_metadata(self, req: IMetadataRequest) -> Union[bytes, str]:
-        grid = await self.db.read_metadata(req.source(), req.structure_id())
+    async def get_metadata(self, req: MetadataRequest) -> Union[bytes, str]:
+        grid = await self.db.read_metadata(req.source, req.structure_id)
         try:
-            annotation = await self.db.read_annotations(req.source(), req.structure_id())
+            annotation = await self.db.read_annotations(req.source, req.structure_id)
         except Exception as e:
             annotation = None
 
@@ -110,19 +107,19 @@ class VolumeServerService:
 
         return serialize_volume_slice(db_slice, metadata, slice_box)
 
-    async def get_meshes(self, req: IMeshRequest) -> list[object]:
-        with self.db.read(req.source(), req.id()) as context:
+    async def get_meshes(self, req: MeshRequest) -> list[object]:
+        with self.db.read(req.source, req.structure_id) as context:
             try:
-                meshes = await context.read_meshes(req.segment_id(), req.detail_lvl())
+                meshes = await context.read_meshes(req.segment_id, req.detail_lvl)
             except KeyError as e:
                 print("Exception in get_meshes: " + str(e))
-                meta = await self.db.read_metadata(req.source(), req.id())
+                meta = await self.db.read_metadata(req.source, req.structure_id)
                 segments_levels = self._extract_segments_detail_levels(meta)
-                error_msg = f'Invalid segment_id={req.segment_id()} or detail_lvl={req.detail_lvl()} (available segment_ids and detail_lvls: {segments_levels})'
+                error_msg = f'Invalid segment_id={req.segment_id} or detail_lvl={req.detail_lvl} (available segment_ids and detail_lvls: {segments_levels})'
                 raise error_msg
 
         return meshes
-        # cif = self.volume_to_cif.convert_meshes(meshes, metadata, req.detail_lvl(), [10, 10, 10])  # TODO: replace 10,10,10 with cell size
+        # cif = convert_meshes(meshes, metadata, req.detail_lvl(), [10, 10, 10])  # TODO: replace 10,10,10 with cell size
 
     def _extract_segments_detail_levels(self, meta: IPreprocessedMetadata) -> dict[int, list[int]]:
         '''Extract available segment_ids and detail_lvls for each segment_id'''

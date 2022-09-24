@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pydantic import BaseModel, root_validator, validator
-from typing import Literal, Optional, Tuple
+from typing import Optional, Tuple
 from enum import Enum
 
 class VolumeRequestDataKind(str, Enum):
@@ -31,6 +31,7 @@ class VolumeRequestBox(BaseModel):
             raise ValueError(f"{bl}, {tr} is not a valid request box")
         return values
 
+# TODO: find a better home for this class??
 @dataclass
 class GridSliceBox:
     downsampling_rate: int
@@ -46,3 +47,18 @@ class GridSliceBox:
     def volume(self):
         nx, ny, nz = self.dimensions
         return nx * ny * nz
+
+class EntriesRequest(BaseModel):
+    limit: int
+    keyword: str
+
+class MeshRequest(BaseModel):
+    source: str
+    structure_id: str
+    segment_id: int
+    detail_lvl: int
+
+
+class MetadataRequest(BaseModel):
+    source: str
+    structure_id: str

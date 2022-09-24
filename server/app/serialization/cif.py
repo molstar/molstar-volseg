@@ -6,13 +6,13 @@ from ciftools.writer.base import OutputStream
 
 from db.interface.i_preprocessed_db import ProcessedVolumeSliceData
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
-from app.serialization.cif_categories.segmentation_data_3d import CategoryWriterProvider_SegmentationData3d
-from app.serialization.cif_categories.segmentation_table import CategoryWriterProvider_SegmentationDataTable
-from app.serialization.cif_categories.volume_data_3d import CategoryWriterProvider_VolumeData3d
-from app.serialization.cif_categories.volume_data_3d_info import CategoryWriterProvider_VolumeData3dInfo
-from app.serialization.cif_categories.common import VolumeInfo
+from app.serialization.volume_cif_categories.segmentation_data_3d import CategoryWriterProvider_SegmentationData3d
+from app.serialization.volume_cif_categories.segmentation_table import CategoryWriterProvider_SegmentationDataTable
+from app.serialization.volume_cif_categories.volume_data_3d import CategoryWriterProvider_VolumeData3d
+from app.serialization.volume_cif_categories.volume_data_3d_info import CategoryWriterProvider_VolumeData3dInfo
+from app.serialization.volume_cif_categories.common import VolumeInfo
 
-from app.requests.volume import GridSliceBox
+from app.api.requests import GridSliceBox
 
 
 class ConverterOutputStream(OutputStream):

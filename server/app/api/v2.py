@@ -5,13 +5,10 @@ from fastapi import FastAPI, Response, Query
 from starlette.responses import JSONResponse
 
 from app.api.service import VolumeServerService
-from app.requests.entries_request.entries_request import EntriesRequest
-from app.requests.mesh_request.mesh_request import MeshRequest
-from app.requests.metadata_request.metadata_request import MetadataRequest
-from app.api.json_numpy_response import JSONNumpyResponse
+from app.serialization.json_numpy_response import JSONNumpyResponse
 
 
-from app.requests.volume import VolumeRequestInfo, VolumeRequestBox, VolumeRequestDataKind
+from app.api.requests import VolumeRequestInfo, VolumeRequestBox, VolumeRequestDataKind, EntriesRequest, MeshRequest, MetadataRequest
 
 HTTP_CODE_UNPROCESSABLE_ENTITY = 422
 
@@ -21,7 +18,7 @@ def configure_endpoints(app: FastAPI, volume_server: VolumeServerService):
     async def get_entries(
             limit: int = 100
     ):
-        request = EntriesRequest(limit, "")
+        request = EntriesRequest(limit=limit, keyword="")
         response = await volume_server.get_entries(request)
 
         return response
@@ -31,7 +28,7 @@ def configure_endpoints(app: FastAPI, volume_server: VolumeServerService):
             keyword: str,
             limit: int = 100
     ):
-        request = EntriesRequest(limit, keyword)
+        request = EntriesRequest(limit=limit, keyword=keyword)
         response = await volume_server.get_entries(request)
 
         return response
@@ -105,7 +102,7 @@ def configure_endpoints(app: FastAPI, volume_server: VolumeServerService):
             source: str,
             id: str,
     ):
-        request = MetadataRequest(source, id)
+        request = MetadataRequest(source=source, structure_id=id)
         metadata = await volume_server.get_metadata(request)
 
         return metadata
@@ -117,7 +114,7 @@ def configure_endpoints(app: FastAPI, volume_server: VolumeServerService):
             segment_id: int,
             detail_lvl: int
     ):
-        request = MeshRequest(source, id, segment_id, detail_lvl)
+        request = MeshRequest(source=source, structure_id=id, segment_id=segment_id, detail_lvl=detail_lvl)
         try:
             meshes = await volume_server.get_meshes(request)
             # return JSONResponse(str(meshes))  # JSONResponse(meshes) throws error

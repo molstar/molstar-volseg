@@ -1,6 +1,6 @@
 from ciftools.writer.base import CategoryDesc, FieldDesc
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
-from app.requests.volume import GridSliceBox
+from app.api.requests import GridSliceBox
 
 
 # TODO: Update CategoryDesc in CifTools to a dataclass
