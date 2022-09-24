@@ -11,7 +11,7 @@ import csv
 import pandas as pd
 import numpy as np
 
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE, DEFAULT_DB_PATH
 
 # TODO: check if it works with abs path (starting with /)
 # TODO: changed based on Lukas response
@@ -35,8 +35,10 @@ def csv_to_config_list_of_dicts(csv_file_path: Path) -> list[dict]:
 
     
 
-def prepare_input_for_preprocessor(config: list[dict], output_dir: Path) -> list[dict]:
+def prepare_input_for_preprocessor(config: list[dict], output_dir: Path, db_path: Path) -> list[dict]:
     for entry in config:
+        entry['db_path'] = str(db_path.resolve())
+
         db = re.split('-|_', entry['entry_id'])[0].lower()
         id = re.split('-|_', entry['entry_id'])[-1]
         
@@ -132,4 +134,4 @@ def prepare_input_for_preprocessor(config: list[dict], output_dir: Path) -> list
 
 if __name__ == '__main__':
     config = csv_to_config_list_of_dicts(CSV_WITH_ENTRY_IDS_FILE)
-    updated_config = prepare_input_for_preprocessor(config=config, output_dir=TEST_RAW_INPUT_FILES_DIR)
+    updated_config = prepare_input_for_preprocessor(config=config, output_dir=TEST_RAW_INPUT_FILES_DIR, db_path=DEFAULT_DB_PATH)

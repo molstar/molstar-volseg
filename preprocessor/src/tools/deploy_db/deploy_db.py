@@ -2,10 +2,12 @@
 
 
 import argparse
+import multiprocessing
 import os
 import subprocess
 from pathlib import Path
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE, DEFAULT_DB_PATH, RAW_INPUT_FILES_DIR
+from preprocessor.main import remove_temp_zarr_hierarchy_storage_folder
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE, DEFAULT_DB_PATH, RAW_INPUT_FILES_DIR, TEMP_ZARR_HIERARCHY_STORAGE_PATH
 
 from preprocessor.src.tools.prepare_input_for_preprocessor.prepare_input_for_preprocessor import csv_to_config_list_of_dicts, prepare_input_for_preprocessor
 
@@ -34,24 +36,28 @@ def _free_port(port_number: str):
     lst = ['killport', str(port_number)]
     subprocess.call(lst)
 
-def _preprocessor_wrapper(config: list[dict], args):
-    for entry in config:
-        # compile lst for preprocessor
-        lst = [
-            "python", "preprocessor/main.py",
-            "--db_path", args.db_path,    
-            "--single_entry", entry['single_entry'],
-            "--entry_id", entry['entry_id'],
-            "--source_db", entry['source_db']
-        ]
+def _preprocessor_internal_wrapper(entry: dict):
+    lst = [
+        "python", "preprocessor/main.py",
+        "--db_path", args.db_path,    
+        "--single_entry", entry['single_entry'],
+        "--entry_id", entry['entry_id'],
+        "--source_db", entry['source_db']
+    ]
 
-        if entry['force_volume_dtype']:
-            lst.extend(['--force_volume_dtype', entry['force_volume_dtype']])
-        
-        if entry['quantization_dtype']:
-            lst.extend(['--quantize_volume_data_dtype_str', entry['quantization_dtype']])
+    if entry['force_volume_dtype']:
+        lst.extend(['--force_volume_dtype', entry['force_volume_dtype']])
+    
+    if entry['quantization_dtype']:
+        lst.extend(['--quantize_volume_data_dtype_str', entry['quantization_dtype']])
 
-        subprocess.call(lst)
+    subprocess.Popen(lst)
+
+def _preprocessor_external_wrapper(config: list[dict]):
+    with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
+        result_iterator = p.map(_preprocessor_internal_wrapper, config)
+        # p.close
+        # p.join()?
 
 def run_api(args):
     deploy_env = {
@@ -83,9 +89,15 @@ def shut_down_ports(args):
 
 def download_files_build_and_deploy_db(args):
     shut_down_ports(args)
+
+    if TEMP_ZARR_HIERARCHY_STORAGE_PATH.exists():
+        remove_temp_zarr_hierarchy_storage_folder(TEMP_ZARR_HIERARCHY_STORAGE_PATH)
+
     config = csv_to_config_list_of_dicts(args.csv_with_entry_ids)
-    updated_config = prepare_input_for_preprocessor(config=config, output_dir=args.raw_input_files_dir)
-    _preprocessor_wrapper(updated_config, args)
+    updated_config = prepare_input_for_preprocessor(config=config, output_dir=args.raw_input_files_dir, db_path=args.db_path)
+    _preprocessor_external_wrapper(updated_config)
+
+    remove_temp_zarr_hierarchy_storage_folder(TEMP_ZARR_HIERARCHY_STORAGE_PATH)
     run_api(args)
     run_frontend(args)
 

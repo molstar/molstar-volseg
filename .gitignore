@@ -1,4 +1,9 @@
 ### Custom
+preprocessor.3.9.0/
+preprocessor/_old/sample_arr_plots/
+preprocessor/data/raw_input_files/
+sfftk_latest_env/
+test_env/
 .benchmarks/
 check_dirs_before_building.sh
 check_dirs_before_creating_fake_entries.sh
