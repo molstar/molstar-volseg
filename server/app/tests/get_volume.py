@@ -2,7 +2,7 @@ import unittest
 
 import requests
 
-from volume_server.tests._test_server_runner import ServerTestBase
+from app.tests._test_server_runner import ServerTestBase
 
 test_configs = {
     "emdb": {
@@ -67,7 +67,7 @@ class FetchVolumeTest(ServerTestBase):
         r = requests.get(f'{self.serverUrl()}/v1/{db}/{entry}/box/{params.get("segmentation")}'
                          f'/{params.get("x_min")}/{params.get("y_min")}/{params.get("z_min")}'
                          f'/{params.get("x_max")}/{params.get("y_max")}/{params.get("z_max")}'
-                         f'/{params.get("max_points")}')
+                         f'&max_points={params.get("max_points")}')
         self.assertEqual(r.status_code, 200)
         body = r.text
         self.assertIsNotNone(body)

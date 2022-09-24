@@ -7,7 +7,7 @@ from abc import ABC
 import uvicorn
 from uvicorn import Config
 
-from main import prepare_fastapi_app
+from main import app
 
 
 class TestServerRunner(uvicorn.Server):
@@ -37,6 +37,6 @@ class ServerTestBase(ABC, unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        ServerTestBase.app = prepare_fastapi_app()
+        ServerTestBase.app = app
         config = Config(ServerTestBase.app, host=ServerTestBase.ip, port=ServerTestBase.port, log_level="info", loop="asyncio")
         ServerTestBase.server = TestServerRunner(config=config)

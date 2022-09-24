@@ -3,7 +3,7 @@ import unittest
 
 import requests
 
-from volume_server.tests._test_server_runner import ServerTestBase
+from app.tests._test_server_runner import ServerTestBase
 
 
 class FetchMetadataTest(ServerTestBase):

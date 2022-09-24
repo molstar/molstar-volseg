@@ -4,6 +4,6 @@ setuptools.setup(
   name='cellstar-volume-server',
   version='0.1',
   packages=setuptools.find_packages(
-    include=["db/", "preprocessor/", "volume_server/"]
+    include=["db/", "preprocessor/"]
   )
  )

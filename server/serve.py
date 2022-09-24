@@ -7,7 +7,7 @@ if __name__ == '__main__':
     print(settings.dict())
 
     uvicorn.run(
-        app="volume_server.server:app",
+        app="main:app",
         host=settings.HOST,
         port=settings.PORT,
         reload=settings.DEV_MODE

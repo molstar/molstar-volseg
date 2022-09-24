@@ -9,15 +9,15 @@ zarr package (a requirement for this project) requires C++ dev-kit in order to i
 
 
 ```
-cd volume_server
-python main.py
+cd server
+python serve.py
 ```
 
 or 
 
 ```
-cd volume_server
-uvicorn server:app --port 9000 --reload  # other params
+cd server
+uvicorn main:app --port 9000 --reload  # other params
 ```
 
 ## Settings
@@ -32,15 +32,15 @@ Environment variables (with defaults):
 Linux/Mac
 
 ```
-cd volume_server
-DEV_MODE=True python main.py
+cd server
+DEV_MODE=True python serve.py
 ```
 
 Windows
 
 ```
-cd volume_server
-set DEV_MODE=True && python main.py
+cd server
+set DEV_MODE=True && python serve.py
 ```
 
 # Conda/Mamba
