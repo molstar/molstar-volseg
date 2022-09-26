@@ -67,7 +67,7 @@ def run_api(args):
         'PORT': args.api_port
         }
     lst = [
-        "python", "main.py"
+        "python", "server/serve.py"
     ]
     subprocess.Popen(lst, env=deploy_env)
 
