@@ -81,6 +81,25 @@ def serialize_volume_slice(
     return output_stream.result_binary if binary else output_stream.result_text
 
 
+def serialize_volume_info(metadata: IPreprocessedMetadata, box: GridSliceBox) -> bytes:
+    writer = BinaryCIFWriter("volume_server")
+
+    volume_info = VolumeInfo(name="volume", metadata=metadata, box=box)
+    volume_info_category = CategoryWriterProvider_VolumeData3dInfo()
+
+    writer.start_data_block("volume_info")
+    writer.write_category(volume_info_category, [volume_info])
+
+    return get_bytes_from_cif_writer(writer)
+
+
+def get_bytes_from_cif_writer(writer: BinaryCIFWriter) -> bytes:
+    writer.encode()
+    output_stream = ConverterOutputStream()
+    writer.flush(output_stream)
+    return output_stream.result_binary
+
+
 def serialize_meshes(
     preprocessed_volume: ProcessedVolumeSliceData,
     metadata: IPreprocessedMetadata,

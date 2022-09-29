@@ -171,7 +171,7 @@ export class AppModel {
             try {
                 const data = await this.plugin.builders.data.download({ url: urls[name], isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
                 const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
-                AppModel.logCifOverview(cif.data!);
+                AppModel.logCifOverview(cif.data!, urls[name]);
             } catch (err) {
                 console.error('Failed', err);
             }
@@ -348,6 +348,16 @@ export class AppModel {
             const BOX = null;
             const MAX_VOXELS = 10 ** 7;
 
+            // DEBUG
+            const debugVolumeInfo = true;
+            if (debugVolumeInfo){
+                const url = `${API2.volumeServerUrl}/${source}/${entryId}/volume_info`;
+                const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+                const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
+                AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
+            }
+
+
             if (hasVolumes) {
                 // const isoLevel = { kind: 'relative', value: 2.73}; // rel 2.73 (abs 0.42) is OK for emd-1832
                 const isoLevel = await AppModel.getIsovalue(entryId);
@@ -373,7 +383,7 @@ export class AppModel {
                 const url = API2.latticeUrl(source, entryId, 0, BOX, MAX_VOXELS);
                 const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
                 const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
-                AppModel.logCifOverview(cif.data!); // TODO when could cif.data be undefined?
+                AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
                 const latticeBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
                 if (latticeBlock) {
                     if (!this.volume) throw new Error('Volume data must be present to create lattice segmentation'); // TODO create grid without volume data
@@ -645,9 +655,9 @@ export class AppModel {
         console.log('children:', repr.currentTree.children.size);
     }
 
-    private static logCifOverview(cifData: CifFile): void {
+    private static logCifOverview(cifData: CifFile, url: string = ''): void {
         const MAX_VALUES = 5;
-        console.log('cifData.name:', cifData.name);
+        console.log('CifFile', url);
         cifData.blocks.forEach(block => {
             console.log(`    ${block.header}`);
             block.categoryNames.forEach(catName => {

@@ -122,3 +122,12 @@ def configure_endpoints(app: FastAPI, volume_server: VolumeServerService):
             return JSONNumpyResponse(meshes)  # JSONResponse(meshes) throws error
         except Exception as e:
             return JSONResponse({"error": str(e)}, status_code=HTTP_CODE_UNPROCESSABLE_ENTITY)
+
+    @app.get("/v2/{source}/{id}/volume_info")
+    async def get_volume_info(
+        source: str,
+        id: str,
+    ):
+        request = MetadataRequest(source=source, structure_id=id)
+        response_bytes = await volume_server.get_volume_info(request)
+        return Response(response_bytes, headers={"Content-Disposition": f'attachment;filename="{id}-volume_info.bcif"'})

@@ -15,7 +15,7 @@ from app.api.requests import (
     VolumeRequestInfo,
 )
 from app.core.models import GridSliceBox
-from app.serialization.cif import serialize_volume_slice
+from app.serialization.cif import serialize_volume_slice, serialize_volume_info
 
 __MAX_DOWN_SAMPLING_VALUE__ = 1000000
 
@@ -78,7 +78,7 @@ class VolumeServerService:
         else:
             lattice_id = req.segmentation_id
 
-        slice_box = self._decide_slice_box(req, req_box, metadata)
+        slice_box = self._decide_slice_box(req.max_points, req_box, metadata)
 
         if slice_box is None:
             # TODO: return empty result instead of exception?
@@ -114,6 +114,11 @@ class VolumeServerService:
 
         return serialize_volume_slice(db_slice, metadata, slice_box)
 
+    async def get_volume_info(self, req: MetadataRequest) -> bytes:
+        metadata = await self.db.read_metadata(req.source, req.structure_id)
+        box = self._decide_slice_box(None, None, metadata)        
+        return serialize_volume_info(metadata, box)
+
     async def get_meshes(self, req: MeshRequest) -> list[object]:
         with self.db.read(req.source, req.structure_id) as context:
             try:
@@ -142,10 +147,10 @@ class VolumeServerService:
         return sorted_result
 
     def _decide_slice_box(
-        self, req: VolumeRequestInfo, req_box: Optional[VolumeRequestBox], metadata: IPreprocessedMetadata
+        self, max_points: Optional[int], req_box: Optional[VolumeRequestBox], metadata: IPreprocessedMetadata
     ) -> Optional[GridSliceBox]:
+        '''`max_points=None` means unlimited number of points'''
         box = None
-        max_points = req.max_points
 
         for downsampling_rate in sorted(metadata.volume_downsamplings()):
             if req_box:
@@ -159,7 +164,7 @@ class VolumeServerService:
 
             # TODO: decide what to do when max_points is 0
             # e.g. whether to return the lowest downsampling or highest
-            if box.volume < max_points:
+            if max_points is None or box.volume < max_points:
                 return box
 
         return box
