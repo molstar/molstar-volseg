@@ -351,7 +351,6 @@ export class AppModel {
             // DEBUG
             const debugVolumeInfo = true;
             if (debugVolumeInfo){
-                // const url = `${API2.volumeServerUrl}/${source}/${entryId}/volume_info`;
                 const url = API2.volumeInfoUrl(source, entryId);
                 const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
                 const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
@@ -675,7 +674,7 @@ export class AppModel {
     }
 
     private static logCifOverview(cifData: CifFile, url: string = ''): void {
-        const MAX_VALUES = 5000;
+        const MAX_VALUES = 10;
         console.log('CifFile', url);
         cifData.blocks.forEach(block => {
             console.log(`    ${block.header}`);

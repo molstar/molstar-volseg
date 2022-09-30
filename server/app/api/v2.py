@@ -118,8 +118,6 @@ def configure_endpoints(app: FastAPI, volume_server: VolumeServerService):
         request = MeshRequest(source=source, structure_id=id, segment_id=segment_id, detail_lvl=detail_lvl)
         try:
             meshes = await volume_server.get_meshes(request)
-            # print('\n\nMESHES:')  # DEBUG
-            # print(meshes)  #DEBUG
             return JSONNumpyResponse(meshes)
         except Exception as e:
             return JSONResponse({"error": str(e)}, status_code=HTTP_CODE_UNPROCESSABLE_ENTITY)

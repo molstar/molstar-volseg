@@ -16,6 +16,8 @@ from app.api.requests import (
 )
 from app.core.models import GridSliceBox
 from app.serialization.cif import serialize_volume_slice, serialize_volume_info, serialize_meshes
+from app.core.timing import Timing
+
 
 __MAX_DOWN_SAMPLING_VALUE__ = 1000000
 
@@ -120,25 +122,30 @@ class VolumeServerService:
         return serialize_volume_info(metadata, box)
 
     async def get_meshes_bcif(self, req: MeshRequest) -> bytes:
-        metadata = await self.db.read_metadata(req.source, req.structure_id)
-        box = self._decide_slice_box(None, None, metadata)
-        with self.db.read(req.source, req.structure_id) as context:
-            try:
-                meshes = await context.read_meshes(req.segment_id, req.detail_lvl)
-                # meshes1 = await context.read_meshes(req.segment_id+1, req.detail_lvl)  # DEBUG, TODO REMOVE
-                # meshes2 = await context.read_meshes(req.segment_id+2, req.detail_lvl)  # DEBUG, TODO REMOVE
-                # for mesh in meshes1: mesh['mesh_id'] = 1  # DEBUG, TODO REMOVE
-                # for mesh in meshes2: mesh['mesh_id'] = 2  # DEBUG, TODO REMOVE
-                # meshes += meshes1  # DEBUG, TODO REMOVE
-                # meshes += meshes2  # DEBUG, TODO REMOVE
-            except KeyError as e:
-                print("Exception in get_meshes: " + str(e))
-                meta = await self.db.read_metadata(req.source, req.structure_id)
-                segments_levels = self._extract_segments_detail_levels(meta)
-                error_msg = f"Invalid segment_id={req.segment_id} or detail_lvl={req.detail_lvl} (available segment_ids and detail_lvls: {segments_levels})"
-                raise Exception(error_msg)
+        with Timing('read metadata'):
+            metadata = await self.db.read_metadata(req.source, req.structure_id)
+        with Timing('decide box'):
+            box = self._decide_slice_box(None, None, metadata)
+        with Timing('read meshes'):
+            with self.db.read(req.source, req.structure_id) as context:
+                try:
+                    meshes = await context.read_meshes(req.segment_id, req.detail_lvl)
+                    # meshes1 = await context.read_meshes(req.segment_id+1, req.detail_lvl)  # DEBUG, TODO REMOVE
+                    # meshes2 = await context.read_meshes(req.segment_id+2, req.detail_lvl)  # DEBUG, TODO REMOVE
+                    # for mesh in meshes1: mesh['mesh_id'] = 1  # DEBUG, TODO REMOVE
+                    # for mesh in meshes2: mesh['mesh_id'] = 2  # DEBUG, TODO REMOVE
+                    # meshes += meshes1  # DEBUG, TODO REMOVE
+                    # meshes += meshes2  # DEBUG, TODO REMOVE
+                except KeyError as e:
+                    print("Exception in get_meshes: " + str(e))
+                    meta = await self.db.read_metadata(req.source, req.structure_id)
+                    segments_levels = self._extract_segments_detail_levels(meta)
+                    error_msg = f"Invalid segment_id={req.segment_id} or detail_lvl={req.detail_lvl} (available segment_ids and detail_lvls: {segments_levels})"
+                    raise KeyError(error_msg)
+        with Timing('serialize meshes'):
+            bcif = serialize_meshes(meshes, metadata, box)
 
-        return serialize_meshes(meshes, metadata, box)
+        return bcif
 
     async def get_meshes(self, req: MeshRequest) -> list[object]:
         with self.db.read(req.source, req.structure_id) as context:
