@@ -59,6 +59,13 @@ export class VolumeApiV2 {
         return `${this.volumeServerUrl}/${source}/${entryId}/mesh/${segment}/${detailLevel}`;
     }
 
+    public meshUrl_Bcif(source: string, entryId: string, segment: number, detailLevel: number): string {
+        return `${this.volumeServerUrl}/${source}/${entryId}/mesh_bcif/${segment}/${detailLevel}`;
+    }
+    public volumeInfoUrl(source: string, entryId: string): string {
+        return `${this.volumeServerUrl}/${source}/${entryId}/volume_info`;
+    }
+
     public async getMetadata(source: string, entryId: string): Promise<Metadata> {
         const response = await fetch(this.metadataUrl(source, entryId));
         return await response.json();

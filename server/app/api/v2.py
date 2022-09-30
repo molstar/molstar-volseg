@@ -118,8 +118,9 @@ def configure_endpoints(app: FastAPI, volume_server: VolumeServerService):
         request = MeshRequest(source=source, structure_id=id, segment_id=segment_id, detail_lvl=detail_lvl)
         try:
             meshes = await volume_server.get_meshes(request)
-            # return JSONResponse(str(meshes))  # JSONResponse(meshes) throws error
-            return JSONNumpyResponse(meshes)  # JSONResponse(meshes) throws error
+            # print('\n\nMESHES:')  # DEBUG
+            # print(meshes)  #DEBUG
+            return JSONNumpyResponse(meshes)
         except Exception as e:
             return JSONResponse({"error": str(e)}, status_code=HTTP_CODE_UNPROCESSABLE_ENTITY)
 
@@ -131,3 +132,14 @@ def configure_endpoints(app: FastAPI, volume_server: VolumeServerService):
         request = MetadataRequest(source=source, structure_id=id)
         response_bytes = await volume_server.get_volume_info(request)
         return Response(response_bytes, headers={"Content-Disposition": f'attachment;filename="{id}-volume_info.bcif"'})
+
+    @app.get("/v2/{source}/{id}/mesh_bcif/{segment_id}/{detail_lvl}")
+    async def get_meshes_bcif(source: str, id: str, segment_id: int, detail_lvl: int):
+        request = MeshRequest(source=source, structure_id=id, segment_id=segment_id, detail_lvl=detail_lvl)
+        try:
+            response_bytes = await volume_server.get_meshes_bcif(request)
+            return Response(response_bytes, headers={"Content-Disposition": f'attachment;filename="{id}-volume_info.bcif"'})
+        except Exception as e:
+            return JSONResponse({"error": str(e)}, status_code=HTTP_CODE_UNPROCESSABLE_ENTITY)
+        finally:
+            pass

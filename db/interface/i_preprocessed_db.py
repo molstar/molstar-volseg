@@ -24,6 +24,14 @@ class ProcessedVolumeSliceData(TypedDict):
     volume_slice: Optional[np.ndarray]
 
 
+class MeshData(TypedDict):
+    mesh_id: int
+    vertices: np.ndarray  # shape = (n_vertices, 3)
+    triangles: np.ndarray  # shape = (n_triangles, 3)
+
+MeshesData = list[MeshData]
+
+
 class IReadOnlyPreprocessedDb(abc.ABC):
     @abc.abstractmethod
     async def contains(self, namespace: str, key: str) -> bool:

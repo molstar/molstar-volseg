@@ -351,10 +351,29 @@ export class AppModel {
             // DEBUG
             const debugVolumeInfo = true;
             if (debugVolumeInfo){
-                const url = `${API2.volumeServerUrl}/${source}/${entryId}/volume_info`;
+                // const url = `${API2.volumeServerUrl}/${source}/${entryId}/volume_info`;
+                const url = API2.volumeInfoUrl(source, entryId);
                 const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
                 const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
                 AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
+            }
+
+            // DEBUG
+            const debugMeshesBcif = true;
+            const debugSegment = 1;
+            const debugDetail = 10;
+            if (debugMeshesBcif){
+                const url = API2.meshUrl_Bcif(source, entryId, debugSegment, debugDetail);
+                const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+                const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
+                AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
+            }
+            if (debugMeshesBcif){
+                const url = API2.meshUrl(source, entryId, debugSegment, debugDetail);
+                const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+                const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
+                AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
+                throw new Error('Debugging OK');
             }
 
 
@@ -656,7 +675,7 @@ export class AppModel {
     }
 
     private static logCifOverview(cifData: CifFile, url: string = ''): void {
-        const MAX_VALUES = 5;
+        const MAX_VALUES = 5000;
         console.log('CifFile', url);
         cifData.blocks.forEach(block => {
             console.log(`    ${block.header}`);

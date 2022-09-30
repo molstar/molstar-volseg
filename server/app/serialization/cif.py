@@ -3,7 +3,7 @@ from typing import Union
 import numpy as np
 from ciftools.binary import BinaryCIFWriter
 from ciftools.writer.base import OutputStream
-from db.interface.i_preprocessed_db import ProcessedVolumeSliceData
+from db.interface.i_preprocessed_db import ProcessedVolumeSliceData, MeshesData
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 
 from app.core.models import GridSliceBox
@@ -12,6 +12,8 @@ from app.serialization.volume_cif_categories.segmentation_data_3d import Categor
 from app.serialization.volume_cif_categories.segmentation_table import CategoryWriterProvider_SegmentationDataTable
 from app.serialization.volume_cif_categories.volume_data_3d import CategoryWriterProvider_VolumeData3d
 from app.serialization.volume_cif_categories.volume_data_3d_info import CategoryWriterProvider_VolumeData3dInfo
+from app.serialization.volume_cif_categories.mesh import CategoryWriterProvider_Mesh, CategoryWriterProvider_MeshVertex, CategoryWriterProvider_MeshTriangle
+from app.serialization.mesh_for_cif import MeshesForCif
 
 
 class ConverterOutputStream(OutputStream):
@@ -93,6 +95,23 @@ def serialize_volume_info(metadata: IPreprocessedMetadata, box: GridSliceBox) ->
     return get_bytes_from_cif_writer(writer)
 
 
+def serialize_meshes(meshes: MeshesData,  metadata: IPreprocessedMetadata, box: GridSliceBox) -> bytes:
+    meshes_for_cif = MeshesForCif(meshes)
+
+    writer = BinaryCIFWriter("volume_server")
+
+    writer.start_data_block("volume_info")
+    volume_info = VolumeInfo(name="volume", metadata=metadata, box=box)
+    writer.write_category(CategoryWriterProvider_VolumeData3dInfo(), [volume_info])
+
+    writer.start_data_block("meshes")
+    writer.write_category(CategoryWriterProvider_Mesh(), [meshes_for_cif])
+    writer.write_category(CategoryWriterProvider_MeshVertex(), [meshes_for_cif])
+    writer.write_category(CategoryWriterProvider_MeshTriangle(), [meshes_for_cif])
+
+    return get_bytes_from_cif_writer(writer)
+
+
 def get_bytes_from_cif_writer(writer: BinaryCIFWriter) -> bytes:
     writer.encode()
     output_stream = ConverterOutputStream()
@@ -100,10 +119,10 @@ def get_bytes_from_cif_writer(writer: BinaryCIFWriter) -> bytes:
     return output_stream.result_binary
 
 
-def serialize_meshes(
-    preprocessed_volume: ProcessedVolumeSliceData,
-    metadata: IPreprocessedMetadata,
-    downsampling: int,
-    grid_size: list[int],
-) -> Union[bytes, str]:
-    pass
+# def serialize_meshes(
+#     preprocessed_volume: ProcessedVolumeSliceData,
+#     metadata: IPreprocessedMetadata,
+#     downsampling: int,
+#     grid_size: list[int],
+# ) -> Union[bytes, str]:
+#     pass
