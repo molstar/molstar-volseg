@@ -12,8 +12,8 @@ from app.serialization.volume_cif_categories.segmentation_data_3d import Categor
 from app.serialization.volume_cif_categories.segmentation_table import CategoryWriterProvider_SegmentationDataTable
 from app.serialization.volume_cif_categories.volume_data_3d import CategoryWriterProvider_VolumeData3d
 from app.serialization.volume_cif_categories.volume_data_3d_info import CategoryWriterProvider_VolumeData3dInfo
-from server.app.serialization.volume_cif_categories.meshes import CategoryWriterProvider_Mesh, CategoryWriterProvider_MeshVertex, CategoryWriterProvider_MeshTriangle
-from server.app.serialization.meshes_for_cif import MeshesForCif
+from app.serialization.volume_cif_categories.meshes import CategoryWriterProvider_Mesh, CategoryWriterProvider_MeshVertex, CategoryWriterProvider_MeshTriangle
+from app.serialization.meshes_for_cif import MeshesForCif
 from app.core.timing import Timing
 
 
