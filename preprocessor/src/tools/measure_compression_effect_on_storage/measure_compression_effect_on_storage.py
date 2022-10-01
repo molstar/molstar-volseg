@@ -2,7 +2,6 @@
 from glob import glob
 from pathlib import Path
 from pprint import pprint
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import SEGMENTATION_DATA_GROUPNAME, VOLUME_DATA_GROUPNAME
 from preprocessor.src.tools.get_dir_size.get_dir_size import get_dir_size
 
 # TODO: compare with filesystem properties

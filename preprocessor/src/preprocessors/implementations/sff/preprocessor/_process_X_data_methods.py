@@ -6,9 +6,11 @@ import numcodecs
 import gemmi
 import numpy as np
 import zarr
+
+from db.file_system.constants import SEGMENTATION_DATA_GROUPNAME, VOLUME_DATA_GROUPNAME
+
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._segmentation_methods import decode_base64_data
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import MESH_SIMPLIFICATION_CURVE, MESH_VERTEX_DENSITY_THRESHOLD, SEGMENTATION_DATA_GROUPNAME, \
-    VOLUME_DATA_GROUPNAME, MIN_GRID_SIZE
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import MESH_VERTEX_DENSITY_THRESHOLD, MIN_GRID_SIZE
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._segmentation_methods import \
     map_value_to_segment_id, lattice_data_to_np_arr
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import read_volume_data

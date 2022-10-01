@@ -4,10 +4,12 @@ import math
 from typing import Dict, List
 from vedo import Mesh
 
+from db.file_system.constants import QUANTIZATION_DATA_DICT_ATTR_NAME
+
 from preprocessor.src.tools.quantize_data.quantize_data import quantize_data
 from ._category_set_downsampling_methods import *
 from preprocessor.src.preprocessors.implementations.sff.downsampling_level_dict import DownsamplingLevelDict
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DOWNSAMPLING_KERNEL, QUANTIZATION_DATA_DICT_ATTR_NAME
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DOWNSAMPLING_KERNEL
 from preprocessor.src.preprocessors.implementations.sff.segmentation_set_table import SegmentationSetTable
 from scipy import signal, ndimage
 import dask.array as da

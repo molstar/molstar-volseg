@@ -6,8 +6,8 @@ import dask.array as da
 import numpy as np
 import zarr
 
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import QUANTIZATION_DATA_DICT_ATTR_NAME, VOLUME_DATA_GROUPNAME, \
-    SEGMENTATION_DATA_GROUPNAME
+from db.file_system.constants import QUANTIZATION_DATA_DICT_ATTR_NAME, VOLUME_DATA_GROUPNAME, SEGMENTATION_DATA_GROUPNAME
+
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._sfftk_methods import \
     open_hdf5_as_segmentation_object
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import ccp4_words_to_dict_mrcfile
