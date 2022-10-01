@@ -11,18 +11,19 @@ MESH_VERTEX_DENSITY_THRESHOLD = {
 MIN_GRID_SIZE = 100**3
 DOWNSAMPLING_KERNEL = (1, 4, 6, 4, 1)
 # TODO: change to big EMDB entry name once ready
-OUTPUT_FILEPATH = Path('preprocessor/data/fake_segmentations/fake_emd_1832.hff')
+OUTPUT_FILEPATH = Path('test-data/preprocessor/fake_segmentations/fake_emd_1832.hff')
 # Just for testing
 # FILEPATH_JSON = Path('preprocessor/fake_segmentations/fake_emd_1832.json')
 
-REAL_MAP_FILEPATH = Path('preprocessor/data/sample_volumes/emdb_sff/EMD-1832.map')
+REAL_MAP_FILEPATH = Path('test-data/preprocessor/sample_volumes/emdb_sff/EMD-1832.map')
 
+# TODO: makes this folder customizable
 TEMP_ZARR_HIERARCHY_STORAGE_PATH = Path('preprocessor/data/temp_zarr_hierarchy_storage')
 
 PARAMETRIZED_DBS_INPUT_PARAMS_FILEPATH = Path('parametrized_dbs_input_params.txt')
 
-RAW_INPUT_FILES_DIR = Path('preprocessor/data/raw_input_files')
-DEFAULT_DB_PATH = Path('db') 
+RAW_INPUT_FILES_DIR = Path('test-data/preprocessor//raw_input_files')
+DEFAULT_DB_PATH = Path('test-data/db') 
 DEFAULT_QUANTIZE_DTYPE_STR = 'u1'
 APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS = ['.am', '.mod', '.seg', '.surf', '.stl']
-CSV_WITH_ENTRY_IDS_FILE = Path('preprocessor/data/entry_ids.csv')
+CSV_WITH_ENTRY_IDS_FILE = Path('test-data/preprocessor//entry_ids.csv')
