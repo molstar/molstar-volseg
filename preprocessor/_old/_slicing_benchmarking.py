@@ -3,7 +3,8 @@ from typing import Tuple
 import zarr
 import numpy as np
 import dask.array as da
-from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb, open_zarr_structure_from_path
+from db.file_system.db import FileSystemVolumeServerDB
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import open_zarr_structure_from_path
 from timeit import default_timer as timer
 import tensorstore as ts
 import shutil
@@ -195,7 +196,7 @@ def _get_sample_zarr_structure():
 
 
 if __name__ == '__main__':
-    db = LocalDiskPreprocessedDb(Path('db'))
+    db = FileSystemVolumeServerDB(Path('db'))
     # for mode in MODES_LIST:    
     #     slice_dict = async_to_sync(db.read_slice)('emdb', 'emd-1832', 0, 2, ((10,10,10), (25,25,25)), mode=mode)
         

@@ -2,10 +2,10 @@
 from random import randint
 import numpy as np
 import pytest
-from glob import glob
 from pathlib import Path
 
-from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
+from db.file_system.db import FileSystemVolumeServerDB
+from db.protocol import VolumeServerDB
 
 KEYS = ['emd-1832']
 BOX_CHOICES = ['random_static_region_small', 'random_static_region_big']
@@ -23,7 +23,7 @@ def generate_random_3d_point_coords(min: tuple[int, int, int], max: tuple[int, i
         randint(min[2], max[2]),
     )
 
-async def compute_random_static_box(db: LocalDiskPreprocessedDb, namespace: str, key: str, box: int):
+async def compute_random_static_box(db: VolumeServerDB, namespace: str, key: str, box: int):
     metadata = await db.read_metadata(namespace, key)
     dims: tuple = metadata.grid_dimensions()
     if key == 'emd-1832':
@@ -47,7 +47,7 @@ async def compute_random_static_box(db: LocalDiskPreprocessedDb, namespace: str,
 
     return box
 
-async def compute_box_size_from_box_fraction(box_fraction: int, db: LocalDiskPreprocessedDb, namespace: str, key: str):
+async def compute_box_size_from_box_fraction(box_fraction: int, db: VolumeServerDB, namespace: str, key: str):
     metadata = await db.read_metadata(namespace, key)
     dims: tuple = metadata.grid_dimensions()
     origin = (0, 0, 0)
@@ -116,7 +116,7 @@ async def test_t(aio_benchmark, key, box_choice, db_path):
         #     db = LocalDiskPreprocessedDb(folder=Path(db_path), store_type='zip')
         # else:
         #     db = LocalDiskPreprocessedDb(folder=Path(db_path))
-        db = LocalDiskPreprocessedDb(folder=Path(db_path), store_type='zip')
+        db = FileSystemVolumeServerDB(folder=Path(db_path), store_type='zip')
 
         if isinstance(box_choice, float):
             box = await compute_box_size_from_box_fraction(box_fraction=box_choice, db=db, namespace='emdb', key=key)

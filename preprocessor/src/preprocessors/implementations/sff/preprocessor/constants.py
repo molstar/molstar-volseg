@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 MESH_SIMPLIFICATION_CURVE = sorted([(detail_lvl, ratio/10) for detail_lvl, ratio in enumerate(range(9, 0, -1), 2)])
 # [(2, 0.9), (3, 0.8), (4, 0.7), (5, 0.6), (6, 0.5), (7, 0.4), (8, 0.3), (9, 0.2), (10, 0.1)]
 MESH_VERTEX_DENSITY_THRESHOLD = {

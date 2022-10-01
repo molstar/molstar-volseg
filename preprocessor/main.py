@@ -9,13 +9,13 @@ import numpy as np
 from pathlib import Path
 from numcodecs import Blosc
 from typing import Dict, Union
-from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
+from db.file_system.db import FileSystemVolumeServerDB
 from preprocessor.params_for_storing_db import CHUNKING_MODES, COMPRESSORS
 from preprocessor.src.service.implementations.preprocessor_service import PreprocessorService
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import \
     APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS, DEFAULT_DB_PATH, OUTPUT_FILEPATH as FAKE_SEGMENTATION_FILEPATH, PARAMETRIZED_DBS_INPUT_PARAMS_FILEPATH, RAW_INPUT_FILES_DIR, TEMP_ZARR_HIERARCHY_STORAGE_PATH
 
-from db.interface.i_preprocessed_db import IPreprocessedDb
+from db.protocol import VolumeServerDB
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import SFFPreprocessor
 from preprocessor.src.tools.convert_app_specific_segm_to_sff.convert_app_specific_segm_to_sff import convert_app_specific_segm_to_sff
 from preprocessor.src.tools.remove_files_or_folders_by_pattern.remove_files_or_folders_by_pattern import remove_files_or_folders_by_pattern
@@ -126,7 +126,7 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
     return d
 
 
-async def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path, params_for_storing: dict) -> None:
+async def preprocess_everything(db: VolumeServerDB, raw_input_files_dir: Path, params_for_storing: dict) -> None:
     preprocessor_service = PreprocessorService([SFFPreprocessor()])
     files_dict = obtain_paths_to_all_files(raw_input_files_dir, hardcoded=False)
     for source_name, source_entries in files_dict.items():
@@ -147,7 +147,7 @@ async def preprocess_everything(db: IPreprocessedDb, raw_input_files_dir: Path, 
             )
             await db.store(namespace=source_name, key=entry['id'], temp_store_path=processed_data_temp_path)
 
-async def preprocess_single_entry(db: IPreprocessedDb, input_files_dir: Path, params_for_storing: dict, entry_id: str, source_db: str, force_volume_dtype: Union[str, None]) -> None:
+async def preprocess_single_entry(db: VolumeServerDB, input_files_dir: Path, params_for_storing: dict, entry_id: str, source_db: str, force_volume_dtype: Union[str, None]) -> None:
     preprocessor_service = PreprocessorService([SFFPreprocessor()])
     if await db.contains(namespace=source_db, key=entry_id):
         await db.delete(namespace=source_db, key=entry_id)
@@ -173,7 +173,7 @@ async def preprocess_single_entry(db: IPreprocessedDb, input_files_dir: Path, pa
     )
     await db.store(namespace=source_db, key=entry_id, temp_store_path=processed_data_temp_path)
     
-async def check_read_slice(db: LocalDiskPreprocessedDb):
+async def check_read_slice(db: VolumeServerDB):
     box = ((0, 0, 0), (10, 10, 10), (10, 10, 10))
     
     with db.read(namespace='emdb', key='emd-99999') as reader:
@@ -208,7 +208,7 @@ async def check_read_slice(db: LocalDiskPreprocessedDb):
         'slice_emd_99999': slice_emd_99999
     }
 
-async def check_read_meshes(db: LocalDiskPreprocessedDb):
+async def check_read_meshes(db: VolumeServerDB):
     with db.read(namespace='empiar', key='empiar-10070') as reader:
         read_meshes_list = await reader.read_meshes(
             segment_id=15,
@@ -242,7 +242,7 @@ async def create_db(db_path: Path, params_for_storing: dict, raw_input_files_dir
         new_db_path.mkdir()
 
     remove_temp_zarr_hierarchy_storage_folder(TEMP_ZARR_HIERARCHY_STORAGE_PATH)
-    db = LocalDiskPreprocessedDb(new_db_path, params_for_storing['store_type'])
+    db = FileSystemVolumeServerDB(new_db_path, params_for_storing['store_type'])
     # db.remove_all_entries()
     await preprocess_everything(db, raw_input_files_dir_path, params_for_storing=params_for_storing)
 
@@ -256,7 +256,7 @@ async def add_entry_to_db(db_path: Path, params_for_storing: dict, input_files_d
 
     # NOTE: with this multiprocessing in deployement script may not work, so commented
     # remove_temp_zarr_hierarchy_storage_folder(TEMP_ZARR_HIERARCHY_STORAGE_PATH)
-    db = LocalDiskPreprocessedDb(new_db_path, store_type='zip')
+    db = FileSystemVolumeServerDB(new_db_path, store_type='zip')
     await preprocess_single_entry(
         db=db,
         input_files_dir=input_files_dir,
