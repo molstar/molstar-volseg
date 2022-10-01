@@ -7,18 +7,21 @@ from db.interface.i_preprocessed_db import ProcessedVolumeSliceData, MeshesData
 from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
 
 from app.core.models import GridSliceBox
-from app.serialization.volume_cif_categories.common import VolumeInfo
-from app.serialization.volume_cif_categories.segmentation_data_3d import CategoryWriterProvider_SegmentationData3d
-from app.serialization.volume_cif_categories.segmentation_table import CategoryWriterProvider_SegmentationDataTable
-from app.serialization.volume_cif_categories.volume_data_3d import CategoryWriterProvider_VolumeData3d
+from app.serialization.data.volume_info import VolumeInfo
+from app.serialization.data.segment_set_table import SegmentSetTable
+from app.serialization.data.meshes_for_cif import MeshesForCif
+
 from app.serialization.volume_cif_categories.volume_data_3d_info import CategoryWriterProvider_VolumeData3dInfo
+from app.serialization.volume_cif_categories.volume_data_3d import CategoryWriterProvider_VolumeData3d
+from app.serialization.volume_cif_categories.segmentation_table import CategoryWriterProvider_SegmentationDataTable
+from app.serialization.volume_cif_categories.segmentation_data_3d import CategoryWriterProvider_SegmentationData3d
 from app.serialization.volume_cif_categories.meshes import CategoryWriterProvider_Mesh, CategoryWriterProvider_MeshVertex, CategoryWriterProvider_MeshTriangle
-from app.serialization.meshes_for_cif import MeshesForCif
+
 from app.core.timing import Timing
 
 
 class ConverterOutputStream(OutputStream):
-    result_binary: bytes = None
+    result_binary: bytes = b''
     result_text: str = ""
 
     def write_string(self, data: str) -> bool:
@@ -28,6 +31,13 @@ class ConverterOutputStream(OutputStream):
     def write_binary(self, data: bytes) -> bool:
         self.result_binary = data
         return True
+
+
+def get_bytes_from_cif_writer(writer: BinaryCIFWriter) -> bytes:
+    writer.encode()
+    output_stream = ConverterOutputStream()
+    writer.flush(output_stream)
+    return output_stream.result_binary
 
 
 def serialize_volume_slice(
@@ -60,38 +70,29 @@ def serialize_volume_slice(
 
         # table
         set_dict = segmentation["category_set_dict"]
-
-        set_ids, segment_ids = [], []
-        for k in set_dict.keys():
-            for v in set_dict[k]:
-                set_ids.append(k)
-                segment_ids.append(v)
-
+        segment_set_table = SegmentSetTable.from_dict(set_dict)
         table_writer_provider = CategoryWriterProvider_SegmentationDataTable()
-        writer.write_category(
-            table_writer_provider, [{"set_id": set_ids, "segment_id": segment_ids, "size": len(set_ids)}]
-        )
+        writer.write_category(table_writer_provider, [segment_set_table])
 
         # 3d_ids
         # uint32
         ids_writer_provider = CategoryWriterProvider_SegmentationData3d()
-        writer.write_category(ids_writer_provider, [segmentation["category_set_ids"]])
+        writer.write_category(ids_writer_provider, [np.ravel(segmentation["category_set_ids"])])
 
-    binary = True
-    writer.encode()
-    output_stream = ConverterOutputStream()
-    writer.flush(output_stream)
-    return output_stream.result_binary if binary else output_stream.result_text
+    # binary = True
+    # writer.encode()
+    # output_stream = ConverterOutputStream()
+    # writer.flush(output_stream)
+    # return output_stream.result_binary if binary else output_stream.result_text
+    return get_bytes_from_cif_writer(writer)
 
 
 def serialize_volume_info(metadata: IPreprocessedMetadata, box: GridSliceBox) -> bytes:
     writer = BinaryCIFWriter("volume_server")
 
-    volume_info = VolumeInfo(name="volume", metadata=metadata, box=box)
-    volume_info_category = CategoryWriterProvider_VolumeData3dInfo()
-
     writer.start_data_block("volume_info")
-    writer.write_category(volume_info_category, [volume_info])
+    volume_info = VolumeInfo(name="volume", metadata=metadata, box=box)
+    writer.write_category(CategoryWriterProvider_VolumeData3dInfo(), [volume_info])
 
     return get_bytes_from_cif_writer(writer)
 
@@ -116,9 +117,3 @@ def serialize_meshes(meshes: MeshesData,  metadata: IPreprocessedMetadata, box: 
         bcif = get_bytes_from_cif_writer(writer)
     return bcif
 
-
-def get_bytes_from_cif_writer(writer: BinaryCIFWriter) -> bytes:
-    writer.encode()
-    output_stream = ConverterOutputStream()
-    writer.flush(output_stream)
-    return output_stream.result_binary

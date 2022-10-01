@@ -358,7 +358,7 @@ export class AppModel {
             }
 
             // DEBUG
-            const debugMeshesBcif = true;
+            const debugMeshesBcif = false;
             const debugSegment = 1;
             const debugDetail = 10;
             if (debugMeshesBcif){

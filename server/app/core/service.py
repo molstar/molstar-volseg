@@ -26,7 +26,7 @@ class VolumeServerService:
     def __init__(self, db: IReadOnlyPreprocessedDb):
         self.db = db
 
-    async def _filter_entries_by_keyword(self, namespace: str, entries: list[str], keyword: str):
+    async def _filter_entries_by_keyword(self, namespace: str, entries: list[str], keyword: str) -> list[str]:
         filtered = []
         for entry in entries:
             if keyword in entry:
@@ -40,9 +40,9 @@ class VolumeServerService:
 
         return filtered
 
-    async def get_entries(self, req: EntriesRequest) -> dict:
+    async def get_entries(self, req: EntriesRequest) -> dict[str, list[str]]:
         limit = req.limit
-        entries = dict()
+        entries: dict[str, list[str]] = {}
         if limit == 0:
             return entries
 
@@ -62,7 +62,7 @@ class VolumeServerService:
 
         return entries
 
-    async def get_metadata(self, req: MetadataRequest) -> Union[bytes, str]:
+    async def get_metadata(self, req: MetadataRequest) -> dict:
         grid = await self.db.read_metadata(req.source, req.structure_id)
         try:
             annotation = await self.db.read_annotations(req.source, req.structure_id)
@@ -156,7 +156,7 @@ class VolumeServerService:
                 meta = await self.db.read_metadata(req.source, req.structure_id)
                 segments_levels = self._extract_segments_detail_levels(meta)
                 error_msg = f"Invalid segment_id={req.segment_id} or detail_lvl={req.detail_lvl} (available segment_ids and detail_lvls: {segments_levels})"
-                raise error_msg
+                raise KeyError(error_msg)
 
         return meshes
         # cif = convert_meshes(meshes, metadata, req.detail_lvl(), [10, 10, 10])  # TODO: replace 10,10,10 with cell size
@@ -187,12 +187,12 @@ class VolumeServerService:
                 box = GridSliceBox(
                     downsampling_rate=downsampling_rate,
                     bottom_left=(0, 0, 0),
-                    top_right=tuple(d - 1 for d in metadata.sampled_grid_dimensions(downsampling_rate)),
+                    top_right=tuple(d - 1 for d in metadata.sampled_grid_dimensions(downsampling_rate)),  # type: ignore  # length is 3
                 )
 
             # TODO: decide what to do when max_points is 0
             # e.g. whether to return the lowest downsampling or highest
-            if max_points is None or box.volume < max_points:
+            if max_points is None or (box is not None and box.volume < max_points):
                 return box
 
         return box
@@ -210,8 +210,8 @@ def calc_slice_box(
         meta.sampled_grid_dimensions(downsampling_rate),
     )
 
-    bottom_left = tuple(max(0, floor((req_min[i] - origin[i]) / voxel_size[i])) for i in range(3))
-    top_right = tuple(min(grid_dimensions[i] - 1, ceil((req_max[i] - origin[i]) / voxel_size[i])) for i in range(3))
+    bottom_left: tuple[int, int, int] = tuple(max(0, floor((req_min[i] - origin[i]) / voxel_size[i])) for i in range(3))  # type: ignore  # length is 3
+    top_right: tuple[int, int, int] = tuple(min(grid_dimensions[i] - 1, ceil((req_max[i] - origin[i]) / voxel_size[i])) for i in range(3))  # type: ignore  # length is 3
 
     # Check if the box is outside the available data
     if any(bottom_left[i] >= grid_dimensions[i] for i in range(3)) or any(top_right[i] < 0 for i in range(3)):

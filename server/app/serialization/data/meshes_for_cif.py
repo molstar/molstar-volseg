@@ -1,6 +1,7 @@
 import numpy as np
 
-from db.interface.i_preprocessed_db import MeshesData  # type: ignore
+from db.interface.i_preprocessed_db import MeshesData
+
 
 class WithArrays(object):
     def try_shrink_uint_array_attrs(self) -> None:
