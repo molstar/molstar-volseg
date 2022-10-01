@@ -1,5 +1,5 @@
 from ciftools.writer.base import CategoryDesc, FieldDesc
-from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
+from db.models import VolumeMetadata
 
 from app.core.models import GridSliceBox
 
@@ -15,7 +15,7 @@ class VolumeInfo:
     def __init__(
         self,
         name: str,
-        metadata: IPreprocessedMetadata,
+        metadata: VolumeMetadata,
         box: GridSliceBox,
     ):
         self.name = name

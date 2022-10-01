@@ -3,8 +3,7 @@ from typing import Union
 import numpy as np
 from ciftools.binary import BinaryCIFWriter
 from ciftools.writer.base import OutputStream
-from db.interface.i_preprocessed_db import ProcessedVolumeSliceData
-from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
+from db.models import VolumeSliceData, VolumeMetadata
 
 from app.core.models import GridSliceBox
 from app.serialization.volume_cif_categories.common import VolumeInfo
@@ -28,7 +27,7 @@ class ConverterOutputStream(OutputStream):
 
 
 def serialize_volume_slice(
-    slice: ProcessedVolumeSliceData, metadata: IPreprocessedMetadata, box: GridSliceBox
+    slice: VolumeSliceData, metadata: VolumeMetadata, box: GridSliceBox
 ) -> Union[bytes, str]:  # TODO: add binary cif to the project
     writer = BinaryCIFWriter("volume_server")
 
@@ -82,8 +81,8 @@ def serialize_volume_slice(
 
 
 def serialize_meshes(
-    preprocessed_volume: ProcessedVolumeSliceData,
-    metadata: IPreprocessedMetadata,
+    preprocessed_volume: VolumeSliceData,
+    metadata: VolumeMetadata,
     downsampling: int,
     grid_size: list[int],
 ) -> Union[bytes, str]:
