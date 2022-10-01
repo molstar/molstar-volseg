@@ -367,14 +367,6 @@ export class AppModel {
                 const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
                 AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
             }
-            if (debugMeshesBcif){
-                const url = API2.meshUrl(source, entryId, debugSegment, debugDetail);
-                const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
-                const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
-                AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
-                throw new Error('Debugging OK');
-            }
-
 
             if (hasVolumes) {
                 // const isoLevel = { kind: 'relative', value: 2.73}; // rel 2.73 (abs 0.42) is OK for emd-1832
