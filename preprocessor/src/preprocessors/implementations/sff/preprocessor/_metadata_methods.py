@@ -13,6 +13,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor._sfftk_meth
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map_methods import ccp4_words_to_dict_mrcfile
 from preprocessor.src.tools.quantize_data.quantize_data import decode_quantized_data
 
+# TODO: replace by db.models
 class MeshMetadata(TypedDict):
     num_vertices: int
     num_triangles: int
