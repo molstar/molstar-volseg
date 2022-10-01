@@ -1,8 +1,12 @@
 from typing import Union
-import numpy as np
-import dask.array as da
 
-def quantize_data(data: Union[da.Array, np.ndarray], output_dtype: Union[str, type]) -> dict:
+import dask.array as da
+import numpy as np
+
+
+def quantize_data(
+    data: Union[da.Array, np.ndarray], output_dtype: Union[str, type]
+) -> dict:
     if isinstance(output_dtype, str):
         output_dtype = np.dtype(output_dtype)
         bits_in_dtype = output_dtype.itemsize * 8
@@ -34,18 +38,18 @@ def quantize_data(data: Union[da.Array, np.ndarray], output_dtype: Union[str, ty
     elif isinstance(quantized, np.ndarray):
         np.round(quantized, 0, out=quantized)
     else:
-        raise Exception('array dtype is neither dask arr nor np ndarray')
+        raise Exception("array dtype is neither dask arr nor np ndarray")
     quantized = quantized.astype(dtype=output_dtype)
 
     # if isinstance(data, da.Array):
     #     quantized = quantized.compute()
-    
+
     # convert min_value, max_value, to_remove_negatives to python dtypes
     # if those three are dask arrs, compute() each prior to conversion
     # convert can be done as:
     # 1. x' = str(x)
     # 2. if x.dtype was float32: float(x')
-        # if x.dtype was uint8: int(x')
+    # if x.dtype was uint8: int(x')
 
     d = {
         "min": min_value,
@@ -59,6 +63,7 @@ def quantize_data(data: Union[da.Array, np.ndarray], output_dtype: Union[str, ty
     d = _convert_data_dict_to_python_dtypes(d)
 
     return d
+
 
 def decode_quantized_data(data_dict: dict) -> Union[da.Array, np.ndarray]:
     # this will decode back to log data
@@ -77,15 +82,26 @@ def decode_quantized_data(data_dict: dict) -> Union[da.Array, np.ndarray]:
 
 def _convert_data_dict_to_python_dtypes(data_dict: dict) -> dict:
     for key in data_dict:
-        if key != 'data' and (isinstance(data_dict[key], da.Array) or isinstance(data_dict[key], np.ndarray)):
+        if key != "data" and (
+            isinstance(data_dict[key], da.Array)
+            or isinstance(data_dict[key], np.ndarray)
+        ):
             if isinstance(data_dict[key], da.Array):
                 data_dict[key] = data_dict[key].compute()
             # TODO: check if there is a way to find corresponding dtype for any np float/np (u)int
             if data_dict[key].dtype in (np.float16, np.float32, np.float64):
                 data_dict[key] = float(str(data_dict[key]))
-            elif data_dict[key].dtype in (np.uint8, np.uint16, np.int8, np.int16, np.int32):
+            elif data_dict[key].dtype in (
+                np.uint8,
+                np.uint16,
+                np.int8,
+                np.int16,
+                np.int32,
+            ):
                 data_dict[key] = int(str(data_dict[key]))
             else:
-                raise Exception(f'dtype of quantized data_dict members is {data_dict[key].dtype} and is not supported')
+                raise Exception(
+                    f"dtype of quantized data_dict members is {data_dict[key].dtype} and is not supported"
+                )
 
     return data_dict
