@@ -55,7 +55,7 @@ export class VolumeApiV2 {
             return `${this.volumeServerUrl}/${source}/${entryId}/segmentation/cell/${segmentation}?max_points=${maxPoints}`;
         }
     }
-    public meshUrl(source: string, entryId: string, segment: number, detailLevel: number): string {
+    public meshUrl_Json(source: string, entryId: string, segment: number, detailLevel: number): string {
         return `${this.volumeServerUrl}/${source}/${entryId}/mesh/${segment}/${detailLevel}`;
     }
 

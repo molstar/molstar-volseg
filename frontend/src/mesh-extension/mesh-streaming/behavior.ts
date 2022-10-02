@@ -19,7 +19,7 @@ const BACKGROUND_SEGMENT_VOLUME_THRESHOLD = 0.5;
 // const DEBUG_IGNORED_SEGMENTS = new Set([13, 15]); // TODO remove
 const DEBUG_IGNORED_SEGMENTS = new Set(); // TODO remove
 
-const APPLY_TRANSFORM_HERE: boolean = false;
+const APPLY_TRANSFORM_HERE: boolean = true;
 
 export class MeshStreaming extends MS.PluginStateObject.CreateBehavior<MeshStreaming.Behavior>({ name: 'Mesh Streaming' }) { }
 

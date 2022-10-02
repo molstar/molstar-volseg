@@ -492,7 +492,7 @@ export class AppModel {
             if (!node) {
                 const detail = Metadata.getSufficientDetail(this.metadata!, seg.id, DEFAULT_DETAIL);
                 const color = seg.colour.length >= 3 ? Color.fromNormalizedArray(seg.colour, 0) : ColorNames.gray;
-                node = await MeshExamples.createMeshFromUrl(this.plugin, API2.meshUrl(AppModel.splitEntryId(entryId).source, entryId, seg.id, detail), seg.id, detail, true, false, color);
+                node = await MeshExamples.createMeshFromUrl(this.plugin, API2.meshUrl_Bcif(AppModel.splitEntryId(entryId).source, entryId, seg.id, detail), seg.id, detail, true, false, color);
                 this.meshSegmentNodes[seg.id] = node;
             }
             setSubtreeVisibility(node.state!, node.ref, false);  // show
