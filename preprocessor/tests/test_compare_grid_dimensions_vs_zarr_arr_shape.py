@@ -2,11 +2,11 @@
 
 from pathlib import Path
 import unittest
-from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
+from db.file_system.db import FileSystemDBReadContext
 
 class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
     async def test(self):
-        db = LocalDiskPreprocessedDb(folder=Path('db'))
+        db = FileSystemDBReadContext(folder=Path('db'))
 
         test_suite_entries = [
             ('emdb', 'emd-1832'),

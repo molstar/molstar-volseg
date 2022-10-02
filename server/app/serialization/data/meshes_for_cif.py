@@ -1,6 +1,6 @@
 import numpy as np
 
-from db.interface.i_preprocessed_db import MeshesData
+from db.models import MeshesData
 
 
 class WithArrays(object):
