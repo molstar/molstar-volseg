@@ -6,7 +6,7 @@
 export { BaseGeometry, VisualQualityOptions, type VisualQuality } from 'molstar/lib/mol-geo/geometry/base';
 export { Mesh } from 'molstar/lib/mol-geo/geometry/mesh/mesh';
 export { Box3D } from 'molstar/lib/mol-math/geometry';
-export { Vec3 } from 'molstar/lib/mol-math/linear-algebra';
+export { Vec3, Mat4 } from 'molstar/lib/mol-math/linear-algebra';
 export { type ShapeProvider } from 'molstar/lib/mol-model/shape/provider';
 export { Shape } from 'molstar/lib/mol-model/shape/shape';
 export { Volume } from 'molstar/lib/mol-model/volume';
@@ -33,3 +33,4 @@ export { ColorNames } from 'molstar/lib/mol-util/color/names';
 export { Material } from 'molstar/lib/mol-util/material';
 export { ParamDefinition } from 'molstar/lib/mol-util/param-definition';
 export { type TypedArray } from 'molstar/lib/mol-util/type-helpers';
+export { CIF, CifFile } from 'molstar/lib/mol-io/reader/cif';

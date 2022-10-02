@@ -171,7 +171,7 @@ export class AppModel {
             try {
                 const data = await this.plugin.builders.data.download({ url: urls[name], isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
                 const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
-                AppModel.logCifOverview(cif.data!);
+                AppModel.logCifOverview(cif.data!, urls[name]);
             } catch (err) {
                 console.error('Failed', err);
             }
@@ -348,11 +348,33 @@ export class AppModel {
             const BOX = null;
             const MAX_VOXELS = 10 ** 7;
 
+            // DEBUG
+            const debugVolumeInfo = true;
+            if (debugVolumeInfo){
+                const url = API2.volumeInfoUrl(source, entryId);
+                const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+                const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
+                AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
+            }
+
+            // DEBUG
+            const debugMeshesBcif = false;
+            const debugSegment = 1;
+            const debugDetail = 10;
+            if (debugMeshesBcif){
+                const url = API2.meshUrl_Bcif(source, entryId, debugSegment, debugDetail);
+                const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+                const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
+                AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
+            }
+
             if (hasVolumes) {
                 // const isoLevel = { kind: 'relative', value: 2.73}; // rel 2.73 (abs 0.42) is OK for emd-1832
                 const isoLevel = await AppModel.getIsovalue(entryId);
                 const url = API2.volumeUrl(source, entryId, BOX, MAX_VOXELS);
                 const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+                // const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit(); // DEBUG
+                // AppModel.logCifOverview(cif.data!); // DEBUG
                 const parsed = await this.plugin.dataFormats.get('dscif')!.parse(this.plugin, data, { entryId });
                 const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
                 const volumeData = volume.cell!.obj!.data;
@@ -371,7 +393,7 @@ export class AppModel {
                 const url = API2.latticeUrl(source, entryId, 0, BOX, MAX_VOXELS);
                 const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
                 const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
-                AppModel.logCifOverview(cif.data!); // TODO when could cif.data be undefined?
+                AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
                 const latticeBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
                 if (latticeBlock) {
                     if (!this.volume) throw new Error('Volume data must be present to create lattice segmentation'); // TODO create grid without volume data
@@ -470,7 +492,7 @@ export class AppModel {
             if (!node) {
                 const detail = Metadata.getSufficientDetail(this.metadata!, seg.id, DEFAULT_DETAIL);
                 const color = seg.colour.length >= 3 ? Color.fromNormalizedArray(seg.colour, 0) : ColorNames.gray;
-                node = await MeshExamples.createMeshFromUrl(this.plugin, API2.meshUrl(AppModel.splitEntryId(entryId).source, entryId, seg.id, detail), seg.id, detail, true, false, color);
+                node = await MeshExamples.createMeshFromUrl(this.plugin, API2.meshUrl_Bcif(AppModel.splitEntryId(entryId).source, entryId, seg.id, detail), seg.id, detail, true, false, color);
                 this.meshSegmentNodes[seg.id] = node;
             }
             setSubtreeVisibility(node.state!, node.ref, false);  // show
@@ -643,9 +665,9 @@ export class AppModel {
         console.log('children:', repr.currentTree.children.size);
     }
 
-    private static logCifOverview(cifData: CifFile): void {
-        const MAX_VALUES = 5;
-        console.log('cifData.name:', cifData.name);
+    private static logCifOverview(cifData: CifFile, url: string = ''): void {
+        const MAX_VALUES = 10;
+        console.log('CifFile', url);
         cifData.blocks.forEach(block => {
             console.log(`    ${block.header}`);
             block.categoryNames.forEach(catName => {

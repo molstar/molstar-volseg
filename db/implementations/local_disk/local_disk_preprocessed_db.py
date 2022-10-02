@@ -22,7 +22,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preproc
 from preprocessor.src.tools.quantize_data.quantize_data import decode_quantized_data
 
 from .local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
-from db.interface.i_preprocessed_db import IPreprocessedDb, ProcessedVolumeSliceData
+from db.interface.i_preprocessed_db import IPreprocessedDb, ProcessedVolumeSliceData, MeshesData
 from ...interface.i_preprocessed_medatada import IPreprocessedMetadata
 
 
@@ -140,7 +140,7 @@ class ReadContext():
 
         return d
 
-    async def read_meshes(self, segment_id: int, detail_lvl: int) -> list[object]:
+    async def read_meshes(self, segment_id: int, detail_lvl: int) -> MeshesData:
         '''
         Returns list of meshes for a given segment, entry, detail lvl
         '''
@@ -154,6 +154,8 @@ class ReadContext():
                 }
                 for mesh_component_name, mesh_component_arr in mesh.arrays():
                     mesh_data[f'{mesh_component_name}'] = mesh_component_arr[...]
+                assert 'vertices' in mesh_data
+                assert 'triangles' in mesh_data
                 mesh_list.append(mesh_data)
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)

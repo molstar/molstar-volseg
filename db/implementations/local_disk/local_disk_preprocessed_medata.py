@@ -8,7 +8,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor._metadata_m
 
 class LocalDiskPreprocessedMetadata(IPreprocessedMetadata):
     def __init__(self, raw_metadata: Dict):
-        print("Metadata " + str(raw_metadata))
+        # print("Metadata " + str(raw_metadata))
         self.raw_metadata = raw_metadata
 
     def json_metadata(self) -> str:

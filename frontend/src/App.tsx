@@ -148,6 +148,9 @@ function UIExampleMeshes({ model }: { model: AppModel }) {
                     </Button>
                 )}
                 <Typography variant='body1' marginTop={2}>
+                    The meshes here are visualized in grid space, not Cartesian space! (waiting for API changes to fix that).
+                </Typography>
+                <Typography variant='body1' marginTop={2}>
                     If you are viewing "empiar-10070", two "background" segments are artificially removed.
                 </Typography>
             </>}

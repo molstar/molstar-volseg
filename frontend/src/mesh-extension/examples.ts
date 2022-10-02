@@ -3,6 +3,7 @@
 import * as MS from './molstar-lib-imports';
 
 import { ParseMeshlistTransformer, MeshShapeTransformer, MeshlistData } from './mesh-extension';
+import * as MeshUtils from './mesh-utils';
 import { InitMeshStreaming } from './mesh-streaming/transformers';
 import { MeshServerInfo } from './mesh-streaming/server-info';
 
@@ -20,6 +21,8 @@ export async function runMeshExtensionExamples(plugin: MS.PluginUIContext, db_ur
     // await runMeshExample(plugin, 'all', db_url);
     // await runMeshExample(plugin, 'fg', db_url);
     // await runMultimeshExample(plugin, 'fg', 'worst', db_url);
+    await runCifMeshExample(plugin);
+    // await runMeshExample2(plugin, 'fg');
     await runMeshStreamingExample(plugin);
 
     console.timeEnd('TIME MESH EXAMPLES');
@@ -33,7 +36,21 @@ export async function runMeshExample(plugin: MS.PluginUIContext, segments: 'fg' 
         : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 17]; // segment-13 and segment-15 are quasi background
 
     for (const segmentId of segmentIds) {
-        createMeshFromUrl(plugin, `${db_url}/empiar-10070-mesh-rounded/segment-${segmentId}/detail-${detail}`, segmentId, detail, true, true, undefined);
+        await createMeshFromUrl(plugin, `${db_url}/empiar-10070-mesh-rounded/segment-${segmentId}/detail-${detail}`, segmentId, detail, true, true, undefined);
+    }
+}
+
+/** Example for downloading multiple separate segments, each containing 1 mesh. */
+export async function runMeshExample2(plugin: MS.PluginUIContext, segments: 'few' | 'fg' | 'all') {
+    const detail = 1;
+    const segmentIds = (segments === 'few') ?
+        [1, 4, 7, 10, 16]
+        : (segments === 'all') ?
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17] // segment-16 has no detail-2
+        : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 17]; // segment-13 and segment-15 are quasi background
+
+    for (const segmentId of segmentIds) {
+        await createMeshFromUrl(plugin, `http://localhost:9000/v2/empiar/empiar-10070/mesh_bcif/${segmentId}/${detail}`, segmentId, detail, false, true, undefined);
     }
 }
 
@@ -66,13 +83,16 @@ export async function createMeshFromUrl(plugin: MS.PluginUIContext, meshDataUrl:
 
     // RAW DATA NODE
     const rawDataNode = await plugin.builders.data.download(
-        { url: meshDataUrl, isBinary: false, label: `Downloaded Data ${segmentId}` }, // params
+        { url: meshDataUrl, isBinary: true, label: `Downloaded Data ${segmentId}` }, // params
         { ref: `ref-raw-data-node-${segmentId}`, tags: ['What', 'are', 'tags', 'good', 'for?'], state: { isCollapsed: collapseTree } } // options
     );
     if (log) console.log('rawDataNode:', rawDataNode);
 
+    const cifNode = await plugin.build().to(rawDataNode).apply(MS.StateTransforms.Data.ParseCif).commit();
+    if (log) console.log('cifNode:', rawDataNode);
+
     // PARSED DATA NODE
-    const parsedDataNode = await plugin.build().to(rawDataNode).apply(
+    const parsedDataNode = await plugin.build().to(cifNode).apply(
         ParseMeshlistTransformer,
         { label: undefined, segmentId: segmentId, segmentName: `Segment ${segmentId}`, detail: detail }, // params
         { ref: `ref-parsed-data-node-${segmentId}` } // options
@@ -187,4 +207,26 @@ export async function runIsosurfaceExample(plugin: MS.PluginUIContext, db_url: s
     });
     root.to(volume).apply(MS.StateTransforms.Representation.VolumeRepresentation3D, volumeParams);
     await root.commit();
+}
+
+
+async function runCifMeshExample(plugin: MS.PluginUIContext, api: string = 'http://localhost:9000/v2', 
+    source: MeshServerInfo.MeshSource = 'empiar', entryId: string = 'empiar-10070',
+    segmentId: number = 1, detail: number = 10,
+){
+    const url = `${api}/${source}/${entryId}/mesh_bcif/${segmentId}/${detail}`
+    getMeshFromBcif(plugin, url);
+}
+
+async function getMeshFromBcif(plugin: MS.PluginUIContext, url: string){
+    const urlAsset = MS.Asset.getUrlAsset(plugin.managers.asset, url); // QUESTION how is urlAsset better than normal `fetch`
+    const asset = await plugin.runTask(plugin.managers.asset.resolve(urlAsset, 'binary'));
+    const parsed = await plugin.runTask(MS.CIF.parseBinary(asset.data));
+    if (parsed.isError) {
+        plugin.log.error('VolumeStreaming, parsing CIF: ' + parsed.toString());
+        return;
+    }
+    console.log('blocks:', parsed.result.blocks);
+    const mesh = MeshUtils.makeMeshFromCif(parsed.result);
+    console.log(mesh);
 }

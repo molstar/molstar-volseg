@@ -5,7 +5,7 @@ import PD = MS.ParamDefinition;
 import { Choice } from '../choice';
 
 
-export const DEFAULT_MESH_SERVER = 'http://localhost:9000/v1';
+export const DEFAULT_MESH_SERVER = 'http://localhost:9000/v2';
 
 
 export class MeshServerInfo extends MS.PluginStateObject.Create<MeshServerInfo.Data>({ name: 'Volume Server', typeClass: 'Object' }) { }
