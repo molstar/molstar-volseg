@@ -15,7 +15,9 @@ from app.api.requests import (
     VolumeRequestInfo,
 )
 from app.core.models import GridSliceBox
-from app.serialization.cif import serialize_volume_slice
+from app.serialization.cif import serialize_volume_slice, serialize_volume_info, serialize_meshes
+from app.core.timing import Timing
+
 
 __MAX_DOWN_SAMPLING_VALUE__ = 1000000
 
@@ -24,7 +26,7 @@ class VolumeServerService:
     def __init__(self, db: VolumeServerDB):
         self.db = db
 
-    async def _filter_entries_by_keyword(self, namespace: str, entries: list[str], keyword: str):
+    async def _filter_entries_by_keyword(self, namespace: str, entries: list[str], keyword: str) -> list[str]:
         filtered = []
         for entry in entries:
             if keyword in entry:
@@ -38,9 +40,9 @@ class VolumeServerService:
 
         return filtered
 
-    async def get_entries(self, req: EntriesRequest) -> dict:
+    async def get_entries(self, req: EntriesRequest) -> dict[str, list[str]]:
         limit = req.limit
-        entries = dict()
+        entries: dict[str, list[str]] = {}
         if limit == 0:
             return entries
 
@@ -60,7 +62,7 @@ class VolumeServerService:
 
         return entries
 
-    async def get_metadata(self, req: MetadataRequest) -> Union[bytes, str]:
+    async def get_metadata(self, req: MetadataRequest) -> dict:
         grid = await self.db.read_metadata(req.source, req.structure_id)
         try:
             annotation = await self.db.read_annotations(req.source, req.structure_id)
@@ -78,7 +80,7 @@ class VolumeServerService:
         else:
             lattice_id = req.segmentation_id
 
-        slice_box = self._decide_slice_box(req, req_box, metadata)
+        slice_box = self._decide_slice_box(req.max_points, req_box, metadata)
 
         if slice_box is None:
             # TODO: return empty result instead of exception?
@@ -114,6 +116,40 @@ class VolumeServerService:
 
         return serialize_volume_slice(db_slice, metadata, slice_box)
 
+    async def get_volume_info(self, req: MetadataRequest) -> bytes:
+        metadata = await self.db.read_metadata(req.source, req.structure_id)
+        box = self._decide_slice_box(None, None, metadata)
+        return serialize_volume_info(metadata, box)
+
+    async def get_meshes_bcif(self, req: MeshRequest) -> bytes:
+        with Timing('read metadata'):
+            metadata = await self.db.read_metadata(req.source, req.structure_id)
+        with Timing('decide box'):
+            box = self._decide_slice_box(None, None, metadata)
+        with Timing('read meshes'):
+            with self.db.read(req.source, req.structure_id) as context:
+                try:
+                    meshes = await context.read_meshes(req.segment_id, req.detail_lvl)
+                    # try:  # DEBUG, TODO REMOVE
+                    #     meshes1 = await context.read_meshes(req.segment_id+1, req.detail_lvl)
+                    #     for mesh in meshes1: mesh['mesh_id'] = 1
+                    #     meshes += meshes1
+                    #     meshes2 = await context.read_meshes(req.segment_id+2, req.detail_lvl)
+                    #     for mesh in meshes2: mesh['mesh_id'] = 2
+                    #     meshes += meshes2
+                    # except KeyError:
+                    #     pass
+                except KeyError as e:
+                    print("Exception in get_meshes: " + str(e))
+                    meta = await self.db.read_metadata(req.source, req.structure_id)
+                    segments_levels = self._extract_segments_detail_levels(meta)
+                    error_msg = f"Invalid segment_id={req.segment_id} or detail_lvl={req.detail_lvl} (available segment_ids and detail_lvls: {segments_levels})"
+                    raise KeyError(error_msg)
+        with Timing('serialize meshes'):
+            bcif = serialize_meshes(meshes, metadata, box)
+
+        return bcif
+
     async def get_meshes(self, req: MeshRequest) -> list[object]:
         with self.db.read(req.source, req.structure_id) as context:
             try:
@@ -123,7 +159,7 @@ class VolumeServerService:
                 meta = await self.db.read_metadata(req.source, req.structure_id)
                 segments_levels = self._extract_segments_detail_levels(meta)
                 error_msg = f"Invalid segment_id={req.segment_id} or detail_lvl={req.detail_lvl} (available segment_ids and detail_lvls: {segments_levels})"
-                raise error_msg
+                raise KeyError(error_msg)
 
         return meshes
         # cif = convert_meshes(meshes, metadata, req.detail_lvl(), [10, 10, 10])  # TODO: replace 10,10,10 with cell size
@@ -142,10 +178,10 @@ class VolumeServerService:
         return sorted_result
 
     def _decide_slice_box(
-        self, req: VolumeRequestInfo, req_box: Optional[VolumeRequestBox], metadata: VolumeMetadata
+        self, max_points: Optional[int], req_box: Optional[VolumeRequestBox], metadata: VolumeMetadata
     ) -> Optional[GridSliceBox]:
+        '''`max_points=None` means unlimited number of points'''
         box = None
-        max_points = req.max_points
 
         for downsampling_rate in sorted(metadata.volume_downsamplings()):
             if req_box:
@@ -154,12 +190,12 @@ class VolumeServerService:
                 box = GridSliceBox(
                     downsampling_rate=downsampling_rate,
                     bottom_left=(0, 0, 0),
-                    top_right=tuple(d - 1 for d in metadata.sampled_grid_dimensions(downsampling_rate)),
+                    top_right=tuple(d - 1 for d in metadata.sampled_grid_dimensions(downsampling_rate)),  # type: ignore  # length is 3
                 )
 
             # TODO: decide what to do when max_points is 0
             # e.g. whether to return the lowest downsampling or highest
-            if box.volume < max_points:
+            if max_points is None or (box is not None and box.volume < max_points):
                 return box
 
         return box
@@ -177,8 +213,8 @@ def calc_slice_box(
         meta.sampled_grid_dimensions(downsampling_rate),
     )
 
-    bottom_left = tuple(max(0, floor((req_min[i] - origin[i]) / voxel_size[i])) for i in range(3))
-    top_right = tuple(min(grid_dimensions[i] - 1, ceil((req_max[i] - origin[i]) / voxel_size[i])) for i in range(3))
+    bottom_left: tuple[int, int, int] = tuple(max(0, floor((req_min[i] - origin[i]) / voxel_size[i])) for i in range(3))  # type: ignore  # length is 3
+    top_right: tuple[int, int, int] = tuple(min(grid_dimensions[i] - 1, ceil((req_max[i] - origin[i]) / voxel_size[i])) for i in range(3))  # type: ignore  # length is 3
 
     # Check if the box is outside the available data
     if any(bottom_left[i] >= grid_dimensions[i] for i in range(3)) or any(top_right[i] < 0 for i in range(3)):
