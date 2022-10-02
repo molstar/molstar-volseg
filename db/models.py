@@ -21,6 +21,14 @@ class MeshComponentNumbers(TypedDict):
     segment_ids: dict[int, DetailLvlsMetadata]
 
 
+class MeshData(TypedDict):
+    mesh_id: int
+    vertices: np.ndarray  # shape = (n_vertices, 3)
+    triangles: np.ndarray  # shape = (n_triangles, 3)
+
+MeshesData = list[MeshData]
+
+
 class SegmentationSliceData(TypedDict):
     # array with set ids
     category_set_ids: np.ndarray

@@ -13,7 +13,7 @@ from db.file_system.constants import (
     SEGMENTATION_DATA_GROUPNAME,
     VOLUME_DATA_GROUPNAME,
 )
-from db.models import VolumeSliceData
+from db.models import VolumeSliceData, MeshesData
 from db.protocol import DBReadContext, VolumeServerDB
 from db.utils.box import normalize_box
 from db.utils.quantization import decode_quantized_data
@@ -107,7 +107,7 @@ class FileSystemDBReadContext(DBReadContext):
 
         return d
 
-    async def read_meshes(self, segment_id: int, detail_lvl: int) -> list[object]:
+    async def read_meshes(self, segment_id: int, detail_lvl: int) -> MeshesData:
         """
         Returns list of meshes for a given segment, entry, detail lvl
         """
@@ -119,6 +119,8 @@ class FileSystemDBReadContext(DBReadContext):
                 mesh_data = {"mesh_id": int(mesh_name)}
                 for mesh_component_name, mesh_component_arr in mesh.arrays():
                     mesh_data[f"{mesh_component_name}"] = mesh_component_arr[...]
+                assert 'vertices' in mesh_data
+                assert 'triangles' in mesh_data
                 mesh_list.append(mesh_data)
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)
