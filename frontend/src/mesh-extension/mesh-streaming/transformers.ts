@@ -128,7 +128,7 @@ export const MeshVisualTransformer = CellStarTransform({
             props.flatShaded = true; // `flatShaded: true` is to see the real mesh vertices and triangles (default: false)
             props.alpha = params.opacity;
             const repr = MS.ShapeRepresentation((ctx, meshlist: MeshlistData) => MeshlistData.getShape(meshlist, visualInfo.color), MS.Mesh.Utils);
-            await repr.createOrUpdate(props, visualInfo.data ?? MeshlistData.Empty).runInContext(ctx);
+            await repr.createOrUpdate(props, visualInfo.data ?? MeshlistData.empty()).runInContext(ctx);
             if (a.data.transform) {
                 repr.setState({ transform: a.data.transform });
             }

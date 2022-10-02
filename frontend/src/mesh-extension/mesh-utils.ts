@@ -2,8 +2,6 @@
 
 import * as MS from './molstar-lib-imports';
 
-import { MeshlistData } from './mesh-extension';
-
 
 type MeshModificationParams = { shift?: [number, number, number], group?: number, invertSides?: boolean };
 
@@ -68,26 +66,95 @@ export function concat(...meshes: MS.Mesh[]): MS.Mesh {
     return MS.Mesh.create(vertices, indices, normals, groups, nVertices, nTriangles);
 }
 
-/** Create Mesh from MeshListData */
-export function makeMeshFromData(data: MeshlistData, meshIndex?: number, group?: number): MS.Mesh {
-    if (meshIndex !== undefined) {
-        const d = data.meshes[meshIndex];
-        const nVertices = d.vertices.length;
-        const nTriangles = d.triangles.length;
-        const vertices = new Float32Array(d.vertices.flat());
-        const indices = new Uint32Array(d.triangles.flat());
-        const normals = new Float32Array(3 * nVertices);
-        const groups = new Float32Array(nVertices).fill(group ?? 0);
-        const mesh = MS.Mesh.create(vertices, indices, normals, groups, nVertices, nTriangles);
-        MS.Mesh.computeNormals(mesh); // normals only necessary if flatShaded==false
-        return mesh;
-    } else {
-        const meshes = data.meshes.map((m, i) => makeMeshFromData(data, i, group ?? m.mesh_id));
-        return concat(...meshes);
+/** Return Mesh from CIF data and mesh IDs (group IDs). */
+export function makeMeshFromCif(data: MS.CifFile, invertSides: boolean = true): [MS.Mesh, readonly number[]] {
+    const volumeInfoBlock = data.blocks.find(b => b.header === 'VOLUME_INFO');
+    const meshesBlock = data.blocks.find(b => b.header === 'MESHES');
+    if (!volumeInfoBlock || !meshesBlock){
+        throw new Error();
     }
+    const meshCat = meshesBlock.categories['mesh'];
+    const vertexCat = meshesBlock.categories['mesh_vertex'];
+    const triangleCat = meshesBlock.categories['mesh_triangle'];
+    if (!meshCat || !vertexCat || !triangleCat){
+        throw new Error();
+    }
+    console.log('mesh cat', meshCat);
+    console.log('vertex cat', vertexCat);
+    console.log('triangle cat', triangleCat);
+    const nVertices = vertexCat.rowCount;
+    const nTriangles = Math.floor(triangleCat.rowCount / 3);
+    const meshIds = meshCat.getField('id')!.toIntArray();
+    const x = vertexCat.getField('x')!.toFloatArray();
+    const y = vertexCat.getField('y')!.toFloatArray();
+    const z = vertexCat.getField('z')!.toFloatArray();
+    const vertices = flattenCoords(x, y, z);
+
+    const groups_ = vertexCat.getField('mesh_id')!.toFloatArray()
+    const starts = startMap(groups_);
+    const triangleMeshIds = triangleCat.getField('mesh_id')!.toIntArray();
+    const triangleVertexIds = triangleCat.getField('vertex_id')!.toIntArray();
+    const indices_ = [];
+    for (let i = 0; i < 3*nTriangles; i++){
+        const offset = starts.get(triangleMeshIds[i])!;
+        indices_.push(offset + triangleVertexIds[i]);
+    }
+    const indices = new Uint32Array(indices_);
+    const groups = new Float32Array(groups_);
+    const normals = new Float32Array(3 * nVertices);
+    const mesh = MS.Mesh.create(vertices, indices, normals, groups, nVertices, nTriangles);
+    MS.Mesh.computeNormals(mesh); // normals only necessary if flatShaded==false
+    if (invertSides){
+        modify(mesh, { invertSides: true }); // Vertex orientation convention is opposite in API and in MolStar
+    }
+    // TODO allow transform
+    return [mesh, meshIds];
 }
 
-/** Example mesh - 1 triagle */
+function flattenCoords(x: readonly number[], y: readonly number[], z: readonly number[]): Float32Array {
+    const n = x.length;
+    const out = new Float32Array(3 * n);
+    for (let i = 0; i < x.length; i++) {
+        out[3*i] = x[i];
+        out[3*i+1] = y[i];
+        out[3*i+2] = z[i];
+    }
+    return out;
+}
+
+/** Return bounding box */
+export function bbox(mesh: MS.Mesh): MS.Box3D | null {  // Is there no function for this?
+    const nVertices = mesh.vertexCount;
+    const coords = mesh.vertexBuffer.ref.value;
+    if (nVertices === 0) {
+        return null;
+    }
+    let minX = coords[0], minY = coords[1], minZ = coords[2];
+    let maxX = minX, maxY = minY, maxZ = minZ;
+    for (let i = 0; i < 3*nVertices; i += 3){
+        const x = coords[i], y = coords[i+1], z = coords[i+2];
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (z < minZ) minZ = z;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+        if (z > maxZ) maxZ = z;
+    }
+    return MS.Box3D.create(MS.Vec3.create(minX, minY, minZ), MS.Vec3.create(maxX, maxY, maxZ));
+}
+
+/** Get mappings of unique values to the position of their first occurrence */
+export function startMap(values: readonly number[]){
+    const result = new Map<number, number>();
+    for (let i = 0; i < values.length; i++){
+        if (!result.has(values[i])){
+            result.set(values[i], i);
+        }
+    }
+    return result;
+}
+
+/** Example mesh - 1 triangle */
 export function makeFakeMesh1(): MS.Mesh {
     const nVertices = 3;
     const nTriangles = 1;

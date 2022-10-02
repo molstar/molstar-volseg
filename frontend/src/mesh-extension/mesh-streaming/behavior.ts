@@ -19,6 +19,7 @@ const BACKGROUND_SEGMENT_VOLUME_THRESHOLD = 0.5;
 // const DEBUG_IGNORED_SEGMENTS = new Set([13, 15]); // TODO remove
 const DEBUG_IGNORED_SEGMENTS = new Set(); // TODO remove
 
+const APPLY_TRANSFORM_HERE: boolean = false;
 
 export class MeshStreaming extends MS.PluginStateObject.CreateBehavior<MeshStreaming.Behavior>({ name: 'Mesh Streaming' }) { }
 
@@ -160,7 +161,7 @@ export namespace MeshStreaming {
                 // TODO obtain the following transform from CIF, including spacegroup_cell_angles!!! (this should be done when parsing the mesh data)
                 const voxelSize = this.metadata?.grid.volumes.voxel_size[1];
                 const origin = this.metadata?.grid.volumes.origin;
-                if (voxelSize && origin) {
+                if (APPLY_TRANSFORM_HERE && voxelSize && origin) {
                     const [vx, vy, vz] = voxelSize;
                     const [x0, y0, z0] = origin;
                     this.transform = MS.Mat4.ofRows([[vx, 0, 0, x0], [0, vy, 0, y0], [0, 0, vz, z0], [0, 0, 0, 1]]);
@@ -204,7 +205,7 @@ export namespace MeshStreaming {
         }
 
         private getMeshUrl(segment: number, detail: number) {
-            return `${this.parentData.serverUrl}/${this.params.source}/${this.params.entryId}/mesh/${segment}/${detail}`;
+            return `${this.parentData.serverUrl}/${this.params.source}/${this.params.entryId}/mesh_bcif/${segment}/${detail}`;
         }
 
         private initVisualInfos() {
@@ -288,8 +289,13 @@ export namespace MeshStreaming {
             // TODO cache
             const url = this.getMeshUrl(visual.segmentId, visual.detail);
             const urlAsset = MS.Asset.getUrlAsset(this.plugin.managers.asset, url); // QUESTION how is urlAsset better than normal `fetch`
-            const asset = await this.plugin.runTask(this.plugin.managers.asset.resolve(urlAsset, 'string'));
-            const meshlistData = MeshlistData.fromJsonString(asset.data, visual.segmentId, visual.segmentName, visual.detail);
+            // const asset = await this.plugin.runTask(this.plugin.managers.asset.resolve(urlAsset, 'string'));
+            const asset = await this.plugin.runTask(this.plugin.managers.asset.resolve(urlAsset, 'binary'));
+            const parsed = await this.plugin.runTask(MS.CIF.parseBinary(asset.data));
+            if (parsed.isError) {
+                throw new Error(`Failed parsing CIF file from ${url}`);
+            }
+            const meshlistData = MeshlistData.fromCIF(parsed.result, visual.segmentId, visual.segmentName, visual.detail);
             meshlistData.ownerId = this.id;
             // const bbox = MeshlistData.bbox(meshlistData);
             // const bboxVolume = bbox ? MS.Box3D.volume(bbox) : 0.0;
@@ -325,6 +331,7 @@ export namespace MeshStreaming {
         getDescription() {
             return Params.ViewTypeChoice.prettyName(this.params.view.name);
         }
+
     }
 }
 

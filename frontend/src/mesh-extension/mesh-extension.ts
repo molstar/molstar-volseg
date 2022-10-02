@@ -12,115 +12,42 @@ export const CellStarTransform: MS.StateTransformer.Builder.Root = MS.StateTrans
 // // // // // // // // // // // // // // // // // // // // // // // //
 // Parsed data
 
-/** Data for a single mesh */
-interface MeshData {
-    mesh_id: number,
-    triangles: [number, number, number][],
-    normals: [number, number, number][],
-    vertices: [number, number, number][],
-}
-namespace MeshData {
-    export function bbox(data: MeshData): MS.Box3D | null {
-        if (data.vertices.length === 0) {
-            return null;
-        }
-        const [x0, y0, z0] = data.vertices[0];
-        let minX = x0, minY = y0, minZ = z0, maxX = x0, maxY = y0, maxZ = z0;
-        for (const [x, y, z] of data.vertices) {
-            if (x < minX) minX = x;
-            if (y < minY) minY = y;
-            if (z < minZ) minZ = z;
-            if (x > maxX) maxX = x;
-            if (y > maxY) maxY = y;
-            if (z > maxZ) maxZ = z;
-        }
-        return MS.Box3D.create(MS.Vec3.create(minX, minY, minZ), MS.Vec3.create(maxX, maxY, maxZ));
-    }
-    export function allVerticesUsed(data: MeshData): boolean {
-        const unusedVertices = new Set();
-        for (let i = 0; i < data.vertices.length; i++) {
-            unusedVertices.add(i);
-        }
-        for (const [a, b, c] of data.triangles) {
-            unusedVertices.delete(a);
-            unusedVertices.delete(b);
-            unusedVertices.delete(c);
-        }
-        return unusedVertices.size === 0;
-    }
-}
-
 /** Data type for `MeshlistStateObject` - list of meshes */
 export interface MeshlistData {
     segmentId: number,
     segmentName: string,
     detail: number,
-    meshes: MeshData[],
+    meshIds: readonly number[],
+    mesh: MS.Mesh,
     /** Reference to the object which created this meshlist (e.g. `MeshStreaming.Behavior`) */
     ownerId?: string,
 }
 
 export namespace MeshlistData {
-    export const Empty: MeshlistData = {
-        segmentId: 0,
-        segmentName: 'Empty',
-        detail: 0,
-        meshes: [],
-    };
-    export function fromJsonString(data: string, segmentId: number, segmentName: string, detail: number): MeshlistData {
-        let parsedData: MeshData[];
-        try {
-            parsedData = JSON.parse(data);
-        } catch (err) {
-            if (err instanceof SyntaxError) throw new Error(`MeshlistData.fromJsonString(): Input data could not be parsed as JSON (${err})`);
-            else throw err;
-        }
-        const validationMsg = MeshlistData.validate(parsedData);
-        if (validationMsg) throw new Error(`MeshlistData.fromJsonString(): Input data could be parsed as JSON, but are not valid as MeshlistData (${validationMsg}).`);
-
+    export function empty(): MeshlistData {
         return {
-            segmentId: segmentId,
-            segmentName: segmentName,
-            detail: detail,
-            meshes: parsedData,
+            segmentId: 0,
+            segmentName: 'Empty',
+            detail: 0,
+            meshIds: [],
+            mesh: MS.Mesh.createEmpty(),
         };
+    };
+    export function fromCIF(data: MS.CifFile, segmentId: number, segmentName: string, detail: number): MeshlistData {
+        const [mesh, meshIds] = MeshUtils.makeMeshFromCif(data);
+        return {
+            segmentId,
+            segmentName,
+            detail,
+            meshIds,
+            mesh,
+        }
     }
     export function stats(meshListData: MeshlistData): string {
-        const lines = [`Meshlist "${meshListData.segmentName}" (detail ${meshListData.detail}) [${meshListData.meshes.length}]:`];
-        for (const meshData of meshListData.meshes) {
-            lines.push(`    { mesh_id: ${meshData.mesh_id}, vertices: ${meshData.vertices.length}, normals: ${meshData.normals?.length}, triangles: ${meshData.triangles.length} }`);
-        }
-        return lines.join('\n');
+        return `Meshlist "${meshListData.segmentName}" (detail ${meshListData.detail}): ${meshListData.meshIds.length} meshes, ${meshListData.mesh.vertexCount} vertices, ${meshListData.mesh.triangleCount} triangles`;
     }
-
-    export function validate(obj: MeshData[]): string {
-        return validateType(obj, Array.isArray, '$', 'array')
-            || obj.map(x => validateMeshData(x)).find(s => s)
-            || '';
-        // QUESTION there must be a better way of validating if all field are present and have correct type, isn't there?
-    }
-
-    function validateMeshData(obj: MeshData): string {
-        return [
-            validateType(obj.mesh_id, x => typeof x === 'number', '$[i].mesh_id', () => 'number'),
-            validateType(obj.vertices, Array.isArray, '$[i].vertices', 'number[][]'),
-            validateType(obj.triangles, Array.isArray, '$[i].triangles', 'number[][]'),
-        ].find(s => s) ?? '';
-    }
-
-    function validateType(obj: any, valFunc: (obj: any) => boolean, objRef: string | (() => string), typeRef: string | (() => string)): string {
-        if (valFunc(obj)) {
-            return '';
-        } else {
-            const objRefStr = (typeof objRef === 'string') ? objRef : objRef();
-            const typeRefStr = (typeof typeRef === 'string') ? typeRef : typeRef();
-            return `${objRefStr} must be ${typeRefStr}, not ${typeof obj}`;
-        }
-    }
-
     export function getShape(data: MeshlistData, color: MS.Color): MS.Shape<MS.Mesh> {
-        const mesh = MeshUtils.makeMeshFromData(data);
-        MeshUtils.modify(mesh, { invertSides: true }); // Vertex orientation convention is opposite in API and in MolStar
+        const mesh = data.mesh;
         const meshShape: MS.Shape<MS.Mesh> = MS.Shape.create('MyShape', data, mesh,
             () => color,
             () => 1, (group) => `${data.segmentName} | Segment ${data.segmentId} | Detail ${data.detail} | Mesh ${group}`);
@@ -142,16 +69,22 @@ export namespace MeshlistData {
         return result;
     }
     export function bbox(data: MeshlistData): MS.Box3D | null {
-        // TODO this will have to be implemented on a different data model when API changes
-        return combineBBoxes(data.meshes.map(mesh => MeshData.bbox(mesh)));
+        return MeshUtils.bbox(data.mesh);
     }
+
     export function allVerticesUsed(data: MeshlistData): boolean {
-        for (const mesh of data.meshes) {
-            if (!MeshData.allVerticesUsed(mesh)) return false;
+        const unusedVertices = new Set();
+        for (let i = 0; i < data.mesh.vertexCount; i++) {
+            unusedVertices.add(i);
         }
-        return true;
+        for (let i = 0; i < 3*data.mesh.triangleCount; i++) {
+            const v = data.mesh.vertexBuffer.ref.value[i];
+            unusedVertices.delete(v);
+        }
+        return unusedVertices.size === 0;
     }
 }
+
 
 
 // // // // // // // // // // // // // // // // // // // // // // // //
@@ -162,7 +95,7 @@ export class MeshlistStateObject extends MS.PluginStateObject.Create<MeshlistDat
 
 export const ParseMeshlistTransformer = CellStarTransform({
     name: 'meshlist-from-string',
-    from: MS.PluginStateObject.Data.String,
+    from: MS.PluginStateObject.Format.Cif,
     to: MeshlistStateObject,
     params: {
         label: PD.Text(MeshlistStateObject.type.name, { isHidden: true }), // QUESTION: Is this the right way to pass a value to apply() without exposing it in GUI?
@@ -172,9 +105,9 @@ export const ParseMeshlistTransformer = CellStarTransform({
     }
 })({
     apply({ a, params }, globalCtx) { // `a` is the parent node, params are 2nd argument to To.apply(), `globalCtx` is the plugin
-        const meshlistData = MeshlistData.fromJsonString(a.data, params.segmentId, params.segmentName, params.detail);
-        const es = meshlistData.meshes.length === 1 ? '' : 'es';
-        return new MeshlistStateObject(meshlistData, { label: params.label, description: `${meshlistData.segmentName} (${meshlistData.meshes.length} mesh${es})` });
+        const meshlistData = MeshlistData.fromCIF(a.data, params.segmentId, params.segmentName, params.detail);
+        const es = meshlistData.meshIds.length === 1 ? '' : 'es';
+        return new MeshlistStateObject(meshlistData, { label: params.label, description: `${meshlistData.segmentName} (${meshlistData.meshIds.length} mesh${es})` });
         // QUESTION: Should I return Task? Is it better?
     }
 });

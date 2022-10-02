@@ -130,12 +130,15 @@ class VolumeServerService:
             with self.db.read(req.source, req.structure_id) as context:
                 try:
                     meshes = await context.read_meshes(req.segment_id, req.detail_lvl)
-                    # meshes1 = await context.read_meshes(req.segment_id+1, req.detail_lvl)  # DEBUG, TODO REMOVE
-                    # meshes2 = await context.read_meshes(req.segment_id+2, req.detail_lvl)  # DEBUG, TODO REMOVE
-                    # for mesh in meshes1: mesh['mesh_id'] = 1  # DEBUG, TODO REMOVE
-                    # for mesh in meshes2: mesh['mesh_id'] = 2  # DEBUG, TODO REMOVE
-                    # meshes += meshes1  # DEBUG, TODO REMOVE
-                    # meshes += meshes2  # DEBUG, TODO REMOVE
+                    # try:  # DEBUG, TODO REMOVE
+                    #     meshes1 = await context.read_meshes(req.segment_id+1, req.detail_lvl)
+                    #     for mesh in meshes1: mesh['mesh_id'] = 1
+                    #     meshes += meshes1
+                    #     meshes2 = await context.read_meshes(req.segment_id+2, req.detail_lvl)
+                    #     for mesh in meshes2: mesh['mesh_id'] = 2
+                    #     meshes += meshes2
+                    # except KeyError:
+                    #     pass
                 except KeyError as e:
                     print("Exception in get_meshes: " + str(e))
                     meta = await self.db.read_metadata(req.source, req.structure_id)

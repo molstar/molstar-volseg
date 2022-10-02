@@ -33,3 +33,4 @@ export { ColorNames } from 'molstar/lib/mol-util/color/names';
 export { Material } from 'molstar/lib/mol-util/material';
 export { ParamDefinition } from 'molstar/lib/mol-util/param-definition';
 export { type TypedArray } from 'molstar/lib/mol-util/type-helpers';
+export { CIF, CifFile } from 'molstar/lib/mol-io/reader/cif';
