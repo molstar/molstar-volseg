@@ -162,7 +162,7 @@ export class AppModel {
 
         this.entryId.next(entryId);
         this.annotation.next(this.metadata.annotation);
-        this.segmentation = await LatticeSegmentation.fromCifBlock(this.plugin, latticeBlock!);
+        this.segmentation = await LatticeSegmentation.fromCifBlock(latticeBlock!);
 
         const repr = plugin.build();
 
@@ -299,9 +299,8 @@ export class AppModel {
         try {
             await this.plugin.clear();
             this.metadata = await API2.getMetadata(source, entryId);
-            console.log(this.metadata.grid);
 
-            let hasVolumes = this.metadata.grid.volumes.volume_downsamplings.length > 0;
+            const hasVolumes = this.metadata.grid.volumes.volume_downsamplings.length > 0;
             const hasLattices = this.metadata.grid.segmentation_lattices.segmentation_lattice_ids.length > 0;
             const hasMeshes = this.metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids !== undefined;
 
@@ -335,8 +334,8 @@ export class AppModel {
                 const isoLevel = await AppModel.getIsovalue(entryId);
                 const url = API2.volumeUrl(source, entryId, BOX, MAX_VOXELS);
                 const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
-                // const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit(); // DEBUG
-                // AppModel.logCifOverview(cif.data!); // DEBUG
+                const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit(); // DEBUG
+                AppModel.logCifOverview(cif.data!); // DEBUG
                 const parsed = await this.plugin.dataFormats.get('dscif')!.parse(this.plugin, data, { entryId });
                 const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
                 const volumeData = volume.cell!.obj!.data;
@@ -358,12 +357,11 @@ export class AppModel {
                 AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
                 const latticeBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
                 if (latticeBlock) {
-                    this.segmentation = await LatticeSegmentation.fromCifBlock(this.plugin, latticeBlock);
+                    this.segmentation = await LatticeSegmentation.fromCifBlock(latticeBlock);
                     await this.showSegments(this.metadata.annotation.segment_list);
                 } else {
                     console.log('WARNING: Block SEGMENTATION_DATA is missing. Not showing segmentations.');
                 }
-
             }
             if (hasMeshes) {
                 MeshExamples.runMeshStreamingExample(this.plugin, source, entryId);

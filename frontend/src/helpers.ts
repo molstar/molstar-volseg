@@ -68,10 +68,10 @@ export class LatticeSegmentation {
         this.grid = grid;
     }
 
-    public static async fromCifBlock(plugin: PluginUIContext, segmentationDataBlock: CifBlock){
+    public static async fromCifBlock(segmentationDataBlock: CifBlock){
         const densityServerCif = CIF.schema.densityServer(segmentationDataBlock);
         // console.log('dscif', densityServerCif);
-        const volume = await plugin.runTask(volumeFromDensityServerData(densityServerCif));
+        const volume = await volumeFromDensityServerData(densityServerCif).run();
         // console.log('volume', volume);
         const grid = volume.grid;
         return new LatticeSegmentation(segmentationDataBlock, grid);

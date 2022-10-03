@@ -21,7 +21,7 @@ export async function runMeshExtensionExamples(plugin: MS.PluginUIContext, db_ur
     // await runMeshExample(plugin, 'all', db_url);
     // await runMeshExample(plugin, 'fg', db_url);
     // await runMultimeshExample(plugin, 'fg', 'worst', db_url);
-    await runCifMeshExample(plugin);
+    // await runCifMeshExample(plugin);
     // await runMeshExample2(plugin, 'fg');
     await runMeshStreamingExample(plugin);
 
@@ -41,13 +41,12 @@ export async function runMeshExample(plugin: MS.PluginUIContext, segments: 'fg' 
 }
 
 /** Example for downloading multiple separate segments, each containing 1 mesh. */
-export async function runMeshExample2(plugin: MS.PluginUIContext, segments: 'few' | 'fg' | 'all') {
+export async function runMeshExample2(plugin: MS.PluginUIContext, segments: 'one' | 'few' | 'fg' | 'all') {
     const detail = 1;
-    const segmentIds = (segments === 'few') ?
-        [1, 4, 7, 10, 16]
-        : (segments === 'all') ?
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17] // segment-16 has no detail-2
-        : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 17]; // segment-13 and segment-15 are quasi background
+    const segmentIds = (segments === 'one') ? [15]
+        : (segments === 'few') ? [1, 4, 7, 10, 16]
+            : (segments === 'all') ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17] // segment-16 has no detail-2
+                : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 17]; // segment-13 and segment-15 are quasi background
 
     for (const segmentId of segmentIds) {
         await createMeshFromUrl(plugin, `http://localhost:9000/v2/empiar/empiar-10070/mesh_bcif/${segmentId}/${detail}`, segmentId, detail, false, true, undefined);
@@ -210,15 +209,15 @@ export async function runIsosurfaceExample(plugin: MS.PluginUIContext, db_url: s
 }
 
 
-async function runCifMeshExample(plugin: MS.PluginUIContext, api: string = 'http://localhost:9000/v2', 
+export async function runCifMeshExample(plugin: MS.PluginUIContext, api: string = 'http://localhost:9000/v2',
     source: MeshServerInfo.MeshSource = 'empiar', entryId: string = 'empiar-10070',
     segmentId: number = 1, detail: number = 10,
-){
-    const url = `${api}/${source}/${entryId}/mesh_bcif/${segmentId}/${detail}`
+) {
+    const url = `${api}/${source}/${entryId}/mesh_bcif/${segmentId}/${detail}`;
     getMeshFromBcif(plugin, url);
 }
 
-async function getMeshFromBcif(plugin: MS.PluginUIContext, url: string){
+async function getMeshFromBcif(plugin: MS.PluginUIContext, url: string) {
     const urlAsset = MS.Asset.getUrlAsset(plugin.managers.asset, url); // QUESTION how is urlAsset better than normal `fetch`
     const asset = await plugin.runTask(plugin.managers.asset.resolve(urlAsset, 'binary'));
     const parsed = await plugin.runTask(MS.CIF.parseBinary(asset.data));
@@ -227,6 +226,6 @@ async function getMeshFromBcif(plugin: MS.PluginUIContext, url: string){
         return;
     }
     console.log('blocks:', parsed.result.blocks);
-    const mesh = MeshUtils.makeMeshFromCif(parsed.result);
+    const mesh = await MeshUtils.meshFromCif(parsed.result);
     console.log(mesh);
 }
