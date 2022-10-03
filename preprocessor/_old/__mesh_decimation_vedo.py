@@ -1,6 +1,6 @@
 from pathlib import Path
 from vedo import Mesh, show
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import SEGMENTATION_DATA_GROUPNAME
+from db.file_system.constants import SEGMENTATION_DATA_GROUPNAME
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.downsampling.downsampling import compute_vertex_density
 
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import open_zarr_structure_from_path

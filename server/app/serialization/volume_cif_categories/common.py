@@ -1,3 +1,4 @@
+from ciftools.writer.base import CategoryDesc, FieldDesc
 from abc import abstractmethod
 from typing import Generic, TypeVar
 

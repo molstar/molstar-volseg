@@ -3,8 +3,7 @@ from typing import Union
 import numpy as np
 from ciftools.binary import BinaryCIFWriter
 from ciftools.writer.base import OutputStream
-from db.interface.i_preprocessed_db import ProcessedVolumeSliceData, MeshesData
-from db.interface.i_preprocessed_medatada import IPreprocessedMetadata
+from db.models import VolumeSliceData, VolumeMetadata, MeshesData
 
 from app.core.models import GridSliceBox
 from app.serialization.data.volume_info import VolumeInfo
@@ -41,7 +40,7 @@ def get_bytes_from_cif_writer(writer: BinaryCIFWriter) -> bytes:
 
 
 def serialize_volume_slice(
-    slice: ProcessedVolumeSliceData, metadata: IPreprocessedMetadata, box: GridSliceBox
+    slice: VolumeSliceData, metadata: VolumeMetadata, box: GridSliceBox
 ) -> Union[bytes, str]:  # TODO: add binary cif to the project
     writer = BinaryCIFWriter("volume_server")
 
@@ -87,7 +86,7 @@ def serialize_volume_slice(
     return get_bytes_from_cif_writer(writer)
 
 
-def serialize_volume_info(metadata: IPreprocessedMetadata, box: GridSliceBox) -> bytes:
+def serialize_volume_info(metadata: VolumeMetadata, box: GridSliceBox) -> bytes:
     writer = BinaryCIFWriter("volume_server")
 
     writer.start_data_block("volume_info")
@@ -97,7 +96,7 @@ def serialize_volume_info(metadata: IPreprocessedMetadata, box: GridSliceBox) ->
     return get_bytes_from_cif_writer(writer)
 
 
-def serialize_meshes(meshes: MeshesData,  metadata: IPreprocessedMetadata, box: GridSliceBox) -> bytes:
+def serialize_meshes(meshes: MeshesData,  metadata: VolumeMetadata, box: GridSliceBox) -> bytes:
     with Timing('  prepare meshes for cif'):
         meshes_for_cif = MeshesForCif(meshes)
 

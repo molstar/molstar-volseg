@@ -3,11 +3,11 @@ from pathlib import Path
 from typing import Union
 import zarr
 import numpy as np
-from db.implementations.local_disk.local_disk_preprocessed_medata import LocalDiskPreprocessedMetadata
+from db.file_system.models import FileSystemVolumeMedatada
+from db.file_system.constants import ANNOTATION_METADATA_FILENAME, GRID_METADATA_FILENAME
 from preprocessor.src.preprocessors.i_data_preprocessor import IDataPreprocessor
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._zarr_methods import get_volume_downsampling_from_zarr, get_segmentation_downsampling_from_zarr
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import GRID_METADATA_FILENAME, \
-    ANNOTATION_METADATA_FILENAME, MESH_SIMPLIFICATION_CURVE
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import MESH_SIMPLIFICATION_CURVE
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
 import mrcfile
 import dask.array as da
@@ -80,7 +80,7 @@ class SFFPreprocessor(IDataPreprocessor):
                 mesh_simplification_curve=mesh_simplification_curve,
                 volume_force_dtype=volume_force_dtype)
             
-            grid_dimensions: list = list(LocalDiskPreprocessedMetadata(grid_metadata).grid_dimensions())
+            grid_dimensions: list = list(FileSystemVolumeMedatada(grid_metadata).grid_dimensions())
             zarr_volume_arr_shape: list = list(get_volume_downsampling_from_zarr(1, zarr_structure).shape)
             
             if segm_file_path is not None and zarr_structure.primary_descriptor[0] == b'three_d_volume':

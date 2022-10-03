@@ -1,7 +1,7 @@
 import numpy as np
 import zarr
 
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import SEGMENTATION_DATA_GROUPNAME, VOLUME_DATA_GROUPNAME
+from db.file_system.constants import SEGMENTATION_DATA_GROUPNAME, VOLUME_DATA_GROUPNAME
 
 def compute_chunk_size_based_on_data(arr: np.ndarray) -> tuple[int, int, int]:
     shape: tuple = arr.shape

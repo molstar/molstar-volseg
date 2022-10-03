@@ -3,7 +3,7 @@ import shutil
 from typing import List
 
 import numpy as np
-from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
+from db.file_system.db import FileSystemVolumeServerDB
 from preprocessor.main import preprocess_everything
 
 # both volumes and segmentations
@@ -53,6 +53,6 @@ if __name__ == '__main__':
     list_of_input_volume_files = RealVolumeToFakeSFFConverter.get_list_of_input_volume_files(REAL_VOLUME_DIR)
 
     sff_converter.create_fake_sff_from_input_volumes(list_of_input_volume_files, DIR_WITH_FILES_FOR_STORING, SOURCE_DB)
-    db = LocalDiskPreprocessedDb()
+    db = FileSystemVolumeServerDB()
     db.remove_all_entries()
     preprocess_everything(db, DIR_WITH_FILES_FOR_STORING)
