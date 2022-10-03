@@ -51,7 +51,7 @@ class FileSystemVolumeServerDB(VolumeServerDB):
     def __init__(self, folder: Path, store_type: str = "zip"):
         # either create of say it doesn't exist
         if not folder.is_dir():
-            raise ValueError(f"Input folder doesn't exist {folder}")
+            folder.mkdir(parents=True, exist_ok=True)
 
         self.folder = folder
 
