@@ -4,6 +4,7 @@ import zarr
 import numpy as np
 import dask.array as da
 from db.file_system.db import FileSystemVolumeServerDB
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DEFAULT_DB_PATH
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.sff_preprocessor import open_zarr_structure_from_path
 from timeit import default_timer as timer
 import tensorstore as ts
@@ -188,7 +189,7 @@ def stored_np_arr_slicing(path: Path):
 
 
 def _get_sample_zarr_structure():
-    path = Path('db') / 'emdb' / 'emd-1832'
+    path = DEFAULT_DB_PATH / 'emdb' / 'emd-1832'
     store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
     # Re-create zarr hierarchy from opened store
     root: zarr.hierarchy.group = zarr.group(store=store)
@@ -196,7 +197,7 @@ def _get_sample_zarr_structure():
 
 
 if __name__ == '__main__':
-    db = FileSystemVolumeServerDB(Path('db'))
+    db = FileSystemVolumeServerDB(DEFAULT_DB_PATH)
     # for mode in MODES_LIST:    
     #     slice_dict = async_to_sync(db.read_slice)('emdb', 'emd-1832', 0, 2, ((10,10,10), (25,25,25)), mode=mode)
         

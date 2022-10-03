@@ -16,7 +16,7 @@ from preprocessor.src.preprocessors.implementations.sff.preprocessor._volume_map
 # TODO: put that on sabre
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
 
-DATA_PATH = Path("preprocessor/data/raw_input_files")
+DATA_PATH = Path("test-data/preprocessor/raw_input_files")
 EMDB_DATA_PATH = DATA_PATH.joinpath("emdb")
 # DUMMY_ARR_SHAPE = (500, 500, 500)
 # DUMMY_ARR_SHAPE = (20,20,20)
