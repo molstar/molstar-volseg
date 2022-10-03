@@ -6,6 +6,7 @@ from pathlib import Path
 
 from db.file_system.db import FileSystemVolumeServerDB
 from db.protocol import VolumeServerDB
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DEFAULT_DB_PATH
 
 KEYS = ['emd-1832']
 BOX_CHOICES = ['random_static_region_small', 'random_static_region_big']
@@ -13,7 +14,7 @@ BOX_CHOICES = ['random_static_region_small', 'random_static_region_big']
 # DB_PATHES_FULL.remove('db_11\\')
 # DB_PATHES_FULL.remove('db_12\\')
 # DB_PATHS = DB_PATHES_FULL
-DB_PATHS = ['db']
+DB_PATHS = [DEFAULT_DB_PATH]
 
 def generate_random_3d_point_coords(min: tuple[int, int, int], max: tuple[int, int, int]) -> tuple[int, int, int]:
     '''Both min and max are inclusive'''

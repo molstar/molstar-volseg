@@ -8,6 +8,7 @@ from pathlib import Path
 
 from db.file_system.db import FileSystemVolumeServerDB
 from db.protocol import VolumeServerDB
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DEFAULT_DB_PATH
 from preprocessor.src.tools.write_dict_to_file.write_dict_to_json import write_dict_to_json
 
 
@@ -49,7 +50,7 @@ class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
             # 'tensorstore'
         ]
 
-        db = FileSystemVolumeServerDB(Path('db'))
+        db = FileSystemVolumeServerDB(DEFAULT_DB_PATH)
 
         d = {}
         for namespace, entry_id in test_suite_entries:
