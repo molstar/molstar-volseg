@@ -1,10 +1,10 @@
 import json
 from collections import defaultdict
 from math import ceil, floor
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 
-from db.protocol import VolumeServerDB
 from db.models import VolumeMetadata
+from db.protocol import VolumeServerDB
 
 from app.api.requests import (
     EntriesRequest,
@@ -15,9 +15,8 @@ from app.api.requests import (
     VolumeRequestInfo,
 )
 from app.core.models import GridSliceBox
-from app.serialization.cif import serialize_volume_slice, serialize_volume_info, serialize_meshes
 from app.core.timing import Timing
-
+from app.serialization.cif import serialize_meshes, serialize_volume_info, serialize_volume_slice
 
 __MAX_DOWN_SAMPLING_VALUE__ = 1000000
 
@@ -122,11 +121,11 @@ class VolumeServerService:
         return serialize_volume_info(metadata, box)
 
     async def get_meshes_bcif(self, req: MeshRequest) -> bytes:
-        with Timing('read metadata'):
+        with Timing("read metadata"):
             metadata = await self.db.read_metadata(req.source, req.structure_id)
-        with Timing('decide box'):
+        with Timing("decide box"):
             box = self._decide_slice_box(None, None, metadata)
-        with Timing('read meshes'):
+        with Timing("read meshes"):
             with self.db.read(req.source, req.structure_id) as context:
                 try:
                     meshes = await context.read_meshes(req.segment_id, req.detail_lvl)
@@ -145,7 +144,7 @@ class VolumeServerService:
                     segments_levels = self._extract_segments_detail_levels(meta)
                     error_msg = f"Invalid segment_id={req.segment_id} or detail_lvl={req.detail_lvl} (available segment_ids and detail_lvls: {segments_levels})"
                     raise KeyError(error_msg)
-        with Timing('serialize meshes'):
+        with Timing("serialize meshes"):
             bcif = serialize_meshes(meshes, metadata, box)
 
         return bcif
@@ -180,7 +179,7 @@ class VolumeServerService:
     def _decide_slice_box(
         self, max_points: Optional[int], req_box: Optional[VolumeRequestBox], metadata: VolumeMetadata
     ) -> Optional[GridSliceBox]:
-        '''`max_points=None` means unlimited number of points'''
+        """`max_points=None` means unlimited number of points"""
         box = None
 
         for downsampling_rate in sorted(metadata.volume_downsamplings()):
