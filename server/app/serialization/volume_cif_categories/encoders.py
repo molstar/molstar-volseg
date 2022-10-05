@@ -39,13 +39,11 @@ def coord_encoder(coords: np.ndarray) -> BinaryCIFEncoder:
     num_steps, array_type = 2**16 - 1, DataTypeEnum.Uint16  # ~0.01 voxel error - should be OK
     # num_steps, array_type = 2**8-1, DataTypeEnum.Uint8  # Too low quality
 
-    return BinaryCIFEncoder(
-        [
+    return encoder.ComposeEncoders(    
             encoder.IntervalQuantization(coords.min(), coords.max(), num_steps, array_type=array_type),
             encoder.DELTA,
             # encoder.INTEGER_PACKING,  # TODO: test this one out
             encoder.BYTE_ARRAY,
-        ]
     )
 
 
