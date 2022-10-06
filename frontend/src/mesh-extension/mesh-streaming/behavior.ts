@@ -14,6 +14,7 @@ const DEFAULT_SEGMENT_COLOR = MS.ColorNames.lightgray;
 export const NO_SEGMENT = -1;
 /** Maximum (worst) detail level available in GUI (TODO set actual maximum possible value) */
 const MAX_DETAIL = 10;
+const DEFAULT_DETAIL = 7;  // TODO decide a reasonable default
 /** Segments whose bounding box volume is above this value (relative to the overall bounding box) are considered as background segments */
 const BACKGROUND_SEGMENT_VOLUME_THRESHOLD = 0.5;
 // const DEBUG_IGNORED_SEGMENTS = new Set([13, 15]); // TODO remove
@@ -35,12 +36,12 @@ export namespace MeshStreaming {
                 view: PD.MappedStatic('select', {
                     'off': PD.Group({}),
                     'select': PD.Group({
-                        baseDetail: PD.Numeric(MAX_DETAIL, { min: 1, max: MAX_DETAIL, step: 1 }, { description: 'Detail level for the non-selected segments (lower number = better)' }),
+                        baseDetail: PD.Numeric(DEFAULT_DETAIL, { min: 1, max: MAX_DETAIL, step: 1 }, { description: 'Detail level for the non-selected segments (lower number = better)' }),
                         focusDetail: PD.Numeric(1, { min: 1, max: MAX_DETAIL, step: 1 }, { description: 'Detail level for the selected segment (lower number = better)' }),
                         selectedSegment: PD.Numeric(NO_SEGMENT, {}, { isHidden: true }),
                     }, { isFlat: true }),
                     'all': PD.Group({
-                        detail: PD.Numeric(MAX_DETAIL, { min: 1, max: MAX_DETAIL, step: 1 }, { description: 'Detail level for all segments (lower number = better)' })
+                        detail: PD.Numeric(DEFAULT_DETAIL, { min: 1, max: MAX_DETAIL, step: 1 }, { description: 'Detail level for all segments (lower number = better)' })
                     }, { isFlat: true }),
                 }, { description: '"Off" hides all segments. \n"Select" shows all segments in lower detail, clicked segment in better detail. "All" shows all segment in the same level.' }),
             };

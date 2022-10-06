@@ -8,10 +8,11 @@ from db.file_system.models import FileSystemVolumeMedatada
 from db.file_system.constants import ANNOTATION_METADATA_FILENAME, GRID_METADATA_FILENAME
 from preprocessor.src.preprocessors.i_data_preprocessor import IDataPreprocessor
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._zarr_methods import get_volume_downsampling_from_zarr, get_segmentation_downsampling_from_zarr
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import MESH_SIMPLIFICATION_CURVE, TEMP_ZARR_HIERARCHY_STORAGE_PATH
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import MESH_SIMPLIFICATION_CURVE_LINEAR, MESH_SIMPLIFICATION_N_LEVELS, MESH_SIMPLIFICATION_LEVELS_PER_ORDER, TEMP_ZARR_HIERARCHY_STORAGE_PATH
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
 import mrcfile
 import dask.array as da
+import math
 
 def open_zarr_structure_from_path(path: Path) -> zarr.hierarchy.Group:
     store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
@@ -71,7 +72,8 @@ class SFFPreprocessor(IDataPreprocessor):
             # this should normalize
             dask_arr = SFFPreprocessor.normalize_axis_order_mrcfile(dask_arr=dask_arr, mrc_header=header)
 
-            mesh_simplification_curve = MESH_SIMPLIFICATION_CURVE
+            # mesh_simplification_curve = MESH_SIMPLIFICATION_CURVE_LINEAR
+            mesh_simplification_curve = make_simplification_curve(MESH_SIMPLIFICATION_N_LEVELS, MESH_SIMPLIFICATION_LEVELS_PER_ORDER)
             if segm_file_path is not None:
                 SFFPreprocessor.process_segmentation_data(self.magic_kernel, zarr_structure, mesh_simplification_curve, params_for_storing=params_for_storing)
 
@@ -117,3 +119,15 @@ class SFFPreprocessor(IDataPreprocessor):
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)
             raise e
+
+
+def make_simplification_curve(n_levels: int, levels_per_order: int) -> dict[int, float]:
+    result = {}
+    for i in range(n_levels):
+        ratio = 10 ** (-i / levels_per_order)
+        result[i + 1] = _round_to_significant_digits(ratio, 2)
+    return result
+
+def _round_to_significant_digits(number: float, digits: int) -> float:
+    first_digit = -math.floor(math.log10(number))
+    return round(number, first_digit + digits - 1)
