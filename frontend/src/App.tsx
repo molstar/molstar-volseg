@@ -26,27 +26,27 @@ function Main() {
     if (!_model.current) _model.current = new AppModel();
     const model = _model.current;
 
-    const src = useBehavior(model.dataSource);
+    const example = useBehavior(model.exampleType);
 
 
     return <>
         <div style={{ display: 'flex', flexDirection: 'column', width: RightWidth, position: 'absolute', right: 0, top: 0, bottom: 0, padding: '8px 8px 8px 0', overflow: 'hidden', overflowY: 'auto' }}>
             <div style={{ marginBottom: 8 }}>
                 <ButtonGroup fullWidth>
-                    <Button variant={src === 'xEmdb' ? 'contained' : 'outlined'} onClick={() => model.loadExampleEmdb()}>EMDB SFF</Button>
-                    <Button variant={src === 'xBioimage' ? 'contained' : 'outlined'} onClick={() => model.loadExampleBioimage()}>BioImage Archive</Button>
-                    <Button variant={src === 'xMeshes' ? 'contained' : 'outlined'} onClick={() => model.loadExampleMeshes()}>Meshes</Button>
-                    {/* <Button variant={src === 'xMeshStreaming' ? 'contained' : 'outlined'} onClick={() => model.loadExampleMeshStreaming()}>Mesh Streaming</Button> */}
-                    <Button variant={src === 'xAuto' ? 'contained' : 'outlined'} onClick={() => model.loadExampleAuto()}>Auto</Button>
+                    <Button variant={example === 'xEmdb' ? 'contained' : 'outlined'} onClick={() => model.loadExampleEmdb()}>EMDB SFF</Button>
+                    <Button variant={example === 'xBioimage' ? 'contained' : 'outlined'} onClick={() => model.loadExampleBioimage()}>BioImage Archive</Button>
+                    <Button variant={example === 'xMeshes' ? 'contained' : 'outlined'} onClick={() => model.loadExampleMeshes()}>Meshes</Button>
+                    {/* <Button variant={example === 'xMeshStreaming' ? 'contained' : 'outlined'} onClick={() => model.loadExampleMeshStreaming()}>Mesh Streaming</Button> */}
+                    <Button variant={example === 'xAuto' ? 'contained' : 'outlined'} onClick={() => model.loadExampleAuto()}>Auto</Button>
                 </ButtonGroup>
             </div>
-            {src === 'xEmdb' && <UIExampleEmdb model={model} />}
-            {src === 'xBioimage' && <UIExampleBioimage model={model} />}
-            {src === 'xMeshes' && <UIExampleMeshes model={model} />}
-            {src === 'xMeshStreaming' && <UIExampleMeshStreaming model={model} />}
-            {src === 'xAuto' && <UIExampleAuto model={model} />}
+            {example === 'xEmdb' && <UIExampleEmdb model={model} />}
+            {example === 'xBioimage' && <UIExampleBioimage model={model} />}
+            {example === 'xMeshes' && <UIExampleMeshes model={model} />}
+            {example === 'xMeshStreaming' && <UIExampleMeshStreaming model={model} />}
+            {example === 'xAuto' && <UIExampleAuto model={model} />}
         </div>
-        {src === 'xBioimage' && <img src='/emd-99999.png' alt='' style={{ width: '33%', position: 'absolute', right: 8, bottom: 8, border: '1px solid #777' }} />}
+        {example === 'xBioimage' && <img src='/emd-99999.png' alt='' style={{ width: '33%', position: 'absolute', right: 8, bottom: 8, border: '1px solid #777' }} />}
         <MolStar model={model} />
     </>;
 }

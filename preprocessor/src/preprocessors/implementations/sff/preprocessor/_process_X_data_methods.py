@@ -43,7 +43,7 @@ def process_volume_data(zarr_structure: zarr.hierarchy.group, dask_arr: da.Array
     )
 
 
-def process_segmentation_data(magic_kernel: MagicKernel3dDownsampler, zarr_structure: zarr.hierarchy.group, mesh_simplification_curve: list[tuple[int, float]], params_for_storing: dict) -> None:
+def process_segmentation_data(magic_kernel: MagicKernel3dDownsampler, zarr_structure: zarr.hierarchy.group, mesh_simplification_curve: dict[int, float], params_for_storing: dict) -> None:
     '''
     Extracts segmentation data from lattice, downsamples it, stores to zarr structure
     '''
@@ -106,7 +106,7 @@ def _write_mesh_component_data_to_zarr_arr(target_group: zarr.hierarchy.group, m
 
 
 
-def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, zarr_structure: zarr.hierarchy.group, simplification_curve: list[tuple[int, float]], params_for_storing: dict):
+def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, zarr_structure: zarr.hierarchy.group, simplification_curve: dict[int, float], params_for_storing: dict):
 
     for segment_name, segment in zarr_structure.segment_list.groups():
         segment_id = str(int(segment.id[...]))
@@ -115,8 +115,6 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, zarr_stru
         for mesh_name, mesh in segment.mesh_list.groups():
             mesh_id = str(int(mesh.id[...]))
             single_mesh_group = single_detail_lvl_group.create_group(mesh_id)
-            
-            
 
             for mesh_component_name, mesh_component in mesh.groups():
                 if mesh_component_name != 'id':
@@ -136,14 +134,18 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, zarr_stru
     
 
     calc_mode = 'area'
+    density_threshold = MESH_VERTEX_DENSITY_THRESHOLD[calc_mode]
+    
     for segment_name_id, segment in segm_data_gr.groups():
         original_detail_lvl_mesh_list_group = segment['1']
         group_ref = original_detail_lvl_mesh_list_group
-        i = 0
-        while i < len(simplification_curve) and compute_vertex_density(group_ref, mode=calc_mode) > MESH_VERTEX_DENSITY_THRESHOLD[calc_mode]:
-            new_ratio = simplification_curve[i][1]
-            new_detail_lvl = simplification_curve[i][0]
-            mesh_data_dict = simplify_meshes(original_detail_lvl_mesh_list_group, ratio=new_ratio, segment_id=segment_name_id)
+
+        for level, fraction in simplification_curve.items():
+            if density_threshold != 0 and compute_vertex_density(group_ref, mode=calc_mode) <= density_threshold:
+                break
+            if fraction == 1:
+                continue  # original data, don't need to compute anything
+            mesh_data_dict = simplify_meshes(original_detail_lvl_mesh_list_group, ratio=fraction, segment_id=segment_name_id)
             # TODO: potentially simplify meshes may output mesh with 0 vertices, normals, triangles
             # it should not be stored?
             # check each mesh in mesh_data_dict if it contains 0 vertices
@@ -156,5 +158,4 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, zarr_stru
             if not bool(mesh_data_dict):
                 break
             
-            group_ref = _store_mesh_data_in_zarr(mesh_data_dict, segment, ratio=new_detail_lvl, params_for_storing=params_for_storing)
-            i = i + 1
+            group_ref = _store_mesh_data_in_zarr(mesh_data_dict, segment, detail_level=level, params_for_storing=params_for_storing)

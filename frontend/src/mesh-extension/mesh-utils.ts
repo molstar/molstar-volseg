@@ -1,12 +1,28 @@
 /** Helper functions for manipulation with mesh data. */
 
+import { CIF_schema_mesh } from './mesh-cif-schema';
 import * as MS from './molstar-lib-imports';
 
 
-type MeshModificationParams = { shift?: [number, number, number], group?: number, invertSides?: boolean };
+type MeshModificationParams = {
+    scale?: [number, number, number],
+    shift?: [number, number, number],
+    matrix?: MS.Mat4,
+    group?: number,
+    invertSides?: boolean
+};
 
 /** Modify mesh in-place */
 export function modify(m: MS.Mesh, params: MeshModificationParams) {
+    if (params.scale !== undefined) {
+        const [qx, qy, qz] = params.scale;
+        const vertices = m.vertexBuffer.ref.value;
+        for (let i = 0; i < vertices.length; i += 3) {
+            vertices[i] *= qx;
+            vertices[i + 1] *= qy;
+            vertices[i + 2] *= qz;
+        }
+    }
     if (params.shift !== undefined) {
         const [dx, dy, dz] = params.shift;
         const vertices = m.vertexBuffer.ref.value;
@@ -14,6 +30,14 @@ export function modify(m: MS.Mesh, params: MeshModificationParams) {
             vertices[i] += dx;
             vertices[i + 1] += dy;
             vertices[i + 2] += dz;
+        }
+    }
+    if (params.matrix !== undefined) {
+        const r = m.vertexBuffer.ref.value;
+        const matrix = params.matrix;
+        const size = 3 * m.vertexCount;
+        for (let i = 0; i < size; i += 3) {
+            MS.Vec3.transformMat4Offset(r, r, matrix, i, i, 0);
         }
     }
     if (params.group !== undefined) {
@@ -66,64 +90,89 @@ export function concat(...meshes: MS.Mesh[]): MS.Mesh {
     return MS.Mesh.create(vertices, indices, normals, groups, nVertices, nTriangles);
 }
 
-/** Return Mesh from CIF data and mesh IDs (group IDs). */
-export function makeMeshFromCif(data: MS.CifFile, invertSides: boolean = true): [MS.Mesh, readonly number[]] {
+/** Return Mesh from CIF data and mesh IDs (group IDs).
+ * Assume the CIF contains coords in grid space,
+ * transform the output mesh to `space` */
+export async function meshFromCif(data: MS.CifFile, invertSides: boolean = true, outSpace: 'grid' | 'fractional' | 'cartesian' = 'cartesian'): Promise<{ mesh: MS.Mesh, meshIds: number[] }> {
     const volumeInfoBlock = data.blocks.find(b => b.header === 'VOLUME_INFO');
     const meshesBlock = data.blocks.find(b => b.header === 'MESHES');
-    if (!volumeInfoBlock || !meshesBlock){
-        throw new Error();
-    }
-    const meshCat = meshesBlock.categories['mesh'];
-    const vertexCat = meshesBlock.categories['mesh_vertex'];
-    const triangleCat = meshesBlock.categories['mesh_triangle'];
-    if (!meshCat || !vertexCat || !triangleCat){
-        throw new Error();
-    }
-    console.log('mesh cat', meshCat);
-    console.log('vertex cat', vertexCat);
-    console.log('triangle cat', triangleCat);
-    const nVertices = vertexCat.rowCount;
-    const nTriangles = Math.floor(triangleCat.rowCount / 3);
-    const meshIds = meshCat.getField('id')!.toIntArray();
-    const x = vertexCat.getField('x')!.toFloatArray();
-    const y = vertexCat.getField('y')!.toFloatArray();
-    const z = vertexCat.getField('z')!.toFloatArray();
-    const vertices = flattenCoords(x, y, z);
+    if (!volumeInfoBlock || !meshesBlock) throw new Error('Missing VOLUME_INFO or MESHES block in mesh CIF file');
+    const volumeInfoCif = MS.CIF.schema.densityServer(volumeInfoBlock);
+    const meshCif = CIF_schema_mesh(meshesBlock);
 
-    const groups_ = vertexCat.getField('mesh_id')!.toFloatArray()
-    const starts = startMap(groups_);
-    const triangleMeshIds = triangleCat.getField('mesh_id')!.toIntArray();
-    const triangleVertexIds = triangleCat.getField('vertex_id')!.toIntArray();
-    const indices_ = [];
-    for (let i = 0; i < 3*nTriangles; i++){
-        const offset = starts.get(triangleMeshIds[i])!;
-        indices_.push(offset + triangleVertexIds[i]);
+    const nVertices = meshCif.mesh_vertex._rowCount;
+    const nTriangles = Math.floor(meshCif.mesh_triangle._rowCount / 3);
+
+    const mesh_id = meshCif.mesh.id.toArray();
+    const vertex_meshId = meshCif.mesh_vertex.mesh_id.toArray();
+    const x = meshCif.mesh_vertex.x.toArray();
+    const y = meshCif.mesh_vertex.y.toArray();
+    const z = meshCif.mesh_vertex.z.toArray();
+    const triangle_meshId = meshCif.mesh_triangle.mesh_id.toArray();
+    const triangle_vertexId = meshCif.mesh_triangle.vertex_id.toArray();
+
+    // Shift indices from within-mesh indices to overall indices
+    const indices = new Uint32Array(3 * nTriangles);
+    const offsets = offsetMap(vertex_meshId);
+    for (let i = 0; i < 3 * nTriangles; i++) {
+        const offset = offsets.get(triangle_meshId[i])!;
+        indices[i] = offset + triangle_vertexId[i];
     }
-    const indices = new Uint32Array(indices_);
-    const groups = new Float32Array(groups_);
+    const vertices = flattenCoords(x, y, z);
     const normals = new Float32Array(3 * nVertices);
+    const groups = new Float32Array(vertex_meshId);
     const mesh = MS.Mesh.create(vertices, indices, normals, groups, nVertices, nTriangles);
-    MS.Mesh.computeNormals(mesh); // normals only necessary if flatShaded==false
-    if (invertSides){
-        modify(mesh, { invertSides: true }); // Vertex orientation convention is opposite in API and in MolStar
+
+    if (invertSides) {
+        modify(mesh, { invertSides: true }); // Vertex orientation convention is opposite in CellStar API and in MolStar
     }
-    // TODO allow transform
-    return [mesh, meshIds];
+
+    if (outSpace === 'cartesian') {
+        const volume = await MS.volumeFromDensityServerData(volumeInfoCif).run();
+        const gridToCartesian = MS.Grid.getGridToCartesianTransform(volume.grid);
+        modify(mesh, { matrix: gridToCartesian });
+    } else if (outSpace === 'fractional') {
+        const gridSize = volumeInfoCif.volume_data_3d_info.sample_count.value(0);
+        const originFract = volumeInfoCif.volume_data_3d_info.origin.value(0);
+        const dimensionFract = volumeInfoCif.volume_data_3d_info.dimensions.value(0);
+        if (dimensionFract[0] !== 1 || dimensionFract[1] !== 1 || dimensionFract[2] !== 1) throw new Error(`Asserted the fractional dimensions are [1,1,1], but are actually [${dimensionFract}]`);
+        const scale: [number, number, number] = [1 / gridSize[0], 1 / gridSize[1], 1 / gridSize[2]];
+        modify(mesh, { scale: scale, shift: Array.from(originFract) as any });
+    }
+
+    MS.Mesh.computeNormals(mesh); // normals only necessary if flatShaded==false
+
+    // const boxMesh = makeMeshFromBox([[0,0,0], [1,1,1]], 1);
+    // const gridSize = volumeInfoCif.volume_data_3d_info.sample_count.value(0); const boxMesh = makeMeshFromBox([[0,0,0], Array.from(gridSize)] as any, 1);
+    // const cellSize = volumeInfoCif.volume_data_3d_info.spacegroup_cell_size.value(0); const boxMesh = makeMeshFromBox([[0, 0, 0], Array.from(cellSize)] as any, 1);
+    // mesh = concat(mesh, boxMesh);  // debug
+    return { mesh: mesh, meshIds: Array.from(mesh_id) };
 }
 
-function flattenCoords(x: readonly number[], y: readonly number[], z: readonly number[]): Float32Array {
+function flattenCoords(x: ArrayLike<number>, y: ArrayLike<number>, z: ArrayLike<number>): Float32Array {
     const n = x.length;
     const out = new Float32Array(3 * n);
-    for (let i = 0; i < x.length; i++) {
-        out[3*i] = x[i];
-        out[3*i+1] = y[i];
-        out[3*i+2] = z[i];
+    for (let i = 0; i < n; i++) {
+        out[3 * i] = x[i];
+        out[3 * i + 1] = y[i];
+        out[3 * i + 2] = z[i];
     }
     return out;
 }
 
+/** Get mapping of unique values to the position of their first occurrence */
+function offsetMap(values: ArrayLike<number>) {
+    const result = new Map<number, number>();
+    for (let i = 0; i < values.length; i++) {
+        if (!result.has(values[i])) {
+            result.set(values[i], i);
+        }
+    }
+    return result;
+}
+
 /** Return bounding box */
-export function bbox(mesh: MS.Mesh): MS.Box3D | null {  // Is there no function for this?
+export function bbox(mesh: MS.Mesh): MS.Box3D | null { // Is there no function for this?
     const nVertices = mesh.vertexCount;
     const coords = mesh.vertexBuffer.ref.value;
     if (nVertices === 0) {
@@ -131,8 +180,8 @@ export function bbox(mesh: MS.Mesh): MS.Box3D | null {  // Is there no function 
     }
     let minX = coords[0], minY = coords[1], minZ = coords[2];
     let maxX = minX, maxY = minY, maxZ = minZ;
-    for (let i = 0; i < 3*nVertices; i += 3){
-        const x = coords[i], y = coords[i+1], z = coords[i+2];
+    for (let i = 0; i < 3 * nVertices; i += 3) {
+        const x = coords[i], y = coords[i + 1], z = coords[i + 2];
         if (x < minX) minX = x;
         if (y < minY) minY = y;
         if (z < minZ) minZ = z;
@@ -143,19 +192,8 @@ export function bbox(mesh: MS.Mesh): MS.Box3D | null {  // Is there no function 
     return MS.Box3D.create(MS.Vec3.create(minX, minY, minZ), MS.Vec3.create(maxX, maxY, maxZ));
 }
 
-/** Get mappings of unique values to the position of their first occurrence */
-export function startMap(values: readonly number[]){
-    const result = new Map<number, number>();
-    for (let i = 0; i < values.length; i++){
-        if (!result.has(values[i])){
-            result.set(values[i], i);
-        }
-    }
-    return result;
-}
-
 /** Example mesh - 1 triangle */
-export function makeFakeMesh1(): MS.Mesh {
+export function fakeFakeMesh1(): MS.Mesh {
     const nVertices = 3;
     const nTriangles = 1;
     const vertices = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
@@ -166,7 +204,7 @@ export function makeFakeMesh1(): MS.Mesh {
 }
 
 /** Example mesh - irregular tetrahedron */
-export function makeFakeMesh4(): MS.Mesh {
+export function fakeMesh4(): MS.Mesh {
     const nVertices = 4;
     const nTriangles = 4;
     const vertices = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1]);
@@ -174,6 +212,34 @@ export function makeFakeMesh4(): MS.Mesh {
     const normals = new Float32Array([-1, -1, -1, 1, 0, 0, 0, 1, 0, 0, 0, 1]);
     const groups = new Float32Array([0, 1, 2, 3]);
     return MS.Mesh.create(vertices, indices, normals, groups, nVertices, nTriangles);
+}
+
+/** Return a box-shaped mesh */
+export function meshFromBox(box: [[number, number, number], [number, number, number]], group: number = 0) {
+    const [[x0, y0, z0], [x1, y1, z1]] = box;
+    const vertices = new Float32Array([
+        x0, y0, z0,
+        x1, y0, z0,
+        x0, y1, z0,
+        x1, y1, z0,
+        x0, y0, z1,
+        x1, y0, z1,
+        x0, y1, z1,
+        x1, y1, z1,
+    ]);
+    const indices = new Uint32Array([
+        2, 1, 0, 1, 2, 3,
+        1, 4, 0, 4, 1, 5,
+        3, 5, 1, 5, 3, 7,
+        2, 7, 3, 7, 2, 6,
+        0, 6, 2, 6, 0, 4,
+        4, 7, 6, 7, 4, 5,
+    ]);
+    const groups = new Float32Array([group, group, group, group, group, group, group, group]);
+    const normals = new Float32Array(8);
+    const mesh = MS.Mesh.create(vertices, indices, normals, groups, 8, 12);
+    MS.Mesh.computeNormals(mesh); // normals only necessary if flatShaded==false
+    return mesh;
 }
 
 function sum(array: number[]): number {

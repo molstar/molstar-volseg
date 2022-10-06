@@ -4,9 +4,9 @@ import * as MS from './molstar-lib-imports';
 // TODO unify with Metadata in CellStar
 
 export interface Metadata {
-    grid: { 
-        general: { 
-            details: string ,
+    grid: {
+        general: {
+            details: string,
         },
         volumes: Volumes,
         segmentation_lattices: SegmentationLattices,
@@ -67,8 +67,8 @@ export interface SegmentationMeshes {
             }
         }
     }
-    detail_lvl_to_fraction: { 
-        [lvl: number]: number 
+    detail_lvl_to_fraction: {
+        [lvl: number]: number
     }
 }
 

@@ -42,7 +42,7 @@ def extract_annotations(segm_file_path: Path) -> dict:
     return segm_dict
 
 
-def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, mesh_simplification_curve: list[tuple[int, float]], volume_force_dtype: np.dtype) -> dict:
+def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, mesh_simplification_curve: dict[int, float], volume_force_dtype: np.dtype) -> dict:
     root = zarr_structure
     details = ''
     if 'details' in root:
@@ -114,9 +114,7 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, m
                             d_ref = mesh_comp_num['segment_ids'][segment_id]['detail_lvls'][detail_lvl]['mesh_ids'][mesh_id]
                             d_ref[f'num_{mesh_component_name}'] = mesh_component.attrs[f'num_{mesh_component_name}']
 
-            # adds original detail lvl
-            detail_lvl_to_fraction_dict = {1: 1.0}
-            detail_lvl_to_fraction_dict.update(dict(mesh_simplification_curve))
+            detail_lvl_to_fraction_dict = mesh_simplification_curve
                             
 
 

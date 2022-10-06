@@ -3,13 +3,18 @@
 // In CellStar: molstar/lib/mol-*
 // In MolStar: ../../../mol-*
 
+export { Column, Database } from 'molstar/lib/mol-data/db';
 export { BaseGeometry, VisualQualityOptions, type VisualQuality } from 'molstar/lib/mol-geo/geometry/base';
 export { Mesh } from 'molstar/lib/mol-geo/geometry/mesh/mesh';
+export { CIF, CifFile } from 'molstar/lib/mol-io/reader/cif';
+export { type CifFrame } from 'molstar/lib/mol-io/reader/cif/data-model';
+export { toDatabase } from 'molstar/lib/mol-io/reader/cif/schema';
 export { Box3D } from 'molstar/lib/mol-math/geometry';
-export { Vec3, Mat4 } from 'molstar/lib/mol-math/linear-algebra';
+export { Mat4, Vec3 } from 'molstar/lib/mol-math/linear-algebra';
+export { volumeFromDensityServerData } from 'molstar/lib/mol-model-formats/volume/density-server';
 export { type ShapeProvider } from 'molstar/lib/mol-model/shape/provider';
 export { Shape } from 'molstar/lib/mol-model/shape/shape';
-export { Volume } from 'molstar/lib/mol-model/volume';
+export { Grid, Volume } from 'molstar/lib/mol-model/volume';
 export { createStructureRepresentationParams } from 'molstar/lib/mol-plugin-state/helpers/structure-representation-params';
 export { createVolumeRepresentationParams } from 'molstar/lib/mol-plugin-state/helpers/volume-representation-params';
 export { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
@@ -33,4 +38,3 @@ export { ColorNames } from 'molstar/lib/mol-util/color/names';
 export { Material } from 'molstar/lib/mol-util/material';
 export { ParamDefinition } from 'molstar/lib/mol-util/param-definition';
 export { type TypedArray } from 'molstar/lib/mol-util/type-helpers';
-export { CIF, CifFile } from 'molstar/lib/mol-io/reader/cif';

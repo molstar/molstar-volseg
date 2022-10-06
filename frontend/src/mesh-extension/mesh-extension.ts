@@ -17,7 +17,7 @@ export interface MeshlistData {
     segmentId: number,
     segmentName: string,
     detail: number,
-    meshIds: readonly number[],
+    meshIds: number[],
     mesh: MS.Mesh,
     /** Reference to the object which created this meshlist (e.g. `MeshStreaming.Behavior`) */
     ownerId?: string,
@@ -33,15 +33,15 @@ export namespace MeshlistData {
             mesh: MS.Mesh.createEmpty(),
         };
     };
-    export function fromCIF(data: MS.CifFile, segmentId: number, segmentName: string, detail: number): MeshlistData {
-        const [mesh, meshIds] = MeshUtils.makeMeshFromCif(data);
+    export async function fromCIF(data: MS.CifFile, segmentId: number, segmentName: string, detail: number): Promise<MeshlistData> {
+        const { mesh, meshIds } = await MeshUtils.meshFromCif(data);
         return {
             segmentId,
             segmentName,
             detail,
             meshIds,
             mesh,
-        }
+        };
     }
     export function stats(meshListData: MeshlistData): string {
         return `Meshlist "${meshListData.segmentName}" (detail ${meshListData.detail}): ${meshListData.meshIds.length} meshes, ${meshListData.mesh.vertexCount} vertices, ${meshListData.mesh.triangleCount} triangles`;
@@ -77,7 +77,7 @@ export namespace MeshlistData {
         for (let i = 0; i < data.mesh.vertexCount; i++) {
             unusedVertices.add(i);
         }
-        for (let i = 0; i < 3*data.mesh.triangleCount; i++) {
+        for (let i = 0; i < 3 * data.mesh.triangleCount; i++) {
             const v = data.mesh.vertexBuffer.ref.value[i];
             unusedVertices.delete(v);
         }
@@ -105,10 +105,11 @@ export const ParseMeshlistTransformer = CellStarTransform({
     }
 })({
     apply({ a, params }, globalCtx) { // `a` is the parent node, params are 2nd argument to To.apply(), `globalCtx` is the plugin
-        const meshlistData = MeshlistData.fromCIF(a.data, params.segmentId, params.segmentName, params.detail);
-        const es = meshlistData.meshIds.length === 1 ? '' : 'es';
-        return new MeshlistStateObject(meshlistData, { label: params.label, description: `${meshlistData.segmentName} (${meshlistData.meshIds.length} mesh${es})` });
-        // QUESTION: Should I return Task? Is it better?
+        return MS.Task.create('Create Parsed Meshlist', async ctx => {
+            const meshlistData = await MeshlistData.fromCIF(a.data, params.segmentId, params.segmentName, params.detail);
+            const es = meshlistData.meshIds.length === 1 ? '' : 'es';
+            return new MeshlistStateObject(meshlistData, { label: params.label, description: `${meshlistData.segmentName} (${meshlistData.meshIds.length} mesh${es})` });
+        });
     }
 });
 
