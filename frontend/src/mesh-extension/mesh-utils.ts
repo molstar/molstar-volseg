@@ -123,8 +123,6 @@ export async function meshFromCif(data: MS.CifFile, invertSides: boolean = true,
     const groups = new Float32Array(vertex_meshId);
     const mesh = MS.Mesh.create(vertices, indices, normals, groups, nVertices, nTriangles);
 
-    MS.Mesh.computeNormals(mesh); // normals only necessary if flatShaded==false
-
     if (invertSides) {
         modify(mesh, { invertSides: true }); // Vertex orientation convention is opposite in CellStar API and in MolStar
     }
@@ -141,6 +139,8 @@ export async function meshFromCif(data: MS.CifFile, invertSides: boolean = true,
         const scale: [number, number, number] = [1 / gridSize[0], 1 / gridSize[1], 1 / gridSize[2]];
         modify(mesh, { scale: scale, shift: Array.from(originFract) as any });
     }
+
+    MS.Mesh.computeNormals(mesh); // normals only necessary if flatShaded==false
 
     // const boxMesh = makeMeshFromBox([[0,0,0], [1,1,1]], 1);
     // const gridSize = volumeInfoCif.volume_data_3d_info.sample_count.value(0); const boxMesh = makeMeshFromBox([[0,0,0], Array.from(gridSize)] as any, 1);
