@@ -17,8 +17,8 @@ OUTPUT_FILEPATH = Path('test-data/preprocessor/fake_segmentations/fake_emd_1832.
 
 REAL_MAP_FILEPATH = Path('test-data/preprocessor/sample_volumes/emdb_sff/EMD-1832.map')
 
-# TODO: makes this folder customizable
-TEMP_ZARR_HIERARCHY_STORAGE_PATH = Path('preprocessor/data/temp_zarr_hierarchy_storage')
+# NOTE: inside this folder, there will be subfolder with name = last path component of db_path
+TEMP_ZARR_HIERARCHY_STORAGE_PATH = Path('test-data/preprocessor/temp_zarr_hierarchy_storage')
 
 PARAMETRIZED_DBS_INPUT_PARAMS_FILEPATH = Path('parametrized_dbs_input_params.txt')
 
