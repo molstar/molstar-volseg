@@ -35,9 +35,11 @@ def csv_to_config_list_of_dicts(csv_file_path: Path) -> list[dict]:
 
     
 
-def prepare_input_for_preprocessor(config: list[dict], output_dir: Path, db_path: Path) -> list[dict]:
+def prepare_input_for_preprocessor(config: list[dict], output_dir: Path, db_path: Path,
+    temp_zarr_hierarchy_storage_path: Path) -> list[dict]:
     for entry in config:
         entry['db_path'] = str(db_path.resolve())
+        entry['temp_zarr_hierarchy_storage_path'] = str(temp_zarr_hierarchy_storage_path.resolve())
 
         db = re.split('-|_', entry['entry_id'])[0].lower()
         id = re.split('-|_', entry['entry_id'])[-1]

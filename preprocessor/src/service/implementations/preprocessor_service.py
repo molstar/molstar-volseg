@@ -18,4 +18,5 @@ class PreprocessorService(IPreprocessorService):
 
     def get_preprocessor(self, file_type: str) -> IDataPreprocessor:
         # temp implementation
-        return SFFPreprocessor()
+        # return SFFPreprocessor(temp_zarr_hierarchy_storage_path=temp_zarr_hierarchy_storage_path)
+        return self.preprocessors[0]
