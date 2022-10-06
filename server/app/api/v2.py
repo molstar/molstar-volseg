@@ -136,7 +136,9 @@ def configure_endpoints(app: FastAPI, volume_server: VolumeServerService):
         request = MeshRequest(source=source, structure_id=id, segment_id=segment_id, detail_lvl=detail_lvl)
         try:
             response_bytes = await volume_server.get_meshes_bcif(request)
-            return Response(response_bytes, headers={"Content-Disposition": f'attachment;filename="{id}-volume_info.bcif"'})
+            return Response(
+                response_bytes, headers={"Content-Disposition": f'attachment;filename="{id}-volume_info.bcif"'}
+            )
         except Exception as e:
             return JSONResponse({"error": str(e)}, status_code=HTTP_CODE_UNPROCESSABLE_ENTITY)
         finally:

@@ -32,7 +32,7 @@ dependencies:
 
   - pip:
     # - -r requirements.txt
-    - git+https://github.com/molstar/ciftools-python.git@e08b7868c823a0c5f53435f28aef1b8839f9de4f#egg=ciftools
+    - git+https://github.com/molstar/ciftools-python.git@b074526a8b418bc68d83ae5556a627d2d6ceabdb#egg=ciftools
     - sfftk==0.5.5.dev1
     - sfftk-rw==0.7.1
     - SimpleParse @ git+https://github.com/mcfletch/simpleparse.git@57c8d734bdc165581fbacfeecabe25a66c3452a4

@@ -21,7 +21,7 @@ def create_fake_ccp4_map(grid_size: tuple[int, int, int], filepath: Path, dtype)
 
 if __name__ == '__main__':
     grid_size = (1000, 1000, 1000)
-    large_map_filepath = Path(f'preprocessor/data/raw_input_files/emdb/emd-88888/fake_large_map.ccp4')
+    large_map_filepath = Path(f'test-data/preprocessor/raw_input_files/emdb/emd-88888/fake_large_map.ccp4')
     create_fake_ccp4_map(grid_size=grid_size, filepath=large_map_filepath, dtype=np.float32)
 
     arr = read_and_normalize_map(large_map_filepath)

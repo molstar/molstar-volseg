@@ -28,6 +28,7 @@ def parse_script_args():
     # NOTE: this will quantize everything (except u2/u1 thing), not what we need
     # parser.add_argument("--quantize_volume_data_dtype_str", action="store", choices=['u1', 'u2'])
     parser.add_argument("--frontend_port", type=str, default=str(DEFAULT_FRONTEND_PORT), help='default frontend port')
+    parser.add_argument("--temp_zarr_hierarchy_storage_path", type=Path, help='path to db working directory')
 
     args=parser.parse_args()
     return args
@@ -39,7 +40,7 @@ def _free_port(port_number: str):
 def _preprocessor_internal_wrapper(entry: dict):
     lst = [
         "python", "preprocessor/main.py",
-        "--db_path", args.db_path,    
+        "--db_path", entry['db_path'],    
         "--single_entry", entry['single_entry'],
         "--entry_id", entry['entry_id'],
         "--source_db", entry['source_db']
@@ -51,13 +52,18 @@ def _preprocessor_internal_wrapper(entry: dict):
     if entry['quantization_dtype']:
         lst.extend(['--quantize_volume_data_dtype_str', entry['quantization_dtype']])
 
-    subprocess.Popen(lst)
+    if entry['temp_zarr_hierarchy_storage_path']:
+        lst.extend(['--temp_zarr_hierarchy_storage_path', entry['temp_zarr_hierarchy_storage_path']])
+
+    process = subprocess.Popen(lst)
+    return process.communicate()
 
 def _preprocessor_external_wrapper(config: list[dict]):
     with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
         result_iterator = p.map(_preprocessor_internal_wrapper, config)
-        # p.close
-        # p.join()?
+        # print(123)
+    
+    p.join()
 
 def run_api(args):
     deploy_env = {
@@ -80,8 +86,8 @@ def run_frontend(args):
         "-s", "frontend/build",
         "-l", str(args.frontend_port)
     ]
-    # subprocess.Popen(lst)
-    subprocess.call(lst)
+    subprocess.Popen(lst)
+    # subprocess.call(lst)
 
 def shut_down_ports(args):
     _free_port(args.frontend_port)
@@ -90,16 +96,27 @@ def shut_down_ports(args):
 def download_files_build_and_deploy_db(args):
     shut_down_ports(args)
 
-    if TEMP_ZARR_HIERARCHY_STORAGE_PATH.exists():
-        remove_temp_zarr_hierarchy_storage_folder(TEMP_ZARR_HIERARCHY_STORAGE_PATH)
+    if not args.temp_zarr_hierarchy_storage_path:
+        temp_zarr_hierarchy_storage_path = TEMP_ZARR_HIERARCHY_STORAGE_PATH / args.db_path.name
+    else:
+        temp_zarr_hierarchy_storage_path = args.temp_zarr_hierarchy_storage_path
+
+    # here it is removed
+    if temp_zarr_hierarchy_storage_path.exists():
+        remove_temp_zarr_hierarchy_storage_folder(temp_zarr_hierarchy_storage_path)
 
     config = csv_to_config_list_of_dicts(args.csv_with_entry_ids)
-    updated_config = prepare_input_for_preprocessor(config=config, output_dir=args.raw_input_files_dir, db_path=args.db_path)
-    _preprocessor_external_wrapper(updated_config)
-
-    remove_temp_zarr_hierarchy_storage_folder(TEMP_ZARR_HIERARCHY_STORAGE_PATH)
+    print('CSV was parsed')
+    updated_config = prepare_input_for_preprocessor(config=config, output_dir=args.raw_input_files_dir,
+        db_path=args.db_path,
+        temp_zarr_hierarchy_storage_path=temp_zarr_hierarchy_storage_path)
+    print('Input files have been downloaded')
     run_api(args)
     run_frontend(args)
+    _preprocessor_external_wrapper(updated_config)
+
+    # TODO: this should be done only after everything is build
+    remove_temp_zarr_hierarchy_storage_folder(temp_zarr_hierarchy_storage_path)
 
 if __name__ == '__main__':
     args = parse_script_args()

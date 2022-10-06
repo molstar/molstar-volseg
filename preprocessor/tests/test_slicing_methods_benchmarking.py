@@ -6,7 +6,9 @@ import unittest
 
 from pathlib import Path
 
-from db.implementations.local_disk.local_disk_preprocessed_db import LocalDiskPreprocessedDb
+from db.file_system.db import FileSystemVolumeServerDB
+from db.protocol import VolumeServerDB
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import DEFAULT_DB_PATH
 from preprocessor.src.tools.write_dict_to_file.write_dict_to_json import write_dict_to_json
 
 
@@ -15,7 +17,7 @@ class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
         OVERWRITE_GOLD_STANDARD = False
         GOLD_STANDARD_FILENAME = Path('preprocessor/tests/performance_measurements/gold_standard.json')
 
-        async def _compute_boxes_for_entry(db: LocalDiskPreprocessedDb, namespace, key):
+        async def _compute_boxes_for_entry(db: VolumeServerDB, namespace, key):
             metadata = await db.read_metadata(namespace, key)
             dims: Tuple = metadata.grid_dimensions()
             origin = (0, 0, 0)
@@ -48,7 +50,7 @@ class TestSlicingMethodsBenchmarking(unittest.IsolatedAsyncioTestCase):
             # 'tensorstore'
         ]
 
-        db = LocalDiskPreprocessedDb(Path('db'))
+        db = FileSystemVolumeServerDB(DEFAULT_DB_PATH)
 
         d = {}
         for namespace, entry_id in test_suite_entries:

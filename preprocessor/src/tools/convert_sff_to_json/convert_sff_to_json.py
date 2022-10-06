@@ -15,5 +15,5 @@ def convert_sff_to_json(input_file: Path) -> Path:
     return Path(json_filepath_str)
 
 if __name__ == '__main__':
-    SFF_PATH = Path("preprocessor/data/raw_input_files/emdb/emd-1832/EMD-1832.hff")
+    SFF_PATH = Path("test-data/preprocessor/raw_input_files/emdb/emd-1832/emd_1832.hff")
     convert_sff_to_json(SFF_PATH)

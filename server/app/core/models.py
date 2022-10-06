@@ -4,11 +4,11 @@ from dataclasses import dataclass
 @dataclass
 class GridSliceBox(object):
     downsampling_rate: int
-    '''Datapoint spacing relative to the original'''
+    """Datapoint spacing relative to the original"""
     bottom_left: tuple[int, int, int]
-    '''x,y,z indices of the bottom-left datapoint (INCLUSIVE)'''
+    """x,y,z indices of the bottom-left datapoint (INCLUSIVE)"""
     top_right: tuple[int, int, int]
-    '''x,y,z indices of the top-right datapoint (INCLUSIVE)'''
+    """x,y,z indices of the top-right datapoint (INCLUSIVE)"""
 
     @property
     def dimensions(self) -> tuple[int, int, int]:
@@ -17,6 +17,6 @@ class GridSliceBox(object):
 
     @property
     def volume(self) -> int:
-        '''Total volume of the box (number of datapoints)'''
+        """Total volume of the box (number of datapoints)"""
         nx, ny, nz = self.dimensions
         return nx * ny * nz

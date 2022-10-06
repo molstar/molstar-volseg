@@ -10,8 +10,8 @@ class SegmentSetTable(object):
 
     @staticmethod
     def from_dict(set_dict: dict[Union[int, str], list[int]]):
-        '''Create `SegmentSetTable` from dict where keys are set ids, values are lists of segments ids.'''
-        set_ids = [] 
+        """Create `SegmentSetTable` from dict where keys are set ids, values are lists of segments ids."""
+        set_ids = []
         segment_ids = []
         for k in set_dict.keys():
             for v in set_dict[k]:
