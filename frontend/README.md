@@ -40,4 +40,6 @@ Running the example
 
 ## Deploy
 
+The variable needs to be set before `yarn build` is called.
+
 Use `REACT_APP_VOLUME_API` env variables to determine the location of the API (e.g. `http://localhost:9000` or `https://my.deploy.url:1234`).
