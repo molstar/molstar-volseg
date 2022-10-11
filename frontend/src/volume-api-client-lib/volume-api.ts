@@ -1,15 +1,19 @@
-import { type Metadata, Annotation, Segment } from './data';
+import { type Metadata } from './data';
 
 
-const DEFAULT_VOLUME_SERVER_V1 = 'http://localhost:9000/v1';
-const DEFAULT_VOLUME_SERVER_V2 = 'http://localhost:9000/v2';
+const DEFAULT_API_PREFIX = process.env.REACT_APP_VOLUME_API 
+    ? !process.env.REACT_APP_VOLUME_API.endsWith('/') ? `${process.env.REACT_APP_VOLUME_API}/` : process.env.REACT_APP_VOLUME_API 
+    : 'http://localhost:9000/';
 
+const DEFAULT_VOLUME_SERVER_V1 = `${DEFAULT_API_PREFIX}v1`;
+const DEFAULT_VOLUME_SERVER_V2 = `${DEFAULT_API_PREFIX}v2`;
 
 export class VolumeApiV1 {
     public volumeServerUrl: string;
 
     public constructor(volumeServerUrl: string = DEFAULT_VOLUME_SERVER_V1) {
         this.volumeServerUrl = volumeServerUrl.replace(/\/$/, '');  // trim trailing slash
+        console.log('API V1', this.volumeServerUrl)
     }
     
     public metadataUrl(source: string, entryId: string): string {
@@ -34,6 +38,7 @@ export class VolumeApiV2 {
 
     public constructor(volumeServerUrl: string = DEFAULT_VOLUME_SERVER_V2) {
         this.volumeServerUrl = volumeServerUrl.replace(/\/$/, '');  // trim trailing slash
+        console.log('API V2', this.volumeServerUrl)
     }
     
     public metadataUrl(source: string, entryId: string): string {
