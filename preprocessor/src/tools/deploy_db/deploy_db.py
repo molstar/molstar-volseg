@@ -78,14 +78,27 @@ def run_api(args):
     subprocess.Popen(lst, env=deploy_env)
 
 def run_frontend(args):
-    # TODO: check if this works in debug mode emd-1832
-    subprocess.call(["yarn", "--cwd", "frontend"])
-    subprocess.call(["yarn", "--cwd", "frontend", "build"])
+    if args.api_hostname == DEFAULT_HOST:
+        api_hostname = 'http://localhost'
+    else:
+        api_hostname = f'http://{args.api_hostname}'
+
+    deploy_env = {
+        **os.environ,
+        'REACT_APP_API_HOSTNAME': api_hostname,
+        'REACT_APP_API_PORT': args.api_port,
+        # NOTE: later, for now set to empty string
+        'REACT_APP_API_PREFIX': ''
+        }
+
+    subprocess.call(["yarn", "--cwd", "frontend"], env=deploy_env)
+    subprocess.call(["yarn", "--cwd", "frontend", "build"], env=deploy_env)
     lst = [
         "serve",
         "-s", "frontend/build",
         "-l", str(args.frontend_port)
     ]
+        
     subprocess.Popen(lst)
     # subprocess.call(lst)
 

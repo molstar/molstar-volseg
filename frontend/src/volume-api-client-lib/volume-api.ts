@@ -1,9 +1,24 @@
 import { type Metadata } from './data';
 
 
-const DEFAULT_API_PREFIX = process.env.REACT_APP_VOLUME_API 
-    ? !process.env.REACT_APP_VOLUME_API.endsWith('/') ? `${process.env.REACT_APP_VOLUME_API}/` : process.env.REACT_APP_VOLUME_API 
-    : 'http://localhost:9000/';
+function createApiPrefix() {
+    const hostname = process.env.REACT_APP_API_HOSTNAME
+        ? process.env.REACT_APP_API_HOSTNAME : `http://${window.location.hostname}`;
+    const port = process.env.REACT_APP_API_PORT
+        ? process.env.REACT_APP_API_PORT : '9000';
+    const prefix = process.env.REACT_APP_API_PREFIX
+        ? `/${process.env.REACT_APP_API_PREFIX}`: ``;
+
+    const full_api_prefix = `${hostname}:${port}${prefix}/`;
+
+    return full_api_prefix;
+}
+
+// const DEFAULT_API_PREFIX = process.env.REACT_APP_VOLUME_API 
+//     ? !process.env.REACT_APP_VOLUME_API.endsWith('/') ? `${process.env.REACT_APP_VOLUME_API}/` : process.env.REACT_APP_VOLUME_API 
+//     : 'http://localhost:9000/';
+
+const DEFAULT_API_PREFIX = createApiPrefix()
 
 const DEFAULT_VOLUME_SERVER_V1 = `${DEFAULT_API_PREFIX}v1`;
 const DEFAULT_VOLUME_SERVER_V2 = `${DEFAULT_API_PREFIX}v2`;
