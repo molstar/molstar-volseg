@@ -9,9 +9,7 @@ function createApiPrefix() {
     const prefix = process.env.REACT_APP_API_PREFIX
         ? `/${process.env.REACT_APP_API_PREFIX}`: ``;
 
-    const full_api_prefix = `${hostname}:${port}${prefix}/`;
-
-    return full_api_prefix;
+    return `${hostname}:${port}${prefix}/`;
 }
 
 // const DEFAULT_API_PREFIX = process.env.REACT_APP_VOLUME_API 
