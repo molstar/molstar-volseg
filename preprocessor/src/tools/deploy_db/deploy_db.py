@@ -78,14 +78,9 @@ def run_api(args):
     subprocess.Popen(lst, env=deploy_env)
 
 def run_frontend(args):
-    if args.api_hostname == DEFAULT_HOST:
-        api_hostname = 'http://localhost'
-    else:
-        api_hostname = f'http://{args.api_hostname}'
-
     deploy_env = {
         **os.environ,
-        'REACT_APP_API_HOSTNAME': api_hostname,
+        'REACT_APP_API_HOSTNAME': '',
         'REACT_APP_API_PORT': args.api_port,
         # NOTE: later, for now set to empty string
         'REACT_APP_API_PREFIX': ''
