@@ -66,16 +66,22 @@ def _preprocessor_external_wrapper(config: list[dict]):
     p.join()
 
 def run_api(args):
+    if os.path.isabs(args.db_path):
+        db_path = args.db_path
+    else:
+        db_path = Path(os.getcwd()) / args.db_path
     deploy_env = {
         **os.environ,
-        'DB_PATH': args.db_path,
+        # check if relative path => then convert to absolute
+        'DB_PATH': db_path,
         'HOST': args.api_hostname,
         'PORT': args.api_port
         }
     lst = [
-        "python", "server/serve.py"
+        "python", "serve.py"
     ]
-    subprocess.Popen(lst, env=deploy_env)
+    # if not figure out how to pass full path
+    subprocess.Popen(lst, env=deploy_env, cwd='server/')
 
 def run_frontend(args):
     deploy_env = {
