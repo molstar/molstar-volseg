@@ -398,12 +398,13 @@ export class AppModel {
 
         for (const s of segments) {
             const volume = this.segmentation?.createSegment(s.id);
+            Volume.PickingGranularity.set(volume!, 'volume');
             const root = update.toRoot().apply(CreateVolume, { volume });
             this.currentLevel.push(root.selector);
 
             root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
                 type: 'isosurface',
-                typeParams: { alpha: 1, isoValue: Volume.IsoValue.absolute(0.95), pickingGranularity: 'surfaces' },
+                typeParams: { alpha: 1, isoValue: Volume.IsoValue.absolute(0.95) },
                 color: 'uniform',
                 colorParams: { value: Color.fromNormalizedArray(s.colour, 0) }
             }));

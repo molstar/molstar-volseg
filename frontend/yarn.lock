@@ -6374,10 +6374,10 @@ mkdirp@^0.5.5, mkdirp@~0.5.1:
   dependencies:
     minimist "^1.2.6"
 
-molstar@^3.21.0:
-  version "3.21.0"
-  resolved "https://registry.yarnpkg.com/molstar/-/molstar-3.21.0.tgz#a3f3cf126a317a0b46d64b4b0c3de0cc0349b97a"
-  integrity sha512-qhsgUdbI0L3Zgyw6bciTWiUXj58gtQjt4Q8VCB1bpJoUgb+D90OwqLtGPCMI/baLQl7OYkl6z8fQv0xgLZTWLg==
+molstar@^3.22.0:
+  version "3.22.0"
+  resolved "https://registry.yarnpkg.com/molstar/-/molstar-3.22.0.tgz#2de73b0047d2204ba04f17e24f07818b4717b793"
+  integrity sha512-5eMtoA1Bf5qZNHFpPhhWnDVXDqvQK8FXTYbdFxkxlDYOpweJACj+plCQBD3Nll1rOWvIeFhZ6kKnuzSDkBQyCA==
   dependencies:
     "@types/argparse" "^2.0.10"
     "@types/benchmark" "^2.1.2"
