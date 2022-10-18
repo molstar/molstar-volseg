@@ -145,8 +145,11 @@ export class AppModel {
         this.metadata = await API2.getMetadata(source, entryId);
         console.log('annotation:', this.metadata.annotation);
 
+        const MAX_VOXELS = 100000000;
+        // const MAX_VOXELS = 1000; // debug
+
         // VOLUME
-        const volumeUrl = API2.volumeUrl(source, entryId, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
+        const volumeUrl = API2.volumeUrl(source, entryId, [[-1000, -1000, -1000], [1000, 1000, 1000]], MAX_VOXELS);
         const volumeDataNode = await plugin.builders.data.download({ url: volumeUrl, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
         const parsed = await plugin.dataFormats.get('dscif')!.parse(plugin, volumeDataNode, { entryId });
         const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
@@ -154,7 +157,7 @@ export class AppModel {
         this.volume = volumeData;
 
         // LATTICE SEGMENTATION
-        const latticeUrl = API2.latticeUrl(source, entryId, segmentationId, [[-1000, -1000, -1000], [1000, 1000, 1000]], 100000000);
+        const latticeUrl = API2.latticeUrl(source, entryId, segmentationId, [[-1000, -1000, -1000], [1000, 1000, 1000]], MAX_VOXELS);
         const latticeDataNode = await plugin.builders.data.download({ url: latticeUrl, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
         const cif = await plugin.build().to(latticeDataNode).apply(StateTransforms.Data.ParseCif).commit();
         AppModel.logCifOverview(cif.data!, latticeUrl);
@@ -400,7 +403,7 @@ export class AppModel {
 
             root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
                 type: 'isosurface',
-                typeParams: { alpha: 1, isoValue: Volume.IsoValue.absolute(0.95) },
+                typeParams: { alpha: 1, isoValue: Volume.IsoValue.absolute(0.95), pickingGranularity: 'surfaces' },
                 color: 'uniform',
                 colorParams: { value: Color.fromNormalizedArray(s.colour, 0) }
             }));
