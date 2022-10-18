@@ -5,7 +5,7 @@ on:
     inputs:
       args:
         description: 'Arguments to the remote script'
-        required: true
+        required: false
         type: string
 
 jobs:
@@ -19,4 +19,4 @@ jobs:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.DEPLOY_KEY }}
-        script: ~/build_script.sh ${{ inputs.args }}
+        script: /sw/build.sh ${{ inputs.args }}
