@@ -39,8 +39,9 @@ def parse_script_args():
     return args
 
 def build_and_deploy_db(args):
-    _build(args)
-    _deploy(args)
+    build_process = _build(args)
+    deploy_process = _deploy(args)
+    return build_process, deploy_process
 
 def _build(args):
     if not args.temp_zarr_hierarchy_storage_path:
@@ -58,6 +59,8 @@ def _build(args):
 
     build_process = subprocess.Popen(build_lst)
 
+    return build_process
+
 def _deploy(args):
     deploy_lst = [
         "python", BUILD_SCRIPT_PATH,
@@ -68,6 +71,8 @@ def _deploy(args):
     ]
 
     deploy_process = subprocess.Popen(deploy_lst)
+
+    return deploy_process
 
 def _signal_handler(sig, frame):
     print('You pressed Ctrl+C!')
@@ -81,4 +86,6 @@ if __name__ == '__main__':
     print("DEFAULT PORTS ARE TEMPORARILY SET TO 4000 and 8000, CHANGE THIS AFTERWARDS")
     signal.signal(signal.SIGINT, _signal_handler)
     args = parse_script_args()
-    build_and_deploy_db(args)
+    build_process, deploy_process = build_and_deploy_db(args)
+    build_process.communicate()
+    deploy_process.communicate()
