@@ -84,8 +84,8 @@ def _deploy(args):
 
 def _signal_handler(sig, frame):
     print('You pressed Ctrl+C!')
-    global PROCESS_IDS_LIST
-    print(f'Process IDs list: {PROCESS_IDS_LIST}')
+    # global PROCESS_IDS_LIST
+    # print(f'Process IDs list: {PROCESS_IDS_LIST}')
     # for process_id in PROCESS_IDS_LIST:
     #     process = psutil.Process(process_id)
     #     for child in process.children(recursive=True):
@@ -96,32 +96,39 @@ def _signal_handler(sig, frame):
     #     print(f'Process killed: {process.cmdline()}')
 
 
-    pid = os.getpid()
-    parent = psutil.Process(pid)
+    # pid = os.getpid()
+    # parent = psutil.Process(pid)
+
+    # if FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH.exists():
+    #     print(f'Removing db working dir:{FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH}')
+    #     remove_temp_zarr_hierarchy_storage_folder(FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH)
+
+    # for child in parent.children(recursive=True):
+    #     child.kill()
+    # parent.kill()
+
+def clean_up(process_ids: list):
+    print('CLEAN UP - killing all processes')
+    processes_list: list[psutil.Process] = []
+    for process_id in process_ids:
+        processes_list.append(psutil.Process(process_id))
 
     if FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH.exists():
         print(f'Removing db working dir:{FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH}')
         remove_temp_zarr_hierarchy_storage_folder(FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH)
-
-    for child in parent.children(recursive=True):
-        child.kill()
-    parent.kill()
-
-# def _clean_up(process_ids: list):
-#     print('CLEAN UP FUNC')
-#     for process_id in process_ids:
-#         process = psutil.Process(process_id)
-#         for child in process.children(recursive=True):
-#             child.kill()
-#             print(f'Process killed by atexit: {child.cmdline()}')
+    
+    for process in processes_list:
+        for child in process.children(recursive=True):
+            child.kill()
+            print(f'Process killed by atexit: {child.cmdline()}')
         
-#         process.kill()
-#         print(f'Process killed by atexit: {process.cmdline()}')
+        process.kill()
+        print(f'Parent process killed by atexit: {process.cmdline()}')
 
 if __name__ == '__main__':
     print("DEFAULT PORTS ARE TEMPORARILY SET TO 4000 and 8000, CHANGE THIS AFTERWARDS")
-    signal.signal(signal.SIGINT, _signal_handler)
-    # atexit.register(_clean_up, PROCESS_IDS_LIST)
+    # signal.signal(signal.SIGINT, _signal_handler)
+    atexit.register(clean_up, PROCESS_IDS_LIST)
     args = parse_script_args()
     build_process, deploy_process = build_and_deploy_db(args)
     build_process.communicate()
