@@ -14,6 +14,7 @@ import psutil
 
 from preprocessor.src.tools.prepare_input_for_preprocessor.prepare_input_for_preprocessor import csv_to_config_list_of_dicts, prepare_input_for_preprocessor
 
+FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH: Path
 DEFAULT_HOST = '0.0.0.0'  # 0.0.0.0 = localhost
 DEFAULT_PORT = 8000
 DEFAULT_FRONTEND_PORT = 4000
@@ -49,6 +50,9 @@ def _build(args):
     else:
         temp_zarr_hierarchy_storage_path = args.temp_zarr_hierarchy_storage_path
 
+    global FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH
+    FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH = temp_zarr_hierarchy_storage_path
+
     build_lst = [
         "python", DEPLOY_SCRIPT_PATH,
         "--csv_with_entry_ids", _path_resolver(args.csv_with_entry_ids),
@@ -78,6 +82,11 @@ def _signal_handler(sig, frame):
     print('You pressed Ctrl+C!')
     pid = os.getpid()
     parent = psutil.Process(pid)
+
+    if FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH.exists():
+        print(f'Removing db working dir:{FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH}')
+        remove_temp_zarr_hierarchy_storage_folder(FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH)
+
     for child in parent.children(recursive=True):
         child.kill()
     parent.kill()
