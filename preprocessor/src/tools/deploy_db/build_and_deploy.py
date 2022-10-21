@@ -2,6 +2,7 @@
 
 
 import argparse
+import atexit
 import multiprocessing
 import os
 import signal
@@ -14,6 +15,7 @@ import psutil
 
 from preprocessor.src.tools.prepare_input_for_preprocessor.prepare_input_for_preprocessor import csv_to_config_list_of_dicts, prepare_input_for_preprocessor
 
+PROCESS_IDS_LIST = []
 FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH: Path
 DEFAULT_HOST = '0.0.0.0'  # 0.0.0.0 = localhost
 DEFAULT_PORT = 8000
@@ -42,6 +44,8 @@ def parse_script_args():
 def build_and_deploy_db(args):
     build_process = _build(args)
     deploy_process = _deploy(args)
+    global PROCESS_IDS_LIST
+    PROCESS_IDS_LIST.extend([build_process.pid, deploy_process.pid])
     return build_process, deploy_process
 
 def _build(args):
@@ -80,6 +84,18 @@ def _deploy(args):
 
 def _signal_handler(sig, frame):
     print('You pressed Ctrl+C!')
+    global PROCESS_IDS_LIST
+    print(f'Process IDs list: {PROCESS_IDS_LIST}')
+    # for process_id in PROCESS_IDS_LIST:
+    #     process = psutil.Process(process_id)
+    #     for child in process.children(recursive=True):
+    #         child.kill()
+    #         print(f'Process killed: {child.cmdline()}')
+    
+    #     process.kill()
+    #     print(f'Process killed: {process.cmdline()}')
+
+
     pid = os.getpid()
     parent = psutil.Process(pid)
 
@@ -91,9 +107,21 @@ def _signal_handler(sig, frame):
         child.kill()
     parent.kill()
 
+# def _clean_up(process_ids: list):
+#     print('CLEAN UP FUNC')
+#     for process_id in process_ids:
+#         process = psutil.Process(process_id)
+#         for child in process.children(recursive=True):
+#             child.kill()
+#             print(f'Process killed by atexit: {child.cmdline()}')
+        
+#         process.kill()
+#         print(f'Process killed by atexit: {process.cmdline()}')
+
 if __name__ == '__main__':
     print("DEFAULT PORTS ARE TEMPORARILY SET TO 4000 and 8000, CHANGE THIS AFTERWARDS")
     signal.signal(signal.SIGINT, _signal_handler)
+    # atexit.register(_clean_up, PROCESS_IDS_LIST)
     args = parse_script_args()
     build_process, deploy_process = build_and_deploy_db(args)
     build_process.communicate()
