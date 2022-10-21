@@ -17,9 +17,7 @@ def lattice_data_to_np_arr(data: str, mode: str, endianness: str, arr_shape: tup
         decoded_data = base64.b64decode(data)
         byteseq = zlib.decompress(decoded_data)
         np_dtype = decide_np_dtype(mode=mode, endianness=endianness)
-        # order should be F as frontend requests in X,Y,Z order,
-        # while numpy by default has Z,Y,X (C order)
-        arr = np.frombuffer(byteseq, dtype=np_dtype).reshape(arr_shape, order='F')
+        arr = np.frombuffer(byteseq, dtype=np_dtype).reshape(arr_shape, order='C')
     except Exception as e:
         logging.error(e, stack_info=True, exc_info=True)
         raise e

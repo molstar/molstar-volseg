@@ -67,9 +67,6 @@ class SFFPreprocessor(IDataPreprocessor):
                 del params_for_storing['quantize_dtype_str']
 
             dask_arr = da.from_array(data)
-            # this one just swaps x to z as mrcfile writes it in specific order
-            dask_arr = dask_arr.swapaxes(0, 2)
-            # this should normalize
             dask_arr = SFFPreprocessor.normalize_axis_order_mrcfile(dask_arr=dask_arr, mrc_header=header)
 
             # mesh_simplification_curve = MESH_SIMPLIFICATION_CURVE_LINEAR
