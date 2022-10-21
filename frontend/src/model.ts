@@ -18,6 +18,7 @@ import { ColorNames, Mesh } from './mesh-extension/molstar-lib-imports';
 import { type Metadata, Annotation, Segment } from './volume-api-client-lib/data';
 import { VolumeApiV1, VolumeApiV2 } from './volume-api-client-lib/volume-api';
 import { LatticeSegmentation, UrlFragmentInfo, MetadataUtils, CreateVolume, ExampleType } from './helpers';
+import { Tensor } from 'molstar/lib/mol-math/linear-algebra';
 
 
 const DEFAULT_DETAIL: number | null = null;  // null means worst
@@ -109,14 +110,20 @@ export class AppModel {
         const BOX: [[number, number, number], [number, number, number]] = [[-A, -A, -A], [A, A, A]];
         const MAX_VOXELS = 10 ** 7;
         const urls: { [name: string]: string } = {
-            'VOLUME BOX EMD-1832': API2.volumeUrl('emdb', 'emd-1832', BOX, MAX_VOXELS),
-            'LATTICE BOX EMD-1832': API2.latticeUrl('emdb', 'emd-1832', 0, BOX, MAX_VOXELS),
+            // 'VOLUME BOX EMD-1832': API2.volumeUrl('emdb', 'emd-1832', BOX, MAX_VOXELS),
+            // 'LATTICE BOX EMD-1832': API2.latticeUrl('emdb', 'emd-1832', 0, BOX, MAX_VOXELS),
+            // 'VOLUME CELL EMD-1832': API2.volumeUrl('emdb', 'emd-1832', null, MAX_VOXELS),
+            // 'LATTICE CELL EMD-1832': API2.latticeUrl('emdb', 'emd-1832', 0, null, MAX_VOXELS),
+            // 'VOLUME BOX EMPIAR-10070': API2.volumeUrl('empiar', 'empiar-10070', BOX, MAX_VOXELS),
+            // 'LATTICE BOX EMPIAR-10070': API2.latticeUrl('empiar', 'empiar-10070', 0, BOX, MAX_VOXELS),
+            // 'VOLUME CELL EMPIAR-10070': API2.volumeUrl('empiar', 'empiar-10070', null, MAX_VOXELS),
+            // 'LATTICE CELL EMPIAR-10070': API2.latticeUrl('empiar', 'empiar-10070', 0, null, MAX_VOXELS),
             'VOLUME CELL EMD-1832': API2.volumeUrl('emdb', 'emd-1832', null, MAX_VOXELS),
-            'LATTICE CELL EMD-1832': API2.latticeUrl('emdb', 'emd-1832', 0, null, MAX_VOXELS),
-            'VOLUME BOX EMPIAR-10070': API2.volumeUrl('empiar', 'empiar-10070', BOX, MAX_VOXELS),
-            'LATTICE BOX EMPIAR-10070': API2.latticeUrl('empiar', 'empiar-10070', 0, BOX, MAX_VOXELS),
-            'VOLUME CELL EMPIAR-10070': API2.volumeUrl('empiar', 'empiar-10070', null, MAX_VOXELS),
-            'LATTICE CELL EMPIAR-10070': API2.latticeUrl('empiar', 'empiar-10070', 0, null, MAX_VOXELS),
+            'VOLUME CELL EMD-1832 EBI': 'https://www.ebi.ac.uk/pdbe/densities/emd/emd-1832/cell?detail=5',
+            'VOLUME CELL EMD-1547': API2.volumeUrl('emdb', 'emd-1547', null, MAX_VOXELS),
+            'VOLUME CELL EMD-1547 EBI': 'https://www.ebi.ac.uk/pdbe/densities/emd/emd-1547/cell?detail=5',
+            'VOLUME CELL EMD-1181': API2.volumeUrl('emdb', 'emd-1181', null, MAX_VOXELS),
+            'VOLUME CELL EMD-1181 EBI': 'https://www.ebi.ac.uk/pdbe/densities/emd/emd-1181/cell?detail=5',
         };
         for (const name in urls) {
             console.log(`\n<<< ${name} >>>`);
@@ -125,10 +132,41 @@ export class AppModel {
                 const data = await this.plugin.builders.data.download({ url: urls[name], isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
                 const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
                 AppModel.logCifOverview(cif.data!, urls[name]);
+                await this.testVolumeBbox(urls[name], 1.0);
             } catch (err) {
                 console.error('Failed', err);
             }
         }
+    }
+
+    async testVolumeBbox(url: string, isoValue: number){
+        const volumeDataNode = await this.plugin.builders.data.download({ url: url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+        const parsed = await this.plugin.dataFormats.get('dscif')!.parse(this.plugin, volumeDataNode, { entryId: url });
+        const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
+        const volumeData = volume.cell!.obj!.data;
+        const space = volumeData.grid.cells.space;
+        const data = volumeData.grid.cells.data;
+        console.log('testVolumeBbox', url, 'axisOrderSlowToFast:', space.axisOrderSlowToFast, 'dimensions:', space.dimensions);
+        const [nx, ny, nz] = space.dimensions;
+
+        let minX = nx, minY = ny, minZ = nz;
+        let maxX = -1, maxY = -1, maxZ = -1;
+        for (let iz = 0; iz < nz; iz++) {
+            for (let iy = 0; iy < ny; iy++) {
+                for (let ix = 0; ix < nx; ix++) {
+                    // Iterating in ZYX order is faster (probably fewer cache misses)
+                    if (space.get(data, ix, iy, iz) >= isoValue) {
+                        if (ix < minX) minX = ix;
+                        if (iy < minY) minY = iy;
+                        if (iz < minZ) minZ = iz;
+                        if (ix > maxX) maxX = ix;
+                        if (iy > maxY) maxY = iy;
+                        if (iz > maxZ) maxZ = iz;
+                    }
+                }
+            }
+        }
+        console.log(`bbox (value>=${isoValue}):`, [minX, minY, minZ], [maxX+1, maxY+1, maxZ+1], 'size:', [maxX-minX+1, maxY-minY+1, maxZ-minZ+1]);
     }
 
     async loadExampleEmdb(entryId: string = 'emd-1832') {
@@ -341,7 +379,25 @@ export class AppModel {
                 AppModel.logCifOverview(cif.data!); // DEBUG
                 const parsed = await this.plugin.dataFormats.get('dscif')!.parse(this.plugin, data, { entryId });
                 const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
-                const volumeData = volume.cell!.obj!.data;
+                let volumeData = volume.cell!.obj!.data;
+
+                // // DEBUG:
+                // const oldSpace = volumeData.grid.cells.space;
+                // const [a, b, c] = oldSpace.axisOrderSlowToFast;
+                // const newSpace = Tensor.Space([...oldSpace.dimensions], [c, b, a], Float32Array);
+                // volumeData = {
+                //     ...volumeData,
+                //     grid: {
+                //         ...volumeData.grid,
+                //         cells: {
+                //             ...volumeData.grid.cells,
+                //             space: newSpace,
+                //         }
+                //     }
+                // }
+                // parsed.volume = volumeData;
+                // parsed.volumes[0] = volumeData;
+
                 this.volume = volumeData;
                 const repr = await this.plugin.build()
                     .to(volume)
