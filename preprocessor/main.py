@@ -104,6 +104,7 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
                 d[source_db] = []
                 for subdir_path in dir_path.iterdir():
                     segmentation_file_path: Path = None
+                    volume_file_path: Path = None
 
                     if subdir_path.is_dir():
                         content = sorted(subdir_path.glob('*'))
@@ -115,7 +116,10 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
                                 elif item.suffix == '.hff':
                                     segmentation_file_path = item
                                 elif item.suffix == '.map' or item.suffix == '.ccp4' or item.suffix == '.mrc':
-                                    volume_file_path: Path = item
+                                    volume_file_path = item
+                        if volume_file_path == None:
+                            raise Exception('Volume file path is None')
+                            
                         d[source_db].append(
                             {
                                 'id': (subdir_path.stem).lower(),
