@@ -8,7 +8,7 @@ import numpy as np
 
 from pathlib import Path
 from numcodecs import Blosc
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 from db.file_system.db import FileSystemVolumeServerDB
 from preprocessor.params_for_storing_db import CHUNKING_MODES, COMPRESSORS
 from preprocessor.src.service.implementations.preprocessor_service import PreprocessorService
@@ -25,7 +25,7 @@ from preprocessor.src.tools.write_dict_to_file.write_dict_to_txt import write_di
 def obtain_paths_to_single_entry_files(input_files_dir: Path) -> Dict:
     d = {}
     segmentation_file_path: Path = None
-    volume_file_path: Path = None
+    volume_file_path: Optional[Path] = None
 
     if input_files_dir.is_dir():
         content = sorted(input_files_dir.glob('*'))
@@ -107,7 +107,7 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
                 d[source_db] = []
                 for subdir_path in dir_path.iterdir():
                     segmentation_file_path: Path = None
-                    volume_file_path: Path = None
+                    volume_file_path: Optional[Path] = None
 
                     if subdir_path.is_dir():
                         content = sorted(subdir_path.glob('*'))

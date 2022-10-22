@@ -16,10 +16,8 @@ def hdf5_to_zarr(temp_root_path: Path, file_path: Path, entry_id: str) -> Path:
     global temp_zarr_structure_path
     temp_zarr_structure_path = temp_root_path / entry_id
     try:
-        # assert temp_zarr_structure_path.exists() == False, \
-        #     f'temp_zarr_structure_path: {temp_zarr_structure_path} already exists'
-        if temp_zarr_structure_path.exists():
-            shutil.rmtree(temp_zarr_structure_path, ignore_errors=True)
+        assert temp_zarr_structure_path.exists() == False, \
+            f'temp_zarr_structure_path: {temp_zarr_structure_path} already exists'
         store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(temp_zarr_structure_path))
         # directory store does not need to be closed, zip does
         hdf5_file: h5py.File = h5py.File(file_path, mode='r')
