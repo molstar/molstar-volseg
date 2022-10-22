@@ -1,24 +1,25 @@
-import { createPluginUI } from 'molstar/lib/mol-plugin-ui/react18';
-import { PluginUIContext } from 'molstar/lib/mol-plugin-ui/context';
-import { DefaultPluginUISpec } from 'molstar/lib/mol-plugin-ui/spec';
-import { PluginConfig } from 'molstar/lib/mol-plugin/config';
-import { StateBuilder, StateObjectSelector, StateTransform } from 'molstar/lib/mol-state';
+import { CifFile } from 'molstar/lib/mol-io/reader/cif';
+import { CustomProperties } from 'molstar/lib/mol-model/custom-property';
+import { Volume } from 'molstar/lib/mol-model/volume';
+import { createVolumeRepresentationParams } from 'molstar/lib/mol-plugin-state/helpers/volume-representation-params';
 import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
 import { StateTransforms } from 'molstar/lib/mol-plugin-state/transforms';
-import { createVolumeRepresentationParams } from 'molstar/lib/mol-plugin-state/helpers/volume-representation-params';
-import { Volume } from 'molstar/lib/mol-model/volume';
-import { Color } from 'molstar/lib/mol-util/color';
-import { CustomProperties } from 'molstar/lib/mol-model/custom-property';
-import { BehaviorSubject } from 'rxjs';
-import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/state';
-import { CifFile } from 'molstar/lib/mol-io/reader/cif';
-
-import * as MeshExamples from './mesh-extension/examples'
-import { ColorNames } from './mesh-extension/molstar-lib-imports';
-import { type Metadata, Annotation, Segment } from './volume-api-client-lib/data';
-import { VolumeApiV1, VolumeApiV2 } from './volume-api-client-lib/volume-api';
-import { LatticeSegmentation, UrlFragmentInfo, MetadataUtils, CreateVolume, ExampleType } from './helpers';
 import { CreateGroup } from 'molstar/lib/mol-plugin-state/transforms/misc';
+import { PluginUIContext } from 'molstar/lib/mol-plugin-ui/context';
+import { createPluginUI } from 'molstar/lib/mol-plugin-ui/react18';
+import { DefaultPluginUISpec } from 'molstar/lib/mol-plugin-ui/spec';
+import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/state';
+import { PluginConfig } from 'molstar/lib/mol-plugin/config';
+import { StateBuilder, StateObjectSelector, StateTransform } from 'molstar/lib/mol-state';
+import { Asset } from 'molstar/lib/mol-util/assets';
+import { Color } from 'molstar/lib/mol-util/color';
+import { BehaviorSubject } from 'rxjs';
+
+import { CreateVolume, ExampleType, LatticeSegmentation, MetadataUtils, UrlFragmentInfo } from './helpers';
+import * as MeshExamples from './mesh-extension/examples';
+import { ColorNames } from './mesh-extension/molstar-lib-imports';
+import { Annotation, Segment, type Metadata } from './volume-api-client-lib/data';
+import { VolumeApiV1, VolumeApiV2 } from './volume-api-client-lib/volume-api';
 
 
 const DEFAULT_DETAIL: number | null = null;  // null means worst
@@ -427,10 +428,14 @@ export class AppModel {
     }
 
     async loadPdbStructureFromBcif(url: string, options?: { dataLabel?: string }) {
-        const _data = await this.plugin.builders.data.download({ url, isBinary: true, label: options?.dataLabel });
-        const trajectory = await this.plugin.builders.structure.parseTrajectory(_data, 'mmcif');
-        await this.plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default');
-        return _data;
+        const urlAsset = Asset.getUrlAsset(this.plugin.managers.asset, url);
+        const asset = await this.plugin.runTask(this.plugin.managers.asset.resolve(urlAsset, 'binary'));
+        const data = asset.data;
+
+        const dataNode = await this.plugin.builders.data.rawData({ data, label: options?.dataLabel });
+        const trajectoryNode = await this.plugin.builders.structure.parseTrajectory(dataNode, 'mmcif');
+        await this.plugin.builders.structure.hierarchy.applyPreset(trajectoryNode, 'default');
+        return dataNode;
     }
 
     private getOrCreateGroup(parent: StateBuilder.To<any>, existingGroup?: StateObjectSelector, params?: { label?: string, description?: string }, options?: Partial<StateTransform.Options>) {
