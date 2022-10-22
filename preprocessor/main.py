@@ -25,7 +25,8 @@ from preprocessor.src.tools.write_dict_to_file.write_dict_to_txt import write_di
 def obtain_paths_to_single_entry_files(input_files_dir: Path) -> Dict:
     d = {}
     segmentation_file_path: Path = None
-    
+    volume_file_path: Path = None
+
     if input_files_dir.is_dir():
         content = sorted(input_files_dir.glob('*'))
         for item in content:
@@ -37,7 +38,9 @@ def obtain_paths_to_single_entry_files(input_files_dir: Path) -> Dict:
                     segmentation_file_path = item
                 elif item.suffix == '.map' or item.suffix == '.ccp4' or item.suffix == '.mrc':
                     volume_file_path: Path = item
-        
+        if volume_file_path == None:
+            raise Exception('Volume file not found')
+            
         d = {
                 'volume_file_path': volume_file_path,
                 'segmentation_file_path': segmentation_file_path,
@@ -118,7 +121,7 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
                                 elif item.suffix == '.map' or item.suffix == '.ccp4' or item.suffix == '.mrc':
                                     volume_file_path = item
                         if volume_file_path == None:
-                            raise Exception('Volume file path is None')
+                            raise Exception('Volume file not found')
                             
                         d[source_db].append(
                             {
