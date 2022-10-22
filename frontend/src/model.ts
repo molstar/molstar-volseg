@@ -14,11 +14,10 @@ import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/sta
 import { CifFile } from 'molstar/lib/mol-io/reader/cif';
 
 import * as MeshExamples from './mesh-extension/examples'
-import { ColorNames, Mesh } from './mesh-extension/molstar-lib-imports';
+import { ColorNames } from './mesh-extension/molstar-lib-imports';
 import { type Metadata, Annotation, Segment } from './volume-api-client-lib/data';
 import { VolumeApiV1, VolumeApiV2 } from './volume-api-client-lib/volume-api';
 import { LatticeSegmentation, UrlFragmentInfo, MetadataUtils, CreateVolume, ExampleType } from './helpers';
-import { Tensor } from 'molstar/lib/mol-math/linear-algebra';
 import { CreateGroup } from 'molstar/lib/mol-plugin-state/transforms/misc';
 
 
@@ -42,7 +41,7 @@ export class AppModel {
 
     private plugin: PluginUIContext = undefined as any;
 
-    private volume?: Volume;  // TODO optional
+    private volume?: Volume;
     private segmentationGroup?: StateObjectSelector = undefined;
     private segmentationNodes = [] as StateObjectSelector[];
     private pdbModelNodes = [] as StateObjectSelector[];
@@ -116,20 +115,20 @@ export class AppModel {
         const BOX: [[number, number, number], [number, number, number]] = [[-A, -A, -A], [A, A, A]];
         const MAX_VOXELS = 10 ** 7;
         const urls: { [name: string]: string } = {
-            // 'VOLUME BOX EMD-1832': API2.volumeUrl('emdb', 'emd-1832', BOX, MAX_VOXELS),
-            // 'LATTICE BOX EMD-1832': API2.latticeUrl('emdb', 'emd-1832', 0, BOX, MAX_VOXELS),
-            // 'VOLUME CELL EMD-1832': API2.volumeUrl('emdb', 'emd-1832', null, MAX_VOXELS),
-            // 'LATTICE CELL EMD-1832': API2.latticeUrl('emdb', 'emd-1832', 0, null, MAX_VOXELS),
-            // 'VOLUME BOX EMPIAR-10070': API2.volumeUrl('empiar', 'empiar-10070', BOX, MAX_VOXELS),
-            // 'LATTICE BOX EMPIAR-10070': API2.latticeUrl('empiar', 'empiar-10070', 0, BOX, MAX_VOXELS),
-            // 'VOLUME CELL EMPIAR-10070': API2.volumeUrl('empiar', 'empiar-10070', null, MAX_VOXELS),
-            // 'LATTICE CELL EMPIAR-10070': API2.latticeUrl('empiar', 'empiar-10070', 0, null, MAX_VOXELS),
+            'VOLUME BOX EMD-1832': API2.volumeUrl('emdb', 'emd-1832', BOX, MAX_VOXELS),
+            'LATTICE BOX EMD-1832': API2.latticeUrl('emdb', 'emd-1832', 0, BOX, MAX_VOXELS),
             'VOLUME CELL EMD-1832': API2.volumeUrl('emdb', 'emd-1832', null, MAX_VOXELS),
-            'VOLUME CELL EMD-1832 EBI': 'https://www.ebi.ac.uk/pdbe/densities/emd/emd-1832/cell?detail=5',
-            'VOLUME CELL EMD-1547': API2.volumeUrl('emdb', 'emd-1547', null, MAX_VOXELS),
-            'VOLUME CELL EMD-1547 EBI': 'https://www.ebi.ac.uk/pdbe/densities/emd/emd-1547/cell?detail=5',
-            'VOLUME CELL EMD-1181': API2.volumeUrl('emdb', 'emd-1181', null, MAX_VOXELS),
-            'VOLUME CELL EMD-1181 EBI': 'https://www.ebi.ac.uk/pdbe/densities/emd/emd-1181/cell?detail=5',
+            'LATTICE CELL EMD-1832': API2.latticeUrl('emdb', 'emd-1832', 0, null, MAX_VOXELS),
+            'VOLUME BOX EMPIAR-10070': API2.volumeUrl('empiar', 'empiar-10070', BOX, MAX_VOXELS),
+            'LATTICE BOX EMPIAR-10070': API2.latticeUrl('empiar', 'empiar-10070', 0, BOX, MAX_VOXELS),
+            'VOLUME CELL EMPIAR-10070': API2.volumeUrl('empiar', 'empiar-10070', null, MAX_VOXELS),
+            'LATTICE CELL EMPIAR-10070': API2.latticeUrl('empiar', 'empiar-10070', 0, null, MAX_VOXELS),
+            // 'VOLUME CELL EMD-1832': API2.volumeUrl('emdb', 'emd-1832', null, MAX_VOXELS),
+            // 'VOLUME CELL EMD-1832 EBI': 'https://www.ebi.ac.uk/pdbe/densities/emd/emd-1832/cell?detail=5',
+            // 'VOLUME CELL EMD-1547': API2.volumeUrl('emdb', 'emd-1547', null, MAX_VOXELS),
+            // 'VOLUME CELL EMD-1547 EBI': 'https://www.ebi.ac.uk/pdbe/densities/emd/emd-1547/cell?detail=5',
+            // 'VOLUME CELL EMD-1181': API2.volumeUrl('emdb', 'emd-1181', null, MAX_VOXELS),
+            // 'VOLUME CELL EMD-1181 EBI': 'https://www.ebi.ac.uk/pdbe/densities/emd/emd-1181/cell?detail=5',
         };
         for (const name in urls) {
             console.log(`\n<<< ${name} >>>`);
@@ -281,10 +280,6 @@ export class AppModel {
                 MetadataUtils.dropSegments(this.metadata, bgSegments);
             }
 
-            for (let segment of this.metadata!.annotation.segment_list) {
-                const detail = MetadataUtils.getSufficientDetail(this.metadata!, segment.id, DEFAULT_DETAIL);
-            }
-
             this.meshSegmentNodes = {};
             this.showMeshSegments(this.metadata!.annotation.segment_list, entryId);
         } catch (ex) {
@@ -333,6 +328,7 @@ export class AppModel {
 
         try {
             await this.plugin.clear();
+            this.plugin.behaviors.layout.leftPanelTabName.next('data');
 
             const metadataPromise = API2.getMetadata(source, entryId);
             const isoLevelPromise = AppModel.getIsovalue(entryId);
@@ -350,37 +346,36 @@ export class AppModel {
             const MAX_VOXELS = 10 ** 7;
 
             // DEBUG
-            const debugVolumeInfo = false;
-            if (debugVolumeInfo) {
-                const url = API2.volumeInfoUrl(source, entryId);
-                const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
-                const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
-                AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
-            }
+            // const debugVolumeInfo = false;
+            // if (debugVolumeInfo) {
+            //     const url = API2.volumeInfoUrl(source, entryId);
+            //     const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+            //     const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
+            //     AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
+            // }
 
-            // DEBUG
-            const debugMeshesBcif = false;
-            const debugSegment = 1;
-            const debugDetail = 10;
-            if (debugMeshesBcif) {
-                const url = API2.meshUrl_Bcif(source, entryId, debugSegment, debugDetail);
-                const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
-                const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
-                AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
-            }
+            // // DEBUG
+            // const debugMeshesBcif = false;
+            // const debugSegment = 1;
+            // const debugDetail = 10;
+            // if (debugMeshesBcif) {
+            //     const url = API2.meshUrl_Bcif(source, entryId, debugSegment, debugDetail);
+            //     const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+            //     const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
+            //     AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
+            // }
 
             if (hasVolumes) {
                 // const isoLevel = { kind: 'relative', value: 2.73}; // rel 2.73 (abs 0.42) is OK for emd-1832
                 const isoLevel = await isoLevelPromise;
                 const url = API2.volumeUrl(source, entryId, BOX, MAX_VOXELS);
-                const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
-                const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit(); // DEBUG
-                AppModel.logCifOverview(cif.data!); // DEBUG
+                const data = await this.plugin.builders.data.download({ url, isBinary: true, label: `Volume Data: ${url}` }, { state: { isGhost: USE_GHOST_NODES } });
+                // const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit(); AppModel.logCifOverview(cif.data!); // DEBUG
                 const parsed = await this.plugin.dataFormats.get('dscif')!.parse(this.plugin, data, { entryId });
                 const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
                 let volumeData = volume.cell!.obj!.data;
                 this.volume = volumeData;
-                const repr = await this.plugin.build()
+                await this.plugin.build()
                     .to(volume)
                     .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
                         type: 'isosurface',
@@ -392,7 +387,7 @@ export class AppModel {
             }
             if (hasLattices) {
                 const url = API2.latticeUrl(source, entryId, 0, BOX, MAX_VOXELS);
-                const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+                const data = await this.plugin.builders.data.download({ url, isBinary: true, label: `Segmentation Data: ${url}` }, { state: { isGhost: USE_GHOST_NODES } });
                 const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
                 AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
                 const latticeBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
@@ -428,13 +423,13 @@ export class AppModel {
 
     async loadPdb(pdbId: string) {
         const url = `https://www.ebi.ac.uk/pdbe/entry-files/download/${pdbId}.bcif`;
-        return await this.loadPdbStructureFromBcif(url);
+        return await this.loadPdbStructureFromBcif(url, { dataLabel: `PDB Data: ${url}` });
     }
 
     async loadPdbStructureFromBcif(url: string, options?: { dataLabel?: string }) {
         const _data = await this.plugin.builders.data.download({ url, isBinary: true, label: options?.dataLabel });
         const trajectory = await this.plugin.builders.structure.parseTrajectory(_data, 'mmcif');
-        const repr = await this.plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default');
+        await this.plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default');
         return _data;
     }
 
@@ -450,7 +445,7 @@ export class AppModel {
 
     async showPdb(pdbId: string | undefined) {
         this.status.next('loading');
-        try{
+        try {
             const update = this.plugin.build();
 
             for (const node of this.pdbModelNodes) update.delete(node);
@@ -488,7 +483,7 @@ export class AppModel {
         for (const s of segments) {
             const volume = this.segmentation?.createSegment(s.id);
             Volume.PickingGranularity.set(volume!, 'volume');
-            const root = update.to(group).apply(CreateVolume, { volume });
+            const root = update.to(group).apply(CreateVolume, { volume, label: `Segment ${s.id}`, description: s.biological_annotation?.name }, { state: { isCollapsed: true } });
             this.segmentationNodes.push(root.selector);
 
             root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {

@@ -1,4 +1,3 @@
-import { PluginUIContext } from 'molstar/lib/mol-plugin-ui/context';
 import { StateTransformer } from 'molstar/lib/mol-state';
 import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
 import { Grid, Volume } from 'molstar/lib/mol-model/volume';
@@ -392,10 +391,12 @@ export const CreateVolume = CreateTransformer({
     from: PluginStateObject.Root,
     to: PluginStateObject.Volume.Data,
     params: {
+        label: PD.Text('Volume', { isHidden: true }),
+        description: PD.Text('', { isHidden: true }),
         volume: PD.Value<Volume>(undefined as any, { isHidden: true }),
     }
 })({
     apply({ params }) {
-        return new PluginStateObject.Volume.Data(params.volume);
+        return new PluginStateObject.Volume.Data(params.volume, { label: params.label, description: params.description });
     }
 })

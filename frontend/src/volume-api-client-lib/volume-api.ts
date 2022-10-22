@@ -1,4 +1,4 @@
-import { type Metadata, Annotation, Segment } from './data';
+import { type Metadata } from './data';
 
 
 const DEFAULT_VOLUME_SERVER_V1 = 'http://localhost:9000/v1';
