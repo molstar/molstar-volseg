@@ -130,12 +130,8 @@ function UIExampleMeshes({ model }: { model: AppModel }) {
 
         <Typography variant='caption'>{entryId}</Typography>
 
-        {error && <>
-            <Typography variant='h6'>{'Error'}</Typography>
-            <Typography variant='body1'>
-                {error.toString()}
-            </Typography>
-        </> || <>
+        {!error
+            ? <>
                 <Typography variant='h6'>{annotation?.name ?? 'Untitled'}</Typography>
                 <Button variant={current ? 'outlined' : 'contained'} size='small'
                     onClick={() => model.showMeshSegments(annotation?.segment_list ?? [], entryId)}>
@@ -148,10 +144,13 @@ function UIExampleMeshes({ model }: { model: AppModel }) {
                     </Button>
                 )}
                 <Typography variant='body1' marginTop={2}>
-                    The meshes here are visualized in grid space, not Cartesian space! (waiting for API changes to fix that).
-                </Typography>
-                <Typography variant='body1' marginTop={2}>
                     If you are viewing "empiar-10070", two "background" segments are artificially removed.
+                </Typography>
+            </>
+            : <>
+                <Typography variant='h6'>{'Error'}</Typography>
+                <Typography variant='body1'>
+                    {error.toString()}
                 </Typography>
             </>}
 
@@ -170,15 +169,16 @@ function UIExampleMeshStreaming({ model }: { model: AppModel }) {
 
         <Typography variant='caption'>{entryId}</Typography>
 
-        {error && <>
-            <Typography variant='h6'>{'Error'}</Typography>
-            <Typography variant='body1'>
-                {error.toString()}
-            </Typography>
-        </> || <>
+        {!error
+            ? <>
                 <Typography variant='h6'>{annotation?.name ?? 'Untitled'}</Typography>
+            </>
+            : <>
+                <Typography variant='h6'>{'Error'}</Typography>
+                <Typography variant='body1'>
+                    {error.toString()}
+                </Typography>
             </>}
-
     </>;
 }
 
