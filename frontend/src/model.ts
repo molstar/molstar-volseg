@@ -38,6 +38,7 @@ export class AppModel {
     public currentPdb = new BehaviorSubject<string | undefined>(undefined);
     public error = new BehaviorSubject<any>(undefined);
     public exampleType = new BehaviorSubject<ExampleType>('');
+    public status = new BehaviorSubject<'ready' | 'loading' | 'error'>('ready');
 
     private plugin: PluginUIContext = undefined as any;
 
@@ -325,6 +326,7 @@ export class AppModel {
 
     async loadExampleAuto(entryId: string = 'emd-1832') {
         console.time('Load example');
+        this.status.next('loading');
         const source = AppModel.splitEntryId(entryId).source as 'empiar' | 'emdb';
         let error = undefined;
         let pdbs: string[] = [];
@@ -418,6 +420,7 @@ export class AppModel {
             this.error.next(error);
             this.pdbs.next(pdbs);
             this.currentPdb.next(undefined);
+            this.status.next(error ? 'error' : 'ready');
             console.timeEnd('Load example');
         }
     }
@@ -446,17 +449,24 @@ export class AppModel {
     }
 
     async showPdb(pdbId: string | undefined) {
-        const update = this.plugin.build();
+        this.status.next('loading');
+        try{
+            const update = this.plugin.build();
 
-        for (const node of this.pdbModelNodes) update.delete(node);
-        this.pdbModelNodes = [];
+            for (const node of this.pdbModelNodes) update.delete(node);
+            this.pdbModelNodes = [];
 
-        if (pdbId){
-            const pdbNode = await this.loadPdb(pdbId);
-            this.pdbModelNodes.push(pdbNode);
+            if (pdbId) {
+                const pdbNode = await this.loadPdb(pdbId);
+                this.pdbModelNodes.push(pdbNode);
+            }
+            await update.commit();
+            this.currentPdb.next(pdbId);
+            this.status.next('ready');
+        } catch (ex) {
+            this.status.next('error');
+            throw ex;
         }
-        await update.commit();
-        this.currentPdb.next(pdbId);
     }
 
     /** Make visible the specified set of lattice segments */

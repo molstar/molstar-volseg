@@ -4,7 +4,7 @@ import { useBehavior } from 'molstar/lib/mol-plugin-ui/hooks/use-behavior';
 import './App.css';
 import 'molstar/lib/mol-plugin-ui/skin/light.scss';
 import { AppModel } from './model';
-import { Button, ButtonGroup, Checkbox, CssBaseline, Divider, FormControlLabel, InputLabel, MenuItem, Select, Slider, TextField, Typography } from '@mui/material';
+import { Button, ButtonGroup, Checkbox, LinearProgress, CssBaseline, Divider, FormControlLabel, InputLabel, MenuItem, Select, Slider, TextField, Typography } from '@mui/material';
 
 
 function App() {
@@ -188,6 +188,7 @@ function UIExampleAuto({ model }: { model: AppModel }) {
     const pdbs = useBehavior(model.pdbs);
     const current = useBehavior(model.currentPdb);
     const error = useBehavior(model.error);
+    const status = useBehavior(model.status);
 
     return <>
         <Typography variant='body1'>
@@ -199,7 +200,8 @@ function UIExampleAuto({ model }: { model: AppModel }) {
         <Divider style={{ marginBlock: 16 }} />
 
         <EntryForm entryId={entryId} action={entryId => model.loadExampleAuto(entryId)} />
-        <Divider style={{ marginBlock: 16 }} />
+
+        <LinearProgress variant={status === 'loading' ? 'indeterminate' : 'determinate'} value={100} color={status === 'error' ? 'error' : 'primary'} style={{ marginBlock: 16 }} />
 
         <Typography variant='caption'>{entryId}</Typography>
         {!error
