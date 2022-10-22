@@ -2,7 +2,7 @@ import { createPluginUI } from 'molstar/lib/mol-plugin-ui/react18';
 import { PluginUIContext } from 'molstar/lib/mol-plugin-ui/context';
 import { DefaultPluginUISpec } from 'molstar/lib/mol-plugin-ui/spec';
 import { PluginConfig } from 'molstar/lib/mol-plugin/config';
-import { StateBuilder, StateObjectSelector } from 'molstar/lib/mol-state';
+import { StateBuilder, StateObjectSelector, StateTransform } from 'molstar/lib/mol-state';
 import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
 import { StateTransforms } from 'molstar/lib/mol-plugin-state/transforms';
 import { createVolumeRepresentationParams } from 'molstar/lib/mol-plugin-state/helpers/volume-representation-params';
@@ -19,6 +19,7 @@ import { type Metadata, Annotation, Segment } from './volume-api-client-lib/data
 import { VolumeApiV1, VolumeApiV2 } from './volume-api-client-lib/volume-api';
 import { LatticeSegmentation, UrlFragmentInfo, MetadataUtils, CreateVolume, ExampleType } from './helpers';
 import { Tensor } from 'molstar/lib/mol-math/linear-algebra';
+import { CreateGroup } from 'molstar/lib/mol-plugin-state/transforms/misc';
 
 
 const DEFAULT_DETAIL: number | null = null;  // null means worst
@@ -33,13 +34,17 @@ export class AppModel {
     public entryId = new BehaviorSubject<string>('');
     public annotation = new BehaviorSubject<Annotation | undefined>(undefined);
     public currentSegment = new BehaviorSubject<Segment | undefined>(undefined);
+    public pdbs = new BehaviorSubject<string[]>([]);
+    public currentPdb = new BehaviorSubject<string | undefined>(undefined);
     public error = new BehaviorSubject<any>(undefined);
     public exampleType = new BehaviorSubject<ExampleType>('');
 
     private plugin: PluginUIContext = undefined as any;
 
     private volume?: Volume;  // TODO optional
-    private currentLevel: any[] = [];
+    private segmentationGroup?: StateObjectSelector = undefined;
+    private segmentationNodes = [] as StateObjectSelector[];
+    private pdbModelNodes = [] as StateObjectSelector[];
 
     private segmentation?: LatticeSegmentation;
 
@@ -139,7 +144,7 @@ export class AppModel {
         }
     }
 
-    async testVolumeBbox(url: string, isoValue: number){
+    async testVolumeBbox(url: string, isoValue: number) {
         const volumeDataNode = await this.plugin.builders.data.download({ url: url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
         const parsed = await this.plugin.dataFormats.get('dscif')!.parse(this.plugin, volumeDataNode, { entryId: url });
         const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
@@ -166,7 +171,7 @@ export class AppModel {
                 }
             }
         }
-        console.log(`bbox (value>=${isoValue}):`, [minX, minY, minZ], [maxX+1, maxY+1, maxZ+1], 'size:', [maxX-minX+1, maxY-minY+1, maxZ-minZ+1]);
+        console.log(`bbox (value>=${isoValue}):`, [minX, minY, minZ], [maxX + 1, maxY + 1, maxZ + 1], 'size:', [maxX - minX + 1, maxY - minY + 1, maxZ - minZ + 1]);
     }
 
     async loadExampleEmdb(entryId: string = 'emd-1832') {
@@ -268,18 +273,6 @@ export class AppModel {
 
         try {
             await this.plugin.clear();
-            // Testing API:
-            // try {
-            //     const meshes = await this.getMeshData_debugging('empiar', 'empiar-10070', 1, 7);
-            //     console.log('Meshes from API:\n', meshes);
-            // } catch {
-            //     console.error('Could not get mesh data from API (maybe API not running?)');
-            // }
-            // await this.plugin.clear();
-
-            // Examples for mesh visualization - currently taking static data stored on a MetaCentrum VM
-            // MeshExamples.runMeshExample(this.plugin, 'fg', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');
-            // MeshExamples.runMultimeshExample(this.plugin, 'fg', 'worst', 'http://sestra.ncbr.muni.cz/data/cellstar-sample-data/db');  // Multiple segments merged into 1 segment with multiple meshes
 
             this.metadata = await API2.getMetadata(source, entryId);
             if (segments === 'fg') {
@@ -289,8 +282,6 @@ export class AppModel {
 
             for (let segment of this.metadata!.annotation.segment_list) {
                 const detail = MetadataUtils.getSufficientDetail(this.metadata!, segment.id, DEFAULT_DETAIL);
-                // console.log(`Annotation: segment ${segment.id}. ${segment.biological_annotation.name} ${segment.colour} ${detail}`);
-                // QUESTION: hmm, shouldn't it be "color"?
             }
 
             this.meshSegmentNodes = {};
@@ -336,10 +327,16 @@ export class AppModel {
         console.time('Load example');
         const source = AppModel.splitEntryId(entryId).source as 'empiar' | 'emdb';
         let error = undefined;
+        let pdbs: string[] = [];
 
         try {
             await this.plugin.clear();
-            this.metadata = await API2.getMetadata(source, entryId);
+
+            const metadataPromise = API2.getMetadata(source, entryId);
+            const isoLevelPromise = AppModel.getIsovalue(entryId);
+            const pdbsPromise = AppModel.getPdbIdsForEmdbEntry(entryId);
+            this.metadata = await metadataPromise;
+
 
             const hasVolumes = this.metadata.grid.volumes.volume_downsamplings.length > 0;
             const hasLattices = this.metadata.grid.segmentation_lattices.segmentation_lattice_ids.length > 0;
@@ -352,7 +349,7 @@ export class AppModel {
 
             // DEBUG
             const debugVolumeInfo = false;
-            if (debugVolumeInfo){
+            if (debugVolumeInfo) {
                 const url = API2.volumeInfoUrl(source, entryId);
                 const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
                 const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
@@ -363,7 +360,7 @@ export class AppModel {
             const debugMeshesBcif = false;
             const debugSegment = 1;
             const debugDetail = 10;
-            if (debugMeshesBcif){
+            if (debugMeshesBcif) {
                 const url = API2.meshUrl_Bcif(source, entryId, debugSegment, debugDetail);
                 const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
                 const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
@@ -372,7 +369,7 @@ export class AppModel {
 
             if (hasVolumes) {
                 // const isoLevel = { kind: 'relative', value: 2.73}; // rel 2.73 (abs 0.42) is OK for emd-1832
-                const isoLevel = await AppModel.getIsovalue(entryId);
+                const isoLevel = await isoLevelPromise;
                 const url = API2.volumeUrl(source, entryId, BOX, MAX_VOXELS);
                 const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
                 const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit(); // DEBUG
@@ -380,24 +377,6 @@ export class AppModel {
                 const parsed = await this.plugin.dataFormats.get('dscif')!.parse(this.plugin, data, { entryId });
                 const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
                 let volumeData = volume.cell!.obj!.data;
-
-                // // DEBUG:
-                // const oldSpace = volumeData.grid.cells.space;
-                // const [a, b, c] = oldSpace.axisOrderSlowToFast;
-                // const newSpace = Tensor.Space([...oldSpace.dimensions], [c, b, a], Float32Array);
-                // volumeData = {
-                //     ...volumeData,
-                //     grid: {
-                //         ...volumeData.grid,
-                //         cells: {
-                //             ...volumeData.grid.cells,
-                //             space: newSpace,
-                //         }
-                //     }
-                // }
-                // parsed.volume = volumeData;
-                // parsed.volumes[0] = volumeData;
-
                 this.volume = volumeData;
                 const repr = await this.plugin.build()
                     .to(volume)
@@ -425,6 +404,8 @@ export class AppModel {
             if (hasMeshes) {
                 MeshExamples.runMeshStreamingExample(this.plugin, source, entryId);
             }
+
+            pdbs = await pdbsPromise;
         } catch (ex) {
             this.metadata = undefined;
             error = ex;
@@ -435,8 +416,47 @@ export class AppModel {
             this.annotation.next(this.metadata?.annotation);
             this.exampleType.next('xAuto');
             this.error.next(error);
+            this.pdbs.next(pdbs);
+            this.currentPdb.next(undefined);
             console.timeEnd('Load example');
         }
+    }
+
+
+    async loadPdb(pdbId: string) {
+        const url = `https://www.ebi.ac.uk/pdbe/entry-files/download/${pdbId}.bcif`;
+        return await this.loadPdbStructureFromBcif(url);
+    }
+
+    async loadPdbStructureFromBcif(url: string, options?: { dataLabel?: string }) {
+        const _data = await this.plugin.builders.data.download({ url, isBinary: true, label: options?.dataLabel });
+        const trajectory = await this.plugin.builders.structure.parseTrajectory(_data, 'mmcif');
+        const repr = await this.plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default');
+        return _data;
+    }
+
+    private getOrCreateGroup(parent: StateBuilder.To<any>, existingGroup?: StateObjectSelector, params?: { label?: string, description?: string }, options?: Partial<StateTransform.Options>) {
+        if (existingGroup) {
+            const children = parent.getTree().children.get(existingGroup.ref);
+            if (children) { // if group exists
+                return existingGroup;
+            }
+        }
+        return parent.apply(CreateGroup, params, options).selector;
+    }
+
+    async showPdb(pdbId: string | undefined) {
+        const update = this.plugin.build();
+
+        for (const node of this.pdbModelNodes) update.delete(node);
+        this.pdbModelNodes = [];
+
+        if (pdbId){
+            const pdbNode = await this.loadPdb(pdbId);
+            this.pdbModelNodes.push(pdbNode);
+        }
+        await update.commit();
+        this.currentPdb.next(pdbId);
     }
 
     /** Make visible the specified set of lattice segments */
@@ -449,14 +469,17 @@ export class AppModel {
 
         const update = this.plugin.build();
 
-        for (const l of this.currentLevel) update.delete(l);
-        this.currentLevel = [];
+        this.segmentationGroup = this.getOrCreateGroup(update.toRoot(), this.segmentationGroup, { label: 'Segmentation' });
+        const group = this.segmentationGroup;
+
+        for (const l of this.segmentationNodes) update.delete(l);
+        this.segmentationNodes = [];
 
         for (const s of segments) {
             const volume = this.segmentation?.createSegment(s.id);
             Volume.PickingGranularity.set(volume!, 'volume');
-            const root = update.toRoot().apply(CreateVolume, { volume });
-            this.currentLevel.push(root.selector);
+            const root = update.to(group).apply(CreateVolume, { volume });
+            this.segmentationNodes.push(root.selector);
 
             root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
                 type: 'isosurface',
@@ -661,7 +684,7 @@ export class AppModel {
     private async showSegment(volume: Volume, color: number[], opacity = 1) {
         const update = this.plugin.build();
         const root = update.toRoot().apply(CreateVolume, { volume });
-        this.currentLevel.push(root.selector);
+        this.segmentationNodes.push(root.selector);
 
         const seg = root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
             type: 'isosurface',
@@ -722,5 +745,27 @@ export class AppModel {
         return { kind: 'relative', value: 1.0 };
     }
 
+    private static async getPdbIdsForEmdbEntry(entryId: string): Promise<string[]> {
+        const split = AppModel.splitEntryId(entryId);
+        const result = [];
+        if (split.source === 'emdb') {
+            entryId = entryId.toUpperCase();
+            const apiUrl = `https://www.ebi.ac.uk/pdbe/api/emdb/entry/fitted/${entryId}`;
+            try {
+                const response = await fetch(apiUrl);
+                if (response.ok) {
+                    const json = await response.json();
+                    const jsonEntry = json[entryId] ?? [];
+                    for (const record of jsonEntry) {
+                        const pdbs = record?.fitted_emdb_id_list?.pdb_id ?? [];
+                        result.push(...pdbs);
+                    }
+                }
+            } catch (ex) {
+                // do nothing
+            }
+        }
+        return result;
+    }
 }
 

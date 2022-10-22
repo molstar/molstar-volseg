@@ -51,7 +51,7 @@ function Main() {
     </>;
 }
 
-function EntryForm({ entryId, action }: { entryId: string, action: (entryId: string) => any }){
+function EntryForm({ entryId, action }: { entryId: string, action: (entryId: string) => any }) {
     let form = AppModel.splitEntryId(entryId);
     return <>
         <form onSubmit={(e) => { action(AppModel.createEntryId(form.source, form.entryNumber)); e.preventDefault(); }} >
@@ -77,7 +77,7 @@ function UIExampleEmdb({ model }: { model: AppModel }) {
     return <>
         <EntryForm entryId={entryId} action={entryId => model.loadExampleEmdb(entryId)} />
         <Divider style={{ marginBlock: 16 }} />
-        
+
         {annotation && <>
             <Typography variant='caption'>{entryId}</Typography>
             <Typography variant='h6'>{annotation?.details}</Typography>
@@ -176,8 +176,8 @@ function UIExampleMeshStreaming({ model }: { model: AppModel }) {
                 {error.toString()}
             </Typography>
         </> || <>
-            <Typography variant='h6'>{annotation?.name ?? 'Untitled'}</Typography>
-        </>}
+                <Typography variant='h6'>{annotation?.name ?? 'Untitled'}</Typography>
+            </>}
 
     </>;
 }
@@ -185,12 +185,13 @@ function UIExampleMeshStreaming({ model }: { model: AppModel }) {
 function UIExampleAuto({ model }: { model: AppModel }) {
     const entryId = useBehavior(model.entryId);
     const annotation = useBehavior(model.annotation);
-    const current = useBehavior(model.currentSegment);
+    const pdbs = useBehavior(model.pdbs);
+    const current = useBehavior(model.currentPdb);
     const error = useBehavior(model.error);
 
     return <>
         <Typography variant='body1'>
-            This example shows either volume isosurface with lattice segmentation or mesh steaming, depending on what data are available. 
+            This example shows either volume isosurface with lattice segmentation or mesh steaming, depending on what data are available.
         </Typography>
         <Typography variant='body1'>
             Try: EMDB 1832, EMPIAR 10070.
@@ -201,16 +202,30 @@ function UIExampleAuto({ model }: { model: AppModel }) {
         <Divider style={{ marginBlock: 16 }} />
 
         <Typography variant='caption'>{entryId}</Typography>
+        {!error
+            ? <>
+                <Typography variant='h6'>{annotation?.name ?? 'Untitled'}</Typography>
+                <Typography variant='caption'>{annotation?.details}</Typography>
+            </>
+            : <>
+                <Typography variant='h6'>{'Error'}</Typography>
+                <Typography variant='body1'>
+                    {error.toString()}
+                </Typography>
+            </>
+        }
 
-        {error && <>
-            <Typography variant='h6'>{'Error'}</Typography>
-            <Typography variant='body1'>
-                {error.toString()}
-            </Typography>
-        </> || <>
-            <Typography variant='h6'>{annotation?.name ?? 'Untitled'}</Typography>
-            <Typography variant='caption'>{annotation?.details}</Typography>
-        </>}
+        {pdbs.length > 0 &&
+            <div>
+                <Typography variant='body2' style={{ marginTop: 12, marginBottom: 4 }}>Fitted models in PDB:</Typography>
+                {pdbs.map(pdb =>
+                    <Button key={pdb} size='small' variant={pdb === current ? 'contained' : 'outlined'} style={{ margin: 2, textTransform: 'lowercase' }}
+                        title={pdb === current ? `Remove ${pdb}` : `Load ${pdb}`}
+                        onClick={() => model.showPdb(pdb === current ? undefined : pdb)}>
+                        {pdb}
+                    </Button>)}
+            </div>
+        }
 
     </>;
 }
