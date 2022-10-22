@@ -1,10 +1,14 @@
 import argparse
+import atexit
 import os
 import subprocess
 from pathlib import Path
 from preprocessor.main import remove_temp_zarr_hierarchy_storage_folder
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE, DEFAULT_DB_PATH, RAW_INPUT_FILES_DIR, TEMP_ZARR_HIERARCHY_STORAGE_PATH
 from preprocessor.src.tools.deploy_db.build_and_deploy import DEFAULT_FRONTEND_PORT, DEFAULT_HOST, DEFAULT_PORT
+from preprocessor.src.tools.deploy_db.deploy_process_helper import clean_up_processes
+
+PROCESS_IDS_LIST = []
 
 def parse_script_args():
     parser=argparse.ArgumentParser()
@@ -37,7 +41,8 @@ def run_api(args):
         "python", "serve.py"
     ]
     # if not figure out how to pass full path
-    subprocess.Popen(lst, env=deploy_env, cwd='server/')
+    api_process = subprocess.Popen(lst, env=deploy_env, cwd='server/')
+    PROCESS_IDS_LIST.append(api_process)
 
 def run_frontend(args):
     deploy_env = {
@@ -56,7 +61,8 @@ def run_frontend(args):
         "-l", str(args.frontend_port)
     ]
         
-    subprocess.Popen(lst)
+    frontend_process = subprocess.Popen(lst)
+    PROCESS_IDS_LIST.append(frontend_process)
     # subprocess.call(lst)
 
 def shut_down_ports(args):
@@ -70,6 +76,7 @@ def deploy(args):
     run_frontend(args)
 
 if __name__ == '__main__':
+    atexit.register(clean_up_processes, PROCESS_IDS_LIST)
     args = parse_script_args()
     deploy(args)
 

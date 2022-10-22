@@ -12,6 +12,7 @@ import sys
 from preprocessor.main import remove_temp_zarr_hierarchy_storage_folder
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE, DEFAULT_DB_PATH, RAW_INPUT_FILES_DIR, TEMP_ZARR_HIERARCHY_STORAGE_PATH
 import psutil
+from preprocessor.src.tools.deploy_db.deploy_process_helper import clean_up_processes, clean_up_temp_zarr_hierarchy_storage
 
 from preprocessor.src.tools.prepare_input_for_preprocessor.prepare_input_for_preprocessor import csv_to_config_list_of_dicts, prepare_input_for_preprocessor
 
@@ -82,53 +83,10 @@ def _deploy(args):
 
     return deploy_process
 
-def _signal_handler(sig, frame):
-    print('You pressed Ctrl+C!')
-    # global PROCESS_IDS_LIST
-    # print(f'Process IDs list: {PROCESS_IDS_LIST}')
-    # for process_id in PROCESS_IDS_LIST:
-    #     process = psutil.Process(process_id)
-    #     for child in process.children(recursive=True):
-    #         child.kill()
-    #         print(f'Process killed: {child.cmdline()}')
-    
-    #     process.kill()
-    #     print(f'Process killed: {process.cmdline()}')
-
-
-    # pid = os.getpid()
-    # parent = psutil.Process(pid)
-
-    # if FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH.exists():
-    #     print(f'Removing db working dir:{FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH}')
-    #     remove_temp_zarr_hierarchy_storage_folder(FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH)
-
-    # for child in parent.children(recursive=True):
-    #     child.kill()
-    # parent.kill()
-
-def clean_up(process_ids: list):
-    print('CLEAN UP - killing all processes')
-    processes_list: list[psutil.Process] = []
-    for process_id in process_ids:
-        processes_list.append(psutil.Process(process_id))
-
-    if FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH.exists():
-        print(f'Removing db working dir:{FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH}')
-        remove_temp_zarr_hierarchy_storage_folder(FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH)
-    
-    for process in processes_list:
-        for child in process.children(recursive=True):
-            child.kill()
-            print(f'Process killed by atexit: {child.cmdline()}')
-        
-        process.kill()
-        print(f'Parent process killed by atexit: {process.cmdline()}')
-
 if __name__ == '__main__':
     print("DEFAULT PORTS ARE TEMPORARILY SET TO 4000 and 8000, CHANGE THIS AFTERWARDS")
-    # signal.signal(signal.SIGINT, _signal_handler)
-    atexit.register(clean_up, PROCESS_IDS_LIST)
+    atexit.register(clean_up_processes, PROCESS_IDS_LIST)
+    atexit.register(clean_up_temp_zarr_hierarchy_storage, FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH)
     args = parse_script_args()
     build_process, deploy_process = build_and_deploy_db(args)
     build_process.communicate()

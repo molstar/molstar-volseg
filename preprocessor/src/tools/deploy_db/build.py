@@ -2,14 +2,19 @@
 
 
 import argparse
+import atexit
 import multiprocessing
 import os
 import subprocess
 from pathlib import Path
 from preprocessor.main import remove_temp_zarr_hierarchy_storage_folder
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE, DEFAULT_DB_PATH, RAW_INPUT_FILES_DIR, TEMP_ZARR_HIERARCHY_STORAGE_PATH
+from preprocessor.src.tools.deploy_db.deploy_process_helper import clean_up_processes, clean_up_temp_zarr_hierarchy_storage
 
 from preprocessor.src.tools.prepare_input_for_preprocessor.prepare_input_for_preprocessor import csv_to_config_list_of_dicts, prepare_input_for_preprocessor
+
+PROCESS_IDS_LIST = []
+FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH: Path
 
 def parse_script_args():
     parser=argparse.ArgumentParser()
@@ -40,6 +45,9 @@ def _preprocessor_internal_wrapper(entry: dict):
         lst.extend(['--temp_zarr_hierarchy_storage_path', entry['temp_zarr_hierarchy_storage_path']])
 
     process = subprocess.Popen(lst)
+    global PROCESS_IDS_LIST
+    PROCESS_IDS_LIST.append(process.pid)
+
     return process.communicate()
 
 def _preprocessor_external_wrapper(config: list[dict]):
@@ -54,6 +62,9 @@ def build(args):
         temp_zarr_hierarchy_storage_path = TEMP_ZARR_HIERARCHY_STORAGE_PATH / args.db_path.name
     else:
         temp_zarr_hierarchy_storage_path = args.temp_zarr_hierarchy_storage_path
+
+    global FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH
+    FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH = temp_zarr_hierarchy_storage_path
 
     # here it is removed
     if temp_zarr_hierarchy_storage_path.exists():
@@ -72,5 +83,7 @@ def build(args):
 
 if __name__ == '__main__':
     print("DEFAULT PORTS ARE TEMPORARILY SET TO 4000 and 8000, CHANGE THIS AFTERWARDS")
+    atexit.register(clean_up_processes, PROCESS_IDS_LIST)
+    atexit.register(clean_up_temp_zarr_hierarchy_storage, FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH)
     args = parse_script_args()
     build(args)
