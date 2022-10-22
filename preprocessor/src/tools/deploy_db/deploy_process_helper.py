@@ -1,3 +1,4 @@
+from typing import Optional
 from preprocessor.main import remove_temp_zarr_hierarchy_storage_folder
 import psutil
 from pathlib import Path
@@ -19,7 +20,7 @@ def clean_up_processes(process_ids: list):
         process.kill()
         # print(f'Parent process killed by atexit: {process.cmdline()}')
 
-def clean_up_temp_zarr_hierarchy_storage(temp_zarr_hierarchy_storage_path: Path):
-    if temp_zarr_hierarchy_storage_path.exists():
+def clean_up_temp_zarr_hierarchy_storage(temp_zarr_hierarchy_storage_path: Optional[Path]):
+    if temp_zarr_hierarchy_storage_path is not None and temp_zarr_hierarchy_storage_path.exists():
         print(f'Removing db working dir:{temp_zarr_hierarchy_storage_path}')
         remove_temp_zarr_hierarchy_storage_folder(temp_zarr_hierarchy_storage_path)

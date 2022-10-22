@@ -7,6 +7,7 @@ import multiprocessing
 import os
 import subprocess
 from pathlib import Path
+from typing import Optional
 from preprocessor.main import remove_temp_zarr_hierarchy_storage_folder
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE, DEFAULT_DB_PATH, RAW_INPUT_FILES_DIR, TEMP_ZARR_HIERARCHY_STORAGE_PATH
 from preprocessor.src.tools.deploy_db.deploy_process_helper import clean_up_processes, clean_up_temp_zarr_hierarchy_storage
@@ -14,7 +15,7 @@ from preprocessor.src.tools.deploy_db.deploy_process_helper import clean_up_proc
 from preprocessor.src.tools.prepare_input_for_preprocessor.prepare_input_for_preprocessor import csv_to_config_list_of_dicts, prepare_input_for_preprocessor
 
 PROCESS_IDS_LIST = []
-FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH: Path
+FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH: Optional[Path] = None
 
 def parse_script_args():
     parser=argparse.ArgumentParser()
