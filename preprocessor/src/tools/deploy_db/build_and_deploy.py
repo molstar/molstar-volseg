@@ -18,7 +18,6 @@ from preprocessor.src.tools.deploy_db.deploy_process_helper import clean_up_proc
 from preprocessor.src.tools.prepare_input_for_preprocessor.prepare_input_for_preprocessor import csv_to_config_list_of_dicts, prepare_input_for_preprocessor
 
 PROCESS_IDS_LIST = []
-FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH: Optional[Path] = None
 DEFAULT_HOST = '0.0.0.0'  # 0.0.0.0 = localhost
 DEFAULT_PORT = 8000
 DEFAULT_FRONTEND_PORT = 4000
@@ -56,8 +55,7 @@ def _build(args):
     else:
         temp_zarr_hierarchy_storage_path = args.temp_zarr_hierarchy_storage_path
 
-    global FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH
-    FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH = temp_zarr_hierarchy_storage_path
+    atexit.register(clean_up_temp_zarr_hierarchy_storage, temp_zarr_hierarchy_storage_path)
 
     build_lst = [
         "python", DEPLOY_SCRIPT_PATH,
@@ -87,7 +85,6 @@ def _deploy(args):
 if __name__ == '__main__':
     print("DEFAULT PORTS ARE TEMPORARILY SET TO 4000 and 8000, CHANGE THIS AFTERWARDS")
     atexit.register(clean_up_processes, PROCESS_IDS_LIST)
-    atexit.register(clean_up_temp_zarr_hierarchy_storage, FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH)
     args = parse_script_args()
     build_process, deploy_process = build_and_deploy_db(args)
     build_process.communicate()
