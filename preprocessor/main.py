@@ -37,11 +37,12 @@ def obtain_paths_to_single_entry_files(input_files_dir: Path) -> Dict:
                 elif item.suffix == '.hff':
                     segmentation_file_path = item
                 elif item.suffix == '.map' or item.suffix == '.ccp4' or item.suffix == '.mrc':
-                    volume_file_path: Path = item
+                    volume_file_path = item
         if volume_file_path == None:
             raise Exception('Volume file not found')
             
         d = {
+                'id': (input_files_dir.stem).lower(),
                 'volume_file_path': volume_file_path,
                 'segmentation_file_path': segmentation_file_path,
             }
@@ -106,30 +107,8 @@ def obtain_paths_to_all_files(raw_input_files_dir: Path, hardcoded=True) -> Dict
                 source_db = (dir_path.stem).lower()
                 d[source_db] = []
                 for subdir_path in dir_path.iterdir():
-                    segmentation_file_path: Path = None
-                    volume_file_path: Optional[Path] = None
-
-                    if subdir_path.is_dir():
-                        content = sorted(subdir_path.glob('*'))
-                        for item in content:
-                            if item.is_file():
-                                if item.suffix in APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS:
-                                    sff_segmentation_hff_file = convert_app_specific_segm_to_sff(input_file=item)
-                                    segmentation_file_path = sff_segmentation_hff_file
-                                elif item.suffix == '.hff':
-                                    segmentation_file_path = item
-                                elif item.suffix == '.map' or item.suffix == '.ccp4' or item.suffix == '.mrc':
-                                    volume_file_path = item
-                        if volume_file_path == None:
-                            raise Exception('Volume file not found')
-                            
-                        d[source_db].append(
-                            {
-                                'id': (subdir_path.stem).lower(),
-                                'volume_file_path': volume_file_path,
-                                'segmentation_file_path': segmentation_file_path,
-                            }
-                        )
+                    single_entry_dict = obtain_paths_to_single_entry_files(input_files_dir=subdir_path)        
+                    d[source_db].append(single_entry_dict)
     return d
 
 
