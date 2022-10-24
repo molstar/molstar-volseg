@@ -5,6 +5,7 @@ from pathlib import Path
 
 def clean_up_processes(process_ids: list):
     print('CLEAN UP - killing all processes')
+    print(f'PIDs: {process_ids}')
     processes_list: list[psutil.Process] = []
     for process_id in process_ids:
         processes_list.append(psutil.Process(process_id))
@@ -20,7 +21,8 @@ def clean_up_processes(process_ids: list):
         process.kill()
         # print(f'Parent process killed by atexit: {process.cmdline()}')
 
-def clean_up_temp_zarr_hierarchy_storage(temp_zarr_hierarchy_storage_path: Optional[Path]):
+def clean_up_temp_zarr_hierarchy_storage(temp_zarr_hierarchy_storage_path: Path):
+    print(f'CLEANING TEMP ZARR HIERARCHY STRUCTURE DIR {temp_zarr_hierarchy_storage_path}')
     if temp_zarr_hierarchy_storage_path is not None and temp_zarr_hierarchy_storage_path.exists():
         print(f'Removing db working dir:{temp_zarr_hierarchy_storage_path}')
         remove_temp_zarr_hierarchy_storage_folder(temp_zarr_hierarchy_storage_path)

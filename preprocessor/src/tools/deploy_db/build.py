@@ -15,7 +15,6 @@ from preprocessor.src.tools.deploy_db.deploy_process_helper import clean_up_proc
 from preprocessor.src.tools.prepare_input_for_preprocessor.prepare_input_for_preprocessor import csv_to_config_list_of_dicts, prepare_input_for_preprocessor
 
 PROCESS_IDS_LIST = []
-FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH: Optional[Path] = None
 
 def parse_script_args():
     parser=argparse.ArgumentParser()
@@ -64,8 +63,7 @@ def build(args):
     else:
         temp_zarr_hierarchy_storage_path = args.temp_zarr_hierarchy_storage_path
 
-    global FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH
-    FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH = temp_zarr_hierarchy_storage_path
+    atexit.register(clean_up_temp_zarr_hierarchy_storage, temp_zarr_hierarchy_storage_path)
 
     # here it is removed
     if temp_zarr_hierarchy_storage_path.exists():
@@ -85,6 +83,5 @@ def build(args):
 if __name__ == '__main__':
     print("DEFAULT PORTS ARE TEMPORARILY SET TO 4000 and 8000, CHANGE THIS AFTERWARDS")
     atexit.register(clean_up_processes, PROCESS_IDS_LIST)
-    atexit.register(clean_up_temp_zarr_hierarchy_storage, FOR_CLEANUP_TEMP_ZARR_HIERARCHY_STORAGE_PATH)
     args = parse_script_args()
     build(args)
