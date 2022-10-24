@@ -42,7 +42,9 @@ def run_api(args):
     ]
     # if not figure out how to pass full path
     api_process = subprocess.Popen(lst, env=deploy_env, cwd='server/')
-    PROCESS_IDS_LIST.append(api_process)
+    PROCESS_IDS_LIST.append(api_process.pid)
+
+    return api_process
 
 def run_frontend(args):
     deploy_env = {
@@ -62,8 +64,9 @@ def run_frontend(args):
     ]
         
     frontend_process = subprocess.Popen(lst)
-    PROCESS_IDS_LIST.append(frontend_process)
+    PROCESS_IDS_LIST.append(frontend_process.pid)
     # subprocess.call(lst)
+    return frontend_process
 
 def shut_down_ports(args):
     _free_port(args.frontend_port)
@@ -72,8 +75,10 @@ def shut_down_ports(args):
 
 def deploy(args):
     shut_down_ports(args)
-    run_api(args)
-    run_frontend(args)
+    api_process = run_api(args)
+    frontend_process = run_frontend(args)
+    api_process.communicate()
+    frontend_process.communicate()
 
 if __name__ == '__main__':
     atexit.register(clean_up_processes, PROCESS_IDS_LIST)
