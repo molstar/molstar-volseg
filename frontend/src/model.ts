@@ -45,12 +45,12 @@ export class AppModel {
     private volume?: Volume;
     private segmentationGroup?: StateObjectSelector = undefined;
     private segmentationNodes = [] as StateObjectSelector[];
-    private pdbModelNodes = [] as StateObjectSelector[];
+    private pdbModelNodes: {[pdb: string]: StateObjectSelector} = {};
 
     private segmentation?: LatticeSegmentation;
 
     private metadata?: Metadata = undefined;
-    private meshSegmentNodes: { [segid: number]: any } = {};
+    private meshSegmentNodes: { [segid: number]: StateObjectSelector } = {};
 
     private currentSegments: any[] = [];
     private volumeRepr: any = undefined;
@@ -438,27 +438,44 @@ export class AppModel {
         return dataNode;
     }
 
-    private getOrCreateGroup(parent: StateBuilder.To<any>, existingGroup?: StateObjectSelector, params?: { label?: string, description?: string }, options?: Partial<StateTransform.Options>) {
-        if (existingGroup) {
-            const children = parent.getTree().children.get(existingGroup.ref);
-            if (children) { // if group exists
-                return existingGroup;
-            }
+    private static nodeExists(node: StateObjectSelector): boolean {
+        try {
+            return node.checkValid();
+        } catch {
+            return false;
         }
-        return parent.apply(CreateGroup, params, options).selector;
+    }
+
+    private getOrCreateGroup(parent: StateBuilder.To<any>, group?: StateObjectSelector, params?: { label?: string, description?: string }, options?: Partial<StateTransform.Options>) {
+        if (group && AppModel.nodeExists(group)) {
+            return group;
+        } else {
+            return parent.apply(CreateGroup, params, options).selector;
+        }
     }
 
     async showPdb(pdbId: string | undefined) {
         this.status.next('loading');
+        console.log('showPdb', pdbId, this.pdbModelNodes);
         try {
             const update = this.plugin.build();
 
-            for (const node of this.pdbModelNodes) update.delete(node);
-            this.pdbModelNodes = [];
+            for (const pdb in this.pdbModelNodes) {
+                const node = this.pdbModelNodes[pdb];
+                if (!AppModel.nodeExists(node)) {
+                    delete this.pdbModelNodes[pdb];
+                    continue;
+                }
+                setSubtreeVisibility(node.state!, node.ref, true);  // hide
+            }
 
             if (pdbId) {
-                const pdbNode = await this.loadPdb(pdbId);
-                this.pdbModelNodes.push(pdbNode);
+                let pdbNode = this.pdbModelNodes[pdbId];
+                if (!pdbNode) {
+                    pdbNode = await this.loadPdb(pdbId);
+                    this.pdbModelNodes[pdbId] = pdbNode;
+                }
+                setSubtreeVisibility(pdbNode.state!, pdbNode.ref, false);  // show
             }
             await update.commit();
             this.currentPdb.next(pdbId);
@@ -536,7 +553,12 @@ export class AppModel {
             this.currentSegment.next(undefined);
         }
 
-        for (const node of Object.values(this.meshSegmentNodes)) {
+        for (const segid in this.meshSegmentNodes) {
+            const node = this.meshSegmentNodes[segid];
+            if (!AppModel.nodeExists(node)) {
+                delete this.meshSegmentNodes[segid];
+                continue;
+            }
             setSubtreeVisibility(node.state!, node.ref, true);  // hide
         }
         for (const seg of segments) {
