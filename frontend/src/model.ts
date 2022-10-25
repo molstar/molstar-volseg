@@ -400,7 +400,7 @@ export class AppModel {
                 }
             }
             if (hasMeshes) {
-                MeshExamples.runMeshStreamingExample(this.plugin, source, entryId);
+                await MeshExamples.runMeshStreamingExample(this.plugin, source, entryId);
             }
 
             pdbs = await pdbsPromise;
