@@ -19,9 +19,9 @@ class VolumeData3dInfoCategory(CIFCategoryDesc):
             Field.strings(name="name", value=lambda d, i: ctx.name),
             # TODO: would be nice to use i as index of axis order instead of index in the
             # axis order
-            Field.numbers(name="axis_order[0]", value=lambda d, i: 0, encoder=byte_array, dtype="i4"),
-            Field.numbers(name="axis_order[1]", value=lambda d, i: 1, encoder=byte_array, dtype="i4"),
-            Field.numbers(name="axis_order[2]", value=lambda d, i: 2, encoder=byte_array, dtype="i4"),
+            Field.numbers(name="axis_order[0]", value=lambda d, i: ctx.axis_order[0], encoder=byte_array, dtype="i4"),
+            Field.numbers(name="axis_order[1]", value=lambda d, i: ctx.axis_order[1], encoder=byte_array, dtype="i4"),
+            Field.numbers(name="axis_order[2]", value=lambda d, i: ctx.axis_order[2], encoder=byte_array, dtype="i4"),
             # origin
             Field.numbers(name="origin[0]", value=lambda d, i: ctx.origin[0], encoder=byte_array, dtype="f4"),
             Field.numbers(name="origin[1]", value=lambda d, i: ctx.origin[1], encoder=byte_array, dtype="f4"),

@@ -130,7 +130,7 @@ class FileSystemVolumeServerDB(VolumeServerDB):
 
         if self.store_type == "directory":
             perm_store = zarr.DirectoryStore(str(self._path_to_object(namespace, key)))
-            zarr.copy_store(temp_store, perm_store, log=stdout)
+            zarr.copy_store(temp_store, perm_store) # , log=stdout)
         elif self.store_type == "zip":
             entry_dir_path = self._path_to_object(namespace, key)
             entry_dir_path.mkdir(parents=True, exist_ok=True)
@@ -140,7 +140,7 @@ class FileSystemVolumeServerDB(VolumeServerDB):
                 allowZip64=True,
                 mode="w",
             )
-            zarr.copy_store(temp_store, perm_store, log=stdout)
+            zarr.copy_store(temp_store, perm_store) # , log=stdout)
         else:
             raise ArgumentError("store type is wrong: {self.store_type}")
 
