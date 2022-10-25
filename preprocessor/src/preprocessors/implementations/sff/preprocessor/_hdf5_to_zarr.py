@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+import shutil
 
 import h5py
 import numcodecs
@@ -24,6 +25,7 @@ def hdf5_to_zarr(temp_root_path: Path, file_path: Path, entry_id: str) -> Path:
         hdf5_file.close()
     except Exception as e:
         logging.error(e, stack_info=True, exc_info=True)
+        raise e
     return temp_zarr_structure_path
 
 
