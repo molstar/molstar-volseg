@@ -9,6 +9,7 @@ class VolumeInfo:
         name: str,
         metadata: VolumeMetadata,
         box: GridSliceBox,
+        axis_order: tuple[int, int, int] = (0, 1, 2)
     ):
         self.name = name
         self.metadata = metadata
@@ -25,3 +26,5 @@ class VolumeInfo:
         self.cell_size = [voxel_size[i] * full_grid_size[i] for i in range(3)]
         self.origin = [(cartn_origin[i] + box.bottom_left[i] * voxel_size[i]) / self.cell_size[i] for i in range(3)]
         self.dimensions = [self.grid_size[i] * voxel_size[i] / self.cell_size[i] for i in range(3)]
+
+        self.axis_order = axis_order

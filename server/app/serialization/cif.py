@@ -36,7 +36,7 @@ def serialize_volume_slice(slice: VolumeSliceData, metadata: VolumeMetadata, box
         writer.write_category(VolumeData3dInfoCategory, [volume_info])
 
         data_category = VolumeData3dCategory()
-        writer.write_category(data_category, [np.ravel(slice["volume_slice"])])
+        writer.write_category(data_category, [np.ravel(slice["volume_slice"], order='F')])
 
     # segmentation
     if "segmentation_slice" in slice and slice["segmentation_slice"]["category_set_ids"] is not None:
@@ -52,7 +52,7 @@ def serialize_volume_slice(slice: VolumeSliceData, metadata: VolumeMetadata, box
 
         # 3d_ids
         # uint32
-        writer.write_category(SegmentationData3dCategory, [np.ravel(segmentation["category_set_ids"])])
+        writer.write_category(SegmentationData3dCategory, [np.ravel(segmentation["category_set_ids"], order='F')])
 
     return writer.encode()
 

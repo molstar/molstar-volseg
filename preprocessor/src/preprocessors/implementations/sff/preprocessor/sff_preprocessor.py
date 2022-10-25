@@ -66,9 +66,18 @@ class SFFPreprocessor(IDataPreprocessor):
                 print(f'Quantization is skipped because input volume dtype is {volume_force_dtype} and requested quantization dtype is {params_for_storing["quantize_dtype_str"]}')
                 del params_for_storing['quantize_dtype_str']
 
+            print(f"Processing volume file {volume_file_path}")
             dask_arr = da.from_array(data)
+            # print('shape', dask_arr.shape)
+            # print('crs', int(header.mapc) - 1, int(header.mapr) - 1, int(header.maps) - 1)
+            # print('n', int(header.nx), int(header.ny), int(header.nz))
+            
             dask_arr = SFFPreprocessor.normalize_axis_order_mrcfile(dask_arr=dask_arr, mrc_header=header)
+            # print('after', dask_arr.shape)
+            
+            
 
+            print(f"Processing segmentation file {segm_file_path}")
             # mesh_simplification_curve = MESH_SIMPLIFICATION_CURVE_LINEAR
             mesh_simplification_curve = make_simplification_curve(MESH_SIMPLIFICATION_N_LEVELS, MESH_SIMPLIFICATION_LEVELS_PER_ORDER)
             if segm_file_path is not None:
@@ -80,18 +89,17 @@ class SFFPreprocessor(IDataPreprocessor):
                 zarr_structure,
                 mrc_header=header,
                 mesh_simplification_curve=mesh_simplification_curve,
-                volume_force_dtype=volume_force_dtype)
+                volume_force_dtype=volume_force_dtype
+            )
             
-            grid_dimensions: list = list(FileSystemVolumeMedatada(grid_metadata).grid_dimensions())
-            zarr_volume_arr_shape: list = list(get_volume_downsampling_from_zarr(1, zarr_structure).shape)
-            
-            if segm_file_path is not None and zarr_structure.primary_descriptor[0] == b'three_d_volume':
-                zarr_segm_arr_shape: list = list(get_segmentation_downsampling_from_zarr(1, zarr_structure, 0).shape)
-                assert grid_dimensions == zarr_segm_arr_shape, \
-                f'grid dimensions from metadata {grid_dimensions} are not equal to segmentation arr shape {zarr_segm_arr_shape}'
-            
-            assert grid_dimensions == zarr_volume_arr_shape, \
-                    f'grid dimensions from metadata {grid_dimensions} are not equal to volume arr shape {zarr_volume_arr_shape}'
+            # grid_dimensions: list = list(FileSystemVolumeMedatada(grid_metadata).grid_dimensions())
+            # zarr_volume_arr_shape: list = list(get_volume_downsampling_from_zarr(1, zarr_structure).shape)            
+            # if segm_file_path is not None and zarr_structure.primary_descriptor[0] == b'three_d_volume':
+            #     zarr_segm_arr_shape: list = list(get_segmentation_downsampling_from_zarr(1, zarr_structure, 0).shape)
+            #     assert grid_dimensions == zarr_segm_arr_shape, \
+            #     f'grid dimensions from metadata {grid_dimensions} are not equal to segmentation arr shape {zarr_segm_arr_shape}'
+            # assert grid_dimensions == zarr_volume_arr_shape, \
+            #         f'grid dimensions from metadata {grid_dimensions} are not equal to volume arr shape {zarr_volume_arr_shape}'
 
             SFFPreprocessor.temp_save_metadata(grid_metadata, GRID_METADATA_FILENAME, self.temp_zarr_structure_path)
 

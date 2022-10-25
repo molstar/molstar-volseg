@@ -119,11 +119,18 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, m
 
 
     d = ccp4_words_to_dict_mrcfile(mrc_header)
+    ao = { d['MAPC'] - 1: 0, d['MAPR'] - 1: 1, d['MAPS'] - 1: 2 }
 
+    N = d['NC'], d['NR'], d['NS']
+    N = N[ao[0]], N[ao[1]], N[ao[2]]
+
+    START = d['NCSTART'], d['NRSTART'], d['NSSTART']
+    START = START[ao[0]], START[ao[1]], START[ao[2]]
+    
     original_voxel_size: tuple[float, float, float] = (
-        d['xLength'] / d['NC'],
-        d['yLength'] / d['NR'],
-        d['zLength'] / d['NS']
+        d['xLength'] / N[0],
+        d['yLength'] / N[1],
+        d['zLength'] / N[2]
     )
 
     voxel_sizes_in_downsamplings: dict = {}
@@ -135,9 +142,9 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, m
     # get origin of grid based on NC/NR/NSSTART variables (5, 6, 7) and original voxel size
     # Converting to strings, then to floats to make it JSON serializable (decimals are not) -> ??
     origin: tuple[float, float, float] = (
-        float(str(d['NCSTART'] * original_voxel_size[0])),
-        float(str(d['NRSTART'] * original_voxel_size[1])),
-        float(str(d['NSSTART'] * original_voxel_size[2])),
+        float(str(START[0] * original_voxel_size[0])),
+        float(str(START[1] * original_voxel_size[1])),
+        float(str(START[2] * original_voxel_size[2])),
     )
 
     # get grid dimensions based on NX/NC, NY/NR, NZ/NS variables (words 1, 2, 3) in CCP4 file
@@ -152,7 +159,7 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, m
             # downsamplings have different voxel size so it is a dict
             'voxel_size': voxel_sizes_in_downsamplings,
             'origin': origin,
-            'grid_dimensions': (d['NC'], d['NR'], d['NS']),
+            'grid_dimensions': N,
             'sampled_grid_dimensions': grid_dimensions_dict,
             'mean': mean_dict,
             'std': std_dict,
