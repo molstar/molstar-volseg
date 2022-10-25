@@ -19,8 +19,8 @@ from preprocessor.src.tools.prepare_input_for_preprocessor.prepare_input_for_pre
 
 PROCESS_IDS_LIST = []
 DEFAULT_HOST = '0.0.0.0'  # 0.0.0.0 = localhost
-DEFAULT_PORT = 8000
-DEFAULT_FRONTEND_PORT = 4000
+DEFAULT_PORT = 9000
+DEFAULT_FRONTEND_PORT = 3000
 DEPLOY_SCRIPT_PATH = str(Path("preprocessor/src/tools/deploy_db/build.py").resolve())
 BUILD_SCRIPT_PATH = str(Path("preprocessor/src/tools/deploy_db/deploy.py").resolve())
 
