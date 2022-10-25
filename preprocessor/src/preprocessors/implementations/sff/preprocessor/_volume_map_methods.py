@@ -75,19 +75,15 @@ def normalize_axis_order_mrcfile(dask_arr: da.Array, mrc_header: object) -> da.A
     Normalizes axis order to X, Y, Z (1, 2, 3)
     '''
     h = mrc_header
-    standard_order = (1, 2, 3)
-    current_order = int(h.mapc), int(h.mapr), int(h.maps)
-    if standard_order != current_order:
-        # mapc/r/s correspondance to dask arr dimensions
-        d = {
-            int(h.mapc): 0,
-            int(h.mapr): 1,
-            int(h.maps): 2
-        }
-        sorted_d = dict(sorted(d.items()))
+    current_order = int(h.mapc) - 1, int(h.mapr) - 1, int(h.maps) - 1
 
-        # reorder dask arr dimensions and return new arr
-        dask_arr = dask_arr.transpose(sorted_d[1], sorted_d[2], sorted_d[3])
+    if current_order != (0, 1, 2):
+        print(f"Reordering axes from {current_order}...")
+        ao = { v: i for i, v in enumerate(current_order) }
+        # TODO: optimize this to a single transpose
+        dask_arr = dask_arr.transpose().transpose(ao[2], ao[1], ao[0]).transpose()
+    else:
+        dask_arr = dask_arr.transpose()
 
     return dask_arr
     
