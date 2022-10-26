@@ -15,7 +15,7 @@ import { Asset } from 'molstar/lib/mol-util/assets';
 import { Color } from 'molstar/lib/mol-util/color';
 import { BehaviorSubject } from 'rxjs';
 
-import { CreateVolume, ExampleType, LatticeSegmentation, MetadataUtils, UrlFragmentInfo } from './helpers';
+import { CreateVolume, CustomVolumeRepresentation3D, ExampleType, LatticeSegmentation, MetadataUtils, UrlFragmentInfo } from './helpers';
 import * as MeshExamples from './mesh-extension/examples';
 import { ColorNames } from './mesh-extension/molstar-lib-imports';
 import { Annotation, Segment, type Metadata } from './volume-api-client-lib/data';
@@ -502,13 +502,15 @@ export class AppModel {
         for (const l of this.segmentationNodes) update.delete(l);
         this.segmentationNodes = [];
 
+        console.log('StateTransforms.Representation.VolumeRepresentation3D', StateTransforms.Representation.VolumeRepresentation3D);
         for (const s of segments) {
             const volume = this.segmentation?.createSegment(s.id);
             Volume.PickingGranularity.set(volume!, 'volume');
             const root = update.to(group).apply(CreateVolume, { volume, label: `Segment ${s.id}`, description: s.biological_annotation?.name }, { state: { isCollapsed: true } });
             this.segmentationNodes.push(root.selector);
 
-            root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
+            // root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
+            root.apply(CustomVolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
                 type: 'isosurface',
                 typeParams: { alpha: 1, isoValue: Volume.IsoValue.absolute(0.95) },
                 color: 'uniform',

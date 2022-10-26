@@ -9,6 +9,7 @@ import { Tensor, Vec3 } from 'molstar/lib/mol-math/linear-algebra';
 import { Box3D } from 'molstar/lib/mol-math/geometry';
 
 import { type Metadata, Segment } from './volume-api-client-lib/data';
+import { VolumeRepresentation3D } from 'molstar/lib/mol-plugin-state/transforms/representation';
 
 
 export namespace MetadataUtils {
@@ -399,4 +400,23 @@ export const CreateVolume = CreateTransformer({
     apply({ params }) {
         return new PluginStateObject.Volume.Data(params.volume, { label: params.label, description: params.description });
     }
+})
+
+// interface CustomVolumeRepresentation extends VolumeRepresentation3D {}
+
+// function mkCustomVolumeRepresentation(){
+//     let x = VolumeRepresentation3D;
+// }
+
+export const CustomVolumeRepresentation3D = CreateTransformer({
+    ...VolumeRepresentation3D.definition,
+    params: (a, globalCtx) => {
+        const p = VolumeRepresentation3D.definition.params!(a, globalCtx);
+        return { ... p, picovina: PD.Text('Picovina') };
+    }
+})({
+    ...VolumeRepresentation3D.definition,
+    canAutoUpdate: ({ oldParams, newParams }) => VolumeRepresentation3D.definition.canAutoUpdate({ oldParams, newParams }),
+    apply: ({ a, params }, plugin) => VolumeRepresentation3D.definition.apply({ a, params }, plugin),
+    update: ({ a, b, oldParams, newParams }, plugin) => VolumeRepresentation3D.definition.update({ a, b, oldParams, newParams }, plugin),
 })
