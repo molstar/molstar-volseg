@@ -305,7 +305,7 @@ export class AppModel {
         try {
             await this.plugin.clear();
             this.metadata = await API2.getMetadata(source, entryId);
-            MeshExamples.runMeshStreamingExample(this.plugin, source, entryId);
+            MeshExamples.runMeshStreamingExample(this.plugin, source, entryId, API2.volumeServerUrl);
         } catch (ex) {
             this.metadata = undefined;
             error = ex;
@@ -400,7 +400,7 @@ export class AppModel {
                 }
             }
             if (hasMeshes) {
-                await MeshExamples.runMeshStreamingExample(this.plugin, source, entryId);
+                await MeshExamples.runMeshStreamingExample(this.plugin, source, entryId, API2.volumeServerUrl);
             }
 
             pdbs = await pdbsPromise;

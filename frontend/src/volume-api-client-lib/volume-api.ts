@@ -9,23 +9,19 @@ function createApiPrefix() {
     const prefix = process.env.REACT_APP_API_PREFIX
         ? `/${process.env.REACT_APP_API_PREFIX}`: ``;
 
-    return `${hostname}:${port}${prefix}/`;
+    return `${hostname}:${port}${prefix}`;
 }
-
-// const DEFAULT_API_PREFIX = process.env.REACT_APP_VOLUME_API 
-//     ? !process.env.REACT_APP_VOLUME_API.endsWith('/') ? `${process.env.REACT_APP_VOLUME_API}/` : process.env.REACT_APP_VOLUME_API 
-//     : 'http://localhost:9000/';
 
 const DEFAULT_API_PREFIX = createApiPrefix()
 
-const DEFAULT_VOLUME_SERVER_V1 = `${DEFAULT_API_PREFIX}v1`;
-const DEFAULT_VOLUME_SERVER_V2 = `${DEFAULT_API_PREFIX}v2`;
+const DEFAULT_VOLUME_SERVER_V1 = `${DEFAULT_API_PREFIX}/v1`;
+const DEFAULT_VOLUME_SERVER_V2 = `${DEFAULT_API_PREFIX}/v2`;
 
 export class VolumeApiV1 {
     public volumeServerUrl: string;
 
     public constructor(volumeServerUrl: string = DEFAULT_VOLUME_SERVER_V1) {
-        this.volumeServerUrl = volumeServerUrl.replace(/\/$/, '');  // trim trailing slash
+        this.volumeServerUrl = volumeServerUrl.replace(/\/*$/, '');  // trim trailing slash
         console.log('API V1', this.volumeServerUrl)
     }
     
