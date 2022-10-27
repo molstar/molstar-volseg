@@ -401,22 +401,3 @@ export const CreateVolume = CreateTransformer({
         return new PluginStateObject.Volume.Data(params.volume, { label: params.label, description: params.description });
     }
 })
-
-// interface CustomVolumeRepresentation extends VolumeRepresentation3D {}
-
-// function mkCustomVolumeRepresentation(){
-//     let x = VolumeRepresentation3D;
-// }
-
-export const CustomVolumeRepresentation3D = CreateTransformer({
-    ...VolumeRepresentation3D.definition,
-    params: (a, globalCtx) => {
-        const p = VolumeRepresentation3D.definition.params!(a, globalCtx);
-        return { ... p, picovina: PD.Text('Picovina') };
-    }
-})({
-    ...VolumeRepresentation3D.definition,
-    canAutoUpdate: ({ oldParams, newParams }) => VolumeRepresentation3D.definition.canAutoUpdate({ oldParams, newParams }),
-    apply: ({ a, params }, plugin) => VolumeRepresentation3D.definition.apply({ a, params }, plugin),
-    update: ({ a, b, oldParams, newParams }, plugin) => VolumeRepresentation3D.definition.update({ a, b, oldParams, newParams }, plugin),
-})

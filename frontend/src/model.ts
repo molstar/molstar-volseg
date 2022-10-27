@@ -15,7 +15,7 @@ import { Asset } from 'molstar/lib/mol-util/assets';
 import { Color } from 'molstar/lib/mol-util/color';
 import { BehaviorSubject } from 'rxjs';
 
-import { CreateVolume, CustomVolumeRepresentation3D, ExampleType, LatticeSegmentation, MetadataUtils, UrlFragmentInfo } from './helpers';
+import { CreateVolume, ExampleType, LatticeSegmentation, MetadataUtils, UrlFragmentInfo } from './helpers';
 import * as MeshExamples from './mesh-extension/examples';
 import { ColorNames } from './mesh-extension/molstar-lib-imports';
 import { Annotation, Segment, type Metadata } from './volume-api-client-lib/data';
@@ -26,7 +26,6 @@ const DEFAULT_DETAIL: number | null = null;  // null means worst
 
 const USE_GHOST_NODES = false;
 
-const API1 = new VolumeApiV1();
 const API2 = new VolumeApiV2();
 
 
@@ -233,18 +232,30 @@ export class AppModel {
 
     async loadExampleBioimage(entryId: string = 'emd-99999') {
         console.time('Load example');
-        const segmentationId = 0;
-        const url = API1.volumeAndLatticeUrl('emdb', entryId, segmentationId, [[-1000, -1000, -1000], [1000, 1000, 1000]], 10000000);
-        // http://localhost:9000/v1/emdb/emd-99999/box/0/-10000/-10000/-10000/10000/10000/10000/10000000
+        const url = API2.volumeUrl('emdb', entryId, null, 10**7);
+        // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [70_000, 69_000, 1_200]], 10**2);
+        // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [80_000, 65_600, 1_600]], 10**2); // 1025 voxels
+        // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [76_000, 68_000, 800]], 10**2); // 1023 voxels
+        // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [70_400, 69_600, 1_200]], 10**2); // 1020 voxels
+        // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 400], [67_600, 67_600, 4_000]], 10**2); // 1000 voxels
+        // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [79_600, 65_600, 1_600]], 10**2); // 1000 voxels
+        // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 400], [108_000, 64_800, 1200]], 10**2); // 999 voxels
+        // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 400], [78_400, 67_200, 1_200]], 10**2); // 999 voxels
+        // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [69_600, 68_000, 2_000]], 10**2); // 900 voxels
+
         const { plugin } = this;
 
         await plugin.clear();
 
         const data = await plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
         const parsed = await plugin.dataFormats.get('dscif')!.parse(plugin, data);
+        const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit(); // DEBUG
+        AppModel.logCifOverview(cif.data!); // DEBUG
+        // AppModel.logCifOverview(parsed); // DEBUG
         const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
         const volumeData = volume.cell!.obj!.data;
         this.volume = volumeData;
+        console.log('volume.grid:', volumeData.grid); // DEBUG
 
         this.volumeRepr = plugin.build()
             .to(volume)
@@ -509,8 +520,7 @@ export class AppModel {
             const root = update.to(group).apply(CreateVolume, { volume, label: `Segment ${s.id}`, description: s.biological_annotation?.name }, { state: { isCollapsed: true } });
             this.segmentationNodes.push(root.selector);
 
-            // root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
-            root.apply(CustomVolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
+            root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
                 type: 'isosurface',
                 typeParams: { alpha: 1, isoValue: Volume.IsoValue.absolute(0.95) },
                 color: 'uniform',
