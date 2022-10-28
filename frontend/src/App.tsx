@@ -51,8 +51,9 @@ function Main() {
     </>;
 }
 
+// TODO remove (replace by EntryForm_new)
 function EntryForm({ entryId, action }: { entryId: string, action: (entryId: string) => any }) {
-    let form = AppModel.splitEntryId(entryId);
+    const form = AppModel.splitEntryId(entryId);
     return <>
         <form onSubmit={(e) => { action(AppModel.createEntryId(form.source, form.entryNumber)); e.preventDefault(); }} >
             <InputLabel>Source</InputLabel>
@@ -69,6 +70,33 @@ function EntryForm({ entryId, action }: { entryId: string, action: (entryId: str
     </>;
 }
 
+function EntryForm_new({ model, action }: { model: AppModel, action: (entryId: string) => any }) {
+    const [source, setSource] = useState('');
+    const [entryNumber, setEntryNumber] = useState('');
+    const entryId = useBehavior(model.entryId);
+    useEffect(() => {
+        const form = AppModel.splitEntryId(entryId);
+        setSource(form.source ?? '');
+        setEntryNumber(form.entryNumber ?? '');
+    }, [entryId]);
+    console.log('EntryForm', entryId, source, entryNumber);
+
+    return <>
+        <form onSubmit={(e) => { action(AppModel.createEntryId(source, entryNumber)); e.preventDefault(); }} >
+            <InputLabel>Source</InputLabel>
+            <Select id='input-source' label='Source' value={source} onChange={e => setSource(e.target.value)} size='small' fullWidth style={{ marginBottom: 8 }}>
+                <MenuItem value='empiar'>EMPIAR</MenuItem>
+                <MenuItem value='emdb'>EMDB</MenuItem>
+            </Select>
+
+            <InputLabel>Entry ID</InputLabel>
+            <TextField id='input-entry-id' value={entryNumber} onChange={e => setEntryNumber(e.target.value)} size='small' fullWidth style={{ marginBottom: 8 }} />
+
+            <Button type='submit' variant='contained' fullWidth>Load</Button>
+        </form>
+    </>;
+}
+        
 function UIExampleEmdb({ model }: { model: AppModel }) {
     const entryId = useBehavior(model.entryId);
     const annotation = useBehavior(model.annotation);
@@ -199,7 +227,8 @@ function UIExampleAuto({ model }: { model: AppModel }) {
         </Typography>
         <Divider style={{ marginBlock: 16 }} />
 
-        <EntryForm entryId={entryId} action={entryId => model.loadExampleAuto(entryId)} />
+        {/* <EntryForm entryId={entryId} action={entryId => model.loadExampleAuto(entryId)} /> */}
+        <EntryForm_new model={model} action={entryId => model.loadExampleAuto(entryId)} />
 
         <LinearProgress variant={status === 'loading' ? 'indeterminate' : 'determinate'} value={100} color={status === 'error' ? 'error' : 'primary'} style={{ marginBlock: 16 }} />
 

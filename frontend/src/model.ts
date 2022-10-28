@@ -28,14 +28,16 @@ const API2 = new VolumeApiV2();
 
 
 export class AppModel {
+    public exampleType = new BehaviorSubject<ExampleType>('');
     public entryId = new BehaviorSubject<string>('');
+    public status = new BehaviorSubject<'ready' | 'loading' | 'error'>('ready');
+    public error = new BehaviorSubject<any>(undefined);
     public annotation = new BehaviorSubject<Annotation | undefined>(undefined);
+    
     public currentSegment = new BehaviorSubject<Segment | undefined>(undefined);
     public pdbs = new BehaviorSubject<string[]>([]);
     public currentPdb = new BehaviorSubject<string | undefined>(undefined);
-    public error = new BehaviorSubject<any>(undefined);
-    public exampleType = new BehaviorSubject<ExampleType>('');
-    public status = new BehaviorSubject<'ready' | 'loading' | 'error'>('ready');
+
 
     private plugin: PluginUIContext = undefined as any;
     
@@ -326,7 +328,7 @@ export class AppModel {
         }
     }
 
-    async loadExampleAuto(entryId: string = 'emd-1832') {
+    async loadExampleAuto_old(entryId: string = 'emd-1832') {
         console.time('Load example');
         this.status.next('loading');
         const source = AppModel.splitEntryId(entryId).source as 'empiar' | 'emdb';
@@ -425,6 +427,125 @@ export class AppModel {
             this.status.next(error ? 'error' : 'ready');
             console.timeEnd('Load example');
         }
+    }
+    async loadExampleAuto(entryId: string = 'emd-1832') {
+        const example: Example = {
+            exampleType: 'xAuto',
+            defaultEntryId: entryId,
+            func: async (entryId) => {
+                const source = AppModel.splitEntryId(entryId).source as 'empiar' | 'emdb';
+                this.pdbs.next([]);
+                const isoLevelPromise = AppModel.getIsovalue(entryId);
+                const pdbsPromise = AppModel.getPdbIdsForEmdbEntry(entryId);
+    
+                if (!this.metadata) throw new Error('Metadata not initialized');
+                const hasVolumes = this.metadata.grid.volumes.volume_downsamplings.length > 0;
+                const hasLattices = this.metadata.grid.segmentation_lattices.segmentation_lattice_ids.length > 0;
+                const hasMeshes = this.metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids !== undefined;
+    
+                // const A = 10 ** 4;
+                // const BOX: [[number, number, number], [number, number, number]] = [[-A, -A, -A], [A, A, A]];
+                const BOX = null;
+                const MAX_VOXELS = 10 ** 7;
+    
+                // DEBUG
+                // const debugVolumeInfo = false;
+                // if (debugVolumeInfo) {
+                //     const url = API2.volumeInfoUrl(source, entryId);
+                //     const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+                //     const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
+                //     AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
+                // }
+    
+                // // DEBUG
+                // const debugMeshesBcif = false;
+                // const debugSegment = 1;
+                // const debugDetail = 10;
+                // if (debugMeshesBcif) {
+                //     const url = API2.meshUrl_Bcif(source, entryId, debugSegment, debugDetail);
+                //     const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+                //     const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
+                //     AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
+                // }
+    
+                if (hasVolumes) {
+                    // const isoLevel = { kind: 'relative', value: 2.73}; // rel 2.73 (abs 0.42) is OK for emd-1832
+                    const isoLevel = await isoLevelPromise;
+                    const url = API2.volumeUrl(source, entryId, BOX, MAX_VOXELS);
+                    const data = await this.plugin.builders.data.download({ url, isBinary: true, label: `Volume Data: ${url}` }, { state: { isGhost: USE_GHOST_NODES } });
+                    // const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit(); AppModel.logCifOverview(cif.data!); // DEBUG
+                    const parsed = await this.plugin.dataFormats.get('dscif')!.parse(this.plugin, data, { entryId });
+                    const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
+                    let volumeData = volume.cell!.obj!.data;
+                    this.volume = volumeData;
+                    await this.plugin.build()
+                        .to(volume)
+                        .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
+                            type: 'isosurface',
+                            typeParams: { alpha: 0.2, isoValue: Volume.adjustedIsoValue(volumeData, isoLevel.value, isoLevel.kind) },
+                            color: 'uniform',
+                            colorParams: { value: Color(0x121212) }
+                        }))
+                        .commit();
+                }
+                if (hasLattices) {
+                    const url = API2.latticeUrl(source, entryId, 0, BOX, MAX_VOXELS);
+                    const data = await this.plugin.builders.data.download({ url, isBinary: true, label: `Segmentation Data: ${url}` }, { state: { isGhost: USE_GHOST_NODES } });
+                    const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
+                    AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
+                    const latticeBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
+                    if (latticeBlock) {
+                        this.segmentation = await LatticeSegmentation.fromCifBlock(latticeBlock);
+                        await this.showSegments(this.metadata.annotation.segment_list);
+                    } else {
+                        console.log('WARNING: Block SEGMENTATION_DATA is missing. Not showing segmentations.');
+                    }
+                }
+                if (hasMeshes) {
+                    await MeshExamples.runMeshStreamingExample(this.plugin, source, entryId, API2.volumeServerUrl);
+                }
+    
+                this.pdbs.next(await pdbsPromise);
+
+            }
+        }
+
+        await this.loadExample(example);
+    }
+
+    async loadExample(example: Example, entryId?: string) {
+        entryId ??= example.defaultEntryId;
+
+        console.time(`Load example ${example.exampleType} ${entryId}`);
+        this.status.next('loading');
+        const source = AppModel.splitEntryId(entryId).source as 'empiar' | 'emdb';
+        let error = undefined;
+
+        UrlFragmentInfo.set({ example: example.exampleType, entry: entryId });
+        this.exampleType.next(example.exampleType);
+        this.entryId.next(entryId);
+        try {
+            await this.plugin.clear();
+            this.plugin.behaviors.layout.leftPanelTabName.next('data');
+            this.metadata = await API2.getMetadata(source, entryId);;
+            this.annotation.next(this.metadata.annotation);
+            await example.func(entryId);
+        } catch (ex) {
+            console.log('Picovina')
+            this.metadata = undefined;
+            this.annotation.next(undefined);
+            error = ex;
+            throw ex;
+        } finally {
+            // UrlFragmentInfo.set({ example: example.exampleType, entry: entryId });
+            // this.exampleType.next(example.exampleType);
+            // this.entryId.next(entryId);
+            this.status.next(error ? 'error' : 'ready');
+            this.error.next(error);
+            // this.annotation.next(this.metadata?.annotation);
+            console.timeEnd(`Load example ${example.exampleType} ${entryId}`);
+        }
+
     }
 
 
@@ -763,3 +884,8 @@ export class AppModel {
     }
 }
 
+interface Example {
+    exampleType: ExampleType,
+    defaultEntryId: string,
+    func: (entryId: string) => any,
+}

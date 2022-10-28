@@ -463,11 +463,12 @@ export class NodeManager {
 
     public async showNode(key: string, factory: () => StateObjectSelector | Promise<StateObjectSelector>) {
         let node = this.getNode(key);
-        if (!node) {
+        if (node) {
+            setSubtreeVisibility(node.state!, node.ref, false);  // show
+        } else {
             node = await factory();
             this.nodes[key] = node;
         }
-        setSubtreeVisibility(node.state!, node.ref, false);  // show
         return node;
     }
 
