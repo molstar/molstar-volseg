@@ -1,4 +1,4 @@
-import { StateTransformer } from 'molstar/lib/mol-state';
+import { StateBuilder, StateObjectSelector, StateTransform, StateTransformer } from 'molstar/lib/mol-state';
 import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
 import { Grid, Volume } from 'molstar/lib/mol-model/volume';
 import { ParamDefinition as PD } from 'molstar/lib/mol-util/param-definition';
@@ -7,9 +7,10 @@ import { CIF, CifBlock } from 'molstar/lib/mol-io/reader/cif';
 import { volumeFromDensityServerData } from 'molstar/lib/mol-model-formats/volume/density-server'
 import { Tensor, Vec3 } from 'molstar/lib/mol-math/linear-algebra';
 import { Box3D } from 'molstar/lib/mol-math/geometry';
+import { CreateGroup } from 'molstar/lib/mol-plugin-state/transforms/misc';
+import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/state';
 
 import { type Metadata, Segment } from './volume-api-client-lib/data';
-import { VolumeRepresentation3D } from 'molstar/lib/mol-plugin-state/transforms/representation';
 
 
 export namespace MetadataUtils {
@@ -401,3 +402,73 @@ export const CreateVolume = CreateTransformer({
         return new PluginStateObject.Volume.Data(params.volume, { label: params.label, description: params.description });
     }
 })
+
+export class NodeManager {
+    public groupLabel?: string;
+    private groupOptions?: Partial<StateTransform.Options>;
+    private group?: StateObjectSelector;
+    private nodes: { [key: string]: StateObjectSelector };
+
+    constructor(groupName?: string, groupOptions?: Partial<StateTransform.Options>) {
+        this.groupLabel = groupName;
+        this.group = undefined;
+        this.nodes = {};
+    }
+
+    private static nodeExists(node: StateObjectSelector): boolean {
+        try {
+            return node.checkValid();
+        } catch {
+            return false;
+        }
+    }
+
+    public getGroup(update: StateBuilder.Root, parent?: StateObjectSelector): StateObjectSelector {
+        if (!this.groupLabel) {
+            return parent ?? update.toRoot().selector;
+        }
+        if (this.group && NodeManager.nodeExists(this.group)) {
+            return this.group;
+        }
+        const to = parent ? update.to(parent) : update.toRoot();
+        this.group = to.apply(CreateGroup, { label: this.groupLabel }, this.groupOptions).selector;
+        return this.group;
+    }
+
+    public getNode(key: string): StateObjectSelector | undefined {
+        const node = this.nodes[key];
+        if (node && !NodeManager.nodeExists(node)) {
+            delete this.nodes[key];
+            return undefined;
+        }
+        return node;
+    }
+
+    public getNodes(): StateObjectSelector[] {
+        return Object.keys(this.nodes).map(key => this.getNode(key)).filter(node => node) as StateObjectSelector[];
+    }
+
+    public deleteAllNodes(update: StateBuilder.Root) {
+        for (const node of this.getNodes()) {
+            update.delete(node);
+        }
+        this.nodes = {};
+    }
+
+    public hideAllNodes() {
+        for (const node of this.getNodes()) {
+            setSubtreeVisibility(node.state!, node.ref, true);  // hide
+        }
+    }
+
+    public async showNode(key: string, factory: () => StateObjectSelector | Promise<StateObjectSelector>) {
+        let node = this.getNode(key);
+        if (!node) {
+            node = await factory();
+            this.nodes[key] = node;
+        }
+        setSubtreeVisibility(node.state!, node.ref, false);  // show
+        return node;
+    }
+
+}

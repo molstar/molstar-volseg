@@ -4,22 +4,20 @@ import { Volume } from 'molstar/lib/mol-model/volume';
 import { createVolumeRepresentationParams } from 'molstar/lib/mol-plugin-state/helpers/volume-representation-params';
 import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
 import { StateTransforms } from 'molstar/lib/mol-plugin-state/transforms';
-import { CreateGroup } from 'molstar/lib/mol-plugin-state/transforms/misc';
 import { PluginUIContext } from 'molstar/lib/mol-plugin-ui/context';
 import { createPluginUI } from 'molstar/lib/mol-plugin-ui/react18';
 import { DefaultPluginUISpec } from 'molstar/lib/mol-plugin-ui/spec';
-import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/state';
 import { PluginConfig } from 'molstar/lib/mol-plugin/config';
 import { StateBuilder, StateObjectSelector, StateTransform } from 'molstar/lib/mol-state';
 import { Asset } from 'molstar/lib/mol-util/assets';
 import { Color } from 'molstar/lib/mol-util/color';
 import { BehaviorSubject } from 'rxjs';
 
-import { CreateVolume, ExampleType, LatticeSegmentation, MetadataUtils, UrlFragmentInfo } from './helpers';
+import { CreateVolume, ExampleType, LatticeSegmentation, MetadataUtils, NodeManager, UrlFragmentInfo } from './helpers';
 import * as MeshExamples from './mesh-extension/examples';
 import { ColorNames } from './mesh-extension/molstar-lib-imports';
 import { Annotation, Segment, type Metadata } from './volume-api-client-lib/data';
-import { VolumeApiV1, VolumeApiV2 } from './volume-api-client-lib/volume-api';
+import { VolumeApiV2 } from './volume-api-client-lib/volume-api';
 
 
 const DEFAULT_DETAIL: number | null = null;  // null means worst
@@ -40,20 +38,17 @@ export class AppModel {
     public status = new BehaviorSubject<'ready' | 'loading' | 'error'>('ready');
 
     private plugin: PluginUIContext = undefined as any;
-
+    
+    private metadata?: Metadata = undefined;
     private volume?: Volume;
-    private segmentationGroup?: StateObjectSelector = undefined;
-    private segmentationNodes = [] as StateObjectSelector[];
-    private pdbModelNodes: {[pdb: string]: StateObjectSelector} = {};
-
     private segmentation?: LatticeSegmentation;
 
-    private metadata?: Metadata = undefined;
-    private meshSegmentNodes: { [segid: number]: StateObjectSelector } = {};
+    private segmentationNodeMgr = new NodeManager('Segmentation');
+    private pdbModelNodeMgr = new NodeManager();
+    private meshSegmentNodeMgr = new NodeManager();
 
     private currentSegments: any[] = [];
     private volumeRepr: any = undefined;
-
 
 
     async init(target: HTMLElement) {
@@ -83,6 +78,7 @@ export class AppModel {
                 [PluginConfig.Viewport.ShowAnimation, false],
             ],
         });
+
 
         // this.testApiV2();
         // return;
@@ -292,7 +288,6 @@ export class AppModel {
                 MetadataUtils.dropSegments(this.metadata, bgSegments);
             }
 
-            this.meshSegmentNodes = {};
             this.showMeshSegments(this.metadata!.annotation.segment_list, entryId);
         } catch (ex) {
             this.metadata = undefined;
@@ -449,46 +444,13 @@ export class AppModel {
         return dataNode;
     }
 
-    private static nodeExists(node: StateObjectSelector): boolean {
-        try {
-            return node.checkValid();
-        } catch {
-            return false;
-        }
-    }
-
-    private getOrCreateGroup(parent: StateBuilder.To<any>, group?: StateObjectSelector, params?: { label?: string, description?: string }, options?: Partial<StateTransform.Options>) {
-        if (group && AppModel.nodeExists(group)) {
-            return group;
-        } else {
-            return parent.apply(CreateGroup, params, options).selector;
-        }
-    }
-
     async showPdb(pdbId: string | undefined) {
         this.status.next('loading');
-        console.log('showPdb', pdbId, this.pdbModelNodes);
         try {
-            const update = this.plugin.build();
-
-            for (const pdb in this.pdbModelNodes) {
-                const node = this.pdbModelNodes[pdb];
-                if (!AppModel.nodeExists(node)) {
-                    delete this.pdbModelNodes[pdb];
-                    continue;
-                }
-                setSubtreeVisibility(node.state!, node.ref, true);  // hide
-            }
-
+            this.pdbModelNodeMgr.hideAllNodes();
             if (pdbId) {
-                let pdbNode = this.pdbModelNodes[pdbId];
-                if (!pdbNode) {
-                    pdbNode = await this.loadPdb(pdbId);
-                    this.pdbModelNodes[pdbId] = pdbNode;
-                }
-                setSubtreeVisibility(pdbNode.state!, pdbNode.ref, false);  // show
+                await this.pdbModelNodeMgr.showNode(pdbId, async () => await this.loadPdb(pdbId));
             }
-            await update.commit();
             this.currentPdb.next(pdbId);
             this.status.next('ready');
         } catch (ex) {
@@ -506,26 +468,24 @@ export class AppModel {
         }
 
         const update = this.plugin.build();
+        const group = this.segmentationNodeMgr.getGroup(update);
 
-        this.segmentationGroup = this.getOrCreateGroup(update.toRoot(), this.segmentationGroup, { label: 'Segmentation' });
-        const group = this.segmentationGroup;
-
-        for (const l of this.segmentationNodes) update.delete(l);
-        this.segmentationNodes = [];
-
-        console.log('StateTransforms.Representation.VolumeRepresentation3D', StateTransforms.Representation.VolumeRepresentation3D);
-        for (const s of segments) {
-            const volume = this.segmentation?.createSegment(s.id);
-            Volume.PickingGranularity.set(volume!, 'volume');
-            const root = update.to(group).apply(CreateVolume, { volume, label: `Segment ${s.id}`, description: s.biological_annotation?.name }, { state: { isCollapsed: true } });
-            this.segmentationNodes.push(root.selector);
-
-            root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
-                type: 'isosurface',
-                typeParams: { alpha: 1, isoValue: Volume.IsoValue.absolute(0.95) },
-                color: 'uniform',
-                colorParams: { value: Color.fromNormalizedArray(s.colour, 0) }
-            }));
+        this.segmentationNodeMgr.hideAllNodes();
+        
+        for (const seg of segments) {
+            this.segmentationNodeMgr.showNode(seg.id.toString(), () => {
+                const volume = this.segmentation?.createSegment(seg.id);
+                Volume.PickingGranularity.set(volume!, 'volume');
+                const volumeNode = update.to(group).apply(CreateVolume, { volume, label: `Segment ${seg.id}`, description: seg.biological_annotation?.name }, { state: { isCollapsed: true } });
+    
+                volumeNode.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
+                    type: 'isosurface',
+                    typeParams: { alpha: 1, isoValue: Volume.IsoValue.absolute(0.95) },
+                    color: 'uniform',
+                    colorParams: { value: Color.fromNormalizedArray(seg.colour, 0) }
+                }));
+                return volumeNode.selector;
+            });
         }
 
         // const controlPoints: Vec2[] = [
@@ -565,23 +525,14 @@ export class AppModel {
             this.currentSegment.next(undefined);
         }
 
-        for (const segid in this.meshSegmentNodes) {
-            const node = this.meshSegmentNodes[segid];
-            if (!AppModel.nodeExists(node)) {
-                delete this.meshSegmentNodes[segid];
-                continue;
-            }
-            setSubtreeVisibility(node.state!, node.ref, true);  // hide
-        }
+        this.meshSegmentNodeMgr.hideAllNodes();
+
         for (const seg of segments) {
-            let node = this.meshSegmentNodes[seg.id];
-            if (!node) {
+            await this.meshSegmentNodeMgr.showNode(seg.id.toString(), async () => {
                 const detail = MetadataUtils.getSufficientDetail(this.metadata!, seg.id, DEFAULT_DETAIL);
                 const color = seg.colour.length >= 3 ? Color.fromNormalizedArray(seg.colour, 0) : ColorNames.gray;
-                node = await MeshExamples.createMeshFromUrl(this.plugin, API2.meshUrl_Bcif(AppModel.splitEntryId(entryId).source, entryId, seg.id, detail), seg.id, detail, true, false, color);
-                this.meshSegmentNodes[seg.id] = node;
-            }
-            setSubtreeVisibility(node.state!, node.ref, false);  // show
+                return await MeshExamples.createMeshFromUrl(this.plugin, API2.meshUrl_Bcif(AppModel.splitEntryId(entryId).source, entryId, seg.id, detail), seg.id, detail, true, false, color);
+            });
         }
     }
 
@@ -728,7 +679,6 @@ export class AppModel {
     private async showSegment(volume: Volume, color: number[], opacity = 1) {
         const update = this.plugin.build();
         const root = update.toRoot().apply(CreateVolume, { volume });
-        this.segmentationNodes.push(root.selector);
 
         const seg = root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
             type: 'isosurface',
