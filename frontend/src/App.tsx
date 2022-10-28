@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { CSSProperties, useEffect, useRef, useState } from 'react';
 import { useBehavior } from 'molstar/lib/mol-plugin-ui/hooks/use-behavior';
 
 import './App.css';
@@ -27,59 +27,42 @@ function Main() {
     const model = _model.current;
 
     const example = useBehavior(model.exampleType);
-
+    const status = useBehavior(model.status);
 
     return <>
         <div style={{ display: 'flex', flexDirection: 'column', width: RightWidth, position: 'absolute', right: 0, top: 0, bottom: 0, padding: '8px 8px 8px 0', overflow: 'hidden', overflowY: 'auto' }}>
             <div style={{ marginBottom: 8 }}>
                 <ButtonGroup fullWidth>
-                    <Button variant={example === 'xEmdb' ? 'contained' : 'outlined'} onClick={() => model.loadExampleEmdb()}>EMDB SFF</Button>
-                    <Button variant={example === 'xBioimage' ? 'contained' : 'outlined'} onClick={() => model.loadExampleBioimage()}>BioImage Archive</Button>
-                    <Button variant={example === 'xMeshes' ? 'contained' : 'outlined'} onClick={() => model.loadExampleMeshes()}>Meshes</Button>
-                    {/* <Button variant={example === 'xMeshStreaming' ? 'contained' : 'outlined'} onClick={() => model.loadExampleMeshStreaming()}>Mesh Streaming</Button> */}
-                    <Button variant={example === 'xAuto' ? 'contained' : 'outlined'} onClick={() => model.loadExampleAuto()}>Auto</Button>
+                    <Button variant={example === 'emdb' ? 'contained' : 'outlined'} onClick={() => model.loadExample('emdb')}>EMDB SFF</Button>
+                    <Button variant={example === 'bioimage' ? 'contained' : 'outlined'} onClick={() => model.loadExample('bioimage')}>BioImage Archive</Button>
+                    <Button variant={example === 'meshes' ? 'contained' : 'outlined'} onClick={() => model.loadExample('meshes')}>Meshes</Button>
+                    {/* <Button variant={example === 'meshStreaming' ? 'contained' : 'outlined'} onClick={() => model.loadExample('meshStreaming')}>Mesh Streaming</Button> */}
+                    <Button variant={example === 'auto' ? 'contained' : 'outlined'} onClick={() => model.loadExample('auto')}>Auto</Button>
                 </ButtonGroup>
             </div>
-            {example === 'xEmdb' && <UIExampleEmdb model={model} />}
-            {example === 'xBioimage' && <UIExampleBioimage model={model} />}
-            {example === 'xMeshes' && <UIExampleMeshes model={model} />}
-            {example === 'xMeshStreaming' && <UIExampleMeshStreaming model={model} />}
-            {example === 'xAuto' && <UIExampleAuto model={model} />}
+
+            {example === 'emdb' && <UIExampleEmdb model={model} />}
+            {example === 'bioimage' && <UIExampleBioimage model={model} />}
+            {example === 'meshes' && <UIExampleMeshes model={model} />}
+            {example === 'meshStreaming' && <UIExampleMeshStreaming model={model} />}
+            {example === 'auto' && <UIExampleAuto model={model} />}
         </div>
-        {example === 'xBioimage' && <img src='/emd-99999.png' alt='' style={{ width: '33%', position: 'absolute', right: 8, bottom: 8, border: '1px solid #777' }} />}
+        {example === 'bioimage' && <img src='/emd-99999.png' alt='' style={{ width: '33%', position: 'absolute', right: 8, bottom: 8, border: '1px solid #777' }} />}
         <MolStar model={model} />
     </>;
 }
 
-// TODO remove (replace by EntryForm_new)
-function EntryForm({ entryId, action }: { entryId: string, action: (entryId: string) => any }) {
-    const form = AppModel.splitEntryId(entryId);
-    return <>
-        <form onSubmit={(e) => { action(AppModel.createEntryId(form.source, form.entryNumber)); e.preventDefault(); }} >
-            <InputLabel>Source</InputLabel>
-            <Select id='input-source' label='Source' defaultValue={form.source} onChange={(e) => { form.source = e.target.value; }} size='small' fullWidth style={{ marginBottom: 8 }}>
-                <MenuItem value='empiar'>EMPIAR</MenuItem>
-                <MenuItem value='emdb'>EMDB</MenuItem>
-            </Select>
-
-            <InputLabel>Entry ID</InputLabel>
-            <TextField id='input-entry-id' defaultValue={form.entryNumber} onChange={(e) => { form.entryNumber = e.target.value; }} size='small' fullWidth style={{ marginBottom: 8 }} />
-
-            <Button type='submit' variant='contained' fullWidth>Load</Button>
-        </form>
-    </>;
-}
-
-function EntryForm_new({ model, action }: { model: AppModel, action: (entryId: string) => any }) {
+function EntryForm({ model, action }: { model: AppModel, action: (entryId: string) => any }) {
     const [source, setSource] = useState('');
     const [entryNumber, setEntryNumber] = useState('');
+
     const entryId = useBehavior(model.entryId);
+    const status = useBehavior(model.status);
     useEffect(() => {
         const form = AppModel.splitEntryId(entryId);
         setSource(form.source ?? '');
         setEntryNumber(form.entryNumber ?? '');
     }, [entryId]);
-    console.log('EntryForm', entryId, source, entryNumber);
 
     return <>
         <form onSubmit={(e) => { action(AppModel.createEntryId(source, entryNumber)); e.preventDefault(); }} >
@@ -92,25 +75,32 @@ function EntryForm_new({ model, action }: { model: AppModel, action: (entryId: s
             <InputLabel>Entry ID</InputLabel>
             <TextField id='input-entry-id' value={entryNumber} onChange={e => setEntryNumber(e.target.value)} size='small' fullWidth style={{ marginBottom: 8 }} />
 
-            <Button type='submit' variant='contained' fullWidth>Load</Button>
+            <Button type='submit' variant='contained' fullWidth disabled={status === 'loading'}>Load</Button>
         </form>
     </>;
 }
-        
+
+function StatusBar({ model, style }: { model: AppModel, style?: CSSProperties }) {
+    const status = useBehavior(model.status);
+    return <div>
+        <LinearProgress variant={status === 'loading' ? 'indeterminate' : 'determinate'} value={100} color={status === 'error' ? 'error' : 'primary'} style={{ marginBlock: 16, ...style }} />
+    </div>
+}
+
 function UIExampleEmdb({ model }: { model: AppModel }) {
     const entryId = useBehavior(model.entryId);
     const annotation = useBehavior(model.annotation);
     const current = useBehavior(model.currentSegment);
 
     return <>
-        <EntryForm entryId={entryId} action={entryId => model.loadExampleEmdb(entryId)} />
-        <Divider style={{ marginBlock: 16 }} />
+        <EntryForm model={model} action={entryId => model.loadExample('emdb', entryId)} />
+
+        <StatusBar model={model} />
 
         {annotation && <>
             <Typography variant='caption'>{entryId}</Typography>
             <Typography variant='h6'>{annotation?.details}</Typography>
             <Typography variant='caption'>{annotation?.details}</Typography>
-            <Divider style={{ margin: '8px 0' }} />
             <Typography variant='h6'>Segmentation</Typography>
             <Button variant={current ? 'outlined' : 'contained'} size='small' onClick={() => model.showSegments(annotation?.segment_list ?? [])}>Show All</Button>
             {annotation?.segment_list.map((seg) =>
@@ -135,6 +125,7 @@ function UIExampleBioimage({ model }: { model: AppModel }) {
     const [segm, setSegm] = useState(false);
 
     return <>
+        <StatusBar model={model} style={{ marginBlock: 8, height: 6, borderRadius: 3 }} />
         <Typography variant='h6'>Benchmark Airyscan data matching FIB SEM data deposited on EMPIAR</Typography>
         <a href='https://www.ebi.ac.uk/biostudies/studies/S-BSST707' target='_blank' rel='noreferrer'>Archive Link</a>
         <Divider style={{ margin: '8px 0' }} />
@@ -153,8 +144,9 @@ function UIExampleMeshes({ model }: { model: AppModel }) {
     const error = useBehavior(model.error);
 
     return <>
-        <EntryForm entryId={entryId} action={entryId => model.loadExampleMeshes(entryId)} />
-        <Divider style={{ marginBlock: 16 }} />
+        <EntryForm model={model} action={entryId => model.loadExample('meshes', entryId)} />       
+
+        <StatusBar model={model} />
 
         <Typography variant='caption'>{entryId}</Typography>
 
@@ -192,8 +184,9 @@ function UIExampleMeshStreaming({ model }: { model: AppModel }) {
     const error = useBehavior(model.error);
 
     return <>
-        <EntryForm entryId={entryId} action={entryId => model.loadExampleMeshStreaming(entryId)} />
-        <Divider style={{ marginBlock: 16 }} />
+        <EntryForm model={model} action={entryId => model.loadExample('meshStreaming', entryId)} />
+
+        <StatusBar model={model} />
 
         <Typography variant='caption'>{entryId}</Typography>
 
@@ -220,17 +213,16 @@ function UIExampleAuto({ model }: { model: AppModel }) {
 
     return <>
         <Typography variant='body1'>
-            This example shows either volume isosurface with lattice segmentation or mesh steaming, depending on what data are available.
+            This example shows volume isosurface, lattice segmentation, mesh streaming, and/or fitted PDB models, depending on what data are available.
         </Typography>
         <Typography variant='body1'>
-            Try: EMDB 1832, EMPIAR 10070.
+            Try: EMDB 1832 (lattice), EMDB 1181 (lattice+PDB), EMPIAR 10070 (mesh).
         </Typography>
         <Divider style={{ marginBlock: 16 }} />
 
-        {/* <EntryForm entryId={entryId} action={entryId => model.loadExampleAuto(entryId)} /> */}
-        <EntryForm_new model={model} action={entryId => model.loadExampleAuto(entryId)} />
+        <EntryForm model={model} action={entryId => model.loadExample('auto', entryId)} />
 
-        <LinearProgress variant={status === 'loading' ? 'indeterminate' : 'determinate'} value={100} color={status === 'error' ? 'error' : 'primary'} style={{ marginBlock: 16 }} />
+        <StatusBar model={model} />
 
         <Typography variant='caption'>{entryId}</Typography>
         {!error

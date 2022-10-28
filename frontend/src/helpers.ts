@@ -56,7 +56,7 @@ export namespace MetadataUtils {
 }
 
 
-export type ExampleType = '' | 'xEmdb' | 'xBioimage' | 'xMeshes' | 'xMeshStreaming' | 'xAuto';
+export type ExampleType = 'emdb' | 'bioimage' | 'meshes' | 'meshStreaming' | 'auto';
 
 
 

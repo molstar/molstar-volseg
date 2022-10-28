@@ -20,7 +20,9 @@ import { Annotation, Segment, type Metadata } from './volume-api-client-lib/data
 import { VolumeApiV2 } from './volume-api-client-lib/volume-api';
 
 
-const DEFAULT_DETAIL: number | null = null;  // null means worst
+const DEFAULT_EXAMPLE: ExampleType = 'auto';
+const DEFAULT_MESH_DETAIL: number | null = 5;  // null means worst
+const MESH_HIDE_BACKGROUND_EMPIAR_10070 = true;
 
 const USE_GHOST_NODES = false;
 
@@ -28,29 +30,29 @@ const API2 = new VolumeApiV2();
 
 
 export class AppModel {
-    public exampleType = new BehaviorSubject<ExampleType>('');
+    public exampleType = new BehaviorSubject<ExampleType | undefined>(undefined);
     public entryId = new BehaviorSubject<string>('');
     public status = new BehaviorSubject<'ready' | 'loading' | 'error'>('ready');
     public error = new BehaviorSubject<any>(undefined);
+
     public annotation = new BehaviorSubject<Annotation | undefined>(undefined);
-    
     public currentSegment = new BehaviorSubject<Segment | undefined>(undefined);
     public pdbs = new BehaviorSubject<string[]>([]);
     public currentPdb = new BehaviorSubject<string | undefined>(undefined);
 
 
     private plugin: PluginUIContext = undefined as any;
-    
+
     private metadata?: Metadata = undefined;
     private volume?: Volume;
     private segmentation?: LatticeSegmentation;
 
+    private currentSegments: any[] = [];
+    private volumeRepr: any = undefined;
+
     private segmentationNodeMgr = new NodeManager('Segmentation');
     private pdbModelNodeMgr = new NodeManager();
     private meshSegmentNodeMgr = new NodeManager();
-
-    private currentSegments: any[] = [];
-    private volumeRepr: any = undefined;
 
 
     async init(target: HTMLElement) {
@@ -86,26 +88,23 @@ export class AppModel {
         // return;
 
         const fragment = UrlFragmentInfo.get();
-        switch (fragment.example) {
-            case 'xEmdb':
-                setTimeout(() => this.loadExampleEmdb(fragment.entry), 50);
-                break;
-            case 'xBioimage':
-                setTimeout(() => this.loadExampleBioimage(fragment.entry), 50);
-                break;
-            case 'xMeshes':
-                setTimeout(() => this.loadExampleMeshes(fragment.entry), 50);
-                break;
-            case 'xMeshStreaming':
-                setTimeout(() => this.loadExampleMeshStreaming(fragment.entry), 50);
-                break;
-            case 'xAuto':
-                setTimeout(() => this.loadExampleAuto(fragment.entry), 50);
-                break;
-            default:
-                setTimeout(() => this.loadExampleAuto(fragment.entry), 50);
-                break;
-        }
+        setTimeout(() => this.loadExample(fragment.example ?? DEFAULT_EXAMPLE, fragment.entry), 50);
+    }
+
+    /** Reset data */
+    private clear() {
+        this.error.next(undefined);
+
+        this.annotation.next(undefined);
+        this.currentSegment.next(undefined);
+        this.pdbs.next([]);
+        this.currentPdb.next(undefined);
+
+        this.metadata = undefined;
+        this.volume = undefined;
+        this.segmentation = undefined;
+        this.currentSegments = [];
+        this.volumeRepr = undefined;
     }
 
     async testApiV2() {
@@ -172,179 +171,128 @@ export class AppModel {
         console.log(`bbox (value>=${isoValue}):`, [minX, minY, minZ], [maxX + 1, maxY + 1, maxZ + 1], 'size:', [maxX - minX + 1, maxY - minY + 1, maxZ - minZ + 1]);
     }
 
-    async loadExampleEmdb(entryId: string = 'emd-1832') {
-        console.time('Load example');
-        // const isoLevel = { kind: 'relative', value: 2.73};
-        const isoLevel = await AppModel.getIsovalue(entryId);
-        const source = AppModel.splitEntryId(entryId).source as 'empiar' | 'emdb';
-        // const url = `https://maps.rcsb.org/em/${entryId}/cell?detail=6`;
-        const segmentationId = 0
-        const { plugin } = this;
+    private readonly exampleEmdb: Example = {
+        exampleType: 'emdb',
+        defaultEntryId: 'emd-1832',
+        action: async (entryId) => {
+            // const isoLevel = { kind: 'relative', value: 2.73};
+            const isoLevel = await AppModel.getIsovalue(entryId);
+            const source = AppModel.splitEntryId(entryId).source as 'empiar' | 'emdb';
+            const segmentationId = 0
+            const { plugin } = this;
 
-        await plugin.clear();
+            const MAX_VOXELS = 10 ** 7;
 
-        this.metadata = await API2.getMetadata(source, entryId);
-        console.log('annotation:', this.metadata.annotation);
+            // VOLUME
+            const volumeUrl = API2.volumeUrl(source, entryId, null, MAX_VOXELS);
+            const volumeDataNode = await plugin.builders.data.download({ url: volumeUrl, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+            const parsed = await plugin.dataFormats.get('dscif')!.parse(plugin, volumeDataNode, { entryId });
+            const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
+            const volumeData = volume.cell!.obj!.data;
+            this.volume = volumeData;
 
-        const MAX_VOXELS = 100000000;
-        // const MAX_VOXELS = 1000; // debug
+            // LATTICE SEGMENTATION
+            const latticeUrl = API2.latticeUrl(source, entryId, segmentationId, null, MAX_VOXELS);
+            const latticeDataNode = await plugin.builders.data.download({ url: latticeUrl, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+            const cif = await plugin.build().to(latticeDataNode).apply(StateTransforms.Data.ParseCif).commit();
+            // AppModel.logCifOverview(cif.data!, latticeUrl);
+            const latticeBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
 
-        // VOLUME
-        const volumeUrl = API2.volumeUrl(source, entryId, [[-1000, -1000, -1000], [1000, 1000, 1000]], MAX_VOXELS);
-        const volumeDataNode = await plugin.builders.data.download({ url: volumeUrl, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
-        const parsed = await plugin.dataFormats.get('dscif')!.parse(plugin, volumeDataNode, { entryId });
-        const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
-        const volumeData = volume.cell!.obj!.data;
-        this.volume = volumeData;
+            this.segmentation = await LatticeSegmentation.fromCifBlock(latticeBlock!);
 
-        // LATTICE SEGMENTATION
-        const latticeUrl = API2.latticeUrl(source, entryId, segmentationId, [[-1000, -1000, -1000], [1000, 1000, 1000]], MAX_VOXELS);
-        const latticeDataNode = await plugin.builders.data.download({ url: latticeUrl, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
-        const cif = await plugin.build().to(latticeDataNode).apply(StateTransforms.Data.ParseCif).commit();
-        AppModel.logCifOverview(cif.data!, latticeUrl);
-        const latticeBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
+            const repr = plugin.build();
 
-        this.entryId.next(entryId);
-        this.annotation.next(this.metadata.annotation);
-        this.segmentation = await LatticeSegmentation.fromCifBlock(latticeBlock!);
+            repr
+                .to(volume)
+                .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
+                    type: 'isosurface',
+                    typeParams: { alpha: 0.2, isoValue: Volume.adjustedIsoValue(volumeData, isoLevel.value, isoLevel.kind) },
+                    color: 'uniform',
+                    colorParams: { value: Color(0x121212) }
+                }));
 
-        const repr = plugin.build();
+            await repr.commit();
 
-        repr
-            .to(volume)
-            .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
-                type: 'isosurface',
-                typeParams: { alpha: 0.2, isoValue: Volume.adjustedIsoValue(volumeData, isoLevel.value, isoLevel.kind) },
-                color: 'uniform',
-                colorParams: { value: Color(0x121212) }
-            }));
-
-        await repr.commit();
-
-        await this.showSegments(this.metadata.annotation.segment_list);
-
-        UrlFragmentInfo.set({ example: 'xEmdb', entry: entryId });
-        this.exampleType.next('xEmdb');
-        console.timeEnd('Load example');
+            if (!this.metadata) throw new Error('Metadata not initialized');
+            await this.showSegments(this.metadata.annotation.segment_list);
+        }
     }
 
-    async loadExampleBioimage(entryId: string = 'emd-99999') {
-        console.time('Load example');
-        const url = API2.volumeUrl('emdb', entryId, null, 10**7);
-        // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [70_000, 69_000, 1_200]], 10**2);
-        // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [80_000, 65_600, 1_600]], 10**2); // 1025 voxels
-        // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [76_000, 68_000, 800]], 10**2); // 1023 voxels
-        // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [70_400, 69_600, 1_200]], 10**2); // 1020 voxels
-        // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 400], [67_600, 67_600, 4_000]], 10**2); // 1000 voxels
-        // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [79_600, 65_600, 1_600]], 10**2); // 1000 voxels
-        // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 400], [108_000, 64_800, 1200]], 10**2); // 999 voxels
-        // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 400], [78_400, 67_200, 1_200]], 10**2); // 999 voxels
-        // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [69_600, 68_000, 2_000]], 10**2); // 900 voxels
+    private readonly exampleBioimage: Example = {
+        exampleType: 'bioimage',
+        defaultEntryId: 'emd-99999',
+        action: async (entryId) => {
+            const url = API2.volumeUrl('emdb', entryId, null, 10 ** 7);
+            // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [70_000, 69_000, 1_200]], 10**2);
+            // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [80_000, 65_600, 1_600]], 10**2); // 1025 voxels
+            // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [76_000, 68_000, 800]], 10**2); // 1023 voxels
+            // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [70_400, 69_600, 1_200]], 10**2); // 1020 voxels
+            // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 400], [67_600, 67_600, 4_000]], 10**2); // 1000 voxels
+            // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [79_600, 65_600, 1_600]], 10**2); // 1000 voxels
+            // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 400], [108_000, 64_800, 1200]], 10**2); // 999 voxels
+            // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 400], [78_400, 67_200, 1_200]], 10**2); // 999 voxels
+            // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [69_600, 68_000, 2_000]], 10**2); // 900 voxels
 
-        const { plugin } = this;
+            const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+            const parsed = await this.plugin.dataFormats.get('dscif')!.parse(this.plugin, data);
+            // const cif = await this.this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit(); // DEBUG
+            // AppModel.logCifOverview(cif.data!); // DEBUG
+            // AppModel.logCifOverview(parsed); // DEBUG
+            const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
+            const volumeData = volume.cell!.obj!.data;
+            this.volume = volumeData;
+            // console.log('volume.grid:', volumeData.grid); // DEBUG
 
-        await plugin.clear();
+            this.volumeRepr = this.plugin.build()
+                .to(volume)
+                .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
+                    type: 'isosurface',
+                    typeParams: { alpha: 1.0, isoValue: Volume.IsoValue.relative(-0.55) },
+                    color: 'uniform',
+                    colorParams: { value: Color(0x224899) }
+                }));
+            await this.volumeRepr.commit();
 
-        const data = await plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
-        const parsed = await plugin.dataFormats.get('dscif')!.parse(plugin, data);
-        const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit(); // DEBUG
-        AppModel.logCifOverview(cif.data!); // DEBUG
-        // AppModel.logCifOverview(parsed); // DEBUG
-        const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
-        const volumeData = volume.cell!.obj!.data;
-        this.volume = volumeData;
-        console.log('volume.grid:', volumeData.grid); // DEBUG
+            // const segP = this.createSegment99999Plus(volumeData, 0);
+            // const segM = this.createSegment99999Minus(volumeData, -0.55);
+            // await this.showSegment(segP, [0.3, 0.7, 0.1]);
+            // await this.showSegment(segM, [0.1, 0.3, 0.7]);
 
-        this.volumeRepr = plugin.build()
-            .to(volume)
-            .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
-                type: 'isosurface',
-                typeParams: { alpha: 1.0, isoValue: Volume.IsoValue.relative(-0.55) },
-                color: 'uniform',
-                colorParams: { value: Color(0x224899) }
-            }));
-        await this.volumeRepr.commit();
-
-        this.currentSegments = [];
-        // const segP = this.createSegment99999Plus(volumeData, 0);
-        // const segM = this.createSegment99999Minus(volumeData, -0.55);
-        // await this.showSegment(segP, [0.3, 0.7, 0.1]);
-        // await this.showSegment(segM, [0.1, 0.3, 0.7]);
-
-        UrlFragmentInfo.set({ example: 'xBioimage', entry: entryId });
-        this.exampleType.next('xBioimage');
-        console.timeEnd('Load example');
+        }
     }
 
-    async loadExampleMeshes(entryId: string = 'empiar-10070', segments: 'fg' | 'all' = 'fg') {
-        console.time('Load example');
-        const source = AppModel.splitEntryId(entryId).source;
-        let error = undefined;
-
-        try {
-            await this.plugin.clear();
-
-            this.metadata = await API2.getMetadata(source, entryId);
-            if (segments === 'fg') {
+    private readonly exampleMeshes: Example = {
+        exampleType: 'meshes',
+        defaultEntryId: 'empiar-10070',
+        action: async (entryId) => {
+            if (!this.metadata) throw new Error('Metadata not initialized');
+            if (entryId === 'empiar-10070' && MESH_HIDE_BACKGROUND_EMPIAR_10070) {
                 const bgSegments = [13, 15];
                 MetadataUtils.dropSegments(this.metadata, bgSegments);
             }
 
-            this.showMeshSegments(this.metadata!.annotation.segment_list, entryId);
-        } catch (ex) {
-            this.metadata = undefined;
-            error = ex;
-            throw ex;
-        } finally {
-            UrlFragmentInfo.set({ example: 'xMeshes', entry: entryId });
-            this.entryId.next(entryId);
-            this.annotation.next(this.metadata?.annotation);
-            this.exampleType.next('xMeshes');
-            this.error.next(error);
-            console.timeEnd('Load example');
+            this.showMeshSegments(this.metadata.annotation.segment_list, entryId);
         }
     }
 
-    async loadExampleMeshStreaming(entryId: string = 'empiar-10070') {
-        console.time('Load example');
-        const source = AppModel.splitEntryId(entryId).source as 'empiar' | 'emdb';
-        let error = undefined;
-
-        try {
-            await this.plugin.clear();
-            this.metadata = await API2.getMetadata(source, entryId);
+    private readonly exampleMeshStreaming: Example = {
+        exampleType: 'meshStreaming',
+        defaultEntryId: 'empiar-10070',
+        action: async (entryId) => {
+            const source = AppModel.splitEntryId(entryId).source as 'empiar' | 'emdb';
             MeshExamples.runMeshStreamingExample(this.plugin, source, entryId, API2.volumeServerUrl);
-        } catch (ex) {
-            this.metadata = undefined;
-            error = ex;
-            throw ex;
-        } finally {
-            UrlFragmentInfo.set({ example: 'xMeshStreaming', entry: entryId });
-            this.entryId.next(entryId);
-            this.annotation.next(this.metadata?.annotation);
-            this.exampleType.next('xMeshStreaming');
-            this.error.next(error);
-            console.timeEnd('Load example');
         }
     }
 
-    async loadExampleAuto_old(entryId: string = 'emd-1832') {
-        console.time('Load example');
-        this.status.next('loading');
-        const source = AppModel.splitEntryId(entryId).source as 'empiar' | 'emdb';
-        let error = undefined;
-        let pdbs: string[] = [];
-
-        try {
-            await this.plugin.clear();
-            this.plugin.behaviors.layout.leftPanelTabName.next('data');
-
-            const metadataPromise = API2.getMetadata(source, entryId);
+    private readonly exampleAuto: Example = {
+        exampleType: 'auto',
+        defaultEntryId: 'emd-1832',
+        action: async (entryId) => {
+            const source = AppModel.splitEntryId(entryId).source as 'empiar' | 'emdb';
             const isoLevelPromise = AppModel.getIsovalue(entryId);
             const pdbsPromise = AppModel.getPdbIdsForEmdbEntry(entryId);
-            this.metadata = await metadataPromise;
 
-
+            if (!this.metadata) throw new Error('Metadata not initialized');
             const hasVolumes = this.metadata.grid.volumes.volume_downsamplings.length > 0;
             const hasLattices = this.metadata.grid.segmentation_lattices.segmentation_lattice_ids.length > 0;
             const hasMeshes = this.metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids !== undefined;
@@ -375,8 +323,6 @@ export class AppModel {
             // }
 
             if (hasVolumes) {
-                // const isoLevel = { kind: 'relative', value: 2.73}; // rel 2.73 (abs 0.42) is OK for emd-1832
-                const isoLevel = await isoLevelPromise;
                 const url = API2.volumeUrl(source, entryId, BOX, MAX_VOXELS);
                 const data = await this.plugin.builders.data.download({ url, isBinary: true, label: `Volume Data: ${url}` }, { state: { isGhost: USE_GHOST_NODES } });
                 // const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit(); AppModel.logCifOverview(cif.data!); // DEBUG
@@ -384,6 +330,8 @@ export class AppModel {
                 const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
                 let volumeData = volume.cell!.obj!.data;
                 this.volume = volumeData;
+                // const isoLevel = { kind: 'relative', value: 2.73}; // rel 2.73 (abs 0.42) is OK for emd-1832
+                const isoLevel = await isoLevelPromise;
                 await this.plugin.build()
                     .to(volume)
                     .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
@@ -398,7 +346,7 @@ export class AppModel {
                 const url = API2.latticeUrl(source, entryId, 0, BOX, MAX_VOXELS);
                 const data = await this.plugin.builders.data.download({ url, isBinary: true, label: `Segmentation Data: ${url}` }, { state: { isGhost: USE_GHOST_NODES } });
                 const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
-                AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
+                // AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
                 const latticeBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
                 if (latticeBlock) {
                     this.segmentation = await LatticeSegmentation.fromCifBlock(latticeBlock);
@@ -411,138 +359,42 @@ export class AppModel {
                 await MeshExamples.runMeshStreamingExample(this.plugin, source, entryId, API2.volumeServerUrl);
             }
 
-            pdbs = await pdbsPromise;
-        } catch (ex) {
-            this.metadata = undefined;
-            error = ex;
-            throw ex;
-        } finally {
-            UrlFragmentInfo.set({ example: 'xAuto', entry: entryId });
-            this.entryId.next(entryId);
-            this.annotation.next(this.metadata?.annotation);
-            this.exampleType.next('xAuto');
-            this.error.next(error);
-            this.pdbs.next(pdbs);
-            this.currentPdb.next(undefined);
-            this.status.next(error ? 'error' : 'ready');
-            console.timeEnd('Load example');
+            this.pdbs.next(await pdbsPromise);
         }
     }
-    async loadExampleAuto(entryId: string = 'emd-1832') {
-        const example: Example = {
-            exampleType: 'xAuto',
-            defaultEntryId: entryId,
-            func: async (entryId) => {
-                const source = AppModel.splitEntryId(entryId).source as 'empiar' | 'emdb';
-                this.pdbs.next([]);
-                const isoLevelPromise = AppModel.getIsovalue(entryId);
-                const pdbsPromise = AppModel.getPdbIdsForEmdbEntry(entryId);
-    
-                if (!this.metadata) throw new Error('Metadata not initialized');
-                const hasVolumes = this.metadata.grid.volumes.volume_downsamplings.length > 0;
-                const hasLattices = this.metadata.grid.segmentation_lattices.segmentation_lattice_ids.length > 0;
-                const hasMeshes = this.metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids !== undefined;
-    
-                // const A = 10 ** 4;
-                // const BOX: [[number, number, number], [number, number, number]] = [[-A, -A, -A], [A, A, A]];
-                const BOX = null;
-                const MAX_VOXELS = 10 ** 7;
-    
-                // DEBUG
-                // const debugVolumeInfo = false;
-                // if (debugVolumeInfo) {
-                //     const url = API2.volumeInfoUrl(source, entryId);
-                //     const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
-                //     const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
-                //     AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
-                // }
-    
-                // // DEBUG
-                // const debugMeshesBcif = false;
-                // const debugSegment = 1;
-                // const debugDetail = 10;
-                // if (debugMeshesBcif) {
-                //     const url = API2.meshUrl_Bcif(source, entryId, debugSegment, debugDetail);
-                //     const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
-                //     const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
-                //     AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
-                // }
-    
-                if (hasVolumes) {
-                    // const isoLevel = { kind: 'relative', value: 2.73}; // rel 2.73 (abs 0.42) is OK for emd-1832
-                    const isoLevel = await isoLevelPromise;
-                    const url = API2.volumeUrl(source, entryId, BOX, MAX_VOXELS);
-                    const data = await this.plugin.builders.data.download({ url, isBinary: true, label: `Volume Data: ${url}` }, { state: { isGhost: USE_GHOST_NODES } });
-                    // const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit(); AppModel.logCifOverview(cif.data!); // DEBUG
-                    const parsed = await this.plugin.dataFormats.get('dscif')!.parse(this.plugin, data, { entryId });
-                    const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
-                    let volumeData = volume.cell!.obj!.data;
-                    this.volume = volumeData;
-                    await this.plugin.build()
-                        .to(volume)
-                        .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
-                            type: 'isosurface',
-                            typeParams: { alpha: 0.2, isoValue: Volume.adjustedIsoValue(volumeData, isoLevel.value, isoLevel.kind) },
-                            color: 'uniform',
-                            colorParams: { value: Color(0x121212) }
-                        }))
-                        .commit();
-                }
-                if (hasLattices) {
-                    const url = API2.latticeUrl(source, entryId, 0, BOX, MAX_VOXELS);
-                    const data = await this.plugin.builders.data.download({ url, isBinary: true, label: `Segmentation Data: ${url}` }, { state: { isGhost: USE_GHOST_NODES } });
-                    const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
-                    AppModel.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
-                    const latticeBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
-                    if (latticeBlock) {
-                        this.segmentation = await LatticeSegmentation.fromCifBlock(latticeBlock);
-                        await this.showSegments(this.metadata.annotation.segment_list);
-                    } else {
-                        console.log('WARNING: Block SEGMENTATION_DATA is missing. Not showing segmentations.');
-                    }
-                }
-                if (hasMeshes) {
-                    await MeshExamples.runMeshStreamingExample(this.plugin, source, entryId, API2.volumeServerUrl);
-                }
-    
-                this.pdbs.next(await pdbsPromise);
 
-            }
-        }
-
-        await this.loadExample(example);
+    public readonly examples: { [name in ExampleType]: Example } = {
+        emdb: this.exampleEmdb,
+        bioimage: this.exampleBioimage,
+        meshes: this.exampleMeshes,
+        meshStreaming: this.exampleMeshStreaming,
+        auto: this.exampleAuto,
     }
 
-    async loadExample(example: Example, entryId?: string) {
+    async loadExample(exampleType: ExampleType, entryId?: string) {
+        const example = this.examples[exampleType] ?? this.examples[DEFAULT_EXAMPLE];
         entryId ??= example.defaultEntryId;
-
         console.time(`Load example ${example.exampleType} ${entryId}`);
-        this.status.next('loading');
         const source = AppModel.splitEntryId(entryId).source as 'empiar' | 'emdb';
-        let error = undefined;
 
-        UrlFragmentInfo.set({ example: example.exampleType, entry: entryId });
+        this.clear();
         this.exampleType.next(example.exampleType);
         this.entryId.next(entryId);
+        this.status.next('loading');
+        UrlFragmentInfo.set({ example: example.exampleType, entry: entryId });
+
         try {
             await this.plugin.clear();
             this.plugin.behaviors.layout.leftPanelTabName.next('data');
-            this.metadata = await API2.getMetadata(source, entryId);;
+            this.metadata = await API2.getMetadata(source, entryId);
             this.annotation.next(this.metadata.annotation);
-            await example.func(entryId);
-        } catch (ex) {
-            console.log('Picovina')
-            this.metadata = undefined;
-            this.annotation.next(undefined);
-            error = ex;
-            throw ex;
-        } finally {
-            // UrlFragmentInfo.set({ example: example.exampleType, entry: entryId });
-            // this.exampleType.next(example.exampleType);
-            // this.entryId.next(entryId);
-            this.status.next(error ? 'error' : 'ready');
+            await example.action(entryId);
+            this.status.next('ready');
+        } catch (error) {
             this.error.next(error);
-            // this.annotation.next(this.metadata?.annotation);
+            this.status.next('error');
+            throw error;
+        } finally {
             console.timeEnd(`Load example ${example.exampleType} ${entryId}`);
         }
 
@@ -592,13 +444,13 @@ export class AppModel {
         const group = this.segmentationNodeMgr.getGroup(update);
 
         this.segmentationNodeMgr.hideAllNodes();
-        
+
         for (const seg of segments) {
             this.segmentationNodeMgr.showNode(seg.id.toString(), () => {
                 const volume = this.segmentation?.createSegment(seg.id);
                 Volume.PickingGranularity.set(volume!, 'volume');
                 const volumeNode = update.to(group).apply(CreateVolume, { volume, label: `Segment ${seg.id}`, description: seg.biological_annotation?.name }, { state: { isCollapsed: true } });
-    
+
                 volumeNode.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
                     type: 'isosurface',
                     typeParams: { alpha: 1, isoValue: Volume.IsoValue.absolute(0.95) },
@@ -650,7 +502,7 @@ export class AppModel {
 
         for (const seg of segments) {
             await this.meshSegmentNodeMgr.showNode(seg.id.toString(), async () => {
-                const detail = MetadataUtils.getSufficientDetail(this.metadata!, seg.id, DEFAULT_DETAIL);
+                const detail = MetadataUtils.getSufficientDetail(this.metadata!, seg.id, DEFAULT_MESH_DETAIL);
                 const color = seg.colour.length >= 3 ? Color.fromNormalizedArray(seg.colour, 0) : ColorNames.gray;
                 return await MeshExamples.createMeshFromUrl(this.plugin, API2.meshUrl_Bcif(AppModel.splitEntryId(entryId).source, entryId, seg.id, detail), seg.id, detail, true, false, color);
             });
@@ -887,5 +739,5 @@ export class AppModel {
 interface Example {
     exampleType: ExampleType,
     defaultEntryId: string,
-    func: (entryId: string) => any,
+    action: (entryId: string) => any,
 }
