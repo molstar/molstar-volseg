@@ -3,8 +3,9 @@ import { useBehavior } from 'molstar/lib/mol-plugin-ui/hooks/use-behavior';
 
 import './App.css';
 import 'molstar/lib/mol-plugin-ui/skin/light.scss';
-import { AppModel } from './model';
+import { AppModel } from './model/model';
 import { Button, ButtonGroup, Checkbox, LinearProgress, CssBaseline, Divider, FormControlLabel, InputLabel, MenuItem, Select, Slider, TextField, Typography } from '@mui/material';
+import { createEntryId, splitEntryId } from './model/helpers';
 
 
 function App() {
@@ -59,13 +60,13 @@ function EntryForm({ model, action }: { model: AppModel, action: (entryId: strin
     const entryId = useBehavior(model.entryId);
     const status = useBehavior(model.status);
     useEffect(() => {
-        const form = AppModel.splitEntryId(entryId);
+        const form = splitEntryId(entryId);
         setSource(form.source ?? '');
         setEntryNumber(form.entryNumber ?? '');
     }, [entryId]);
 
     return <>
-        <form onSubmit={(e) => { action(AppModel.createEntryId(source, entryNumber)); e.preventDefault(); }} >
+        <form onSubmit={(e) => { action(createEntryId(source, entryNumber)); e.preventDefault(); }} >
             <InputLabel>Source</InputLabel>
             <Select id='input-source' label='Source' value={source} onChange={e => setSource(e.target.value)} size='small' fullWidth style={{ marginBottom: 8 }}>
                 <MenuItem value='empiar'>EMPIAR</MenuItem>
@@ -102,10 +103,10 @@ function UIExampleEmdb({ model }: { model: AppModel }) {
             <Typography variant='h6'>{annotation?.details}</Typography>
             <Typography variant='caption'>{annotation?.details}</Typography>
             <Typography variant='h6'>Segmentation</Typography>
-            <Button variant={current ? 'outlined' : 'contained'} size='small' onClick={() => model.showSegments(annotation?.segment_list ?? [])}>Show All</Button>
+            <Button variant={current ? 'outlined' : 'contained'} size='small' onClick={() => model.session?.showSegments(annotation?.segment_list ?? [])}>Show All</Button>
             {annotation?.segment_list.map((seg) =>
                 <Button size='small' key={seg.id} style={{ marginTop: 4 }} variant={current === seg ? 'contained' : 'outlined'}
-                    onClick={() => model.showSegments([seg])}>
+                    onClick={() => model.session?.showSegments([seg])}>
                     {seg.biological_annotation.name ?? `(Unnamed segment ${seg.id})`}
                 </Button>)
             }
@@ -129,8 +130,8 @@ function UIExampleBioimage({ model }: { model: AppModel }) {
         <Typography variant='h6'>Benchmark Airyscan data matching FIB SEM data deposited on EMPIAR</Typography>
         <a href='https://www.ebi.ac.uk/biostudies/studies/S-BSST707' target='_blank' rel='noreferrer'>Archive Link</a>
         <Divider style={{ margin: '8px 0' }} />
-        <Slider min={-1} max={-0.35} step={0.025} value={iso} valueLabelDisplay='auto' marks onChange={(_, v) => setIso(v as number)} onChangeCommitted={(_, v) => model.setIsoValue(v as number, segm)} />
-        <FormControlLabel control={<Checkbox value={segm} onChange={e => { setSegm(!!e.target.checked); model.setIsoValue(iso, !segm); }} />} label='Auto-segmentation' />
+        <Slider min={-1} max={-0.35} step={0.025} value={iso} valueLabelDisplay='auto' marks onChange={(_, v) => setIso(v as number)} onChangeCommitted={(_, v) => model.session?.setIsoValue(v as number, segm)} />
+        <FormControlLabel control={<Checkbox value={segm} onChange={e => { setSegm(!!e.target.checked); model.session?.setIsoValue(iso, !segm); }} />} label='Auto-segmentation' />
         <Typography variant='body1' style={{ textAlign: 'center', marginTop: 16 }}>
             <b>~500kB of volumetric data</b> to create this rendering.<br />Obtained by converting 600MB of downsampled TIFFs from EMPIAR to MAP (using imod), original dataset size 1.7TB.
         </Typography>
@@ -154,12 +155,12 @@ function UIExampleMeshes({ model }: { model: AppModel }) {
             ? <>
                 <Typography variant='h6'>{annotation?.name ?? 'Untitled'}</Typography>
                 <Button variant={current ? 'outlined' : 'contained'} size='small'
-                    onClick={() => model.showMeshSegments(annotation?.segment_list ?? [], entryId)}>
+                    onClick={() => model.session?.showMeshSegments(annotation?.segment_list ?? [], entryId)}>
                     Show All
                 </Button>
                 {annotation?.segment_list.map(seg =>
                     <Button size='small' key={seg.id} style={{ marginTop: 4 }} variant={current === seg ? 'contained' : 'outlined'}
-                        onClick={() => model.showMeshSegments([seg], entryId)}>
+                        onClick={() => model.session?.showMeshSegments([seg], entryId)}>
                         {seg.id}. {seg.biological_annotation.name}
                     </Button>
                 )}
@@ -209,13 +210,12 @@ function UIExampleAuto({ model }: { model: AppModel }) {
     const pdbs = useBehavior(model.pdbs);
     const current = useBehavior(model.currentPdb);
     const error = useBehavior(model.error);
-    const status = useBehavior(model.status);
 
     return <>
-        <Typography variant='body1'>
+        <Typography variant='caption'>
             This example shows volume isosurface, lattice segmentation, mesh streaming, and/or fitted PDB models, depending on what data are available.
         </Typography>
-        <Typography variant='body1'>
+        <Typography variant='caption'>
             Try: EMDB 1832 (lattice), EMDB 1181 (lattice+PDB), EMPIAR 10070 (mesh).
         </Typography>
         <Divider style={{ marginBlock: 16 }} />
@@ -244,7 +244,7 @@ function UIExampleAuto({ model }: { model: AppModel }) {
                 {pdbs.map(pdb =>
                     <Button key={pdb} size='small' variant={pdb === current ? 'contained' : 'outlined'} style={{ margin: 2, textTransform: 'lowercase' }}
                         title={pdb === current ? `Remove ${pdb}` : `Load ${pdb}`}
-                        onClick={() => model.showPdb(pdb === current ? undefined : pdb)}>
+                        onClick={() => model.session?.showPdb(pdb === current ? undefined : pdb)}>
                         {pdb}
                     </Button>)}
             </div>

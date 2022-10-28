@@ -1,126 +1,10 @@
-import { StateBuilder, StateObjectSelector, StateTransform, StateTransformer } from 'molstar/lib/mol-state';
-import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
-import { Grid, Volume } from 'molstar/lib/mol-model/volume';
-import { ParamDefinition as PD } from 'molstar/lib/mol-util/param-definition';
-import { CustomProperties } from 'molstar/lib/mol-model/custom-property';
 import { CIF, CifBlock } from 'molstar/lib/mol-io/reader/cif';
-import { volumeFromDensityServerData } from 'molstar/lib/mol-model-formats/volume/density-server'
-import { Tensor, Vec3 } from 'molstar/lib/mol-math/linear-algebra';
 import { Box3D } from 'molstar/lib/mol-math/geometry';
-import { CreateGroup } from 'molstar/lib/mol-plugin-state/transforms/misc';
-import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/state';
+import { Tensor, Vec3 } from 'molstar/lib/mol-math/linear-algebra';
+import { volumeFromDensityServerData } from 'molstar/lib/mol-model-formats/volume/density-server';
+import { CustomProperties } from 'molstar/lib/mol-model/custom-property';
+import { Grid, Volume } from 'molstar/lib/mol-model/volume';
 
-import { type Metadata, Segment } from './volume-api-client-lib/data';
-
-
-export namespace MetadataUtils {
-    export function meshSegments(metadata: Metadata): number[] {
-        const segmentIds = metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids;
-        if (segmentIds === undefined) return [];
-        return Object.keys(segmentIds).map(s => parseInt(s));
-    }
-    export function meshSegmentDetails(metadata: Metadata, segmentId: number): number[] {
-        const segmentIds = metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids;
-        if (segmentIds === undefined) return [];
-        const details = segmentIds[segmentId].detail_lvls;
-        return Object.keys(details).map(s => parseInt(s));
-    }
-    /** Get the worst available detail level that is not worse than preferredDetail. 
-     * If preferredDetail is null, get the worst detail level overall.
-     * (worse = greater number) */
-    export function getSufficientDetail(metadata: Metadata, segmentId: number, preferredDetail: number | null) {
-        let availDetails = meshSegmentDetails(metadata, segmentId);
-        if (preferredDetail !== null) {
-            availDetails = availDetails.filter(det => det <= preferredDetail);
-        }
-        return Math.max(...availDetails);
-    }
-    export function annotationsBySegment(metadata: Metadata): { [id: number]: Segment } {
-        const result: { [id: number]: Segment } = {};
-        for (const segment of metadata.annotation.segment_list) {
-            if (segment.id in result) {
-                throw new Error(`Duplicate segment annotation for segment ${segment.id}`);
-            }
-            result[segment.id] = segment;
-        }
-        return result;
-    }
-    export function dropSegments(metadata: Metadata, segments: number[]): void {
-        if (metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids === undefined) return;
-        const dropSet = new Set(segments);
-        metadata.annotation.segment_list = metadata.annotation.segment_list.filter(seg => !dropSet.has(seg.id));
-        for (const seg of segments) {
-            delete metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids[seg];
-        }
-    }
-}
-
-
-export type ExampleType = 'emdb' | 'bioimage' | 'meshes' | 'meshStreaming' | 'auto';
-
-
-
-type Box = [number, number, number, number, number, number];
-
-/** Represents a 3D box in integer coordinates. xFrom... is inclusive, xTo... is exclusive. */
-namespace Box {
-    export function create(xFrom: number, xTo: number, yFrom: number, yTo: number, zFrom: number, zTo: number): Box {
-        return [xFrom, xTo, yFrom, yTo, zFrom, zTo];
-    }
-    export function expand(box: Box, expandFrom: number, expandTo: number): Box {
-        const [xFrom, xTo, yFrom, yTo, zFrom, zTo] = box;
-        return [xFrom - expandFrom, xTo + expandTo, yFrom - expandFrom, yTo + expandTo, zFrom - expandFrom, zTo + expandTo];
-    }
-    export function confine(box1: Box, box2: Box): Box {
-        const [xFrom1, xTo1, yFrom1, yTo1, zFrom1, zTo1] = box1;
-        const [xFrom2, xTo2, yFrom2, yTo2, zFrom2, zTo2] = box2;
-        return [
-            Math.max(xFrom1, xFrom2), Math.min(xTo1, xTo2),
-            Math.max(yFrom1, yFrom2), Math.min(yTo1, yTo2),
-            Math.max(zFrom1, zFrom2), Math.min(zTo1, zTo2)
-        ];
-    }
-    export function cover(box1: Box, box2: Box): Box {
-        const [xFrom1, xTo1, yFrom1, yTo1, zFrom1, zTo1] = box1;
-        const [xFrom2, xTo2, yFrom2, yTo2, zFrom2, zTo2] = box2;
-        return [
-            Math.min(xFrom1, xFrom2), Math.max(xTo1, xTo2),
-            Math.min(yFrom1, yFrom2), Math.max(yTo1, yTo2),
-            Math.min(zFrom1, zFrom2), Math.max(zTo1, zTo2)
-        ];
-    }
-    export function size(box: Box): [number, number, number] {
-        const [xFrom, xTo, yFrom, yTo, zFrom, zTo] = box;
-        return [xTo - xFrom, yTo - yFrom, zTo - zFrom];
-    }
-    export function origin(box: Box): [number, number, number] {
-        const [xFrom, xTo, yFrom, yTo, zFrom, zTo] = box;
-        return [xFrom, yFrom, zFrom];
-    }
-    export function log(name: string, box: Box): void {
-        const [xFrom, xTo, yFrom, yTo, zFrom, zTo] = box;
-        console.log(`Box ${name}: [${xFrom}:${xTo}, ${yFrom}:${yTo}, ${zFrom}:${zTo}], size: ${size(box)}`);
-    }
-    export function toFractional(box: Box, relativeTo: Box): Box3D {
-        const [xFrom, xTo, yFrom, yTo, zFrom, zTo] = box;
-        const [x0, y0, z0] = origin(relativeTo);
-        const [sizeX, sizeY, sizeZ] = size(relativeTo);
-        const min = Vec3.create((xFrom - x0) / sizeX, (yFrom - y0) / sizeY, (zFrom - z0) / sizeZ);
-        const max = Vec3.create((xTo - x0) / sizeX, (yTo - y0) / sizeY, (zTo - z0) / sizeZ);
-        return Box3D.create(min, max);
-    }
-    export function addPoint_InclusiveEnd(box: Box, x: number, y: number, z: number): void {
-        if (x < box[0]) box[0] = x;
-        if (x > box[1]) box[1] = x;
-        if (y < box[2]) box[2] = y;
-        if (y > box[3]) box[3] = y;
-        if (z < box[4]) box[4] = z;
-        if (z > box[5]) box[5] = z;
-    }
-    export function equal(box1: Box, box2: Box): boolean {
-        return box1.every((value, i) => value === box2[i]);
-    }
-}
 
 export class LatticeSegmentation {
     private segments: number[];
@@ -360,116 +244,73 @@ export class LatticeSegmentation {
 }
 
 
+type Box = [number, number, number, number, number, number];
 
-export interface UrlFragmentInfo {
-    example?: ExampleType,
-    entry?: string,
-}
-export namespace UrlFragmentInfo {
-    export function get(): UrlFragmentInfo {
-        const fragment = window.location.hash.replace('#', '');
-        return Object.fromEntries(new URLSearchParams(fragment).entries())
+/** Represents a 3D box in integer coordinates. xFrom... is inclusive, xTo... is exclusive. */
+namespace Box {
+    export function create(xFrom: number, xTo: number, yFrom: number, yTo: number, zFrom: number, zTo: number): Box {
+        return [xFrom, xTo, yFrom, yTo, zFrom, zTo];
     }
-    export function set(urlFragmentInfo: UrlFragmentInfo): void {
-        const fragment = new URLSearchParams(urlFragmentInfo).toString();
-        window.location.hash = fragment;
+    export function expand(box: Box, expandFrom: number, expandTo: number): Box {
+        const [xFrom, xTo, yFrom, yTo, zFrom, zTo] = box;
+        return [xFrom - expandFrom, xTo + expandTo, yFrom - expandFrom, yTo + expandTo, zFrom - expandFrom, zTo + expandTo];
+    }
+    export function confine(box1: Box, box2: Box): Box {
+        const [xFrom1, xTo1, yFrom1, yTo1, zFrom1, zTo1] = box1;
+        const [xFrom2, xTo2, yFrom2, yTo2, zFrom2, zTo2] = box2;
+        return [
+            Math.max(xFrom1, xFrom2), Math.min(xTo1, xTo2),
+            Math.max(yFrom1, yFrom2), Math.min(yTo1, yTo2),
+            Math.max(zFrom1, zFrom2), Math.min(zTo1, zTo2)
+        ];
+    }
+    export function cover(box1: Box, box2: Box): Box {
+        const [xFrom1, xTo1, yFrom1, yTo1, zFrom1, zTo1] = box1;
+        const [xFrom2, xTo2, yFrom2, yTo2, zFrom2, zTo2] = box2;
+        return [
+            Math.min(xFrom1, xFrom2), Math.max(xTo1, xTo2),
+            Math.min(yFrom1, yFrom2), Math.max(yTo1, yTo2),
+            Math.min(zFrom1, zFrom2), Math.max(zTo1, zTo2)
+        ];
+    }
+    export function size(box: Box): [number, number, number] {
+        const [xFrom, xTo, yFrom, yTo, zFrom, zTo] = box;
+        return [xTo - xFrom, yTo - yFrom, zTo - zFrom];
+    }
+    export function origin(box: Box): [number, number, number] {
+        const [xFrom, xTo, yFrom, yTo, zFrom, zTo] = box;
+        return [xFrom, yFrom, zFrom];
+    }
+    export function log(name: string, box: Box): void {
+        const [xFrom, xTo, yFrom, yTo, zFrom, zTo] = box;
+        console.log(`Box ${name}: [${xFrom}:${xTo}, ${yFrom}:${yTo}, ${zFrom}:${zTo}], size: ${size(box)}`);
+    }
+    export function toFractional(box: Box, relativeTo: Box): Box3D {
+        const [xFrom, xTo, yFrom, yTo, zFrom, zTo] = box;
+        const [x0, y0, z0] = origin(relativeTo);
+        const [sizeX, sizeY, sizeZ] = size(relativeTo);
+        const min = Vec3.create((xFrom - x0) / sizeX, (yFrom - y0) / sizeY, (zFrom - z0) / sizeZ);
+        const max = Vec3.create((xTo - x0) / sizeX, (yTo - y0) / sizeY, (zTo - z0) / sizeZ);
+        return Box3D.create(min, max);
+    }
+    export function addPoint_InclusiveEnd(box: Box, x: number, y: number, z: number): void {
+        if (x < box[0]) box[0] = x;
+        if (x > box[1]) box[1] = x;
+        if (y < box[2]) box[2] = y;
+        if (y > box[3]) box[3] = y;
+        if (z < box[4]) box[4] = z;
+        if (z > box[5]) box[5] = z;
+    }
+    export function equal(box1: Box, box2: Box): boolean {
+        return box1.every((value, i) => value === box2[i]);
     }
 }
 
 
-export function lazyGetter<T>(getter: () => T) {
+function lazyGetter<T>(getter: () => T) {
     let value: T | undefined = undefined;
     return () => {
         if (value === undefined) value = getter();
         return value;
     };
-}
-
-
-const CreateTransformer = StateTransformer.builderFactory('cellstar');
-
-export const CreateVolume = CreateTransformer({
-    name: 'create-transformer',
-    from: PluginStateObject.Root,
-    to: PluginStateObject.Volume.Data,
-    params: {
-        label: PD.Text('Volume', { isHidden: true }),
-        description: PD.Text('', { isHidden: true }),
-        volume: PD.Value<Volume>(undefined as any, { isHidden: true }),
-    }
-})({
-    apply({ params }) {
-        return new PluginStateObject.Volume.Data(params.volume, { label: params.label, description: params.description });
-    }
-})
-
-export class NodeManager {
-    public groupLabel?: string;
-    private groupOptions?: Partial<StateTransform.Options>;
-    private group?: StateObjectSelector;
-    private nodes: { [key: string]: StateObjectSelector };
-
-    constructor(groupName?: string, groupOptions?: Partial<StateTransform.Options>) {
-        this.groupLabel = groupName;
-        this.group = undefined;
-        this.nodes = {};
-    }
-
-    private static nodeExists(node: StateObjectSelector): boolean {
-        try {
-            return node.checkValid();
-        } catch {
-            return false;
-        }
-    }
-
-    public getGroup(update: StateBuilder.Root, parent?: StateObjectSelector): StateObjectSelector {
-        if (!this.groupLabel) {
-            return parent ?? update.toRoot().selector;
-        }
-        if (this.group && NodeManager.nodeExists(this.group)) {
-            return this.group;
-        }
-        const to = parent ? update.to(parent) : update.toRoot();
-        this.group = to.apply(CreateGroup, { label: this.groupLabel }, this.groupOptions).selector;
-        return this.group;
-    }
-
-    public getNode(key: string): StateObjectSelector | undefined {
-        const node = this.nodes[key];
-        if (node && !NodeManager.nodeExists(node)) {
-            delete this.nodes[key];
-            return undefined;
-        }
-        return node;
-    }
-
-    public getNodes(): StateObjectSelector[] {
-        return Object.keys(this.nodes).map(key => this.getNode(key)).filter(node => node) as StateObjectSelector[];
-    }
-
-    public deleteAllNodes(update: StateBuilder.Root) {
-        for (const node of this.getNodes()) {
-            update.delete(node);
-        }
-        this.nodes = {};
-    }
-
-    public hideAllNodes() {
-        for (const node of this.getNodes()) {
-            setSubtreeVisibility(node.state!, node.ref, true);  // hide
-        }
-    }
-
-    public async showNode(key: string, factory: () => StateObjectSelector | Promise<StateObjectSelector>) {
-        let node = this.getNode(key);
-        if (node) {
-            setSubtreeVisibility(node.state!, node.ref, false);  // show
-        } else {
-            node = await factory();
-            this.nodes[key] = node;
-        }
-        return node;
-    }
-
 }
