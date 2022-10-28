@@ -8,7 +8,7 @@ from db.file_system.models import FileSystemVolumeMedatada
 from db.file_system.constants import ANNOTATION_METADATA_FILENAME, GRID_METADATA_FILENAME
 from preprocessor.src.preprocessors.i_data_preprocessor import IDataPreprocessor
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._zarr_methods import get_volume_downsampling_from_zarr, get_segmentation_downsampling_from_zarr
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import MESH_SIMPLIFICATION_CURVE_LINEAR, MESH_SIMPLIFICATION_N_LEVELS, MESH_SIMPLIFICATION_LEVELS_PER_ORDER, TEMP_ZARR_HIERARCHY_STORAGE_PATH
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import MAP_SIZE_THRESHOLD_FOR_MRCFILE_MMAP, MESH_SIMPLIFICATION_CURVE_LINEAR, MESH_SIMPLIFICATION_N_LEVELS, MESH_SIMPLIFICATION_LEVELS_PER_ORDER, TEMP_ZARR_HIERARCHY_STORAGE_PATH
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
 import mrcfile
 import dask.array as da
@@ -49,14 +49,35 @@ class SFFPreprocessor(IDataPreprocessor):
                 self.temp_zarr_structure_path)
 
             # read map
-            with mrcfile.mmap(str(volume_file_path.resolve())) as mrc_original:
-                data: np.memmap = mrc_original.data
-                if volume_force_dtype is not None:
-                    data = data.astype(volume_force_dtype)
-                else:
-                    volume_force_dtype = data.dtype
+            # TODO:
+            # measure volume_file_path size
+            # if > threshold
+            # open with mmap
+            # else
+            # open with regular mrcfile open
 
-                header = mrc_original.header
+            # TODO:
+            # measure time of entry preprocessing on one file with size < threshold (emd-1832, 1MB map)
+            if volume_file_path.stat().st_size > MAP_SIZE_THRESHOLD_FOR_MRCFILE_MMAP:
+                print('Processing map using mrcfile MEMMAP')
+                with mrcfile.mmap(str(volume_file_path.resolve())) as mrc_original:
+                    data: np.memmap = mrc_original.data
+                    if volume_force_dtype is not None:
+                        data = data.astype(volume_force_dtype)
+                    else:
+                        volume_force_dtype = data.dtype
+
+                    header = mrc_original.header
+            else:
+                print('Processing map using REGULAR mrcfile open')
+                with mrcfile.open(str(volume_file_path.resolve())) as mrc_original:
+                    data: np.ndarray = mrc_original.data
+                    if volume_force_dtype is not None:
+                        data = data.astype(volume_force_dtype)
+                    else:
+                        volume_force_dtype = data.dtype
+
+                    header = mrc_original.header
 
             if ('quantize_dtype_str' in params_for_storing) and \
                 (
@@ -131,3 +152,5 @@ def make_simplification_curve(n_levels: int, levels_per_order: int) -> dict[int,
 def _round_to_significant_digits(number: float, digits: int) -> float:
     first_digit = -math.floor(math.log10(number))
     return round(number, first_digit + digits - 1)
+
+

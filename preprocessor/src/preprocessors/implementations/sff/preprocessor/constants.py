@@ -29,3 +29,7 @@ DEFAULT_DB_PATH = Path('test-data/db')
 DEFAULT_QUANTIZE_DTYPE_STR = 'u1'
 APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS = ['.am', '.mod', '.seg', '.surf', '.stl']
 CSV_WITH_ENTRY_IDS_FILE = Path('test-data/preprocessor//entry_ids.csv')
+
+# in bytes
+# MAP_SIZE_THRESHOLD_FOR_MRCFILE_MMAP = 4 * 10**9
+MAP_SIZE_THRESHOLD_FOR_MRCFILE_MMAP = 1
