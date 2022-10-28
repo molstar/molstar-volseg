@@ -8,7 +8,7 @@ from db.file_system.models import FileSystemVolumeMedatada
 from db.file_system.constants import ANNOTATION_METADATA_FILENAME, GRID_METADATA_FILENAME
 from preprocessor.src.preprocessors.i_data_preprocessor import IDataPreprocessor
 from preprocessor.src.preprocessors.implementations.sff.preprocessor._zarr_methods import get_volume_downsampling_from_zarr, get_segmentation_downsampling_from_zarr
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import MESH_SIMPLIFICATION_CURVE_LINEAR, MESH_SIMPLIFICATION_N_LEVELS, MESH_SIMPLIFICATION_LEVELS_PER_ORDER, TEMP_ZARR_HIERARCHY_STORAGE_PATH
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import MAP_SIZE_THRESHOLD_FOR_DASK_METHODS, MESH_SIMPLIFICATION_CURVE_LINEAR, MESH_SIMPLIFICATION_N_LEVELS, MESH_SIMPLIFICATION_LEVELS_PER_ORDER, TEMP_ZARR_HIERARCHY_STORAGE_PATH
 from preprocessor.src.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import MagicKernel3dDownsampler
 import mrcfile
 import dask.array as da
@@ -65,6 +65,8 @@ class SFFPreprocessor(IDataPreprocessor):
                 ):
                 print(f'Quantization is skipped because input volume dtype is {volume_force_dtype} and requested quantization dtype is {params_for_storing["quantize_dtype_str"]}')
                 del params_for_storing['quantize_dtype_str']
+
+            if volume_file_path.stat().st_size > MAP_SIZE_THRESHOLD_FOR_DASK_METHODS:
 
             dask_arr = da.from_array(data)
             # this one just swaps x to z as mrcfile writes it in specific order
