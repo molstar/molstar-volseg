@@ -264,7 +264,6 @@ def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: Union[
                 dtype=force_dtype,
                 params_for_storing=params_for_storing,
             )
-            print(123)
         # TODO: first try to write to empty zarr arr
         # TODO: then proceed with changing dask convolve
         
