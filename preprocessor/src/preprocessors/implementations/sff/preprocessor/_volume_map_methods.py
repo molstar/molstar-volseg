@@ -1,6 +1,7 @@
 from decimal import getcontext, ROUND_CEILING, Decimal
 import logging
 from pathlib import Path
+from typing import Union
 
 import gemmi
 import dask.array as da
@@ -70,7 +71,7 @@ def normalize_axis_order(map_object: gemmi.Ccp4Map):
         logging.error(e, stack_info=True, exc_info=True)
     return map_object
 
-def normalize_axis_order_mrcfile(dask_arr: da.Array, mrc_header: object) -> da.Array:
+def normalize_axis_order_mrcfile(dask_arr: Union[da.Array, np.ndarray], mrc_header: object) -> da.Array:
     '''
     Normalizes axis order to X, Y, Z (1, 2, 3)
     '''

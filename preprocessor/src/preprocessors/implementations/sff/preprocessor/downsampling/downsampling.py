@@ -1,7 +1,7 @@
 from decimal import Decimal
 import logging
 import math
-from typing import Dict, List
+from typing import Dict, List, Union
 from vedo import Mesh
 
 from db.file_system.constants import QUANTIZATION_DATA_DICT_ATTR_NAME
@@ -142,7 +142,7 @@ def compute_number_of_downsampling_steps(min_grid_size: int, input_grid_size: in
     return num_of_downsampling_steps
 
 
-def create_volume_downsamplings(original_data: da.Array, downsampling_steps: int,
+def create_volume_downsamplings(original_data: Union[da.Array, np.ndarray], downsampling_steps: int,
                                 downsampled_data_group: zarr.hierarchy.Group, params_for_storing: dict, force_dtype: np.dtype):
     '''
     Take original volume data, do all downsampling levels and store in zarr struct one by one
@@ -190,39 +190,81 @@ def create_category_set_downsamplings(
     store_downsampling_levels_in_zarr(levels, downsampled_data_group, params_for_storing=params_for_storing)
 
 
-def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: da.Array,
+def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: Union[da.Array, np.ndarray],
                                                         downsampled_data_group: zarr.hierarchy.Group, ratio: int,
                                                         params_for_storing: dict,
                                                         force_dtype: np.dtype):
-    
-    if 'quantize_dtype_str' in params_for_storing:
-        force_dtype = params_for_storing['quantize_dtype_str']
+    if isinstance(downsampled_data, da.Array):
+        if 'quantize_dtype_str' in params_for_storing:
+            force_dtype = params_for_storing['quantize_dtype_str']
 
-    zarr_arr = create_dataset_wrapper(
-        zarr_group=downsampled_data_group,
-        data=None,
-        name=str(ratio),
-        shape=downsampled_data.shape,
-        dtype=force_dtype,
-        params_for_storing=params_for_storing,
-        is_empty=True
-    )
-    
-    if 'quantize_dtype_str' in params_for_storing:
-        quantized_data_dict = quantize_data(
-            data=downsampled_data,
-            output_dtype=params_for_storing['quantize_dtype_str'])
+        zarr_arr = create_dataset_wrapper(
+            zarr_group=downsampled_data_group,
+            data=None,
+            name=str(ratio),
+            shape=downsampled_data.shape,
+            dtype=force_dtype,
+            params_for_storing=params_for_storing,
+            is_empty=True
+        )
         
-        downsampled_data = quantized_data_dict["data"]
+        if 'quantize_dtype_str' in params_for_storing:
+            quantized_data_dict = quantize_data(
+                data=downsampled_data,
+                output_dtype=params_for_storing['quantize_dtype_str'])
+            
+            downsampled_data = quantized_data_dict["data"]
+            
+            quantized_data_dict_without_data = quantized_data_dict.copy()
+            quantized_data_dict_without_data.pop('data')
+
+            # save this dict as attr of zarr arr
+            zarr_arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME] = quantized_data_dict_without_data
+
+        # here downsampled_data is uint8
+        da.to_zarr(arr=downsampled_data, url=zarr_arr, overwrite=True, compute=True)
+    
+    elif isinstance(downsampled_data, np.ndarray):
+        # TODO: Check if this version is different in time
+        # if 'quantize_dtype_str' in params_for_storing:
+        #     force_dtype = params_for_storing['quantize_dtype_str']
+
+        #     quantized_data_dict = quantize_data(
+        #         data=downsampled_data,
+        #         output_dtype=params_for_storing['quantize_dtype_str'])
+            
+        #     downsampled_data = quantized_data_dict["data"]
+            
+        #     quantized_data_dict_without_data = quantized_data_dict.copy()
+        #     quantized_data_dict_without_data.pop('data')
+
+        #     zarr_arr = create_dataset_wrapper(
+        #         zarr_group=downsampled_data_group,
+        #         data=downsampled_data.astype(force_dtype),
+        #         name=str(ratio),
+        #         shape=downsampled_data.shape,
+        #         dtype=force_dtype,
+        #         params_for_storing=params_for_storing,
+        #     )
         
-        quantized_data_dict_without_data = quantized_data_dict.copy()
-        quantized_data_dict_without_data.pop('data')
+        #     # save this dict as attr of zarr arr
+        #     zarr_arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME] = quantized_data_dict_without_data
+        # else:
+        #     zarr_arr = create_dataset_wrapper(
+        #         zarr_group=downsampled_data_group,
+        #         data=downsampled_data.astype(force_dtype),
+        #         name=str(ratio),
+        #         shape=downsampled_data.shape,
+        #         dtype=force_dtype,
+        #         params_for_storing=params_for_storing,
+        #     )
 
-        # save this dict as attr of zarr arr
-        zarr_arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME] = quantized_data_dict_without_data
-
-    # here downsampled_data is uint8
-    da.to_zarr(arr=downsampled_data, url=zarr_arr, overwrite=True, compute=True)
+        # TODO: first try to write to empty zarr arr
+        # TODO: then proceed with changing dask convolve
+        pass
+        
+    else:
+        raise Exception('array dtype is neither dask arr nor np ndarray')
     
 
 
