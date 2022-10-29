@@ -154,7 +154,13 @@ def create_volume_downsamplings(original_data: Union[da.Array, np.ndarray], down
         kernel = generate_kernel_3d_arr(list(DOWNSAMPLING_KERNEL))
         # downsampled_data: np.ndarray = signal.convolve(current_level_data, kernel, mode='same', method='fft')
         # downsampled_data: np.ndarray = ndimage.convolve(current_level_data, kernel, mode='mirror', cval=0.0)
-        downsampled_data = dask_convolve(current_level_data, kernel, mode='mirror', cval=0.0)
+        if isinstance(current_level_data, da.Array):
+            downsampled_data: da.Array = dask_convolve(current_level_data, kernel, mode='mirror', cval=0.0)
+        elif isinstance(current_level_data, np.ndarray):
+            downsampled_data: np.ndarray = ndimage.convolve(current_level_data, kernel, mode='mirror', cval=0.0)
+        else:
+            raise Exception('array dtype is neither dask arr nor np ndarray')
+
         downsampled_data = downsampled_data[::2, ::2, ::2]
 
         __store_single_volume_downsampling_in_zarr_stucture(downsampled_data, downsampled_data_group, current_ratio,
@@ -226,42 +232,41 @@ def __store_single_volume_downsampling_in_zarr_stucture(downsampled_data: Union[
     
     elif isinstance(downsampled_data, np.ndarray):
         # TODO: Check if this version is different in time
-        # if 'quantize_dtype_str' in params_for_storing:
-        #     force_dtype = params_for_storing['quantize_dtype_str']
+        if 'quantize_dtype_str' in params_for_storing:
+            force_dtype = params_for_storing['quantize_dtype_str']
 
-        #     quantized_data_dict = quantize_data(
-        #         data=downsampled_data,
-        #         output_dtype=params_for_storing['quantize_dtype_str'])
+            quantized_data_dict = quantize_data(
+                data=downsampled_data,
+                output_dtype=params_for_storing['quantize_dtype_str'])
             
-        #     downsampled_data = quantized_data_dict["data"]
+            downsampled_data = quantized_data_dict["data"]
             
-        #     quantized_data_dict_without_data = quantized_data_dict.copy()
-        #     quantized_data_dict_without_data.pop('data')
+            quantized_data_dict_without_data = quantized_data_dict.copy()
+            quantized_data_dict_without_data.pop('data')
 
-        #     zarr_arr = create_dataset_wrapper(
-        #         zarr_group=downsampled_data_group,
-        #         data=downsampled_data.astype(force_dtype),
-        #         name=str(ratio),
-        #         shape=downsampled_data.shape,
-        #         dtype=force_dtype,
-        #         params_for_storing=params_for_storing,
-        #     )
+            zarr_arr = create_dataset_wrapper(
+                zarr_group=downsampled_data_group,
+                data=downsampled_data.astype(force_dtype),
+                name=str(ratio),
+                shape=downsampled_data.shape,
+                dtype=force_dtype,
+                params_for_storing=params_for_storing,
+            )
         
-        #     # save this dict as attr of zarr arr
-        #     zarr_arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME] = quantized_data_dict_without_data
-        # else:
-        #     zarr_arr = create_dataset_wrapper(
-        #         zarr_group=downsampled_data_group,
-        #         data=downsampled_data.astype(force_dtype),
-        #         name=str(ratio),
-        #         shape=downsampled_data.shape,
-        #         dtype=force_dtype,
-        #         params_for_storing=params_for_storing,
-        #     )
-
+            # save this dict as attr of zarr arr
+            zarr_arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME] = quantized_data_dict_without_data
+        else:
+            zarr_arr = create_dataset_wrapper(
+                zarr_group=downsampled_data_group,
+                data=downsampled_data.astype(force_dtype),
+                name=str(ratio),
+                shape=downsampled_data.shape,
+                dtype=force_dtype,
+                params_for_storing=params_for_storing,
+            )
+            print(123)
         # TODO: first try to write to empty zarr arr
         # TODO: then proceed with changing dask convolve
-        pass
         
     else:
         raise Exception('array dtype is neither dask arr nor np ndarray')
