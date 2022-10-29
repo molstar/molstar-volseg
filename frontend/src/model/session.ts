@@ -8,6 +8,7 @@ import { Asset } from 'molstar/lib/mol-util/assets';
 import { Color } from 'molstar/lib/mol-util/color';
 import { ColorNames } from 'molstar/lib/mol-util/color/names';
 import { PluginUIContext } from 'molstar/lib/mol-plugin-ui/context';
+import { UUID } from 'molstar/lib/mol-util';
 
 import * as MeshExamples from '../mesh-extension/examples';
 import { type Metadata, Segment } from '../volume-api-client-lib/data';
@@ -31,11 +32,12 @@ interface Example {
 
 export class Session {
     constructor(
+        private id: UUID,
         private model: AppModel,
         private plugin: PluginUIContext
     ) { }
 
-    public metadata?: Metadata; // TODO private set via lazy init
+    private metadata?: Metadata;
     private volume?: Volume;
     private segmentation?: LatticeSegmentation;
 
@@ -52,6 +54,7 @@ export class Session {
         defaultEntryId: 'emd-1832',
         action: async (entryId) => {
             // const isoLevel = { kind: 'relative', value: 2.73};
+            this.metadata = await this.initMetadata(entryId);
             const isoLevel = await ExternalAPIs.getIsovalue(entryId);
             const source = splitEntryId(entryId).source as 'empiar' | 'emdb';
             const segmentationId = 0
@@ -89,7 +92,6 @@ export class Session {
 
             await repr.commit();
 
-            if (!this.metadata) throw new Error('Metadata not initialized');
             await this.showSegments(this.metadata.annotation.segment_list);
         }
     }
@@ -98,6 +100,7 @@ export class Session {
         exampleType: 'bioimage',
         defaultEntryId: 'emd-99999',
         action: async (entryId) => {
+            this.metadata = await this.initMetadata(entryId);
             const url = API2.volumeUrl('emdb', entryId, null, 10 ** 7);
             // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [70_000, 69_000, 1_200]], 10**2);
             // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [80_000, 65_600, 1_600]], 10**2); // 1025 voxels
@@ -141,13 +144,13 @@ export class Session {
         exampleType: 'meshes',
         defaultEntryId: 'empiar-10070',
         action: async (entryId) => {
-            if (!this.metadata) throw new Error('Metadata not initialized');
+            this.metadata = await this.initMetadata(entryId);
             if (entryId === 'empiar-10070' && MESH_HIDE_BACKGROUND_EMPIAR_10070) {
                 const bgSegments = [13, 15];
                 MetadataUtils.dropSegments(this.metadata, bgSegments);
             }
 
-            this.showMeshSegments(this.metadata.annotation.segment_list, entryId);
+            await this.showMeshSegments(this.metadata.annotation.segment_list, entryId);
         }
     }
 
@@ -155,8 +158,9 @@ export class Session {
         exampleType: 'meshStreaming',
         defaultEntryId: 'empiar-10070',
         action: async (entryId) => {
+            this.metadata = await this.initMetadata(entryId);
             const source = splitEntryId(entryId).source as 'empiar' | 'emdb';
-            MeshExamples.runMeshStreamingExample(this.plugin, source, entryId, API2.volumeServerUrl);
+            await MeshExamples.runMeshStreamingExample(this.plugin, source, entryId, API2.volumeServerUrl);
         }
     }
 
@@ -164,11 +168,11 @@ export class Session {
         exampleType: 'auto',
         defaultEntryId: 'emd-1832',
         action: async (entryId) => {
+            this.metadata = await this.initMetadata(entryId);
             const source = splitEntryId(entryId).source as 'empiar' | 'emdb';
             const isoLevelPromise = ExternalAPIs.getIsovalue(entryId);
             const pdbsPromise = ExternalAPIs.getPdbIdsForEmdbEntry(entryId);
 
-            if (!this.metadata) throw new Error('Metadata not initialized');
             const hasVolumes = this.metadata.grid.volumes.volume_downsamplings.length > 0;
             const hasLattices = this.metadata.grid.segmentation_lattices.segmentation_lattice_ids.length > 0;
             const hasMeshes = this.metadata.grid.segmentation_meshes.mesh_component_numbers.segment_ids !== undefined;
@@ -235,7 +239,7 @@ export class Session {
                 await MeshExamples.runMeshStreamingExample(this.plugin, source, entryId, API2.volumeServerUrl);
             }
 
-            this.model.pdbs.next(await pdbsPromise);
+            this.model.pdbs.nextWithinSession(await pdbsPromise, this.id);
         }
     }
 
@@ -245,6 +249,15 @@ export class Session {
         meshes: this.exampleMeshes,
         meshStreaming: this.exampleMeshStreaming,
         auto: this.exampleAuto,
+    }
+
+    private async initMetadata(entryId: string) {
+        if (!this.metadata) {
+            const source = splitEntryId(entryId).source as 'empiar' | 'emdb';
+            this.metadata = await API2.getMetadata(source, entryId);
+            this.model.annotation.nextWithinSession(this.metadata.annotation, this.id);
+        }
+        return this.metadata;
     }
 
     async loadPdb(pdbId: string) {
@@ -264,16 +277,16 @@ export class Session {
     }
 
     async showPdb(pdbId: string | undefined) {
-        this.model.status.next('loading');
+        this.model.status.nextWithinSession('loading', this.id);
         try {
             this.pdbModelNodeMgr.hideAllNodes();
             if (pdbId) {
                 await this.pdbModelNodeMgr.showNode(pdbId, async () => await this.loadPdb(pdbId));
             }
-            this.model.currentPdb.next(pdbId);
-            this.model.status.next('ready');
+            this.model.currentPdb.nextWithinSession(pdbId, this.id);
+            this.model.status.nextWithinSession('ready', this.id);
         } catch (ex) {
-            this.model.status.next('error');
+            this.model.status.nextWithinSession('error', this.id);
             throw ex;
         }
     }
@@ -281,9 +294,9 @@ export class Session {
     /** Make visible the specified set of lattice segments */
     async showSegments(segments: Segment[]) {
         if (segments.length === 1) {
-            this.model.currentSegment.next(segments[0]);
+            this.model.currentSegment.nextWithinSession(segments[0], this.id);
         } else {
-            this.model.currentSegment.next(undefined);
+            this.model.currentSegment.nextWithinSession(undefined, this.id);
         }
 
         const update = this.plugin.build();
@@ -339,9 +352,9 @@ export class Session {
     /** Make visible the specified set of mesh segments */
     async showMeshSegments(segments: Segment[], entryId: string) {
         if (segments.length === 1) {
-            this.model.currentSegment.next(segments[0]);
+            this.model.currentSegment.nextWithinSession(segments[0], this.id);
         } else {
-            this.model.currentSegment.next(undefined);
+            this.model.currentSegment.nextWithinSession(undefined, this.id);
         }
 
         this.meshSegmentNodeMgr.hideAllNodes();
