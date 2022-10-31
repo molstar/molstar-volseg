@@ -1,4 +1,4 @@
-name: cellstar-volume-server
+name: cellstar-preprocessor
 channels:
   - https://conda.anaconda.org/conda-forge
   - https://repo.anaconda.com/pkgs/main
