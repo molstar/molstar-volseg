@@ -68,8 +68,10 @@ class SFFPreprocessor(IDataPreprocessor):
 
             print(f"Processing volume file {volume_file_path}")
             if volume_file_path.stat().st_size > MAP_SIZE_THRESHOLD_FOR_DASK_METHODS:
+                print('using DASK methods')
                 dask_arr = da.from_array(data)
             else:
+                print('using NP methods')
                 dask_arr = data
             
             # print('shape', dask_arr.shape)
