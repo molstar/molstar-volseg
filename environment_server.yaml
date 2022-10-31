@@ -1,0 +1,20 @@
+name: cellstar-volume-server
+channels:
+  - https://conda.anaconda.org/conda-forge
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+  - https://repo.anaconda.com/pkgs/msys2
+
+dependencies:
+# TODO: check which python version
+  - python ==3.10.0
+  - pip
+  - fastapi==0.73.0
+  - numpy
+  - starlette==0.17.1
+  - uvicorn==0.17.6
+
+  - pip:
+    # - -r requirements.txt
+    - git+https://github.com/molstar/ciftools-python.git@b074526a8b418bc68d83ae5556a627d2d6ceabdb#egg=ciftools
+    - killport

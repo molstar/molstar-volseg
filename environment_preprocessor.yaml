@@ -1,0 +1,41 @@
+name: cellstar-volume-server
+channels:
+  - https://conda.anaconda.org/conda-forge
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+  - https://repo.anaconda.com/pkgs/msys2
+# needed for server only are commented
+dependencies:
+  - python ==3.9.0
+  - pip
+  - asgiref==3.5.0
+  - dask==2022.2.1
+  # - fastapi==0.73.0
+  - gemmi==0.5.3
+  - h5py==3.6.0
+  - matplotlib==3.5.1
+  - mrcfile==1.4.0
+  - numcodecs==0.9.1
+  - numpy
+  - pytest==7.1.2
+  - pytest-asyncio==0.18.3
+  - pytest-benchmark==3.4.1
+  - scikit-image==0.19.1
+  - scipy
+  # - starlette==0.17.1
+  # - uvicorn==0.17.6
+  - vedo==2022.2.3
+  # there were issues with version of this package
+  # uncomment if without it it would not work
+  # - vtk==9.0.3
+  - zarr==2.11.1
+  - dask-image
+
+  - pip:
+    # - -r requirements.txt
+    # - git+https://github.com/molstar/ciftools-python.git@b074526a8b418bc68d83ae5556a627d2d6ceabdb#egg=ciftools
+    - sfftk==0.5.5.dev1
+    - sfftk-rw==0.7.1
+    - SimpleParse @ git+https://github.com/mcfletch/simpleparse.git@57c8d734bdc165581fbacfeecabe25a66c3452a4
+    - tensorstore==0.1.18
+    # - killport
