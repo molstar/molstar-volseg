@@ -13,8 +13,12 @@ dependencies:
   - numpy
   - starlette==0.17.1
   - uvicorn==0.17.6
+  - zarr==2.11.1
+  - dask==2022.2.1
+
 
   - pip:
     # - -r requirements.txt
     - git+https://github.com/molstar/ciftools-python.git@b074526a8b418bc68d83ae5556a627d2d6ceabdb#egg=ciftools
     - killport
+    - tensorstore==0.1.18
