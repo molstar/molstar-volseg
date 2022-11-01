@@ -10,13 +10,13 @@ on:
 
 jobs:
   build:
-    name: Build
+    name: Build and deploy app
     runs-on: ubuntu-latest
     steps:
-    - name: executing remote ssh commands using SSH key
+    - name: executing remote ssh command in the background using SSH key
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.DEPLOY_KEY }}
-        script: /sw/build.sh ${{ inputs.args }}
+        script: /sw/build.sh ${{ inputs.args }} &
