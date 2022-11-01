@@ -4,7 +4,7 @@ import { useBehavior } from 'molstar/lib/mol-plugin-ui/hooks/use-behavior';
 import './App.css';
 import 'molstar/lib/mol-plugin-ui/skin/light.scss';
 import { AppModel } from './model/model';
-import { Button, ButtonGroup, Checkbox, LinearProgress, CssBaseline, Divider, FormControlLabel, InputLabel, MenuItem, Select, Slider, TextField, Typography } from '@mui/material';
+import { Button, ButtonGroup, Checkbox, LinearProgress, CssBaseline, Divider, FormControlLabel, InputLabel, MenuItem, Select, Slider, TextField, Typography, Autocomplete } from '@mui/material';
 import { createEntryId, splitEntryId } from './model/helpers';
 
 
@@ -36,7 +36,7 @@ function Main() {
                     <Button variant={example === 'emdb' ? 'contained' : 'outlined'} onClick={() => model.loadExample('emdb')}>EMDB SFF</Button>
                     <Button variant={example === 'bioimage' ? 'contained' : 'outlined'} onClick={() => model.loadExample('bioimage')}>BioImage Archive</Button>
                     <Button variant={example === 'meshes' ? 'contained' : 'outlined'} onClick={() => model.loadExample('meshes')}>Meshes</Button>
-                    <Button variant={example === 'meshStreaming' ? 'contained' : 'outlined'} onClick={() => model.loadExample('meshStreaming')}>Mesh Streaming</Button>
+                    {/* <Button variant={example === 'meshStreaming' ? 'contained' : 'outlined'} onClick={() => model.loadExample('meshStreaming')}>Mesh Streaming</Button> */}
                     <Button variant={example === 'auto' ? 'contained' : 'outlined'} onClick={() => model.loadExample('auto')}>Auto</Button>
                 </ButtonGroup>
             </div>
@@ -173,6 +173,9 @@ function UIExampleAuto({ model }: { model: AppModel }) {
 function EntryForm({ model, action }: { model: AppModel, action: (entryId: string) => any }) {
     const [source, setSource] = useState('');
     const [entryNumber, setEntryNumber] = useState('');
+    // const [comboValues, setComboValues] = useState(['1014', '1181', '1547', '1832', '10070']); // TODO useBehavior, get from API
+    const entryList = useBehavior(model.entryList);
+    const comboValues = entryList[source]?.map(entry => splitEntryId(entry).entryNumber) ?? [];
 
     const entryId = useBehavior(model.entryId);
     const status = useBehavior(model.status);
@@ -183,16 +186,29 @@ function EntryForm({ model, action }: { model: AppModel, action: (entryId: strin
     }, [entryId]);
 
     return <>
-        <form onSubmit={(e) => { action(createEntryId(source, entryNumber)); e.preventDefault(); }} >
+        <form onSubmit={e => { e.preventDefault(); action(createEntryId(source, entryNumber)); }} >
             <InputLabel>Source</InputLabel>
             <Select id='input-source' label='Source' value={source} onChange={e => setSource(e.target.value)} size='small' fullWidth style={{ marginBottom: 8 }}>
                 <MenuItem value='empiar'>EMPIAR</MenuItem>
                 <MenuItem value='emdb'>EMDB</MenuItem>
             </Select>
 
-            <InputLabel>Entry ID</InputLabel>
-            <TextField id='input-entry-id' value={entryNumber} onChange={e => setEntryNumber(e.target.value)} size='small' fullWidth style={{ marginBottom: 8 }} />
+            {/* <InputLabel>Entry ID</InputLabel>
+            <TextField id='input-entry-id' value={entryNumber} onChange={e => setEntryNumber(e.target.value)} size='small' fullWidth style={{ marginBottom: 8 }} /> */}
 
+            <InputLabel>Entry ID</InputLabel>
+            <Autocomplete size='small' fullWidth style={{ marginBottom: 8 }}
+                disablePortal
+                freeSolo // allow non-listed values
+                selectOnFocus
+                id='combo-entry-id'
+                options={comboValues}
+                inputValue={entryNumber}
+                value={entryNumber}
+                onInputChange={(e, value) => { setEntryNumber(value ?? ''); }}
+                onChange={(e, value) => { action(createEntryId(source, value ?? '')); }}
+                renderInput={(params) => <TextField {...params} />}
+            />
             <Button type='submit' variant='contained' fullWidth disabled={status === 'loading'}>Load</Button>
         </form>
     </>;

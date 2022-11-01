@@ -3,6 +3,7 @@ import { PluginUIContext } from 'molstar/lib/mol-plugin-ui/context';
 import { createPluginUI } from 'molstar/lib/mol-plugin-ui/react18';
 import { DefaultPluginUISpec } from 'molstar/lib/mol-plugin-ui/spec';
 import { PluginConfig } from 'molstar/lib/mol-plugin/config';
+import { BehaviorSubject } from 'rxjs';
 
 import { Annotation, Segment } from '../volume-api-client-lib/data';
 import { VolumeApiV2 } from '../volume-api-client-lib/volume-api';
@@ -13,10 +14,13 @@ import { SubjectSessionManager } from './subject-session-manager';
 
 export const API2 = new VolumeApiV2();
 
+const MAX_ENTRIES_IN_LIST = 1000;
 const DEFAULT_EXAMPLE: ExampleType = 'auto';
 
 
 export class AppModel {
+    public entryList = new BehaviorSubject<{ [source: string]: string[] }>({});
+
     private subjectMgr = new SubjectSessionManager();
 
     public exampleType = this.subjectMgr.behaviorSubject<ExampleType | undefined>(undefined);
@@ -60,11 +64,13 @@ export class AppModel {
             ],
         });
 
+        API2.getEntryList(MAX_ENTRIES_IN_LIST).then(list => this.entryList.next(list));
+
         // await Debugging.testApiV2(this.plugin, API2);
         // return;
 
         const fragment = UrlFragmentInfo.get();
-        setTimeout(() => this.loadExample(fragment.example ?? DEFAULT_EXAMPLE, fragment.entry), 50);
+        setTimeout(() => this.loadExample(fragment.example ?? DEFAULT_EXAMPLE, fragment.entry), 50); // why setTimeout here?
     }
 
     async loadExample(exampleType: ExampleType, entryId?: string) {
