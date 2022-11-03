@@ -13,11 +13,11 @@ function createApiPrefix() {
 }
 
 function getGitTag() {
-    return `${process.env.REACT_APP_GIT_TAG}`;
+    return `${process.env.REACT_APP_GIT_TAG ?? ''}`;
 }
 
 function getGitSha() {
-    return `${process.env.REACT_APP_GIT_SHA}`;
+    return `${process.env.REACT_APP_GIT_SHA ?? ''}`;
 }
 
 
