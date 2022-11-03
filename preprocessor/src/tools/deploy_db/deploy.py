@@ -10,6 +10,16 @@ from preprocessor.src.tools.deploy_db.deploy_process_helper import clean_up_proc
 
 PROCESS_IDS_LIST = []
 
+# source: https://stackoverflow.com/a/21901260/13136429
+def _get_git_revision_hash() -> str:
+    return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
+
+def _get_git_revision_short_hash() -> str:
+    return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
+
+def _get_git_tag() -> str:
+    return subprocess.check_output(['git', 'describe']).decode('ascii').strip()
+
 def parse_script_args():
     parser=argparse.ArgumentParser()
     parser.add_argument("--db_path", type=Path, default=DEFAULT_DB_PATH, help='path to db folder')
@@ -47,12 +57,19 @@ def run_api(args):
     return api_process
 
 def run_frontend(args):
+    tag = _get_git_tag()
+    print(tag)
+    full_sha = _get_git_revision_hash()
+
     deploy_env = {
         **os.environ,
         'REACT_APP_API_HOSTNAME': '',
         'REACT_APP_API_PORT': args.api_port,
         # NOTE: later, for now set to empty string
-        'REACT_APP_API_PREFIX': ''
+        'REACT_APP_API_PREFIX': '',
+        'REACT_APP_GIT_SHA': full_sha,
+        # NOTE: _GIT_TAG, GIT_TAG does not appear in process.env in node
+        'REACT_APP_GIT_TAG': tag,
         }
 
     subprocess.call(["yarn", "--cwd", "frontend"], env=deploy_env)
