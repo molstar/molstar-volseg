@@ -36,6 +36,9 @@ def _free_port(port_number: str):
     subprocess.call(lst)
 
 def run_api(args):
+    tag = _get_git_tag()
+    full_sha = _get_git_revision_hash()
+
     if os.path.isabs(args.db_path):
         db_path = args.db_path
     else:
@@ -45,7 +48,9 @@ def run_api(args):
         # check if relative path => then convert to absolute
         'DB_PATH': db_path,
         'HOST': args.api_hostname,
-        'PORT': args.api_port
+        'PORT': args.api_port,
+        'GIT_TAG': tag,
+        'GIT_SHA': full_sha
         }
     lst = [
         "python", "serve.py"
@@ -58,7 +63,6 @@ def run_api(args):
 
 def run_frontend(args):
     tag = _get_git_tag()
-    print(tag)
     full_sha = _get_git_revision_hash()
 
     deploy_env = {
