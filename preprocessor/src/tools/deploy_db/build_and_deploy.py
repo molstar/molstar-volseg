@@ -23,6 +23,8 @@ DEFAULT_PORT = 9000
 DEFAULT_FRONTEND_PORT = 3000
 DEPLOY_SCRIPT_PATH = str(Path("preprocessor/src/tools/deploy_db/build.py").resolve())
 BUILD_SCRIPT_PATH = str(Path("preprocessor/src/tools/deploy_db/deploy.py").resolve())
+SERVER_CONDA_ENV_NAME = 'cellstar-volume-server-server'
+PREPROCESSOR_CONDA_ENV_NAME = 'cellstar-preprocessor'
 
 def _path_resolver(path: Path) -> str:
     return str(path.resolve())

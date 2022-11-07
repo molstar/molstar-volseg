@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 from preprocessor.main import remove_temp_zarr_hierarchy_storage_folder
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE, DEFAULT_DB_PATH, RAW_INPUT_FILES_DIR, TEMP_ZARR_HIERARCHY_STORAGE_PATH
-from preprocessor.src.tools.deploy_db.build_and_deploy import DEFAULT_FRONTEND_PORT, DEFAULT_HOST, DEFAULT_PORT
+from preprocessor.src.tools.deploy_db.build_and_deploy import DEFAULT_FRONTEND_PORT, DEFAULT_HOST, DEFAULT_PORT, SERVER_CONDA_ENV_NAME
 from preprocessor.src.tools.deploy_db.deploy_process_helper import clean_up_processes
 
 PROCESS_IDS_LIST = []
@@ -37,9 +37,7 @@ def run_api(args):
         'HOST': args.api_hostname,
         'PORT': args.api_port
         }
-    lst = [
-        "python", "serve.py"
-    ]
+    lst = f"conda run -n ${SERVER_CONDA_ENV_NAME} python serve.py".split()
     # if not figure out how to pass full path
     api_process = subprocess.Popen(lst, env=deploy_env, cwd='server/')
     PROCESS_IDS_LIST.append(api_process.pid)
