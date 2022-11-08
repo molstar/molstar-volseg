@@ -16,10 +16,8 @@ export namespace MeshServerInfo {
 
     export const Params = {
         serverUrl: PD.Text(DEFAULT_MESH_SERVER),
-        entryId: PD.Text(''),
         source: MeshSourceChoice.PDSelect(),
-        // segmentFrom: PD.Numeric(0), // DEBUG
-        // segmentTo: PD.Numeric(1_000_000), // DEBUG
+        entryId: PD.Text(''),
     };
     export type Data = PD.Values<typeof Params>;
 }
