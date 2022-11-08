@@ -120,8 +120,9 @@ export async function createMeshFromUrl(plugin: MS.PluginUIContext, meshDataUrl:
 
 }
 
-export async function runMeshStreamingExample(plugin: MS.PluginUIContext, source: MeshServerInfo.MeshSource = 'empiar', entryId: string = 'empiar-10070') {
+export async function runMeshStreamingExample(plugin: MS.PluginUIContext, source: MeshServerInfo.MeshSource = 'empiar', entryId: string = 'empiar-10070', serverUrl?: string) {
     const params = MS.ParamDefinition.getDefaultValues(MeshServerInfo.Params);
+    if (serverUrl) params.serverUrl = serverUrl;
     params.source = source;
     params.entryId = entryId;
     await plugin.runTask(plugin.state.data.applyAction(InitMeshStreaming, params), { useOverlay: false });

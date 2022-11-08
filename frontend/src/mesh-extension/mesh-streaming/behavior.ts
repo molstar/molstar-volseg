@@ -31,8 +31,6 @@ export namespace MeshStreaming {
 
         export function create(options: MeshServerInfo.Data) {
             return {
-                entryId: PD.Text(options.entryId, { isHidden: true }),
-                source: MeshServerInfo.MeshSourceChoice.PDSelect(options.source, { isHidden: true }),
                 view: PD.MappedStatic('select', {
                     'off': PD.Group({}),
                     'select': PD.Group({
@@ -52,8 +50,6 @@ export namespace MeshStreaming {
 
         export function copyValues(params: Values): Values {
             return {
-                entryId: params.entryId,
-                source: params.source,
                 view: {
                     name: params.view.name,
                     params: { ...params.view.params } as any,
@@ -61,8 +57,6 @@ export namespace MeshStreaming {
             };
         }
         export function valuesEqual(p: Values, q: Values): boolean {
-            if (p.entryId !== q.entryId) return false;
-            if (p.source !== q.source) return false;
             if (p.view.name !== q.view.name) return false;
             for (const key in p.view.params) {
                 if ((p.view.params as any)[key] !== (q.view.params as any)[key]) return false;
@@ -105,7 +99,7 @@ export namespace MeshStreaming {
     export class Behavior extends MS.PluginBehavior.WithSubscribers<Params.Values> {
         private id: string;
         private ref: string = '';
-        private parentData: MeshServerInfo.Data;
+        public parentData: MeshServerInfo.Data;
         private metadata?: Metadata;
         public visuals?: { [tag: string]: VisualInfo };
         public backgroundSegments: { [segmentId: number]: boolean } = {};
@@ -191,11 +185,11 @@ export namespace MeshStreaming {
         }
 
         private getMetadataUrl() {
-            return `${this.parentData.serverUrl}/${this.params.source}/${this.params.entryId}/metadata`;
+            return `${this.parentData.serverUrl}/${this.parentData.source}/${this.parentData.entryId}/metadata`;
         }
 
         private getMeshUrl(segment: number, detail: number) {
-            return `${this.parentData.serverUrl}/${this.params.source}/${this.params.entryId}/mesh_bcif/${segment}/${detail}`;
+            return `${this.parentData.serverUrl}/${this.parentData.source}/${this.parentData.entryId}/mesh_bcif/${segment}/${detail}`;
         }
 
         private initVisualInfos() {
@@ -204,7 +198,6 @@ export namespace MeshStreaming {
             const visuals: { [tag: string]: VisualInfo } = {};
             for (const segid of Metadata.meshSegments(this.metadata!)) {
                 if (DEBUG_IGNORED_SEGMENTS.has(segid)) continue;
-                // if (segid < this.parentData.segmentFrom || segid >= this.parentData.segmentTo) continue; // DEBUG
                 const name = namesAndColors[segid]?.name ?? DEFAULT_SEGMENT_NAME;
                 const color = namesAndColors[segid]?.color ?? DEFAULT_SEGMENT_COLOR;
                 for (const detailType of VisualInfo.DetailTypes) {
@@ -278,8 +271,7 @@ export namespace MeshStreaming {
             }
             // TODO cache
             const url = this.getMeshUrl(visual.segmentId, visual.detail);
-            const urlAsset = MS.Asset.getUrlAsset(this.plugin.managers.asset, url); // QUESTION how is urlAsset better than normal `fetch`
-            // const asset = await this.plugin.runTask(this.plugin.managers.asset.resolve(urlAsset, 'string'));
+            const urlAsset = MS.Asset.getUrlAsset(this.plugin.managers.asset, url);
             const asset = await this.plugin.runTask(this.plugin.managers.asset.resolve(urlAsset, 'binary'));
             const parsed = await this.plugin.runTask(MS.CIF.parseBinary(asset.data));
             if (parsed.isError) {

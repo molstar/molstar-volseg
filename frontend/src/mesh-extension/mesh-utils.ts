@@ -48,8 +48,11 @@ export function modify(m: MS.Mesh, params: MeshModificationParams) {
     }
     if (params.invertSides) {
         const indices = m.indexBuffer.ref.value;
+        let tmp;
         for (let i = 0; i < indices.length; i += 3) {
-            [indices[i], indices[i + 1]] = [indices[i + 1], indices[i]];
+            tmp = indices[i];
+            indices[i] = indices[i + 1];
+            indices[i + 1] = tmp;
         }
         const normals = m.normalBuffer.ref.value;
         for (let i = 0; i < normals.length; i++) {

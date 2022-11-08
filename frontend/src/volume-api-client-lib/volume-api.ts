@@ -7,9 +7,9 @@ function createApiPrefix() {
     const port = process.env.REACT_APP_API_PORT
         ? process.env.REACT_APP_API_PORT : '9000';
     const prefix = process.env.REACT_APP_API_PREFIX
-        ? `/${process.env.REACT_APP_API_PREFIX}`: ``;
+        ? `/${process.env.REACT_APP_API_PREFIX}` : ``;
 
-    return `${hostname}:${port}${prefix}/`;
+    return `${hostname}:${port}${prefix}`;
 }
 
 function getGitTag() {
@@ -29,8 +29,8 @@ const DEFAULT_API_PREFIX = createApiPrefix()
 const GIT_TAG = getGitTag()
 const GIT_SHA = getGitSha()
 
-const DEFAULT_VOLUME_SERVER_V1 = `${DEFAULT_API_PREFIX}v1`;
-const DEFAULT_VOLUME_SERVER_V2 = `${DEFAULT_API_PREFIX}v2`;
+const DEFAULT_VOLUME_SERVER_V1 = `${DEFAULT_API_PREFIX}/v1`;
+const DEFAULT_VOLUME_SERVER_V2 = `${DEFAULT_API_PREFIX}/v2`;
 
 export class VolumeApiV1 {
     public volumeServerUrl: string;
@@ -50,7 +50,7 @@ export class VolumeApiV1 {
         console.log(`SHA: ${this.volumeServerGitSha}`)
         console.log(`GIT TAG: ${this.volumeServerGitTag}`)
     }
-    
+
     public metadataUrl(source: string, entryId: string): string {
         return `${this.volumeServerUrl}/${source}/${entryId}/metadata`;
     }
@@ -75,7 +75,11 @@ export class VolumeApiV2 {
         this.volumeServerUrl = volumeServerUrl.replace(/\/$/, '');  // trim trailing slash
         console.log('API V2', this.volumeServerUrl)
     }
-    
+
+    public entryListUrl(maxEntries: number, keyword?: string): string {
+        return `${this.volumeServerUrl}/list_entries/${maxEntries}/${keyword ?? ''}`;
+    }
+
     public metadataUrl(source: string, entryId: string): string {
         return `${this.volumeServerUrl}/${source}/${entryId}/metadata`;
     }
@@ -88,7 +92,7 @@ export class VolumeApiV2 {
         }
     }
     public latticeUrl(source: string, entryId: string, segmentation: number, box: [[number, number, number], [number, number, number]] | null, maxPoints: number): string {
-        if (box){
+        if (box) {
             const [[a1, a2, a3], [b1, b2, b3]] = box;
             return `${this.volumeServerUrl}/${source}/${entryId}/segmentation/box/${segmentation}/${a1}/${a2}/${a3}/${b1}/${b2}/${b3}?max_points=${maxPoints}`;
         } else {
@@ -104,6 +108,11 @@ export class VolumeApiV2 {
     }
     public volumeInfoUrl(source: string, entryId: string): string {
         return `${this.volumeServerUrl}/${source}/${entryId}/volume_info`;
+    }
+
+    public async getEntryList(maxEntries: number, keyword?: string): Promise<{ [source: string]: string[] }> {
+        const response = await fetch(this.entryListUrl(maxEntries, keyword));
+        return await response.json();
     }
 
     public async getMetadata(source: string, entryId: string): Promise<Metadata> {
