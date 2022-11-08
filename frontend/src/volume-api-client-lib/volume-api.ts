@@ -12,17 +12,43 @@ function createApiPrefix() {
     return `${hostname}:${port}${prefix}`;
 }
 
+function getGitTag() {
+    return `${process.env.REACT_APP_GIT_TAG ?? ''}`;
+}
+
+function getGitSha() {
+    return `${process.env.REACT_APP_GIT_SHA ?? ''}`;
+}
+
+
+// const DEFAULT_API_PREFIX = process.env.REACT_APP_VOLUME_API 
+//     ? !process.env.REACT_APP_VOLUME_API.endsWith('/') ? `${process.env.REACT_APP_VOLUME_API}/` : process.env.REACT_APP_VOLUME_API 
+//     : 'http://localhost:9000/';
+
 const DEFAULT_API_PREFIX = createApiPrefix()
+const GIT_TAG = getGitTag()
+const GIT_SHA = getGitSha()
 
 const DEFAULT_VOLUME_SERVER_V1 = `${DEFAULT_API_PREFIX}/v1`;
 const DEFAULT_VOLUME_SERVER_V2 = `${DEFAULT_API_PREFIX}/v2`;
 
 export class VolumeApiV1 {
     public volumeServerUrl: string;
+    public volumeServerGitTag: string;
+    public volumeServerGitSha: string;
 
-    public constructor(volumeServerUrl: string = DEFAULT_VOLUME_SERVER_V1) {
-        this.volumeServerUrl = volumeServerUrl.replace(/\/*$/, '');  // trim trailing slash
+    public constructor(
+        volumeServerUrl: string = DEFAULT_VOLUME_SERVER_V1,
+        volumeServerGitTag: string = GIT_TAG,
+        volumeServerGitSha: string = GIT_SHA
+        ) {
+        this.volumeServerUrl = volumeServerUrl.replace(/\/$/, '');  // trim trailing slash
+        this.volumeServerGitTag = volumeServerGitTag;
+        this.volumeServerGitSha = volumeServerGitSha;
         console.log('API V1', this.volumeServerUrl)
+
+        console.log(`SHA: ${this.volumeServerGitSha}`)
+        console.log(`GIT TAG: ${this.volumeServerGitTag}`)
     }
 
     public metadataUrl(source: string, entryId: string): string {
@@ -44,10 +70,21 @@ export class VolumeApiV1 {
 
 export class VolumeApiV2 {
     public volumeServerUrl: string;
-
-    public constructor(volumeServerUrl: string = DEFAULT_VOLUME_SERVER_V2) {
+    public volumeServerGitTag: string;
+    public volumeServerGitSha: string;
+    
+    public constructor(
+        volumeServerUrl: string = DEFAULT_VOLUME_SERVER_V2,
+        volumeServerGitTag: string = GIT_TAG,
+        volumeServerGitSha: string = GIT_SHA
+        ) {
         this.volumeServerUrl = volumeServerUrl.replace(/\/$/, '');  // trim trailing slash
+        this.volumeServerGitTag = volumeServerGitTag;
+        this.volumeServerGitSha = volumeServerGitSha;
+
         console.log('API V2', this.volumeServerUrl)
+        console.log(`SHA: ${this.volumeServerGitSha}`)
+        console.log(`GIT TAG: ${this.volumeServerGitTag}`)
     }
 
     public entryListUrl(maxEntries: number, keyword?: string): string {
