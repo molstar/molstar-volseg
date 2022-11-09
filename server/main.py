@@ -10,7 +10,12 @@ from app.settings import settings
 
 print("Server Settings: ", settings.dict())
 
-app = FastAPI()
+description = f'''
+GIT TAG: {settings.GIT_TAG}
+GIT SHA: {settings.GIT_SHA}
+'''
+
+app = FastAPI(description=description)
 
 # origins = [
 #     "http://localhost",
