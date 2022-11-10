@@ -27,3 +27,18 @@ def clean_up_temp_zarr_hierarchy_storage(temp_zarr_hierarchy_storage_path: Path)
     if temp_zarr_hierarchy_storage_path is not None and temp_zarr_hierarchy_storage_path.exists():
         print(f'Removing db working dir:{temp_zarr_hierarchy_storage_path}')
         remove_temp_zarr_hierarchy_storage_folder(temp_zarr_hierarchy_storage_path)
+
+def _check_if_ssl_keyfile_and_certfile_provided(args):
+    if args.ssl_keyfile and args.ssl_certfile:
+        return True
+    else:
+        return False
+
+def decide_port_number(args) -> str:
+    # if development_mode == False, api_port arg is ignored
+    if args.development_mode:
+        return args.api_port
+    elif _check_if_ssl_keyfile_and_certfile_provided(args):
+        return '443'
+    else:
+        return '80'

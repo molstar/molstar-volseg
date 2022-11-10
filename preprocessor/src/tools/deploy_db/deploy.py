@@ -6,7 +6,7 @@ from pathlib import Path
 from preprocessor.main import remove_temp_zarr_hierarchy_storage_folder
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE, DEFAULT_DB_PATH, RAW_INPUT_FILES_DIR, TEMP_ZARR_HIERARCHY_STORAGE_PATH
 from preprocessor.src.tools.deploy_db.build_and_deploy import DEFAULT_FRONTEND_PORT, DEFAULT_HOST, DEFAULT_PORT
-from preprocessor.src.tools.deploy_db.deploy_process_helper import clean_up_processes
+from preprocessor.src.tools.deploy_db.deploy_process_helper import clean_up_processes, decide_port_number
 
 PROCESS_IDS_LIST = []
 
@@ -20,22 +20,10 @@ def _get_git_revision_short_hash() -> str:
 def _get_git_tag() -> str:
     return subprocess.check_output(['git', 'describe']).decode('ascii').strip()
 
-def _check_if_ssl_keyfile_and_certfile_provided(args):
-    if args.ssl_keyfile and args.ssl_certfile:
-        return True
-    else:
-        return False
-
-def _decide_http_vs_https_port_number(args) -> str:
-    if _check_if_ssl_keyfile_and_certfile_provided(args):
-        return '443'
-    else:
-        return '80'
-
-
 def parse_script_args():
     parser=argparse.ArgumentParser()
     parser.add_argument("--db_path", type=Path, default=DEFAULT_DB_PATH, help='path to db folder')
+    parser.add_argument("--development_mode", type=bool, default=True, help='whether to use custom api port arg or not')
     parser.add_argument("--api_port", type=str, default=str(DEFAULT_PORT), help='default api port')
     parser.add_argument("--api_hostname", type=str, default=DEFAULT_HOST, help='default host')
     # NOTE: this will quantize everything (except u2/u1 thing), not what we need
@@ -119,6 +107,7 @@ def deploy(args):
 if __name__ == '__main__':
     atexit.register(clean_up_processes, PROCESS_IDS_LIST)
     args = parse_script_args()
+    args.api_port = decide_port_number(args)
     deploy(args)
 
 

@@ -13,7 +13,7 @@ from typing import Optional
 from preprocessor.main import remove_temp_zarr_hierarchy_storage_folder
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE, DEFAULT_DB_PATH, RAW_INPUT_FILES_DIR, TEMP_ZARR_HIERARCHY_STORAGE_PATH
 import psutil
-from preprocessor.src.tools.deploy_db.deploy_process_helper import clean_up_processes, clean_up_temp_zarr_hierarchy_storage
+from preprocessor.src.tools.deploy_db.deploy_process_helper import clean_up_processes, clean_up_temp_zarr_hierarchy_storage, decide_port_number
 
 from preprocessor.src.tools.prepare_input_for_preprocessor.prepare_input_for_preprocessor import csv_to_config_list_of_dicts, prepare_input_for_preprocessor
 
@@ -32,6 +32,7 @@ def parse_script_args():
     parser.add_argument('--csv_with_entry_ids', type=Path, default=CSV_WITH_ENTRY_IDS_FILE, help='csv with entry ids and info for preprocessor')
     parser.add_argument('--raw_input_files_dir', type=Path, default=RAW_INPUT_FILES_DIR, help='dir with raw input files')
     parser.add_argument("--db_path", type=Path, default=DEFAULT_DB_PATH, help='path to db folder')
+    parser.add_argument("--development_mode", type=bool, default=True, help='whether to use custom api port arg or not')
     parser.add_argument("--api_port", type=str, default=str(DEFAULT_PORT), help='default api port')
     parser.add_argument("--api_hostname", type=str, default=DEFAULT_HOST, help='default host')
     # NOTE: this will quantize everything (except u2/u1 thing), not what we need
@@ -88,6 +89,7 @@ if __name__ == '__main__':
     print("DEFAULT PORTS ARE TEMPORARILY SET TO 4000 and 8000, CHANGE THIS AFTERWARDS")
     atexit.register(clean_up_processes, PROCESS_IDS_LIST)
     args = parse_script_args()
+    args.api_port = decide_port_number(args)
     build_process, deploy_process = build_and_deploy_db(args)
     build_process.communicate()
     deploy_process.communicate()
