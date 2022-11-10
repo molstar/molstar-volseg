@@ -20,6 +20,19 @@ def _get_git_revision_short_hash() -> str:
 def _get_git_tag() -> str:
     return subprocess.check_output(['git', 'describe']).decode('ascii').strip()
 
+def _check_if_ssl_keyfile_and_certfile_provided(args):
+    if args.ssl_keyfile and args.ssl_certfile:
+        return True
+    else:
+        return False
+
+def _decide_http_vs_https_port_number(args) -> str:
+    if _check_if_ssl_keyfile_and_certfile_provided(args):
+        return '443'
+    else:
+        return '80'
+
+
 def parse_script_args():
     parser=argparse.ArgumentParser()
     parser.add_argument("--db_path", type=Path, default=DEFAULT_DB_PATH, help='path to db folder')
@@ -27,7 +40,9 @@ def parse_script_args():
     parser.add_argument("--api_hostname", type=str, default=DEFAULT_HOST, help='default host')
     # NOTE: this will quantize everything (except u2/u1 thing), not what we need
     parser.add_argument("--frontend_port", type=str, default=str(DEFAULT_FRONTEND_PORT), help='default frontend port')
-    
+    parser.add_argument("--ssl_keyfile", type=Path, help='path to ssl_keyfile')
+    parser.add_argument("--ssl_certfile", type=Path, help='path to ssl_certfile')
+
     args=parser.parse_args()
     return args
 

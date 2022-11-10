@@ -19,8 +19,8 @@ from preprocessor.src.tools.prepare_input_for_preprocessor.prepare_input_for_pre
 
 PROCESS_IDS_LIST = []
 DEFAULT_HOST = '0.0.0.0'  # 0.0.0.0 = localhost
-DEFAULT_PORT = 9000
-DEFAULT_FRONTEND_PORT = 3000
+DEFAULT_PORT = 8000
+DEFAULT_FRONTEND_PORT = 4000
 DEPLOY_SCRIPT_PATH = str(Path("preprocessor/src/tools/deploy_db/build.py").resolve())
 BUILD_SCRIPT_PATH = str(Path("preprocessor/src/tools/deploy_db/deploy.py").resolve())
 
@@ -38,6 +38,8 @@ def parse_script_args():
     # parser.add_argument("--quantize_volume_data_dtype_str", action="store", choices=['u1', 'u2'])
     parser.add_argument("--frontend_port", type=str, default=str(DEFAULT_FRONTEND_PORT), help='default frontend port')
     parser.add_argument("--temp_zarr_hierarchy_storage_path", type=Path, help='path to db working directory')
+    parser.add_argument("--ssl_keyfile", type=Path, help='path to ssl_keyfile')
+    parser.add_argument("--ssl_certfile", type=Path, help='path to ssl_certfile')
 
     args=parser.parse_args()
     return args

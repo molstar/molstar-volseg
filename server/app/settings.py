@@ -23,6 +23,9 @@ class _Settings(BaseSettings):
     # GIT_SHA: str = _get_git_revision_hash()
     GIT_TAG: str = ''
     GIT_SHA: str = ''
+    # TODO: set default values
+    CERT: str = ''
+    KEY: str = ''
 
 
 settings = _Settings()
