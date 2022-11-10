@@ -53,7 +53,9 @@ def run_api(args):
         'HOST': args.api_hostname,
         'PORT': args.api_port,
         'GIT_TAG': tag,
-        'GIT_SHA': full_sha
+        'GIT_SHA': full_sha,
+        'CERT': args.ssl_certfile,
+        'KEY': args.ssl_keyfile
         }
     lst = [
         "python", "serve.py"
