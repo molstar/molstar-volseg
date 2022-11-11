@@ -14,10 +14,10 @@ class FileSystemVolumeMedatada(VolumeMetadata):
         return self.raw_metadata
     
     def db_name(self) -> str:
-        return self.raw_metadata["general"]["db_name"]
+        return self.raw_metadata["general"]["source_db_name"]
 
     def entry_id(self) -> str:
-        return self.raw_metadata["general"]["entry_id"]
+        return self.raw_metadata["general"]["source_db_id"]
 
     def segmentation_lattice_ids(self) -> List[int]:
         return self.raw_metadata["segmentation_lattices"]["segmentation_lattice_ids"]
