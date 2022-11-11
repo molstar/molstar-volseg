@@ -168,7 +168,7 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, m
     return {
         'general': {
             'details': details,
-            'source_db': source_db,
+            'source_db_name': source_db,
             'source_db_id': source_db_id,
         },
         'volumes': {
