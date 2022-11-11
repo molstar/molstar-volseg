@@ -11,7 +11,7 @@ import csv
 import pandas as pd
 import numpy as np
 
-from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE, DEFAULT_DB_PATH
+from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS, CSV_WITH_ENTRY_IDS_FILE, DEFAULT_DB_PATH
 
 # TODO: check if it works with abs path (starting with /)
 # TODO: changed based on Lukas response
@@ -67,8 +67,9 @@ def prepare_input_for_preprocessor(config: list[dict], output_dir: Path, db_path
             static_folder_content = sorted((STATIC_INPUT_FILES_DIR / entry['source_db'] / preprocessor_folder_name).glob('*'))
             for item in static_folder_content:
                 if item.is_file():
-                    if item.suffix == '.hff':
+                    if item.suffix == '.hff' or item.suffix in APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS:
                         static_segmentation_file_path = item
+                        # TODO: add segmentation specific exts
                     elif item.suffix == '.map' or item.suffix == '.ccp4' or item.suffix == '.mrc':
                         static_volume_file_path: Path = item
 
