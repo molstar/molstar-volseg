@@ -44,10 +44,10 @@ def extract_annotations(segm_file_path: Path) -> dict:
 
 def _parse_entry_id(entry_id: str) -> dict:
     db = re.split('-|_', entry_id)[0].lower()
-    id = int(re.split('-|_', entry_id)[-1])
+    id = entry_id.lower()
     if db == 'emd':
         db = 'emdb'
-        
+
     return {
         'source_db': db,
         'source_db_id': id
