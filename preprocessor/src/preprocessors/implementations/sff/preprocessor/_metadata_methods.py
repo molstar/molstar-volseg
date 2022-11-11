@@ -49,8 +49,8 @@ def _parse_entry_id(entry_id: str) -> dict:
         db = 'emdb'
 
     return {
-        'source_db': db,
-        'source_db_id': id
+        'db_name': db,
+        'entry_id': id
     }
 
 def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, mesh_simplification_curve: dict[int, float], volume_force_dtype: np.dtype, entry_id: str) -> dict:
