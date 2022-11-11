@@ -1,6 +1,7 @@
 import json
 from decimal import Decimal
 from pathlib import Path
+import re
 from typing import TypedDict
 import dask.array as da
 import numpy as np
@@ -41,8 +42,18 @@ def extract_annotations(segm_file_path: Path) -> dict:
 
     return segm_dict
 
+def _parse_entry_id(entry_id: str) -> dict:
+    db = re.split('-|_', entry_id)[0].lower()
+    id = int(re.split('-|_', entry_id)[-1])
+    if db == 'emd':
+        db = 'emdb'
+        
+    return {
+        'source_db': db,
+        'source_db_id': id
+    }
 
-def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, mesh_simplification_curve: dict[int, float], volume_force_dtype: np.dtype) -> dict:
+def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, mesh_simplification_curve: dict[int, float], volume_force_dtype: np.dtype, entry_id: str) -> dict:
     root = zarr_structure
     details = ''
     if 'details' in root:
@@ -150,9 +161,15 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, m
     # get grid dimensions based on NX/NC, NY/NR, NZ/NS variables (words 1, 2, 3) in CCP4 file
     # original_grid_dimensions: Tuple[int, int, int] = (d['NC'], d['NR'], d['NS'])
 
+    entry_id_dict = _parse_entry_id(entry_id=entry_id)
+    source_db = entry_id_dict['source_db']
+    source_db_id = entry_id_dict['source_db_id']
+
     return {
         'general': {
-            'details': details
+            'details': details,
+            'source_db': source_db,
+            'source_db_id': source_db_id,
         },
         'volumes': {
             'volume_downsamplings': volume_downsamplings,

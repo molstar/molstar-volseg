@@ -85,11 +85,15 @@ class SFFPreprocessor(IDataPreprocessor):
 
             SFFPreprocessor.process_volume_data(zarr_structure=zarr_structure, dask_arr=dask_arr, params_for_storing=params_for_storing, force_dtype=volume_force_dtype)
 
+            # NOTE: hack for showing manually created segmentations of emd-9094
+            if entry_id in ['emd-90940001', 'emd-90940002', 'emd-90940003']:
+                entry_id = 'emd-9094'
             grid_metadata = SFFPreprocessor.extract_metadata(
                 zarr_structure,
                 mrc_header=header,
                 mesh_simplification_curve=mesh_simplification_curve,
-                volume_force_dtype=volume_force_dtype
+                volume_force_dtype=volume_force_dtype,
+                entry_id=entry_id
             )
             
             # grid_dimensions: list = list(FileSystemVolumeMedatada(grid_metadata).grid_dimensions())
