@@ -32,7 +32,9 @@ def _preprocessor_internal_wrapper(entry: dict):
         "--db_path", entry['db_path'],    
         "--single_entry", entry['single_entry'],
         "--entry_id", entry['entry_id'],
-        "--source_db", entry['source_db']
+        "--source_db", entry['source_db'],
+        "--source_db_id", entry['source_db_id'],
+        "--source_db_name", entry['source_db_name']
     ]
 
     if entry['force_volume_dtype']:
