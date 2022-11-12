@@ -42,18 +42,9 @@ def extract_annotations(segm_file_path: Path) -> dict:
 
     return segm_dict
 
-def _parse_entry_id(entry_id: str) -> dict:
-    db = re.split('-|_', entry_id)[0].lower()
-    id = entry_id.lower()
-    if db == 'emd':
-        db = 'emdb'
-
-    return {
-        'db_name': db,
-        'entry_id': id
-    }
-
-def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, mesh_simplification_curve: dict[int, float], volume_force_dtype: np.dtype, entry_id: str) -> dict:
+def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, mesh_simplification_curve: dict[int, float], volume_force_dtype: np.dtype,
+        source_db_id: str,
+        source_db_name: str) -> dict:
     root = zarr_structure
     details = ''
     if 'details' in root:
@@ -161,14 +152,10 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, m
     # get grid dimensions based on NX/NC, NY/NR, NZ/NS variables (words 1, 2, 3) in CCP4 file
     # original_grid_dimensions: Tuple[int, int, int] = (d['NC'], d['NR'], d['NS'])
 
-    entry_id_dict = _parse_entry_id(entry_id=entry_id)
-    source_db = entry_id_dict['source_db']
-    source_db_id = entry_id_dict['source_db_id']
-
     return {
         'general': {
             'details': details,
-            'source_db_name': source_db,
+            'source_db_name': source_db_name,
             'source_db_id': source_db_id,
         },
         'volumes': {

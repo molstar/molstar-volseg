@@ -35,7 +35,10 @@ class SFFPreprocessor(IDataPreprocessor):
         self.magic_kernel = MagicKernel3dDownsampler()
         self.temp_zarr_structure_path = None
 
-    def preprocess(self, segm_file_path: Path, volume_file_path: Path, params_for_storing: dict, volume_force_dtype: Union[np.dtype, None], entry_id: str):
+    def preprocess(self, segm_file_path: Path, volume_file_path: Path, params_for_storing: dict, volume_force_dtype: Union[np.dtype, None], entry_id: str,
+        source_db_id: str,
+        source_db_name: str
+        ):
         '''
         Returns path to temporary zarr structure that will be stored permanently using db.store
         '''
@@ -85,15 +88,13 @@ class SFFPreprocessor(IDataPreprocessor):
 
             SFFPreprocessor.process_volume_data(zarr_structure=zarr_structure, dask_arr=dask_arr, params_for_storing=params_for_storing, force_dtype=volume_force_dtype)
 
-            # NOTE: hack for showing manually created segmentations of emd-9094
-            if entry_id in ['emd-90940001', 'emd-90940002', 'emd-90940003']:
-                entry_id = 'emd-9094'
             grid_metadata = SFFPreprocessor.extract_metadata(
                 zarr_structure,
                 mrc_header=header,
                 mesh_simplification_curve=mesh_simplification_curve,
                 volume_force_dtype=volume_force_dtype,
-                entry_id=entry_id
+                source_db_id=source_db_id,
+                source_db_name=source_db_name
             )
             
             # grid_dimensions: list = list(FileSystemVolumeMedatada(grid_metadata).grid_dimensions())
