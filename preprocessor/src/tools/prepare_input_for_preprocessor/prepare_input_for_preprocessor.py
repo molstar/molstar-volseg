@@ -118,7 +118,13 @@ def prepare_input_for_preprocessor(config: list[dict], output_dir: Path, db_path
                         shutil.copyfileobj(f_in, f_out)
                 sff_gz_output_path.unlink()
         
-        
+        # NOTE: if one of them is not present, use source_db and entry_id
+        if not entry['source_db_name'] or not entry['source_db_id']:
+            entry['source_db_name'] = entry['source_db']
+            entry['source_db_id'] = entry['entry_id']
+
+
+
             # elif db == 'empiar':
             #     pass
         # for sff:
@@ -137,4 +143,4 @@ def prepare_input_for_preprocessor(config: list[dict], output_dir: Path, db_path
 
 if __name__ == '__main__':
     config = csv_to_config_list_of_dicts(CSV_WITH_ENTRY_IDS_FILE)
-    updated_config = prepare_input_for_preprocessor(config=config, output_dir=TEST_RAW_INPUT_FILES_DIR, db_path=DEFAULT_DB_PATH)
+    updated_config = prepare_input_for_preprocessor(config=config, output_dir=TEST_RAW_INPUT_FILES_DIR, db_path=DEFAULT_DB_PATH, temp_zarr_hierarchy_storage_path=Path(r'dummy_temp_zarr_hierarchy_storage'))
