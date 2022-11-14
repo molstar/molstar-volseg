@@ -1,6 +1,7 @@
 import json
 from decimal import Decimal
 from pathlib import Path
+import re
 from typing import TypedDict
 import dask.array as da
 import numpy as np
@@ -41,8 +42,9 @@ def extract_annotations(segm_file_path: Path) -> dict:
 
     return segm_dict
 
-
-def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, mesh_simplification_curve: dict[int, float], volume_force_dtype: np.dtype) -> dict:
+def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, mesh_simplification_curve: dict[int, float], volume_force_dtype: np.dtype,
+        source_db_id: str,
+        source_db_name: str) -> dict:
     root = zarr_structure
     details = ''
     if 'details' in root:
@@ -152,7 +154,9 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, m
 
     return {
         'general': {
-            'details': details
+            'details': details,
+            'source_db_name': source_db_name,
+            'source_db_id': source_db_id,
         },
         'volumes': {
             'volume_downsamplings': volume_downsamplings,

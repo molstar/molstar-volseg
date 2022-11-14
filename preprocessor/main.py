@@ -129,12 +129,16 @@ async def preprocess_everything(db: VolumeServerDB, raw_input_files_dir: Path, p
                 volume_file_path=entry['volume_file_path'],
                 volume_force_dtype=None,
                 params_for_storing=params_for_storing,
-                entry_id=entry['id']
+                entry_id=entry['id'],
+                source_db_id=entry['id'],
+                source_db_name=source_name
             )
             await db.store(namespace=source_name, key=entry['id'], temp_store_path=processed_data_temp_path)
 
 async def preprocess_single_entry(db: VolumeServerDB, input_files_dir: Path, params_for_storing: dict, entry_id: str, source_db: str, force_volume_dtype: Union[str, None],
-    temp_zarr_hierarchy_storage_path: Path) -> None:
+        temp_zarr_hierarchy_storage_path: Path,
+        source_db_id: str,
+        source_db_name: str) -> None:
     preprocessor_service = PreprocessorService([SFFPreprocessor(temp_zarr_hierarchy_storage_path=temp_zarr_hierarchy_storage_path)])
     if await db.contains(namespace=source_db, key=entry_id):
         await db.delete(namespace=source_db, key=entry_id)
@@ -156,7 +160,9 @@ async def preprocess_single_entry(db: VolumeServerDB, input_files_dir: Path, par
         volume_file_path=files_dict['volume_file_path'],
         volume_force_dtype=force_volume_dtype,
         params_for_storing=params_for_storing,
-        entry_id=entry_id
+        entry_id=entry_id,
+        source_db_id=source_db_id,
+        source_db_name=source_db_name
     )
     await db.store(namespace=source_db, key=entry_id, temp_store_path=processed_data_temp_path)
     
@@ -236,7 +242,16 @@ async def create_db(db_path: Path, params_for_storing: dict,
     await preprocess_everything(db, raw_input_files_dir_path, params_for_storing=params_for_storing,
         temp_zarr_hierarchy_storage_path=temp_zarr_hierarchy_storage_path)
 
-async def add_entry_to_db(db_path: Path, params_for_storing: dict, input_files_dir: Path, entry_id: str, source_db: str, force_volume_dtype: Union[str, None], temp_zarr_hierarchy_storage_path: Path):
+async def add_entry_to_db(
+        db_path: Path,
+        params_for_storing: dict,
+        input_files_dir: Path,
+        entry_id: str,
+        source_db: str,
+        force_volume_dtype: Union[str, None],
+        temp_zarr_hierarchy_storage_path: Path,
+        source_db_id: str,
+        source_db_name: str):
     '''
     By default, initializes db with store_type = "zip"
     '''
@@ -254,7 +269,10 @@ async def add_entry_to_db(db_path: Path, params_for_storing: dict, input_files_d
         entry_id=entry_id,
         source_db=source_db,
         force_volume_dtype=force_volume_dtype,
-        temp_zarr_hierarchy_storage_path=temp_zarr_hierarchy_storage_path)
+        temp_zarr_hierarchy_storage_path=temp_zarr_hierarchy_storage_path,
+        source_db_id=source_db_id,
+        source_db_name=source_db_name
+        )
 
 async def main():
     args = parse_script_args()
@@ -269,6 +287,7 @@ async def main():
         # raise ValueError('No temp_zarr_hierarchy_storage_path is provided as argument')
         temp_zarr_hierarchy_storage_path = TEMP_ZARR_HIERARCHY_STORAGE_PATH / args.db_path.name
 
+    # NOTE: not maintained currently (outdated arg numbers etc.)
     if args.create_parametrized_dbs:
         # TODO: add quantize and raw input files dir path here too
         remove_files_or_folders_by_pattern('db_*/')
@@ -291,7 +310,7 @@ async def main():
             params_for_storing['quantize_dtype_str'] = args.quantize_volume_data_dtype_str
 
         if args.single_entry:
-            if args.entry_id and args.source_db:
+            if args.entry_id and args.source_db and args.source_db_id and args.source_db_name:
                 single_entry_folder_path = args.single_entry
                 single_entry_id = args.entry_id
                 single_entry_source_db = args.source_db
@@ -308,10 +327,12 @@ async def main():
                     entry_id=single_entry_id,
                     source_db=single_entry_source_db,
                     force_volume_dtype=force_volume_dtype,
-                    temp_zarr_hierarchy_storage_path=temp_zarr_hierarchy_storage_path
+                    temp_zarr_hierarchy_storage_path=temp_zarr_hierarchy_storage_path,
+                    source_db_id=args.source_db_id,
+                    source_db_name=args.source_db_name
                     )
             else:
-                raise ValueError('entry_id and source_db args are required for single entry mode')
+                raise ValueError('args.entry_id and args.source_db and args.source_db_id and args.source_db_name are required for single entry mode')
         else:
             await create_db(Path(args.db_path),
                 params_for_storing=params_for_storing,
@@ -327,10 +348,12 @@ def parse_script_args():
     parser.add_argument("--create_parametrized_dbs", action='store_true')
     parser.add_argument("--quantize_volume_data_dtype_str", action="store", choices=['u1', 'u2'])
     parser.add_argument('--single_entry', type=Path, help='path to folder with MAP and segmentation files')
-    parser.add_argument('--entry_id', type=str, help='entry id')
-    parser.add_argument('--source_db', type=str, help='source database name')
+    parser.add_argument('--entry_id', type=str, help='entry id to be used as DB folder name')
+    parser.add_argument('--source_db', type=str, help='source database name to be used as DB folder name')
     parser.add_argument('--force_volume_dtype', type=str, help='dtype of volume data to be used')
     parser.add_argument("--temp_zarr_hierarchy_storage_path", type=Path, help='path to db working directory')
+    parser.add_argument('--source_db_id', type=str, help='actual source db id for metadata')
+    parser.add_argument('--source_db_name', type=str, help='actual source db name for metadata')
     args=parser.parse_args()
     return args
 
