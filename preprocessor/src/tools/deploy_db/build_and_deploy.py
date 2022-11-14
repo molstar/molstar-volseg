@@ -39,8 +39,8 @@ def parse_script_args():
     # parser.add_argument("--quantize_volume_data_dtype_str", action="store", choices=['u1', 'u2'])
     parser.add_argument("--frontend_port", type=str, default=str(DEFAULT_FRONTEND_PORT), help='default frontend port')
     parser.add_argument("--temp_zarr_hierarchy_storage_path", type=Path, help='path to db working directory')
-    parser.add_argument("--ssl_keyfile", type=Path, help='path to ssl_keyfile')
-    parser.add_argument("--ssl_certfile", type=Path, help='path to ssl_certfile')
+    parser.add_argument("--ssl_keyfile", type=Path, help='path to ssl_keyfile', default='')
+    parser.add_argument("--ssl_certfile", type=Path, help='path to ssl_certfile', default='')
 
     args=parser.parse_args()
     return args
@@ -78,7 +78,9 @@ def _deploy(args):
         "--db_path", _path_resolver(args.db_path),
         "--api_port", args.api_port,
         "--api_hostname", args.api_hostname,
-        "--frontend_port", args.frontend_port
+        "--frontend_port", args.frontend_port,
+        '--ssl_keyfile', args.ssl_keyfile,
+        '--ssl_certfile', args.ssl_certfile
     ]
 
     deploy_process = subprocess.Popen(deploy_lst)

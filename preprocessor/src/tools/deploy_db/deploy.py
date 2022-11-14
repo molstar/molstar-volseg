@@ -28,8 +28,8 @@ def parse_script_args():
     parser.add_argument("--api_hostname", type=str, default=DEFAULT_HOST, help='default host')
     # NOTE: this will quantize everything (except u2/u1 thing), not what we need
     parser.add_argument("--frontend_port", type=str, default=str(DEFAULT_FRONTEND_PORT), help='default frontend port')
-    parser.add_argument("--ssl_keyfile", type=Path, help='path to ssl_keyfile')
-    parser.add_argument("--ssl_certfile", type=Path, help='path to ssl_certfile')
+    parser.add_argument("--ssl_keyfile", type=Path, help='path to ssl_keyfile', default='')
+    parser.add_argument("--ssl_certfile", type=Path, help='path to ssl_certfile', default='')
 
     args=parser.parse_args()
     return args
