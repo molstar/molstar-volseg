@@ -47,8 +47,9 @@ export class Session {
     private volumeRepr: any;
 
     private entryRoot?: StateObjectSelector;
-    private segmentationNodeMgr = new NodeManager('Segmentation');
-    private pdbModelNodeMgr = new NodeManager('Fitted Models');
+    private groupNodeMgr = new NodeManager();
+    private segmentationNodeMgr = new NodeManager();
+    private pdbModelNodeMgr = new NodeManager();
     private meshSegmentNodeMgr = new NodeManager();
 
 
@@ -81,6 +82,7 @@ export class Session {
             const cif = await plugin.build().to(latticeDataNode).apply(StateTransforms.Data.ParseCif).commit();
             // Debugging.logCifOverview(cif.data!, latticeUrl);
             const latticeBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
+            // TODO download and parse cif without changing state tree?
 
             this.segmentation = await LatticeSegmentation.fromCifBlock(latticeBlock!);
 
@@ -293,8 +295,8 @@ export class Session {
         try {
             this.pdbModelNodeMgr.hideAllNodes();
             if (pdbId) {
-                const update = this.plugin.build();
-                const group = this.pdbModelNodeMgr.getGroup(update, this.entryRoot);
+                const update = this.entryRoot ? this.plugin.build().to(this.entryRoot) : this.plugin.build().toRoot();
+                const group = await this.groupNodeMgr.showNode('Fitted Models', () => update.apply(CreateGroup, {label: 'Fitted Models'}).selector);
                 await update.commit();
                 await this.pdbModelNodeMgr.showNode(pdbId, async () => await this.loadPdb(pdbId, group));
             }
@@ -314,8 +316,8 @@ export class Session {
             this.model.currentSegment.nextWithinSession(undefined, this.id);
         }
 
-        const update = this.plugin.build();
-        const group = this.segmentationNodeMgr.getGroup(update, this.entryRoot);
+        const update = this.entryRoot ? this.plugin.build().to(this.entryRoot) : this.plugin.build().toRoot();
+        const group = await this.groupNodeMgr.showNode('Segmentation', () => update.apply(CreateGroup, {label: 'Segmentation'}).selector);
 
         this.segmentationNodeMgr.hideAllNodes();
 
