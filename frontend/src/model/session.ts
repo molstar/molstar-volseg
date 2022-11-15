@@ -9,6 +9,7 @@ import { Color } from 'molstar/lib/mol-util/color';
 import { ColorNames } from 'molstar/lib/mol-util/color/names';
 import { PluginUIContext } from 'molstar/lib/mol-plugin-ui/context';
 import { UUID } from 'molstar/lib/mol-util';
+import { Download, RawData } from 'molstar/lib/mol-plugin-state/transforms/data';
 
 import * as MeshExamples from '../mesh-extension/examples';
 import { type Metadata, Segment } from '../volume-api-client-lib/data';
@@ -16,6 +17,7 @@ import * as ExternalAPIs from './external-api';
 import { CreateVolume, Debugging, ExampleType, MetadataUtils, NodeManager, splitEntryId } from './helpers';
 import { LatticeSegmentation } from './lattice-segmentation';
 import { AppModel, API2 } from './model';
+import { CreateGroup } from 'molstar/lib/mol-plugin-state/transforms/misc';
 
 
 const USE_GHOST_NODES = false;
@@ -44,8 +46,9 @@ export class Session {
     private currentSegments: any[] = [];
     private volumeRepr: any;
 
+    private entryRoot?: StateObjectSelector;
     private segmentationNodeMgr = new NodeManager('Segmentation');
-    private pdbModelNodeMgr = new NodeManager();
+    private pdbModelNodeMgr = new NodeManager('Fitted Models');
     private meshSegmentNodeMgr = new NodeManager();
 
 
@@ -59,12 +62,13 @@ export class Session {
             const source = splitEntryId(entryId).source as 'empiar' | 'emdb';
             const segmentationId = 0
             const { plugin } = this;
+            this.entryRoot = await this.plugin.build().toRoot().apply(CreateGroup, {label: entryId, description: 'Meshes'}).commit();
 
             const MAX_VOXELS = 10 ** 7;
 
             // VOLUME
             const volumeUrl = API2.volumeUrl(source, entryId, null, MAX_VOXELS);
-            const volumeDataNode = await plugin.builders.data.download({ url: volumeUrl, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+            const volumeDataNode = await plugin.build().to(this.entryRoot).apply(Download, { url: volumeUrl, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } }).commit();
             const parsed = await plugin.dataFormats.get('dscif')!.parse(plugin, volumeDataNode, { entryId });
             const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
             const volumeData = volume.cell!.obj!.data;
@@ -72,7 +76,8 @@ export class Session {
 
             // LATTICE SEGMENTATION
             const latticeUrl = API2.latticeUrl(source, entryId, segmentationId, null, MAX_VOXELS);
-            const latticeDataNode = await plugin.builders.data.download({ url: latticeUrl, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+            const latticeDataNode = await plugin.build().to(this.entryRoot).apply(Download, { url: latticeUrl, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } }).commit();
+            // const latticeDataNode = await plugin.builders.data.download({ url: latticeUrl, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
             const cif = await plugin.build().to(latticeDataNode).apply(StateTransforms.Data.ParseCif).commit();
             // Debugging.logCifOverview(cif.data!, latticeUrl);
             const latticeBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
@@ -112,7 +117,8 @@ export class Session {
             // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 400], [78_400, 67_200, 1_200]], 10**2); // 999 voxels
             // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [69_600, 68_000, 2_000]], 10**2); // 900 voxels
 
-            const data = await this.plugin.builders.data.download({ url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+            this.entryRoot = await this.plugin.build().toRoot().apply(CreateGroup, {label: entryId, description: 'Bioimage'}).commit();
+            const data = await this.plugin.build().to(this.entryRoot).apply(Download, { url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } }).commit();
             const parsed = await this.plugin.dataFormats.get('dscif')!.parse(this.plugin, data);
             // const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit(); // DEBUG
             // Debugging.logCifOverview(cif.data!); // DEBUG
@@ -145,6 +151,7 @@ export class Session {
         defaultEntryId: 'empiar-10070',
         action: async (entryId) => {
             this.metadata = await this.initMetadata(entryId);
+            this.entryRoot = await this.plugin.build().toRoot().apply(CreateGroup, {label: entryId, description: 'Meshes'}).commit();
             if (entryId === 'empiar-10070' && MESH_HIDE_BACKGROUND_EMPIAR_10070) {
                 const bgSegments = [13, 15];
                 MetadataUtils.dropSegments(this.metadata, bgSegments);
@@ -159,8 +166,9 @@ export class Session {
         defaultEntryId: 'empiar-10070',
         action: async (entryId) => {
             this.metadata = await this.initMetadata(entryId);
+            this.entryRoot = await this.plugin.build().toRoot().apply(CreateGroup, {label: entryId, description: 'Mesh Streaming'}).commit();
             const source = splitEntryId(entryId).source as 'empiar' | 'emdb';
-            await MeshExamples.runMeshStreamingExample(this.plugin, source, entryId, API2.volumeServerUrl);
+            await MeshExamples.runMeshStreamingExample(this.plugin, source, entryId, API2.volumeServerUrl, this.entryRoot);
         }
     }
 
@@ -201,10 +209,12 @@ export class Session {
             //     const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
             //     Debugging.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
             // }
+            this.entryRoot = await this.plugin.build().toRoot().apply(CreateGroup, {label: entryId, description: 'Auto'}).commit();
 
             if (hasVolumes) {
                 const url = API2.volumeUrl(source, entryId, BOX, MAX_VOXELS);
-                const data = await this.plugin.builders.data.download({ url, isBinary: true, label: `Volume Data: ${url}` }, { state: { isGhost: USE_GHOST_NODES } });
+                const data = await this.plugin.build().to(this.entryRoot).apply(Download, { url, isBinary: true, label: `Volume Data: ${url}` }, { state: { isGhost: USE_GHOST_NODES } }).commit();
+                // const data = await this.plugin.builders.data.download({ url, isBinary: true, label: `Volume Data: ${url}` }, { state: { isGhost: USE_GHOST_NODES } });
                 // const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit(); Debugging.logCifOverview(cif.data!); // DEBUG
                 const parsed = await this.plugin.dataFormats.get('dscif')!.parse(this.plugin, data, { entryId });
                 const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
@@ -224,7 +234,8 @@ export class Session {
             }
             if (hasLattices) {
                 const url = API2.latticeUrl(source, entryId, 0, BOX, MAX_VOXELS);
-                const data = await this.plugin.builders.data.download({ url, isBinary: true, label: `Segmentation Data: ${url}` }, { state: { isGhost: USE_GHOST_NODES } });
+                const data = await this.plugin.build().to(this.entryRoot).apply(Download, { url, isBinary: true, label: `Segmentation Data: ${url}` }, { state: { isGhost: USE_GHOST_NODES } }).commit();
+                // const data = await this.plugin.builders.data.download({ url, isBinary: true, label: `Segmentation Data: ${url}` }, { state: { isGhost: USE_GHOST_NODES } });
                 const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
                 // Debugging.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
                 const latticeBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
@@ -236,7 +247,7 @@ export class Session {
                 }
             }
             if (hasMeshes) {
-                await MeshExamples.runMeshStreamingExample(this.plugin, source, entryId, API2.volumeServerUrl);
+                await MeshExamples.runMeshStreamingExample(this.plugin, source, entryId, API2.volumeServerUrl, this.entryRoot);
             }
 
             this.model.pdbs.nextWithinSession(await pdbsPromise, this.id);
@@ -260,17 +271,18 @@ export class Session {
         return this.metadata;
     }
 
-    async loadPdb(pdbId: string) {
+    private async loadPdb(pdbId: string, parent?: StateObjectSelector) {
         const url = `https://www.ebi.ac.uk/pdbe/entry-files/download/${pdbId}.bcif`;
-        return await this.loadPdbStructureFromBcif(url, { dataLabel: `PDB Data: ${url}` });
+        return await this.loadPdbStructureFromBcif(url, { dataLabel: `PDB Data: ${url}` }, parent);
     }
 
-    async loadPdbStructureFromBcif(url: string, options?: { dataLabel?: string }) {
+    private async loadPdbStructureFromBcif(url: string, options?: { dataLabel?: string }, parent?: StateObjectSelector) {
         const urlAsset = Asset.getUrlAsset(this.plugin.managers.asset, url);
         const asset = await this.plugin.runTask(this.plugin.managers.asset.resolve(urlAsset, 'binary'));
         const data = asset.data;
 
-        const dataNode = await this.plugin.builders.data.rawData({ data, label: options?.dataLabel });
+        const update = parent ? this.plugin.build().to(parent) : this.plugin.build().toRoot();
+        const dataNode = await update.apply(RawData, { data, label: options?.dataLabel }).commit();
         const trajectoryNode = await this.plugin.builders.structure.parseTrajectory(dataNode, 'mmcif');
         await this.plugin.builders.structure.hierarchy.applyPreset(trajectoryNode, 'default');
         return dataNode;
@@ -281,7 +293,10 @@ export class Session {
         try {
             this.pdbModelNodeMgr.hideAllNodes();
             if (pdbId) {
-                await this.pdbModelNodeMgr.showNode(pdbId, async () => await this.loadPdb(pdbId));
+                const update = this.plugin.build();
+                const group = this.pdbModelNodeMgr.getGroup(update, this.entryRoot);
+                await update.commit();
+                await this.pdbModelNodeMgr.showNode(pdbId, async () => await this.loadPdb(pdbId, group));
             }
             this.model.currentPdb.nextWithinSession(pdbId, this.id);
             this.model.status.nextWithinSession('ready', this.id);
@@ -300,7 +315,7 @@ export class Session {
         }
 
         const update = this.plugin.build();
-        const group = this.segmentationNodeMgr.getGroup(update);
+        const group = this.segmentationNodeMgr.getGroup(update, this.entryRoot);
 
         this.segmentationNodeMgr.hideAllNodes();
 
@@ -363,7 +378,7 @@ export class Session {
             await this.meshSegmentNodeMgr.showNode(seg.id.toString(), async () => {
                 const detail = MetadataUtils.getSufficientDetail(this.metadata!, seg.id, DEFAULT_MESH_DETAIL);
                 const color = seg.colour.length >= 3 ? Color.fromNormalizedArray(seg.colour, 0) : ColorNames.gray;
-                return await MeshExamples.createMeshFromUrl(this.plugin, API2.meshUrl_Bcif(splitEntryId(entryId).source, entryId, seg.id, detail), seg.id, detail, true, false, color);
+                return await MeshExamples.createMeshFromUrl(this.plugin, API2.meshUrl_Bcif(splitEntryId(entryId).source, entryId, seg.id, detail), seg.id, detail, true, false, color, this.entryRoot);
             });
         }
     }
