@@ -59,47 +59,53 @@ export class Session {
         action: async (entryId) => {
             // const isoLevel = { kind: 'relative', value: 2.73};
             this.metadata = await this.initMetadata(entryId);
-            const isoLevel = await ExternalAPIs.getIsovalue(entryId);
+            const isoLevel = await ExternalAPIs.getIsovalue(this.metadata.grid.general.source_db_id ?? entryId);
             const source = splitEntryId(entryId).source as 'empiar' | 'emdb';
-            const segmentationId = 0
+            const segmentationId = 0;
             const { plugin } = this;
-            this.entryRoot = await this.plugin.build().toRoot().apply(CreateGroup, {label: entryId, description: 'Meshes'}).commit();
+            this.entryRoot = await this.plugin.build().toRoot().apply(CreateGroup, { label: entryId, description: 'Meshes' }).commit();
 
             const MAX_VOXELS = 10 ** 7;
 
+            const hasVolumes = this.metadata.grid.volumes.volume_downsamplings.length > 0;
+            const hasLattices = this.metadata.grid.segmentation_lattices.segmentation_lattice_ids.length > 0;
+
             // VOLUME
-            const volumeUrl = API2.volumeUrl(source, entryId, null, MAX_VOXELS);
-            const volumeDataNode = await plugin.build().to(this.entryRoot).apply(Download, { url: volumeUrl, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } }).commit();
-            const parsed = await plugin.dataFormats.get('dscif')!.parse(plugin, volumeDataNode, { entryId });
-            const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
-            const volumeData = volume.cell!.obj!.data;
-            this.volume = volumeData;
+            if (hasVolumes) {
+                const volumeUrl = API2.volumeUrl(source, entryId, null, MAX_VOXELS);
+                const volumeDataNode = await plugin.build().to(this.entryRoot).apply(Download, { url: volumeUrl, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } }).commit();
+                // const parsed = await plugin.dataFormats.get('dscif')!.parse(plugin, volumeDataNode, { entryId });
+                const parsed = await plugin.dataFormats.get('dscif')!.parse(plugin, volumeDataNode);
+                const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[0] ?? parsed.volume;
+                const volumeData = volume.cell!.obj!.data;
+                this.volume = volumeData;
+
+                const repr = plugin.build();
+                repr
+                    .to(volume)
+                    .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
+                        type: 'isosurface',
+                        typeParams: { alpha: 0.2, isoValue: Volume.adjustedIsoValue(volumeData, isoLevel.value, isoLevel.kind) },
+                        color: 'uniform',
+                        colorParams: { value: Color(0x121212) }
+                    }));
+                await repr.commit();
+            }
 
             // LATTICE SEGMENTATION
-            const latticeUrl = API2.latticeUrl(source, entryId, segmentationId, null, MAX_VOXELS);
-            const latticeDataNode = await plugin.build().to(this.entryRoot).apply(Download, { url: latticeUrl, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } }).commit();
-            // const latticeDataNode = await plugin.builders.data.download({ url: latticeUrl, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
-            const cif = await plugin.build().to(latticeDataNode).apply(StateTransforms.Data.ParseCif).commit();
-            // Debugging.logCifOverview(cif.data!, latticeUrl);
-            const latticeBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
-            // TODO download and parse cif without changing state tree?
+            if (hasLattices) {
+                const latticeUrl = API2.latticeUrl(source, entryId, segmentationId, null, MAX_VOXELS);
+                const latticeDataNode = await plugin.build().to(this.entryRoot).apply(Download, { url: latticeUrl, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } }).commit();
+                // const latticeDataNode = await plugin.builders.data.download({ url: latticeUrl, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } });
+                const cif = await plugin.build().to(latticeDataNode).apply(StateTransforms.Data.ParseCif).commit();
+                // Debugging.logCifOverview(cif.data!, latticeUrl);
+                const latticeBlock = cif.data!.blocks.find(b => b.header === 'SEGMENTATION_DATA');
+                // TODO download and parse cif without changing state tree?
 
-            this.segmentation = await LatticeSegmentation.fromCifBlock(latticeBlock!);
+                this.segmentation = await LatticeSegmentation.fromCifBlock(latticeBlock!);
 
-            const repr = plugin.build();
-
-            repr
-                .to(volume)
-                .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
-                    type: 'isosurface',
-                    typeParams: { alpha: 0.2, isoValue: Volume.adjustedIsoValue(volumeData, isoLevel.value, isoLevel.kind) },
-                    color: 'uniform',
-                    colorParams: { value: Color(0x121212) }
-                }));
-
-            await repr.commit();
-
-            await this.showSegments(this.metadata.annotation.segment_list);
+                await this.showSegments(this.metadata.annotation.segment_list);
+            }
         }
     }
 
@@ -119,7 +125,7 @@ export class Session {
             // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 400], [78_400, 67_200, 1_200]], 10**2); // 999 voxels
             // const url = API2.volumeUrl('emdb', entryId, [[64_000, 64_000, 0], [69_600, 68_000, 2_000]], 10**2); // 900 voxels
 
-            this.entryRoot = await this.plugin.build().toRoot().apply(CreateGroup, {label: entryId, description: 'Bioimage'}).commit();
+            this.entryRoot = await this.plugin.build().toRoot().apply(CreateGroup, { label: entryId, description: 'Bioimage' }).commit();
             const data = await this.plugin.build().to(this.entryRoot).apply(Download, { url, isBinary: true }, { state: { isGhost: USE_GHOST_NODES } }).commit();
             const parsed = await this.plugin.dataFormats.get('dscif')!.parse(this.plugin, data);
             // const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit(); // DEBUG
@@ -153,7 +159,7 @@ export class Session {
         defaultEntryId: 'empiar-10070',
         action: async (entryId) => {
             this.metadata = await this.initMetadata(entryId);
-            this.entryRoot = await this.plugin.build().toRoot().apply(CreateGroup, {label: entryId, description: 'Meshes'}).commit();
+            this.entryRoot = await this.plugin.build().toRoot().apply(CreateGroup, { label: entryId, description: 'Meshes' }).commit();
             if (entryId === 'empiar-10070' && MESH_HIDE_BACKGROUND_EMPIAR_10070) {
                 const bgSegments = [13, 15];
                 MetadataUtils.dropSegments(this.metadata, bgSegments);
@@ -168,7 +174,7 @@ export class Session {
         defaultEntryId: 'empiar-10070',
         action: async (entryId) => {
             this.metadata = await this.initMetadata(entryId);
-            this.entryRoot = await this.plugin.build().toRoot().apply(CreateGroup, {label: entryId, description: 'Mesh Streaming'}).commit();
+            this.entryRoot = await this.plugin.build().toRoot().apply(CreateGroup, { label: entryId, description: 'Mesh Streaming' }).commit();
             const source = splitEntryId(entryId).source as 'empiar' | 'emdb';
             await MeshExamples.runMeshStreamingExample(this.plugin, source, entryId, API2.volumeServerUrl, this.entryRoot);
         }
@@ -180,8 +186,8 @@ export class Session {
         action: async (entryId) => {
             this.metadata = await this.initMetadata(entryId);
             const source = splitEntryId(entryId).source as 'empiar' | 'emdb';
-            const isoLevelPromise = ExternalAPIs.getIsovalue(entryId);
-            const pdbsPromise = ExternalAPIs.getPdbIdsForEmdbEntry(entryId);
+            const isoLevelPromise = ExternalAPIs.getIsovalue(this.metadata.grid.general.source_db_id ?? entryId);
+            const pdbsPromise = ExternalAPIs.getPdbIdsForEmdbEntry(this.metadata.grid.general.source_db_id ?? entryId);
 
             const hasVolumes = this.metadata.grid.volumes.volume_downsamplings.length > 0;
             const hasLattices = this.metadata.grid.segmentation_lattices.segmentation_lattice_ids.length > 0;
@@ -211,7 +217,7 @@ export class Session {
             //     const cif = await this.plugin.build().to(data).apply(StateTransforms.Data.ParseCif).commit();
             //     Debugging.logCifOverview(cif.data!, url); // TODO when could cif.data be undefined?
             // }
-            this.entryRoot = await this.plugin.build().toRoot().apply(CreateGroup, {label: entryId, description: 'Auto'}).commit();
+            this.entryRoot = await this.plugin.build().toRoot().apply(CreateGroup, { label: entryId, description: 'Auto' }).commit();
 
             if (hasVolumes) {
                 const url = API2.volumeUrl(source, entryId, BOX, MAX_VOXELS);
@@ -296,7 +302,7 @@ export class Session {
             this.pdbModelNodeMgr.hideAllNodes();
             if (pdbId) {
                 const update = this.entryRoot ? this.plugin.build().to(this.entryRoot) : this.plugin.build().toRoot();
-                const group = await this.groupNodeMgr.showNode('Fitted Models', () => update.apply(CreateGroup, {label: 'Fitted Models'}).selector);
+                const group = await this.groupNodeMgr.showNode('Fitted Models', () => update.apply(CreateGroup, { label: 'Fitted Models' }).selector);
                 await update.commit();
                 await this.pdbModelNodeMgr.showNode(pdbId, async () => await this.loadPdb(pdbId, group));
             }
@@ -317,7 +323,7 @@ export class Session {
         }
 
         const update = this.entryRoot ? this.plugin.build().to(this.entryRoot) : this.plugin.build().toRoot();
-        const group = await this.groupNodeMgr.showNode('Segmentation', () => update.apply(CreateGroup, {label: 'Segmentation'}).selector);
+        const group = await this.groupNodeMgr.showNode('Segmentation', () => update.apply(CreateGroup, { label: 'Segmentation' }).selector);
 
         this.segmentationNodeMgr.hideAllNodes();
 
