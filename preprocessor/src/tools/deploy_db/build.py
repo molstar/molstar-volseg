@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Optional
 from preprocessor.main import remove_temp_zarr_hierarchy_storage_folder
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE, DEFAULT_DB_PATH, RAW_INPUT_FILES_DIR, TEMP_ZARR_HIERARCHY_STORAGE_PATH
-from preprocessor.src.tools.deploy_db.deploy_process_helper import clean_up_processes, clean_up_temp_zarr_hierarchy_storage
+from preprocessor.src.tools.deploy_db.deploy_process_helper import clean_up_processes, clean_up_raw_input_files_dir, clean_up_temp_zarr_hierarchy_storage
 
 from preprocessor.src.tools.prepare_input_for_preprocessor.prepare_input_for_preprocessor import csv_to_config_list_of_dicts, prepare_input_for_preprocessor
 
@@ -70,6 +70,8 @@ def build(args):
     # here it is removed
     if temp_zarr_hierarchy_storage_path.exists():
         remove_temp_zarr_hierarchy_storage_folder(temp_zarr_hierarchy_storage_path)
+
+    clean_up_raw_input_files_dir(args.raw_input_files_dir)
 
     config = csv_to_config_list_of_dicts(args.csv_with_entry_ids)
     print('CSV was parsed')
