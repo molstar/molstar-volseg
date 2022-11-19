@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 import logging
 from pathlib import Path
 from timeit import default_timer as timer
@@ -203,9 +204,8 @@ class FileSystemDBReadContext(DBReadContext):
                     down_sampling_ratio
                 ].set_table[0]
             else:
-                raise Exception(
-                    "No segmentation data is available for the the given entry or lattice_id is None"
-                )
+                raise HTTPException(status_code=404, detail="No segmentation data is available for the the given entry or lattice_id is None")
+            
 
             start = timer()
             segm_slice = self._do_slicing(arr=segm_arr, box=box, mode=mode)
