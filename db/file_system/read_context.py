@@ -53,9 +53,15 @@ class FileSystemDBReadContext(DBReadContext):
                 segm_dict = root[SEGMENTATION_DATA_GROUPNAME][lattice_id][
                     down_sampling_ratio
                 ].set_table[0]
-            volume_arr: zarr.core.Array = root[VOLUME_DATA_GROUPNAME][
-                down_sampling_ratio
-            ]
+            else:
+                raise HTTPException(status_code=404, detail="No segmentation data is available for the the given entry or lattice_id is None")
+
+            if VOLUME_DATA_GROUPNAME in root and (down_sampling_ratio is not None):
+                volume_arr: zarr.core.Array = root[VOLUME_DATA_GROUPNAME][
+                    down_sampling_ratio
+                ]
+            else:
+                raise HTTPException(status_code=404, detail="No volume data is available for the the given entry or down_sampling_ratio is None")
 
             assert (
                 np.array(box[0]) >= np.array([0, 0, 0])
@@ -137,41 +143,43 @@ class FileSystemDBReadContext(DBReadContext):
         timer_printout=False,
     ) -> VolumeSliceData:
         try:
-
             box = normalize_box(box)
 
             root: zarr.hierarchy.group = zarr.group(self.store)
 
-            volume_arr: zarr.core.Array = root[VOLUME_DATA_GROUPNAME][
-                down_sampling_ratio
-            ]
+            if VOLUME_DATA_GROUPNAME in root and (down_sampling_ratio is not None):
+                volume_arr: zarr.core.Array = root[VOLUME_DATA_GROUPNAME][
+                    down_sampling_ratio
+                ]
 
-            assert (
-                np.array(box[0]) >= np.array([0, 0, 0])
-            ).all(), f"requested box {box} does not correspond to arr dimensions"
-            assert (
-                np.array(box[1]) <= np.array(volume_arr.shape)
-            ).all(), f"requested box {box} does not correspond to arr dimensions"
+                assert (
+                    np.array(box[0]) >= np.array([0, 0, 0])
+                ).all(), f"requested box {box} does not correspond to arr dimensions"
+                assert (
+                    np.array(box[1]) <= np.array(volume_arr.shape)
+                ).all(), f"requested box {box} does not correspond to arr dimensions"
 
-            start = timer()
-            volume_slice = self._do_slicing(arr=volume_arr, box=box, mode=mode)
-            end = timer()
+                start = timer()
+                volume_slice = self._do_slicing(arr=volume_arr, box=box, mode=mode)
+                end = timer()
 
-            # check if volume_arr was originally quantized data (e.g. some attr on array, e.g. data_dict attr with data_dict)
-            # if yes, decode volume_slice (reassamble data dict from data_dict attr, just add 'data' key with volume_slice)
-            # do .compute on output of decode_quantized_data function if output is da.Array
+                # check if volume_arr was originally quantized data (e.g. some attr on array, e.g. data_dict attr with data_dict)
+                # if yes, decode volume_slice (reassamble data dict from data_dict attr, just add 'data' key with volume_slice)
+                # do .compute on output of decode_quantized_data function if output is da.Array
 
-            if QUANTIZATION_DATA_DICT_ATTR_NAME in volume_arr.attrs:
-                data_dict = volume_arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME]
-                data_dict["data"] = volume_slice
-                volume_slice = decode_quantized_data(data_dict)
-                if isinstance(volume_slice, da.Array):
-                    volume_slice = volume_slice.compute()
+                if QUANTIZATION_DATA_DICT_ATTR_NAME in volume_arr.attrs:
+                    data_dict = volume_arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME]
+                    data_dict["data"] = volume_slice
+                    volume_slice = decode_quantized_data(data_dict)
+                    if isinstance(volume_slice, da.Array):
+                        volume_slice = volume_slice.compute()
 
-            if timer_printout == True:
-                print(f"read_volume_slice with mode {mode}: {end - start}")
+                if timer_printout == True:
+                    print(f"read_volume_slice with mode {mode}: {end - start}")
 
-            return {"volume_slice": volume_slice}
+                return {"volume_slice": volume_slice}
+            else:
+                raise HTTPException(status_code=404, detail="No volume data is available for the the given entry or down_sampling_ratio is None")
 
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)
