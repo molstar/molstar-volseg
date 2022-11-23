@@ -148,10 +148,11 @@ class FileSystemVolumeServerDB(VolumeServerDB):
         print("A: " + str(temp_store_path))
         print("B: " + GRID_METADATA_FILENAME)
 
-        shutil.copy2(
-            temp_store_path / GRID_METADATA_FILENAME,
-            self._path_to_object(namespace, key) / GRID_METADATA_FILENAME,
-        )
+        if (temp_store_path / GRID_METADATA_FILENAME).exists():
+            shutil.copy2(
+                temp_store_path / GRID_METADATA_FILENAME,
+                self._path_to_object(namespace, key) / GRID_METADATA_FILENAME,
+            )
         if (temp_store_path / ANNOTATION_METADATA_FILENAME).exists():
             shutil.copy2(
                 temp_store_path / ANNOTATION_METADATA_FILENAME,

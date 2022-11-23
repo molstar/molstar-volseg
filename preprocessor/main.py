@@ -1,3 +1,4 @@
+import zarr
 import argparse
 import asyncio
 import logging
@@ -5,11 +6,13 @@ from pprint import pprint
 import shutil
 from asgiref.sync import async_to_sync
 import numpy as np
+import numcodecs
 
 from pathlib import Path
 from numcodecs import Blosc
 from typing import Dict, Optional, Union
 from db.file_system.db import FileSystemVolumeServerDB
+from file_system.constants import SEGMENTATION_DATA_GROUPNAME
 from preprocessor.params_for_storing_db import CHUNKING_MODES, COMPRESSORS
 from preprocessor.src.service.implementations.preprocessor_service import PreprocessorService
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import \
@@ -21,6 +24,8 @@ from preprocessor.src.tools.convert_app_specific_segm_to_sff.convert_app_specifi
 from preprocessor.src.tools.remove_files_or_folders_by_pattern.remove_files_or_folders_by_pattern import remove_files_or_folders_by_pattern
 from preprocessor.src.tools.write_dict_to_file.write_dict_to_json import write_dict_to_json
 from preprocessor.src.tools.write_dict_to_file.write_dict_to_txt import write_dict_to_txt
+
+OME_ZARR_DEFAULT_PATH = Path('sample_ome_zarr_from_ome_zarr_py_docs/6001240.zarr')
 
 def obtain_paths_to_single_entry_files(input_files_dir: Path) -> Dict:
     d = {}
@@ -274,8 +279,54 @@ async def add_entry_to_db(
         source_db_name=source_db_name
         )
 
+# returns zarr structure to be stored with db.store
+def process_ome_zarr(ome_zarr_path, temp_zarr_hierarchy_storage_path):
+    ome_zarr_root = zarr.open_group(ome_zarr_path)
+    # temp
+    entry_id = 'ngff-' + ome_zarr_path.name
+    our_zarr_structure = zarr.open_group(temp_zarr_hierarchy_storage_path / entry_id, mode='w')
+    segmentation_data_gr = our_zarr_structure.create_group(SEGMENTATION_DATA_GROUPNAME)
+    lattice_id_gr = segmentation_data_gr.create_group('0')
+
+    # hardcoded labels [0], should iterate over them
+    for arr_name, arr in ome_zarr_root.labels[0].arrays():
+        our_resolution_gr = lattice_id_gr.create_group(arr_name)
+        our_arr = our_resolution_gr.create_dataset(
+            name='grid',
+            shape=arr.shape
+        )
+        our_arr_view = our_arr[...]
+        our_arr_view = arr[...]
+        
+        our_set_table = our_resolution_gr.create_dataset(
+            name='set_table',
+            dtype=object,
+            object_codec=numcodecs.JSON(),
+            shape=1
+        )
+        
+        d = {}
+        for value in np.unique(our_arr_view):
+            d[str(value)] = [int(value)]
+        
+
+        our_set_table[...] = [d]
+
+    # need 3D dataset
+    return our_zarr_structure
+
+async def store_ome_zarr_structure(db_path, temp_ome_zarr_structure, source_db, entry_id):
+    new_db_path = Path(db_path)
+    if new_db_path.is_dir() == False:
+        new_db_path.mkdir()
+
+    db = FileSystemVolumeServerDB(new_db_path, store_type='zip')
+    await db.store(namespace=source_db, key=entry_id, temp_store_path=Path(temp_ome_zarr_structure.store.path))
+
 async def main():
     args = parse_script_args()
+    
+
     if args.raw_input_files_dir_path:
         raw_input_files_dir_path = args.raw_input_files_dir_path
     else:
@@ -286,7 +337,7 @@ async def main():
     else:
         # raise ValueError('No temp_zarr_hierarchy_storage_path is provided as argument')
         temp_zarr_hierarchy_storage_path = TEMP_ZARR_HIERARCHY_STORAGE_PATH / args.db_path.name
-
+        
     # NOTE: not maintained currently (outdated arg numbers etc.)
     if args.create_parametrized_dbs:
         # TODO: add quantize and raw input files dir path here too
@@ -311,26 +362,32 @@ async def main():
 
         if args.single_entry:
             if args.entry_id and args.source_db and args.source_db_id and args.source_db_name:
-                single_entry_folder_path = args.single_entry
-                single_entry_id = args.entry_id
-                single_entry_source_db = args.source_db
-
-                if args.force_volume_dtype:
-                    force_volume_dtype = args.force_volume_dtype
+                if args.ome_zarr_path:
+                    # do ome zarr thing
+                    zarr_structure_to_be_saved = process_ome_zarr(args.ome_zarr_path, temp_zarr_hierarchy_storage_path)
+                    await store_ome_zarr_structure(args.db_path, zarr_structure_to_be_saved, args.source_db, args.entry_id)
+                    print(1)
                 else:
-                    force_volume_dtype = None
+                    single_entry_folder_path = args.single_entry
+                    single_entry_id = args.entry_id
+                    single_entry_source_db = args.source_db
 
-                await add_entry_to_db(
-                    Path(args.db_path),
-                    params_for_storing=params_for_storing,
-                    input_files_dir=single_entry_folder_path,
-                    entry_id=single_entry_id,
-                    source_db=single_entry_source_db,
-                    force_volume_dtype=force_volume_dtype,
-                    temp_zarr_hierarchy_storage_path=temp_zarr_hierarchy_storage_path,
-                    source_db_id=args.source_db_id,
-                    source_db_name=args.source_db_name
-                    )
+                    if args.force_volume_dtype:
+                        force_volume_dtype = args.force_volume_dtype
+                    else:
+                        force_volume_dtype = None
+
+                    await add_entry_to_db(
+                        Path(args.db_path),
+                        params_for_storing=params_for_storing,
+                        input_files_dir=single_entry_folder_path,
+                        entry_id=single_entry_id,
+                        source_db=single_entry_source_db,
+                        force_volume_dtype=force_volume_dtype,
+                        temp_zarr_hierarchy_storage_path=temp_zarr_hierarchy_storage_path,
+                        source_db_id=args.source_db_id,
+                        source_db_name=args.source_db_name
+                        )
             else:
                 raise ValueError('args.entry_id and args.source_db and args.source_db_id and args.source_db_name are required for single entry mode')
         else:
@@ -354,6 +411,7 @@ def parse_script_args():
     parser.add_argument("--temp_zarr_hierarchy_storage_path", type=Path, help='path to db working directory')
     parser.add_argument('--source_db_id', type=str, help='actual source db id for metadata')
     parser.add_argument('--source_db_name', type=str, help='actual source db name for metadata')
+    parser.add_argument('--ome_zarr_path', type=Path, default=OME_ZARR_DEFAULT_PATH)
     args=parser.parse_args()
     return args
 
