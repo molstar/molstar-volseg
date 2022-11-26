@@ -12,7 +12,7 @@ from pathlib import Path
 from numcodecs import Blosc
 from typing import Dict, Optional, Union
 from db.file_system.db import FileSystemVolumeServerDB
-from file_system.constants import SEGMENTATION_DATA_GROUPNAME
+from file_system.constants import SEGMENTATION_DATA_GROUPNAME, VOLUME_DATA_GROUPNAME
 from preprocessor.params_for_storing_db import CHUNKING_MODES, COMPRESSORS
 from preprocessor.src.service.implementations.preprocessor_service import PreprocessorService
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import \
@@ -279,16 +279,170 @@ async def add_entry_to_db(
         source_db_name=source_db_name
         )
 
+# NOTE: one volume_force_dtype for all resolutions
+def extract_ome_zarr_metadata(zarr_structure: zarr.hierarchy.group, volume_force_dtype: np.dtype,
+        source_db_id: str,
+        source_db_name: str) -> dict:
+    root = zarr_structure
+    
+    volume_downsamplings = sorted(root[VOLUME_DATA_GROUPNAME].array_keys())
+    # convert to ints
+    volume_downsamplings = sorted([int(x) for x in volume_downsamplings])
+
+    mean_dict = {}
+    std_dict = {}
+    max_dict = {}
+    min_dict = {}
+    grid_dimensions_dict = {}
+
+    for arr_name, arr in root[VOLUME_DATA_GROUPNAME].arrays():
+        arr_view = arr[...]
+        # if QUANTIZATION_DATA_DICT_ATTR_NAME in arr.attrs:
+        #     data_dict = arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME]
+        #     data_dict['data'] = arr_view
+        #     arr_view = decode_quantized_data(data_dict)
+        #     if isinstance(arr_view, da.Array):
+        #         arr_view = arr_view.compute()
+
+        mean_val = float(str(np.mean(arr_view)))
+        std_val = float(str(np.std(arr_view)))
+        max_val = float(str(arr_view.max()))
+        min_val = float(str(arr_view.min()))
+        grid_dimensions_val: tuple[int, int, int] = arr.shape
+
+        mean_dict[str(arr_name)] = mean_val
+        std_dict[str(arr_name)] = std_val
+        max_dict[str(arr_name)] = max_val
+        min_dict[str(arr_name)] = min_val
+        grid_dimensions_dict[str(arr_name)] = grid_dimensions_val
+
+    lattice_dict = {}
+    lattice_ids = []
+    
+    if SEGMENTATION_DATA_GROUPNAME in root:
+        for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
+            # each key is lattice id
+            lattice_id = int(gr_name)
+
+            segm_downsamplings = sorted(gr.group_keys())
+            # convert to ints
+            segm_downsamplings = sorted([int(x) for x in segm_downsamplings])
+
+            lattice_dict[lattice_id] = segm_downsamplings
+            lattice_ids.append(lattice_id)
+                        
+
+    # TODO: rework as it is not map
+    # TODO: convert units (micrometers -> angstroms)
+    # TODO: axis order - ZYX (channel is eliminated)
+    # TODO: normalize or leave as zyx? What is axis order?
+
+    # TODO: scale?
+    # How to get origin, etc.
+
+    root_zattrs = root.attrs
+    multiscales = root_zattrs["multiscales"]
+    axes_meta = multiscales["axes"]
+    datasets_meta = multiscales["datasets"]
+
+    # voxel_sizes_in_downsamplings = dict with keys = resolutions (0, 1, 2)
+    # values = tuples of voxel sizes in angstroms, ordered x y z as in ED map
+
+
+    # d = ccp4_words_to_dict_mrcfile(mrc_header)
+    # ao = { d['MAPC'] - 1: 0, d['MAPR'] - 1: 1, d['MAPS'] - 1: 2 }
+
+    # N = d['NC'], d['NR'], d['NS']
+    # N = N[ao[0]], N[ao[1]], N[ao[2]]
+
+    # START = d['NCSTART'], d['NRSTART'], d['NSSTART']
+    # START = START[ao[0]], START[ao[1]], START[ao[2]]
+    
+    # original_voxel_size: tuple[float, float, float] = (
+    #     d['xLength'] / N[0],
+    #     d['yLength'] / N[1],
+    #     d['zLength'] / N[2]
+    # )
+
+    # voxel_sizes_in_downsamplings: dict = {}
+    # for rate in volume_downsamplings:
+    #     voxel_sizes_in_downsamplings[rate] = tuple(
+    #         [float(Decimal(i) * Decimal(rate)) for i in original_voxel_size]
+    #     )
+
+    # # get origin of grid based on NC/NR/NSSTART variables (5, 6, 7) and original voxel size
+    # # Converting to strings, then to floats to make it JSON serializable (decimals are not) -> ??
+    # origin: tuple[float, float, float] = (
+    #     float(str(START[0] * original_voxel_size[0])),
+    #     float(str(START[1] * original_voxel_size[1])),
+    #     float(str(START[2] * original_voxel_size[2])),
+    # )
+
+    return {
+        'general': {
+            'source_db_name': source_db_name,
+            'source_db_id': source_db_id,
+        },
+        'volumes': {
+            'volume_downsamplings': volume_downsamplings,
+            # downsamplings have different voxel size so it is a dict
+            'voxel_size': voxel_sizes_in_downsamplings,
+            'origin': origin,
+            'grid_dimensions': N,
+            'sampled_grid_dimensions': grid_dimensions_dict,
+            'mean': mean_dict,
+            'std': std_dict,
+            'max': max_dict,
+            'min': min_dict,
+            'volume_force_dtype': volume_force_dtype.str
+        },
+        'segmentation_lattices': {
+            'segmentation_lattice_ids': lattice_ids,
+            'segmentation_downsamplings': lattice_dict
+        },
+        'segmentation_meshes': {
+            'mesh_component_numbers': None,
+            'detail_lvl_to_fraction': None
+        }
+    }
+
 # returns zarr structure to be stored with db.store
-def process_ome_zarr(ome_zarr_path, temp_zarr_hierarchy_storage_path):
+# NOTE: just one channel
+def process_ome_zarr(ome_zarr_path, temp_zarr_hierarchy_storage_path, source_db_id, source_db_name):
     ome_zarr_root = zarr.open_group(ome_zarr_path)
-    # temp
-    entry_id = 'ngff-' + ome_zarr_path.name
+    
+    entry_id = source_db_name + '-' + source_db_id
     our_zarr_structure = zarr.open_group(temp_zarr_hierarchy_storage_path / entry_id, mode='w')
+
+    # PROCESSING VOLUME
+    # TODO: just Dapi channel. Is it second one (1)? (second in sample_ome_zarr_from_ome_zarr_py_docs/6001240.zarr/.zattrs)
+    volume_data_gr = our_zarr_structure.create_group(VOLUME_DATA_GROUPNAME)
+    for volume_arr_resolution, volume_arr in ome_zarr_root.arrays():
+        our_volume_resolution_arr = volume_data_gr.create_dataset(
+            name=volume_arr_resolution,
+            shape=volume_arr.shape,
+            # hardcoded only second channel
+            data=volume_arr[...][1]
+        )
+
+    # TODO: convert units if necessary (micrometers)
+    # TODO: extract metadata from ome zarr root
+    # NOTE: single volume_force_dtype 
+    # extract_ome_zarr_metadata(
+    #     zarr_structure=our_zarr_structure,
+    #     volume_force_dtype=volume_data_gr[0].dtype,
+    #     source_db_id=source_db_id,
+    #     source_db_name=source_db_name
+    # )
+        
+    # TODO: annotations.json?
+    
+    # PROCESSING SEGMENTATION
     segmentation_data_gr = our_zarr_structure.create_group(SEGMENTATION_DATA_GROUPNAME)
     lattice_id_gr = segmentation_data_gr.create_group('0')
 
-    # hardcoded labels [0], should iterate over them
+    # hardcoded labels [0], should iterate over them, but for sample file ok (just 0 label is here)
+    # arr_name is resolution
     for arr_name, arr in ome_zarr_root.labels[0].arrays():
         our_resolution_gr = lattice_id_gr.create_group(arr_name)
         our_arr = our_resolution_gr.create_dataset(
@@ -364,7 +518,11 @@ async def main():
             if args.entry_id and args.source_db and args.source_db_id and args.source_db_name:
                 if args.ome_zarr_path:
                     # do ome zarr thing
-                    zarr_structure_to_be_saved = process_ome_zarr(args.ome_zarr_path, temp_zarr_hierarchy_storage_path)
+                    zarr_structure_to_be_saved = process_ome_zarr(
+                        ome_zarr_path=args.ome_zarr_path,
+                        temp_zarr_hierarchy_storage_path=temp_zarr_hierarchy_storage_path,
+                        source_db_id=args.source_db_id,
+                        source_db_name=args.source_db_name)
                     await store_ome_zarr_structure(args.db_path, zarr_structure_to_be_saved, args.source_db, args.entry_id)
                     print(1)
                 else:
