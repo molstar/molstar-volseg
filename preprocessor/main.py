@@ -12,7 +12,7 @@ from pathlib import Path
 from numcodecs import Blosc
 from typing import Dict, Optional, Union
 from db.file_system.db import FileSystemVolumeServerDB
-from file_system.constants import GRID_METADATA_FILENAME, SEGMENTATION_DATA_GROUPNAME, VOLUME_DATA_GROUPNAME
+from file_system.constants import ANNOTATION_METADATA_FILENAME, GRID_METADATA_FILENAME, SEGMENTATION_DATA_GROUPNAME, VOLUME_DATA_GROUPNAME
 from preprocessor.params_for_storing_db import CHUNKING_MODES, COMPRESSORS
 from preprocessor.src.service.implementations.preprocessor_service import PreprocessorService
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import \
@@ -396,8 +396,40 @@ def extract_ome_zarr_metadata(our_zarr_structure: zarr.hierarchy.group, volume_f
 
 # NOTE: To be clarified how to get actual annotations:
 # https://github.com/ome/ngff/issues/163#issuecomment-1328009660
-def extract_ome_zarr_annotations():
-    pass
+# This one just uses label-value originated from .zattrs and copied to set_table of 0th resolution
+def extract_ome_zarr_annotations(our_zarr_structure):
+    d = {
+        "segment_list": []
+    }
+    segment_list = d['segment_list']
+    set_table = our_zarr_structure[SEGMENTATION_DATA_GROUPNAME][0][0].set_table[...][0]
+    for label_value in set_table.keys():
+        # TODO: null (json) to None?
+        segment_list.append(
+            {
+                "id": int(label_value),
+                "parent_id": 0,
+                "biological_annotation": {
+                    "name": f"segment {label_value}",
+                    "description": None,
+                    "number_of_instances": 1,
+                    "external_references": [
+                    ]
+                },
+                "colour": [
+                ],
+                "mesh_list": [],
+                "three_d_volume": {
+                    "lattice_id": 0,
+                    "value": float(label_value),
+                    "transform_id": None
+                },
+                "shape_primitive_list": []
+            }
+        )
+
+    return d
+
 
 # returns zarr structure to be stored with db.store
 # NOTE: just one channel
@@ -463,9 +495,12 @@ def process_ome_zarr(ome_zarr_path, temp_zarr_hierarchy_storage_path, source_db_
         ome_zarr_root=ome_zarr_root
     )
 
+    annotation_metadata = extract_ome_zarr_annotations(
+        our_zarr_structure
+    )
+
     SFFPreprocessor.temp_save_metadata(grid_metadata, GRID_METADATA_FILENAME, our_zarr_structure_path)
-    
-    # TODO: annotations.json?
+    SFFPreprocessor.temp_save_metadata(annotation_metadata, ANNOTATION_METADATA_FILENAME, our_zarr_structure_path)
 
     # need 3D dataset
     return our_zarr_structure
