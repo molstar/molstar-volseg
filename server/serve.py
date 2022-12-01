@@ -11,5 +11,6 @@ if __name__ == "__main__":
         port=settings.PORT,
         reload=settings.DEV_MODE,
         ssl_keyfile=settings.CERT,
-        ssl_certfile=settings.KEY
+        ssl_certfile=settings.KEY,
+        ssl_keyfile_password=settings.PASS
         )

@@ -26,6 +26,6 @@ class _Settings(BaseSettings):
     # TODO: set default values
     CERT: str = ''
     KEY: str = ''
-
+    PASS: str = ''
 
 settings = _Settings()
