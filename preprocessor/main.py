@@ -7,6 +7,7 @@ import shutil
 from asgiref.sync import async_to_sync
 import numpy as np
 import numcodecs
+from PIL import ImageColor
 
 from pathlib import Path
 from numcodecs import Blosc
@@ -397,36 +398,38 @@ def extract_ome_zarr_metadata(our_zarr_structure: zarr.hierarchy.group, volume_f
 # NOTE: To be clarified how to get actual annotations:
 # https://github.com/ome/ngff/issues/163#issuecomment-1328009660
 # This one just uses label-value originated from .zattrs and copied to set_table of 0th resolution
-def extract_ome_zarr_annotations(our_zarr_structure):
+def extract_ome_zarr_annotations(our_zarr_structure, ome_zarr_root):
+    dapi_channel_color_hex = ome_zarr_root.attrs['omero']['channels'][1]['color']
+    dapi_channel_color_rgba = ImageColor.getcolor(f'#{dapi_channel_color_hex}', "RGBA")
+    dapi_channel_color_rgba_fractional = [i/255 for i in dapi_channel_color_rgba]
     d = {
         "segment_list": []
     }
     segment_list = d['segment_list']
     set_table = our_zarr_structure[SEGMENTATION_DATA_GROUPNAME][0][0].set_table[...][0]
     for label_value in set_table.keys():
-        # TODO: null (json) to None?
-        segment_list.append(
-            {
-                "id": int(label_value),
-                "parent_id": 0,
-                "biological_annotation": {
-                    "name": f"segment {label_value}",
-                    "description": None,
-                    "number_of_instances": 1,
-                    "external_references": [
-                    ]
-                },
-                "colour": [
-                ],
-                "mesh_list": [],
-                "three_d_volume": {
-                    "lattice_id": 0,
-                    "value": float(label_value),
-                    "transform_id": None
-                },
-                "shape_primitive_list": []
-            }
-        )
+        if label_value != '0':
+            segment_list.append(
+                {
+                    "id": int(label_value),
+                    "parent_id": 0,
+                    "biological_annotation": {
+                        "name": f"segment {label_value}",
+                        "description": None,
+                        "number_of_instances": 1,
+                        "external_references": [
+                        ]
+                    },
+                    "colour": dapi_channel_color_rgba_fractional,
+                    "mesh_list": [],
+                    "three_d_volume": {
+                        "lattice_id": 0,
+                        "value": float(label_value),
+                        "transform_id": None
+                    },
+                    "shape_primitive_list": []
+                }
+            )
 
     return d
 
@@ -482,7 +485,6 @@ def process_ome_zarr(ome_zarr_path, temp_zarr_hierarchy_storage_path, source_db_
         d = {}
         for value in np.unique(our_arr[...]):
             d[str(value)] = [int(value)]
-        
 
         our_set_table[...] = [d]
 
@@ -496,7 +498,8 @@ def process_ome_zarr(ome_zarr_path, temp_zarr_hierarchy_storage_path, source_db_
     )
 
     annotation_metadata = extract_ome_zarr_annotations(
-        our_zarr_structure
+        our_zarr_structure=our_zarr_structure,
+        ome_zarr_root=ome_zarr_root
     )
 
     SFFPreprocessor.temp_save_metadata(grid_metadata, GRID_METADATA_FILENAME, our_zarr_structure_path)
