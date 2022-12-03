@@ -67,8 +67,7 @@ def run_frontend(args):
 
     deploy_env = {
         **os.environ,
-        'REACT_APP_API_HOSTNAME': '',
-        'REACT_APP_API_PORT': args.api_port,
+        'REACT_APP_API_HOSTNAME': 'https://cellstar.ncbr.muni.cz',
         # NOTE: later, for now set to empty string
         'REACT_APP_API_PREFIX': '',
         'REACT_APP_GIT_SHA': full_sha,
