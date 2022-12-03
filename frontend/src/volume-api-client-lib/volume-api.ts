@@ -8,7 +8,7 @@ function createApiPrefix() {
     const prefix = process.env.REACT_APP_API_PREFIX
         ? `/${process.env.REACT_APP_API_PREFIX}` : ``;
 
-    return `${hostname}${port ? port : ''}${prefix}`;
+    return `${hostname}${port ? ':' + port : ''}${prefix}`;
 }
 
 function getGitTag() {
