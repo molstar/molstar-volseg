@@ -32,7 +32,7 @@ def parse_script_args():
     parser.add_argument('--csv_with_entry_ids', type=Path, default=CSV_WITH_ENTRY_IDS_FILE, help='csv with entry ids and info for preprocessor')
     parser.add_argument('--raw_input_files_dir', type=Path, default=RAW_INPUT_FILES_DIR, help='dir with raw input files')
     parser.add_argument("--db_path", type=Path, default=DEFAULT_DB_PATH, help='path to db folder')
-    parser.add_argument("--api_port", type=str, default=str(DEFAULT_PORT), help='default api port')
+    parser.add_argument("--api_port", type=str, help='api port')
     parser.add_argument("--api_hostname", type=str, default=DEFAULT_HOST, help='default host')
     # NOTE: this will quantize everything (except u2/u1 thing), not what we need
     # parser.add_argument("--quantize_volume_data_dtype_str", action="store", choices=['u1', 'u2'])
