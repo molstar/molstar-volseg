@@ -1,3 +1,5 @@
+import os
+import shutil
 from typing import Optional
 from preprocessor.main import remove_temp_zarr_hierarchy_storage_folder
 import psutil
@@ -27,3 +29,16 @@ def clean_up_temp_zarr_hierarchy_storage(temp_zarr_hierarchy_storage_path: Path)
     if temp_zarr_hierarchy_storage_path is not None and temp_zarr_hierarchy_storage_path.exists():
         print(f'Removing db working dir:{temp_zarr_hierarchy_storage_path}')
         remove_temp_zarr_hierarchy_storage_folder(temp_zarr_hierarchy_storage_path)
+
+def clean_up_raw_input_files_dir(raw_input_files_dir_path: Path):
+    print(f'CLEANING RAW INPUT FILES DIR {raw_input_files_dir_path}')
+    for path in raw_input_files_dir_path.glob("**/*"):
+        try:
+            if path.is_file():
+                path.unlink()
+            elif path.is_dir():
+                # NOTE: ignore errors?
+                shutil.rmtree(path)
+        except Exception as e:
+            print(f'Problem with cleaning raw input files dir')
+            print(e)
