@@ -103,6 +103,9 @@ export class LatticeSegmentation {
             throw new Error('Not implemented for transform of kind "matrix"'); // TODO ask if this is really needed
         } else if (transform.kind === 'spacegroup') {
             const newFractionalBox = Box.toFractional(bbox, cell);
+            const origFractSize = Vec3.sub(Vec3.zero(), transform.fractionalBox.max, transform.fractionalBox.min);
+            Vec3.mul(newFractionalBox.min, newFractionalBox.min, origFractSize);
+            Vec3.mul(newFractionalBox.max, newFractionalBox.max, origFractSize);
             Vec3.add(newFractionalBox.min, newFractionalBox.min, transform.fractionalBox.min);
             Vec3.add(newFractionalBox.max, newFractionalBox.max, transform.fractionalBox.min);
             newTransform = { ...transform, fractionalBox: newFractionalBox };
@@ -278,7 +281,9 @@ namespace Box {
         return [xTo - xFrom, yTo - yFrom, zTo - zFrom];
     }
     export function origin(box: Box): [number, number, number] {
-        const [xFrom, xTo, yFrom, yTo, zFrom, zTo] = box;
+        const xFrom = box[0];
+        const yFrom = box[2];
+        const zFrom = box[4];
         return [xFrom, yFrom, zFrom];
     }
     export function log(name: string, box: Box): void {

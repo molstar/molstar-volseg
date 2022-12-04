@@ -36,7 +36,7 @@ function Main() {
                     <Button variant={example === 'emdb' ? 'contained' : 'outlined'} onClick={() => model.loadExample('emdb')}>EMDB SFF</Button>
                     <Button variant={example === 'bioimage' ? 'contained' : 'outlined'} onClick={() => model.loadExample('bioimage')}>BioImage Archive</Button>
                     <Button variant={example === 'meshes' ? 'contained' : 'outlined'} onClick={() => model.loadExample('meshes')}>Meshes</Button>
-                    <Button variant={example === 'meshStreaming' ? 'contained' : 'outlined'} onClick={() => model.loadExample('meshStreaming')}>Mesh Streaming</Button>
+                    {/* <Button variant={example === 'meshStreaming' ? 'contained' : 'outlined'} onClick={() => model.loadExample('meshStreaming')}>Mesh Streaming</Button> */}
                     <Button variant={example === 'auto' ? 'contained' : 'outlined'} onClick={() => model.loadExample('auto')}>Auto</Button>
                 </ButtonGroup>
             </div>

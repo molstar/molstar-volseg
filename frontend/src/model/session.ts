@@ -14,7 +14,7 @@ import { Download, RawData } from 'molstar/lib/mol-plugin-state/transforms/data'
 import * as MeshExamples from '../mesh-extension/examples';
 import { type Metadata, Segment } from '../volume-api-client-lib/data';
 import * as ExternalAPIs from './external-api';
-import { CreateVolume, Debugging, ExampleType, MetadataUtils, NodeManager, splitEntryId } from './helpers';
+import { CreateVolume, ExampleType, MetadataUtils, NodeManager, splitEntryId } from './helpers';
 import { LatticeSegmentation } from './lattice-segmentation';
 import { AppModel, API2 } from './model';
 import { CreateGroup } from 'molstar/lib/mol-plugin-state/transforms/misc';
