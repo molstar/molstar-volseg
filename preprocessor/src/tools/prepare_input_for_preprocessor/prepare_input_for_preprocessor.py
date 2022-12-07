@@ -55,6 +55,8 @@ def prepare_input_for_preprocessor(config: list[dict], output_dir: Path, db_path
             entry['source_db'] = 'emdb'
         elif db == 'empiar':
             entry['source_db'] = 'empiar'
+        elif db == 'idr':
+            entry['source_db'] = 'idr'
         else:
             raise ValueError(f'Source db is not recognized: {db}')
 
@@ -62,7 +64,7 @@ def prepare_input_for_preprocessor(config: list[dict], output_dir: Path, db_path
         entry_folder.mkdir(parents=True, exist_ok=True)
         entry['single_entry'] = str(entry_folder.resolve())
 
-        if entry['static_input_files']:
+        if entry['static_input_files'] and entry['source_db'] != 'idr':
             static_segmentation_file_path = None
             static_folder_content = sorted((STATIC_INPUT_FILES_DIR / entry['source_db'] / preprocessor_folder_name).glob('*'))
             for item in static_folder_content:
@@ -79,7 +81,20 @@ def prepare_input_for_preprocessor(config: list[dict], output_dir: Path, db_path
             if static_segmentation_file_path:
                 static_sff_output_path = entry_folder / static_segmentation_file_path.name
                 shutil.copy2(static_segmentation_file_path, static_sff_output_path)
+
+        elif entry['static_input_files'] and entry['source_db'] == 'idr':
+            # NOTE: for ome zarr
+            static_folder_content = sorted((STATIC_INPUT_FILES_DIR / entry['source_db'] / preprocessor_folder_name).glob('*'))
+            for item in static_folder_content:
+                if item.is_dir() and item.name.split('.')[1] == 'zarr':
+                    static_ome_zarr_dir_path: Path = item
+                    static_ome_zarr_dir_output_path = entry_folder / static_ome_zarr_dir_path.name
+                    entry['ome_zarr_path'] = static_ome_zarr_dir_output_path
             
+            if not static_ome_zarr_dir_path:
+                raise Exception('No ome zarr found')
+
+            shutil.copytree(static_ome_zarr_dir_path, static_ome_zarr_dir_output_path)
         else:
             if db == 'emd':
                 # Get map

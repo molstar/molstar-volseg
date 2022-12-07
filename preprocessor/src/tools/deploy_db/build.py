@@ -46,6 +46,9 @@ def _preprocessor_internal_wrapper(entry: dict):
     if entry['temp_zarr_hierarchy_storage_path']:
         lst.extend(['--temp_zarr_hierarchy_storage_path', entry['temp_zarr_hierarchy_storage_path']])
 
+    if entry['source_db'] == 'idr':
+        lst.extend(['--ome_zarr_path', entry['ome_zarr_path']])
+
     process = subprocess.Popen(lst)
     global PROCESS_IDS_LIST
     PROCESS_IDS_LIST.append(process.pid)

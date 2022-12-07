@@ -608,7 +608,7 @@ def parse_script_args():
     parser.add_argument("--temp_zarr_hierarchy_storage_path", type=Path, help='path to db working directory')
     parser.add_argument('--source_db_id', type=str, help='actual source db id for metadata')
     parser.add_argument('--source_db_name', type=str, help='actual source db name for metadata')
-    parser.add_argument('--ome_zarr_path', type=Path, default=OME_ZARR_DEFAULT_PATH)
+    parser.add_argument('--ome_zarr_path', type=Path)
     args=parser.parse_args()
     return args
 
