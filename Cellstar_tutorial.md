@@ -1,19 +1,3 @@
-# TODO Keep or remove contents?
-Contents:
-Introduction
-Getting local copy of Cellstar server
-Setting up the environment
-Setting up the database
-What formats are supported
-Build database script
-Adding an entry to already build database
-Preprocessing and adding custom segmentations
-Hosting
-Hosting the Cell* VolumeServer
-Hosting/linking the Mol* client (TODO by Adam/David)
-All-in-one solution
-How to build database and run both API and frontend 
-
 # Introduction
 This tutorial will help you to set up your local copy of Cellstar server and explain how to use it (add entries, host server and frontend etc.)
 
