@@ -34,29 +34,10 @@ mamba env create -f environment.yaml
 ## Supported formats
 SFF (.hff) for segmentation data, CCP4 for volume data(.map, .mrc, .ccp4 files). Additionally, as an experimental feature, we support also segmentation data in .am, .mod, .seg, .stl formats through conversion to SFF (.hff).
 
-## Build database script
-Activate created conda environment, e.g.
-```
-conda activate cellstar-volume-server
-```
-From root project directory (cellstar-volume-server by default) run:
-```
-python preprocessor/src/tools/deploy_db/build.py  --csv_with_entry_ids test-data/preprocessor/db_building_parameters_custom_entries.csv
-```
-
-This will build db with 11 EMDB entries, and using default values of all other arguments.
-Arguments description:
- - --csv_with_entry_ids - csv file with entry ids and info for preprocessor, default - test-data\preprocessor\db_building_parameters_all_entries.csv*
- - --raw_input_files_dir dir with raw input files for preprocessor, default - test-data/preprocessor//raw_input_files
- - --db_path - path to db folder, default - test-data/db
- - --temp_zarr_hierarchy_storage_path - path to directory where temporary files will be stored during the build process. Default - test-data/preprocessor/temp_zarr_hierarchy_storage/YOUR_DB_PATH
-
-	
-
 ## Adding an entry to the database
 To add entry to the database from root project directory (cellstar-volume-server by default) run preprocessor\main.py with the following arguments:
 
-- --db_path - path to folder with database, default -  - test-data/db
+ - --db_path - path to folder with database, default -  - test-data/db
  - --single_entry - path to folder with input files (volume and segmentation)
  - --entry_id - entry id (e.g. emd-1832) to be used as database folder name for that entry
  - --source_db - source database name (e.g. emdb) to be used as DB folder name
@@ -74,6 +55,25 @@ There are two options - either use application specific segmentation file format
 
 We describe the first option here. For example, you have Segger segmentation (emd_9094.seg) for emd-9094 and corresponding volume map (emd_9094.map). Then follow all the steps described in “Adding an entry to the database”, but instead of .hff file, place your emd_9094.seg file into the folder specified as --single_entry argument. During the build process, .hff file will appear in that folder, and will be used to add entry to the database.
 Note that if you won’t delete application specific segmentation file from that folder, and run adding entry to the database again, it will convert it again to SFF (.hff) and replace previously converted SFF.
+
+## Build database script
+Activate created conda environment, e.g.
+```
+conda activate cellstar-volume-server
+```
+From root project directory (cellstar-volume-server by default) run:
+```
+python preprocessor/src/tools/deploy_db/build.py  --csv_with_entry_ids test-data/preprocessor/db_building_parameters_custom_entries.csv
+```
+
+This will build db with 11 EMDB entries, and using default values of all other arguments.
+Arguments description:
+ - --csv_with_entry_ids - csv file with entry ids and info for preprocessor, default - test-data\preprocessor\db_building_parameters_all_entries.csv (not recommended to use default for users, as it requires static files to be hosted at specific location, use --csv_with_entry_ids test-data/preprocessor/db_building_parameters_custom_entries.csv instead)
+ - --raw_input_files_dir dir with raw input files for preprocessor, default - test-data/preprocessor//raw_input_files
+ - --db_path - path to db folder, default - test-data/db
+ - --temp_zarr_hierarchy_storage_path - path to directory where temporary files will be stored during the build process. Default - test-data/preprocessor/temp_zarr_hierarchy_storage/YOUR_DB_PATH
+
+	
 
 # Hosting
 ## Hosting the Cell* VolumeServer
@@ -99,7 +99,7 @@ cd server
 set DEV_MODE=True && python serve.py
 ```
 
-# Building the frontend 
+# Hosting/linking the Mol* client (TODO by Adam/David) 
 TODO: section highlighting how to use the server from Mol*
 
 
@@ -113,7 +113,7 @@ python preprocessor/src/tools/deploy_db/build_and_deploy.py  --csv_with_entry_id
 This will build db with 11 EMDB entries, and using default values of all other arguments, and run both API and frontend.
 
 Optionally, add arguments:
- - --csv_with_entry_ids - csv file with entry ids and info for preprocessor, default - test-data\preprocessor\db_building_parameters_all_entries.csv*
+ - --csv_with_entry_ids - csv file with entry ids and info for preprocessor, default - test-data\preprocessor\db_building_parameters_all_entries.csv (not recommended to use default for users, as it requires static files to be hosted at specific location, use --csv_with_entry_ids test-data/preprocessor/db_building_parameters_custom_entries.csv instead)
 - --raw_input_files_dir - dir with raw input files for preprocessor, default - test-data/preprocessor//raw_input_files
  - --db_path - path to db folder, default - test-data/db
  - --temp_zarr_hierarchy_storage_path - path to directory where temporary files will be stored during the build process. Default - test-data/preprocessor/temp_zarr_hierarchy_storage/YOUR_DB_PATH
