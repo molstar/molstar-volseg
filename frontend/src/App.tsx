@@ -191,6 +191,7 @@ function EntryForm({ model, action }: { model: AppModel, action: (entryId: strin
             <Select id='input-source' label='Source' value={source} onChange={e => setSource(e.target.value)} size='small' fullWidth style={{ marginBottom: 8 }}>
                 <MenuItem value='empiar'>EMPIAR</MenuItem>
                 <MenuItem value='emdb'>EMDB</MenuItem>
+                <MenuItem value='idr'>IDR</MenuItem>
             </Select>
 
             {/* <InputLabel>Entry ID</InputLabel>

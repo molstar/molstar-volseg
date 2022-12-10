@@ -149,7 +149,7 @@ export class NodeManager {
 
 /** Split entry ID (e.g. 'emd-1832') into source ('emdb') and number ('1832') */
 export function splitEntryId(entryId: string) {
-    const PREFIX_TO_SOURCE: { [prefix: string]: string } = { 'empiar': 'empiar', 'emd': 'emdb' };
+    const PREFIX_TO_SOURCE: { [prefix: string]: string } = { 'empiar': 'empiar', 'emd': 'emdb', 'idr': 'idr'  };
     const [prefix, entry] = entryId.split('-');
     return {
         source: PREFIX_TO_SOURCE[prefix],
@@ -159,7 +159,7 @@ export function splitEntryId(entryId: string) {
 
 /** Create entry ID (e.g. 'emd-1832') for a combination of source ('emdb') and number ('1832') */
 export function createEntryId(source: string, entryNumber: string | number) {
-    const SOURCE_TO_PREFIX: { [prefix: string]: string } = { 'empiar': 'empiar', 'emdb': 'emd' };
+    const SOURCE_TO_PREFIX: { [prefix: string]: string } = { 'empiar': 'empiar', 'emdb': 'emd', 'idr': 'idr' };
     return `${SOURCE_TO_PREFIX[source]}-${entryNumber}`;
 }
 
