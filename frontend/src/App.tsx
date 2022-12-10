@@ -175,7 +175,7 @@ function EntryForm({ model, action }: { model: AppModel, action: (entryId: strin
     const [entryNumber, setEntryNumber] = useState('');
     // const [comboValues, setComboValues] = useState(['1014', '1181', '1547', '1832', '10070']); // TODO useBehavior, get from API
     const entryList = useBehavior(model.entryList);
-    const comboValues = entryList[source]?.map(entry => splitEntryId(entry).entryNumber) ?? [];
+    const comboValues = entryList[source]?.map(entry => splitEntryId(entry).entryNumber).sort() ?? [];
 
     const entryId = useBehavior(model.entryId);
     const status = useBehavior(model.status);

@@ -173,9 +173,12 @@ export const InitMeshStreaming = MS.StateAction.build({
     from: MS.PluginStateObject.Root,
     params: MeshServerInfo.Params,
     isApplicable: (a, _, plugin: MS.PluginContext) => true
-})(function ({ params }, plugin: MS.PluginContext) {
+})(function (p, plugin: MS.PluginContext) {
     return MS.Task.create('Mesh Streaming', async ctx => {
-        const serverNode = await plugin.build().toRoot().apply(MeshServerTransformer, params).commit();
+        const { params } = p;
+        // p.ref
+        const serverNode = await plugin.build().to(p.ref).apply(MeshServerTransformer, params).commit();
+        // const serverNode = await plugin.build().toRoot().apply(MeshServerTransformer, params).commit();
         const streamingNode = await plugin.build().to(serverNode).apply(MeshStreamingTransformer, {}).commit();
         const visuals = streamingNode.data?.visuals ?? {};
         const bgSegments = streamingNode.data?.backgroundSegments ?? {};

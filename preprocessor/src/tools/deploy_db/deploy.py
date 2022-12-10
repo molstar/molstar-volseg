@@ -7,6 +7,7 @@ from preprocessor.main import remove_temp_zarr_hierarchy_storage_folder
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE, DEFAULT_DB_PATH, RAW_INPUT_FILES_DIR, TEMP_ZARR_HIERARCHY_STORAGE_PATH
 from preprocessor.src.tools.deploy_db.build_and_deploy import DEFAULT_FRONTEND_PORT, DEFAULT_HOST, DEFAULT_PORT
 from preprocessor.src.tools.deploy_db.deploy_process_helper import clean_up_processes
+from sys import platform
 
 PROCESS_IDS_LIST = []
 
@@ -23,7 +24,7 @@ def _get_git_tag() -> str:
 def parse_script_args():
     parser=argparse.ArgumentParser()
     parser.add_argument("--db_path", type=Path, default=DEFAULT_DB_PATH, help='path to db folder')
-    parser.add_argument("--api_port", type=str, default=str(DEFAULT_PORT), help='default api port')
+    parser.add_argument("--api_port", type=str, help='api port')
     parser.add_argument("--api_hostname", type=str, default=DEFAULT_HOST, help='default host')
     # NOTE: this will quantize everything (except u2/u1 thing), not what we need
     parser.add_argument("--frontend_port", type=str, default=str(DEFAULT_FRONTEND_PORT), help='default frontend port')
@@ -48,10 +49,16 @@ def run_api(args):
         # check if relative path => then convert to absolute
         'DB_PATH': db_path,
         'HOST': args.api_hostname,
-        'PORT': args.api_port,
         'GIT_TAG': tag,
         'GIT_SHA': full_sha
         }
+
+    if platform == "win32":
+        deploy_env['DB_PATH'] = str(db_path.resolve())
+        
+    if args.api_port:
+        deploy_env['PORT'] = args.api_port
+
     lst = [
         "python", "serve.py"
     ]
@@ -67,8 +74,8 @@ def run_frontend(args):
 
     deploy_env = {
         **os.environ,
-        'REACT_APP_API_HOSTNAME': '',
-        'REACT_APP_API_PORT': args.api_port,
+        'REACT_APP_API_HOSTNAME': 'https://cellstar.ncbr.muni.cz',
+        'REACT_APP_API_PORT': args.api_port if args.api_port else '',
         # NOTE: later, for now set to empty string
         'REACT_APP_API_PREFIX': '',
         'REACT_APP_GIT_SHA': full_sha,
@@ -76,22 +83,38 @@ def run_frontend(args):
         'REACT_APP_GIT_TAG': tag,
         }
 
-    subprocess.call(["yarn", "--cwd", "frontend"], env=deploy_env)
-    subprocess.call(["yarn", "--cwd", "frontend", "build"], env=deploy_env)
-    lst = [
-        "serve",
-        "-s", "frontend/build",
-        "-l", str(args.frontend_port)
-    ]
-        
-    frontend_process = subprocess.Popen(lst)
+    if platform == "win32":
+        subprocess.call(["yarn", "--cwd", "frontend"], env=deploy_env, shell=True)
+        subprocess.call(["yarn", "--cwd", "frontend", "build"], env=deploy_env, shell=True)
+        lst = [
+            "serve",
+            "-s", "frontend/build",
+            "-l", str(args.frontend_port)
+        ]
+            
+        frontend_process = subprocess.Popen(lst, shell=True)
+    else:
+        subprocess.call(["yarn", "--cwd", "frontend"], env=deploy_env)
+        subprocess.call(["yarn", "--cwd", "frontend", "build"], env=deploy_env)
+        lst = [
+            "serve",
+            "-s", "frontend/build",
+            "-l", str(args.frontend_port)
+        ]
+            
+        frontend_process = subprocess.Popen(lst)
+
+
     PROCESS_IDS_LIST.append(frontend_process.pid)
     # subprocess.call(lst)
     return frontend_process
 
 def shut_down_ports(args):
     _free_port(args.frontend_port)
-    _free_port(args.api_port)
+    if args.api_port:
+        _free_port(args.api_port)
+    else:
+        _free_port(str(DEFAULT_PORT))
 
 
 def deploy(args):

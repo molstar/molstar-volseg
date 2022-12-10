@@ -93,14 +93,9 @@ export const CreateVolume = CreateTransformer({
 
 
 export class NodeManager {
-    public groupLabel?: string;
-    private groupOptions?: Partial<StateTransform.Options>;
-    private group?: StateObjectSelector;
     private nodes: { [key: string]: StateObjectSelector };
 
-    constructor(groupName?: string, groupOptions?: Partial<StateTransform.Options>) {
-        this.groupLabel = groupName;
-        this.group = undefined;
+    constructor() {
         this.nodes = {};
     }
 
@@ -110,18 +105,6 @@ export class NodeManager {
         } catch {
             return false;
         }
-    }
-
-    public getGroup(update: StateBuilder.Root, parent?: StateObjectSelector): StateObjectSelector {
-        if (!this.groupLabel) {
-            return parent ?? update.toRoot().selector;
-        }
-        if (this.group && NodeManager.nodeExists(this.group)) {
-            return this.group;
-        }
-        const to = parent ? update.to(parent) : update.toRoot();
-        this.group = to.apply(CreateGroup, { label: this.groupLabel }, this.groupOptions).selector;
-        return this.group;
     }
 
     public getNode(key: string): StateObjectSelector | undefined {

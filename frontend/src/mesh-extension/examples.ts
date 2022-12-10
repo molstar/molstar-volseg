@@ -61,7 +61,7 @@ export async function runMultimeshExample(plugin: MS.PluginUIContext, segments: 
 }
 
 /** Download data and create state tree hierarchy down to visual representation. */
-export async function createMeshFromUrl(plugin: MS.PluginUIContext, meshDataUrl: string, segmentId: number, detail: number, collapseTree: boolean, log: boolean, color?: MS.Color) {
+export async function createMeshFromUrl(plugin: MS.PluginUIContext, meshDataUrl: string, segmentId: number, detail: number, collapseTree: boolean, log: boolean, color?: MS.Color, parent?: MS.StateObjectSelector) {
 
     // PARAMS - Depend on the type of transformer T -> Params<T>
     // 1st argument to plugin.builders.data.rawData, 2nd argument to .apply
@@ -80,11 +80,13 @@ export async function createMeshFromUrl(plugin: MS.PluginUIContext, meshDataUrl:
     //     dependsOn?: string[]  // references to other nodes, I think
     // }
 
+    const update = parent ? plugin.build().to(parent) : plugin.build().toRoot();
+
     // RAW DATA NODE
-    const rawDataNode = await plugin.builders.data.download(
+    const rawDataNode = await update.apply(MS.Download,
         { url: meshDataUrl, isBinary: true, label: `Downloaded Data ${segmentId}` }, // params
-        { ref: `ref-raw-data-node-${segmentId}`, tags: ['What', 'are', 'tags', 'good', 'for?'], state: { isCollapsed: collapseTree } } // options
-    );
+        { tags: ['What', 'are', 'tags', 'good', 'for?'], state: { isCollapsed: collapseTree } } // options
+    ).commit();
     if (log) console.log('rawDataNode:', rawDataNode);
 
     const cifNode = await plugin.build().to(rawDataNode).apply(MS.StateTransforms.Data.ParseCif).commit();
@@ -120,12 +122,12 @@ export async function createMeshFromUrl(plugin: MS.PluginUIContext, meshDataUrl:
 
 }
 
-export async function runMeshStreamingExample(plugin: MS.PluginUIContext, source: MeshServerInfo.MeshSource = 'empiar', entryId: string = 'empiar-10070', serverUrl?: string) {
+export async function runMeshStreamingExample(plugin: MS.PluginUIContext, source: MeshServerInfo.MeshSource = 'empiar', entryId: string = 'empiar-10070', serverUrl?: string, parent?: MS.StateObjectSelector) {
     const params = MS.ParamDefinition.getDefaultValues(MeshServerInfo.Params);
     if (serverUrl) params.serverUrl = serverUrl;
     params.source = source;
     params.entryId = entryId;
-    await plugin.runTask(plugin.state.data.applyAction(InitMeshStreaming, params), { useOverlay: false });
+    await plugin.runTask(plugin.state.data.applyAction(InitMeshStreaming, params, parent?.ref), { useOverlay: false });
 }
 
 /** Example for downloading a protein structure and visualizing molecular surface. */

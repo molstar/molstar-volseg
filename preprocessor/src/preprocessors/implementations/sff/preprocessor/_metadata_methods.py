@@ -64,19 +64,25 @@ def extract_metadata(zarr_structure: zarr.hierarchy.group, mrc_header: object, m
     grid_dimensions_dict = {}
 
     for arr_name, arr in root[VOLUME_DATA_GROUPNAME].arrays():
-        arr_view = arr[...]
+        arr_view: da.Array = da.from_zarr(url=arr)
+        
+
+
+        # TODO: separate case, do afterwards
         if QUANTIZATION_DATA_DICT_ATTR_NAME in arr.attrs:
             data_dict = arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME]
             data_dict['data'] = arr_view
-            arr_view = decode_quantized_data(data_dict)
-            if isinstance(arr_view, da.Array):
-                arr_view = arr_view.compute()
+            arr_view: da.Array = decode_quantized_data(data_dict)
 
-        mean_val = float(str(np.mean(arr_view)))
-        std_val = float(str(np.std(arr_view)))
-        max_val = float(str(arr_view.max()))
-        min_val = float(str(arr_view.min()))
+            assert isinstance(arr_view, da.Array), 'Decoded quantized data array should be dask array'
+
+        # NOTE: we may not need compute
+        mean_val = float(str(arr_view.mean().compute()))
+        std_val = float(str(arr_view.std().compute()))
+        max_val = float(str(arr_view.max().compute()))
+        min_val = float(str(arr_view.min().compute()))
         grid_dimensions_val: tuple[int, int, int] = arr.shape
+        # TODO: check metadata file if everything is written to it correctly
 
         mean_dict[str(arr_name)] = mean_val
         std_dict[str(arr_name)] = std_val

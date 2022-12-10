@@ -4,12 +4,11 @@ import { type Metadata } from './data';
 function createApiPrefix() {
     const hostname = process.env.REACT_APP_API_HOSTNAME
         ? process.env.REACT_APP_API_HOSTNAME : `${window.location.protocol}//${window.location.hostname}`;
-    const port = process.env.REACT_APP_API_PORT
-        ? process.env.REACT_APP_API_PORT : '9000';
+    const port = process.env.REACT_APP_API_PORT;
     const prefix = process.env.REACT_APP_API_PREFIX
         ? `/${process.env.REACT_APP_API_PREFIX}` : ``;
 
-    return `${hostname}:${port}${prefix}`;
+    return `${hostname}${port ? ':' + port : ''}${prefix}`;
 }
 
 function getGitTag() {
