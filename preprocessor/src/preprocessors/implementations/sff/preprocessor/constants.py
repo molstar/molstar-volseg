@@ -28,4 +28,4 @@ RAW_INPUT_FILES_DIR = Path('test-data/preprocessor//raw_input_files')
 DEFAULT_DB_PATH = Path('test-data/db') 
 DEFAULT_QUANTIZE_DTYPE_STR = 'u1'
 APPLICATION_SPECIFIC_SEGMENTATION_EXTENSIONS = ['.am', '.mod', '.seg', '.surf', '.stl']
-CSV_WITH_ENTRY_IDS_FILE = Path('test-data/preprocessor//entry_ids.csv')
+CSV_WITH_ENTRY_IDS_FILE = Path('test-data/preprocessor/db_building_parameters_all_entries.csv')

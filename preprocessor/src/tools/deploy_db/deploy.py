@@ -7,6 +7,7 @@ from preprocessor.main import remove_temp_zarr_hierarchy_storage_folder
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import CSV_WITH_ENTRY_IDS_FILE, DEFAULT_DB_PATH, RAW_INPUT_FILES_DIR, TEMP_ZARR_HIERARCHY_STORAGE_PATH
 from preprocessor.src.tools.deploy_db.build_and_deploy import DEFAULT_FRONTEND_PORT, DEFAULT_HOST, DEFAULT_PORT
 from preprocessor.src.tools.deploy_db.deploy_process_helper import clean_up_processes
+from sys import platform
 
 PROCESS_IDS_LIST = []
 
@@ -51,6 +52,10 @@ def run_api(args):
         'GIT_TAG': tag,
         'GIT_SHA': full_sha
         }
+
+    if platform == "win32":
+        deploy_env['DB_PATH'] = str(db_path.resolve())
+        
     if args.api_port:
         deploy_env['PORT'] = args.api_port
 
@@ -78,15 +83,28 @@ def run_frontend(args):
         'REACT_APP_GIT_TAG': tag,
         }
 
-    subprocess.call(["yarn", "--cwd", "frontend"], env=deploy_env)
-    subprocess.call(["yarn", "--cwd", "frontend", "build"], env=deploy_env)
-    lst = [
-        "serve",
-        "-s", "frontend/build",
-        "-l", str(args.frontend_port)
-    ]
-        
-    frontend_process = subprocess.Popen(lst)
+    if platform == "win32":
+        subprocess.call(["yarn", "--cwd", "frontend"], env=deploy_env, shell=True)
+        subprocess.call(["yarn", "--cwd", "frontend", "build"], env=deploy_env, shell=True)
+        lst = [
+            "serve",
+            "-s", "frontend/build",
+            "-l", str(args.frontend_port)
+        ]
+            
+        frontend_process = subprocess.Popen(lst, shell=True)
+    else:
+        subprocess.call(["yarn", "--cwd", "frontend"], env=deploy_env)
+        subprocess.call(["yarn", "--cwd", "frontend", "build"], env=deploy_env)
+        lst = [
+            "serve",
+            "-s", "frontend/build",
+            "-l", str(args.frontend_port)
+        ]
+            
+        frontend_process = subprocess.Popen(lst)
+
+
     PROCESS_IDS_LIST.append(frontend_process.pid)
     # subprocess.call(lst)
     return frontend_process
