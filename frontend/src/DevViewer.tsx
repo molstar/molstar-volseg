@@ -1,14 +1,13 @@
 import React, { CSSProperties, useEffect, useRef, useState } from 'react';
 import { useBehavior } from 'molstar/lib/mol-plugin-ui/hooks/use-behavior';
 
-import './App.css';
 import 'molstar/lib/mol-plugin-ui/skin/light.scss';
 import { AppModel } from './model/model';
 import { Button, ButtonGroup, Checkbox, LinearProgress, CssBaseline, Divider, FormControlLabel, InputLabel, MenuItem, Select, Slider, TextField, Typography, Autocomplete } from '@mui/material';
 import { createEntryId, splitEntryId } from './model/helpers';
 
 
-function App() {
+export default function ViewerApp() {
     return (
         <div className="App">
             <CssBaseline>
@@ -17,8 +16,6 @@ function App() {
         </div>
     );
 }
-
-export default App;
 
 const RightWidth = 360;
 
