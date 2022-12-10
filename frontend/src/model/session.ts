@@ -140,7 +140,7 @@ export class Session {
                 .to(volume)
                 .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
                     type: 'isosurface',
-                    typeParams: { alpha: 1.0, isoValue: Volume.IsoValue.relative(-0.55) },
+                    typeParams: { alpha: 1.0, isoValue: Volume.IsoValue.relative(-0.55), tryUseGpu: false  },
                     color: 'uniform',
                     colorParams: { value: Color(0x224899) }
                 }));
@@ -234,7 +234,7 @@ export class Session {
                     .to(volume)
                     .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volumeData, {
                         type: 'isosurface',
-                        typeParams: { alpha: 0.2, isoValue: Volume.adjustedIsoValue(volumeData, isoLevel.value, isoLevel.kind) },
+                        typeParams: { alpha: 0.2, isoValue: Volume.adjustedIsoValue(volumeData, isoLevel.value, isoLevel.kind), tryUseGpu: false  },
                         color: 'uniform',
                         colorParams: { value: Color(0x121212) }
                     }))
@@ -335,7 +335,7 @@ export class Session {
 
                 volumeNode.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
                     type: 'isosurface',
-                    typeParams: { alpha: 1, isoValue: Volume.IsoValue.absolute(0.95) },
+                    typeParams: { alpha: 1, isoValue: Volume.IsoValue.absolute(0.95), tryUseGpu: false },
                     color: 'uniform',
                     colorParams: { value: Color.fromNormalizedArray(seg.colour, 0) }
                 }));
@@ -492,7 +492,7 @@ export class Session {
 
         const seg = root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
             type: 'isosurface',
-            typeParams: { alpha: opacity, isoValue: Volume.IsoValue.absolute(0.95), transparentBackfaces: 'off', doubleSided: false, flatShaded: true },
+            typeParams: { alpha: opacity, isoValue: Volume.IsoValue.absolute(0.95), transparentBackfaces: 'off', doubleSided: false, flatShaded: true, tryUseGpu: false  },
             color: 'uniform',
             colorParams: { value: Color.fromNormalizedArray(color, 0) }
         }));

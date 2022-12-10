@@ -1,3 +1,4 @@
+import zarr
 import argparse
 import asyncio
 import logging
@@ -5,11 +6,14 @@ from pprint import pprint
 import shutil
 from asgiref.sync import async_to_sync
 import numpy as np
+import numcodecs
+from PIL import ImageColor
 
 from pathlib import Path
 from numcodecs import Blosc
 from typing import Dict, Optional, Union
 from db.file_system.db import FileSystemVolumeServerDB
+from file_system.constants import ANNOTATION_METADATA_FILENAME, GRID_METADATA_FILENAME, SEGMENTATION_DATA_GROUPNAME, VOLUME_DATA_GROUPNAME
 from preprocessor.params_for_storing_db import CHUNKING_MODES, COMPRESSORS
 from preprocessor.src.service.implementations.preprocessor_service import PreprocessorService
 from preprocessor.src.preprocessors.implementations.sff.preprocessor.constants import \
@@ -21,6 +25,8 @@ from preprocessor.src.tools.convert_app_specific_segm_to_sff.convert_app_specifi
 from preprocessor.src.tools.remove_files_or_folders_by_pattern.remove_files_or_folders_by_pattern import remove_files_or_folders_by_pattern
 from preprocessor.src.tools.write_dict_to_file.write_dict_to_json import write_dict_to_json
 from preprocessor.src.tools.write_dict_to_file.write_dict_to_txt import write_dict_to_txt
+
+OME_ZARR_DEFAULT_PATH = Path('sample_ome_zarr_from_ome_zarr_py_docs/6001240.zarr')
 
 def obtain_paths_to_single_entry_files(input_files_dir: Path) -> Dict:
     d = {}
@@ -274,8 +280,246 @@ async def add_entry_to_db(
         source_db_name=source_db_name
         )
 
+def _compose_voxel_sizes_in_downsamplings_dict(ome_zarr_root):
+    root_zattrs = ome_zarr_root.attrs
+    multiscales = root_zattrs["multiscales"]
+    datasets_meta = multiscales[0]["datasets"]
+
+    labels_datasets_meta = ome_zarr_root['labels'][0].attrs['multiscales'][0]["datasets"]
+
+    d = {}
+    
+    for index, level in enumerate(datasets_meta):
+        scale_arr = level['coordinateTransformations'][0]['scale']
+        # check if multiscales in labels are the same
+        assert scale_arr == labels_datasets_meta[index]['coordinateTransformations'][0]['scale']
+        # no channel, *micrometers to angstroms
+        scale_arr = scale_arr[1:]
+        scale_arr = [i*10000 for i in scale_arr]
+        # x and z swapped
+        d[level['path']] = (
+            scale_arr[2],
+            scale_arr[1],
+            scale_arr[0]
+        )
+
+    return d
+
+# NOTE: one volume_force_dtype for all resolutions
+def extract_ome_zarr_metadata(our_zarr_structure: zarr.hierarchy.group, volume_force_dtype: np.dtype,
+        source_db_id: str,
+        source_db_name: str,
+        ome_zarr_root: zarr.hierarchy.group) -> dict:
+    root = our_zarr_structure
+    
+    volume_downsamplings = sorted(root[VOLUME_DATA_GROUPNAME].array_keys())
+    # convert to ints
+    volume_downsamplings = sorted([int(x) for x in volume_downsamplings])
+
+    mean_dict = {}
+    std_dict = {}
+    max_dict = {}
+    min_dict = {}
+    grid_dimensions_dict = {}
+
+    for arr_name, arr in root[VOLUME_DATA_GROUPNAME].arrays():
+        arr_view = arr[...]
+        # if QUANTIZATION_DATA_DICT_ATTR_NAME in arr.attrs:
+        #     data_dict = arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME]
+        #     data_dict['data'] = arr_view
+        #     arr_view = decode_quantized_data(data_dict)
+        #     if isinstance(arr_view, da.Array):
+        #         arr_view = arr_view.compute()
+
+        mean_val = float(str(np.mean(arr_view)))
+        std_val = float(str(np.std(arr_view)))
+        max_val = float(str(arr_view.max()))
+        min_val = float(str(arr_view.min()))
+        grid_dimensions_val: tuple[int, int, int] = arr.shape
+
+        mean_dict[str(arr_name)] = mean_val
+        std_dict[str(arr_name)] = std_val
+        max_dict[str(arr_name)] = max_val
+        min_dict[str(arr_name)] = min_val
+        grid_dimensions_dict[str(arr_name)] = grid_dimensions_val
+
+    lattice_dict = {}
+    lattice_ids = []
+    
+    if SEGMENTATION_DATA_GROUPNAME in root:
+        for gr_name, gr in root[SEGMENTATION_DATA_GROUPNAME].groups():
+            # each key is lattice id
+            lattice_id = int(gr_name)
+
+            segm_downsamplings = sorted(gr.group_keys())
+            # convert to ints
+            segm_downsamplings = sorted([int(x) for x in segm_downsamplings])
+
+            lattice_dict[lattice_id] = segm_downsamplings
+            lattice_ids.append(lattice_id)
+                        
+    # Sampled grid dimensions: in zattrs, they have 0,1,2 downsampling levels (XY is cut x2, Z stays)
+    # We have 1, 2, 4 (according to downsampling factor)
+    # I do 0,1,2
+    voxel_sizes_in_downsamplings = _compose_voxel_sizes_in_downsamplings_dict(ome_zarr_root=ome_zarr_root)
+
+    # origin is probably (0, 0, 0), as there is no 'translation' in zattrs
+    # Ctrl+F 'origin' https://ngff.openmicroscopy.org/latest/#multiscale-md
+    origin = (0, 0, 0)
+
+    return {
+        'general': {
+            'source_db_name': source_db_name,
+            'source_db_id': source_db_id,
+        },
+        'volumes': {
+            'volume_downsamplings': volume_downsamplings,
+            # downsamplings have different voxel size so it is a dict
+            'voxel_size': voxel_sizes_in_downsamplings,
+            'origin': origin,
+            'grid_dimensions': grid_dimensions_dict['0'],
+            'sampled_grid_dimensions': grid_dimensions_dict,
+            'mean': mean_dict,
+            'std': std_dict,
+            'max': max_dict,
+            'min': min_dict,
+            'volume_force_dtype': volume_force_dtype.str
+        },
+        'segmentation_lattices': {
+            'segmentation_lattice_ids': lattice_ids,
+            'segmentation_downsamplings': lattice_dict
+        },
+        'segmentation_meshes': {
+            'mesh_component_numbers': {},
+            'detail_lvl_to_fraction': {}
+        }
+    }
+
+# NOTE: To be clarified how to get actual annotations:
+# https://github.com/ome/ngff/issues/163#issuecomment-1328009660
+# This one just uses label-value originated from .zattrs and copied to set_table of 0th resolution
+def extract_ome_zarr_annotations(our_zarr_structure, ome_zarr_root):
+    dapi_channel_color_hex = ome_zarr_root.attrs['omero']['channels'][1]['color']
+    dapi_channel_color_rgba = ImageColor.getcolor(f'#{dapi_channel_color_hex}', "RGBA")
+    dapi_channel_color_rgba_fractional = [i/255 for i in dapi_channel_color_rgba]
+    d = {
+        "segment_list": []
+    }
+    segment_list = d['segment_list']
+    set_table = our_zarr_structure[SEGMENTATION_DATA_GROUPNAME][0][0].set_table[...][0]
+    for label_value in set_table.keys():
+        if label_value != '0':
+            segment_list.append(
+                {
+                    "id": int(label_value),
+                    "parent_id": 0,
+                    "biological_annotation": {
+                        "name": f"segment {label_value}",
+                        "description": None,
+                        "number_of_instances": 1,
+                        "external_references": [
+                        ]
+                    },
+                    "colour": dapi_channel_color_rgba_fractional,
+                    "mesh_list": [],
+                    "three_d_volume": {
+                        "lattice_id": 0,
+                        "value": float(label_value),
+                        "transform_id": None
+                    },
+                    "shape_primitive_list": []
+                }
+            )
+
+    return d
+
+
+# returns zarr structure to be stored with db.store
+# NOTE: just one channel
+def process_ome_zarr(ome_zarr_path, temp_zarr_hierarchy_storage_path, source_db_id, source_db_name):
+    ome_zarr_root = zarr.open_group(ome_zarr_path)
+    
+    entry_id = source_db_name + '-' + source_db_id
+    our_zarr_structure_path = temp_zarr_hierarchy_storage_path / entry_id
+    our_zarr_structure = zarr.open_group(temp_zarr_hierarchy_storage_path / entry_id, mode='w')
+
+    # PROCESSING VOLUME
+    # NOTE: just Dapi channel (second in sample_ome_zarr_from_ome_zarr_py_docs/6001240.zarr/.zattrs)
+    volume_data_gr = our_zarr_structure.create_group(VOLUME_DATA_GROUPNAME)
+    for volume_arr_resolution, volume_arr in ome_zarr_root.arrays():
+        # hardcoded only second channel
+        # TODO: ask if swapaxes is correct
+        corrected_volume_arr_data = volume_arr[...][1].swapaxes(0,2)
+        our_volume_resolution_arr = volume_data_gr.create_dataset(
+            name=volume_arr_resolution,
+            shape=corrected_volume_arr_data.shape,
+            data=corrected_volume_arr_data
+        )
+
+    
+
+    
+    # PROCESSING SEGMENTATION
+    segmentation_data_gr = our_zarr_structure.create_group(SEGMENTATION_DATA_GROUPNAME)
+    lattice_id_gr = segmentation_data_gr.create_group('0')
+
+    # hardcoded labels [0], should iterate over them, but for sample file ok (just 0 label is here)
+    # arr_name is resolution
+    for arr_name, arr in ome_zarr_root.labels[0].arrays():
+        # swapaxes (ZYX to XYZ), and no channel dimension (there is just single channel dimension)
+        corrected_arr_data = arr[...][0].swapaxes(0,2)
+        our_resolution_gr = lattice_id_gr.create_group(arr_name)
+        our_arr = our_resolution_gr.create_dataset(
+            name='grid',
+            shape=corrected_arr_data.shape,
+            data=corrected_arr_data
+        )
+        
+        our_set_table = our_resolution_gr.create_dataset(
+            name='set_table',
+            dtype=object,
+            object_codec=numcodecs.JSON(),
+            shape=1
+        )
+        
+        d = {}
+        for value in np.unique(our_arr[...]):
+            d[str(value)] = [int(value)]
+
+        our_set_table[...] = [d]
+
+    # NOTE: single volume_force_dtype 
+    grid_metadata = extract_ome_zarr_metadata(
+        our_zarr_structure=our_zarr_structure,
+        volume_force_dtype=volume_data_gr[0].dtype,
+        source_db_id=source_db_id,
+        source_db_name=source_db_name,
+        ome_zarr_root=ome_zarr_root
+    )
+
+    annotation_metadata = extract_ome_zarr_annotations(
+        our_zarr_structure=our_zarr_structure,
+        ome_zarr_root=ome_zarr_root
+    )
+
+    SFFPreprocessor.temp_save_metadata(grid_metadata, GRID_METADATA_FILENAME, our_zarr_structure_path)
+    SFFPreprocessor.temp_save_metadata(annotation_metadata, ANNOTATION_METADATA_FILENAME, our_zarr_structure_path)
+
+    # need 3D dataset
+    return our_zarr_structure
+
+async def store_ome_zarr_structure(db_path, temp_ome_zarr_structure, source_db, entry_id):
+    new_db_path = Path(db_path)
+    if new_db_path.is_dir() == False:
+        new_db_path.mkdir()
+
+    db = FileSystemVolumeServerDB(new_db_path, store_type='zip')
+    await db.store(namespace=source_db, key=entry_id, temp_store_path=Path(temp_ome_zarr_structure.store.path))
+
 async def main():
     args = parse_script_args()
+    
+
     if args.raw_input_files_dir_path:
         raw_input_files_dir_path = args.raw_input_files_dir_path
     else:
@@ -286,7 +530,7 @@ async def main():
     else:
         # raise ValueError('No temp_zarr_hierarchy_storage_path is provided as argument')
         temp_zarr_hierarchy_storage_path = TEMP_ZARR_HIERARCHY_STORAGE_PATH / args.db_path.name
-
+        
     # NOTE: not maintained currently (outdated arg numbers etc.)
     if args.create_parametrized_dbs:
         # TODO: add quantize and raw input files dir path here too
@@ -311,26 +555,36 @@ async def main():
 
         if args.single_entry:
             if args.entry_id and args.source_db and args.source_db_id and args.source_db_name:
-                single_entry_folder_path = args.single_entry
-                single_entry_id = args.entry_id
-                single_entry_source_db = args.source_db
-
-                if args.force_volume_dtype:
-                    force_volume_dtype = args.force_volume_dtype
+                if args.ome_zarr_path:
+                    # do ome zarr thing
+                    zarr_structure_to_be_saved = process_ome_zarr(
+                        ome_zarr_path=args.ome_zarr_path,
+                        temp_zarr_hierarchy_storage_path=temp_zarr_hierarchy_storage_path,
+                        source_db_id=args.source_db_id,
+                        source_db_name=args.source_db_name)
+                    await store_ome_zarr_structure(args.db_path, zarr_structure_to_be_saved, args.source_db, args.entry_id)
+                    print(1)
                 else:
-                    force_volume_dtype = None
+                    single_entry_folder_path = args.single_entry
+                    single_entry_id = args.entry_id
+                    single_entry_source_db = args.source_db
 
-                await add_entry_to_db(
-                    Path(args.db_path),
-                    params_for_storing=params_for_storing,
-                    input_files_dir=single_entry_folder_path,
-                    entry_id=single_entry_id,
-                    source_db=single_entry_source_db,
-                    force_volume_dtype=force_volume_dtype,
-                    temp_zarr_hierarchy_storage_path=temp_zarr_hierarchy_storage_path,
-                    source_db_id=args.source_db_id,
-                    source_db_name=args.source_db_name
-                    )
+                    if args.force_volume_dtype:
+                        force_volume_dtype = args.force_volume_dtype
+                    else:
+                        force_volume_dtype = None
+
+                    await add_entry_to_db(
+                        Path(args.db_path),
+                        params_for_storing=params_for_storing,
+                        input_files_dir=single_entry_folder_path,
+                        entry_id=single_entry_id,
+                        source_db=single_entry_source_db,
+                        force_volume_dtype=force_volume_dtype,
+                        temp_zarr_hierarchy_storage_path=temp_zarr_hierarchy_storage_path,
+                        source_db_id=args.source_db_id,
+                        source_db_name=args.source_db_name
+                        )
             else:
                 raise ValueError('args.entry_id and args.source_db and args.source_db_id and args.source_db_name are required for single entry mode')
         else:
@@ -354,6 +608,7 @@ def parse_script_args():
     parser.add_argument("--temp_zarr_hierarchy_storage_path", type=Path, help='path to db working directory')
     parser.add_argument('--source_db_id', type=str, help='actual source db id for metadata')
     parser.add_argument('--source_db_name', type=str, help='actual source db name for metadata')
+    parser.add_argument('--ome_zarr_path', type=Path)
     args=parser.parse_args()
     return args
 
