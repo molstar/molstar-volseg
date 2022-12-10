@@ -32,7 +32,7 @@ export function LandingPage() {
             <div className='one-half column'
                 style= {{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                 <a href='viewer' target='_blank' title='Open Mol* Viewer'>
-                    <video controls autoPlay loop style={{ maxHeight: '100%', maxWidth: '100%' }} width='320'>
+                    <video autoPlay loop style={{ maxHeight: '100%', maxWidth: '100%' }} width='320'>
                         <source src='/img/2C7D_state-snapshots.mp4' type='video/mp4' />
                     </video>
                 </a>
