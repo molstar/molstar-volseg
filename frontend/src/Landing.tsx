@@ -1,12 +1,9 @@
 export function LandingPage() {
     return <div className='container' style={{ marginBottom: 20 }}>
-        {/* <div className='row' style={{ textAlign: 'center', marginTop: 40, fontWeight: 'bold' }}>
-            <img style={{ maxWidth: 160, width: '100%' }} src='img/molstar-logo.png' alt='logo' />
-        </div> */}
         <div className='row' style={{ textAlign: 'center', marginTop: 40 }}>
             <img style={{ maxWidth: 160, width: '100%', marginBottom: 20 }} src='img/molstar-logo.png' alt='logo' />
             <h2 style={{ fontWeight: 'bold' }}>
-                Cell* Volumes & Segmentations
+                Volumes & Segmentations
             </h2>
         </div>
 
@@ -14,39 +11,21 @@ export function LandingPage() {
             <div className='two columns'>&nbsp;</div>
             <div className='eight columns' style={{ borderTop: '1px solid #E0DDD4', paddingTop: 20 }}>
                 <h5 className='hero-heading'>
-                    Cell* (<i>/'cellstar/</i>) is a <a href='https://molstar.org' target='_blank' rel='noreferrer'>Mol*</a> extension focused on support for large-scale volumetric data and segmentations
+                    A <a href='https://molstar.org' target='_blank' rel='noreferrer'>Mol*</a> extension focused on support for large-scale volumetric data and segmentations
                 </h5>
             </div>
             <div className='two columns'>&nbsp;</div>
         </div>
 
-        {/* <div className='row'>
-            <div className='twelve columns' style={{ textAlign: 'center' }}>
-                <video controls autoPlay loop width='250'>
-                    <source src='/img/animation.mp4' type='video/mp4' />
-                </video>
-            </div>
-        </div> */}
-
-        <div className='row' style={{ marginTop: 30, display: 'flex' }}>
-            <div className='one-half column'
+        <div className='row' style={{ marginTop: 0, display: 'flex' }}>
+            <div className='twelve column'
                 style= {{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                 <a href='viewer' target='_blank' title='Open Mol* Viewer'>
-                    <video autoPlay loop style={{ maxHeight: '100%', maxWidth: '100%' }} width='320'>
+                    <video autoPlay loop style={{ maxHeight: '100%', maxWidth: '100%' }} width='450'>
                         <source src='/img/2C7D_state-snapshots.mp4' type='video/mp4' />
                     </video>
                 </a>
-            </div>
-            <div className='one-half column'
-                style= {{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                <a className='button button-primary' href='viewer' style={{ fontSize: '2rem', width: '100%' }}
-                    target='_blank'>Open Mol* Viewer</a>
-                <a className='button' href='https://github.com/molstar/cellstar-volume-server/' style={{ fontSize: '2rem', width: '100%' }} target='_blank' rel='noreferrer'>
-                    <svg width='14' height='14' style={{ marginRight: '0.75rem' }}><use href='#github-logo' /></svg>
-                    GitHub
-                </a>
-                {/* <a className='button' href='https://github.com/molstar/molstar/issues' style='font-size: 2rem; width: 100%;'
-                    target='_blank'>Issues &amp; Feedback</a> */}
+
                 <div style={{ textAlign: 'justify', margin: 5 }}>
                     Cell* Volumes & Segmentations is a Mol* extension which adds the support for large scale volumetric data & their segmentations. Building on the existing Mol* ecosystem, Cell* 
                     allows seamless integration of biomolecular data ranging from whole cell 3D reconstructions from light miscroscopy all the way down to atomic scale.
@@ -54,7 +33,7 @@ export function LandingPage() {
             </div>
         </div>
 
-        <div className='row' style={{ textAlign: 'center', marginTop: 40 }}>
+        <div className='row' style={{ textAlign: 'center', marginTop: 20 }}>
             <div className='twelve columns'>
                 <h4 className='hero-heading' style={{ marginBottom: 40 }}><b>Interactive Examples</b></h4>
                 <div className='examples'>
@@ -89,6 +68,20 @@ export function LandingPage() {
                 </div>
             </div>
         </div>
+
+        <div className='row' style={{ marginTop: 30, display: 'flex' }}>
+            <div className='twelve column'
+                style= {{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                <a className='button button-primary' href='https://github.com/molstar/cellstar-volume-server/' style={{ fontSize: '2rem', width: '100%' }} target='_blank' rel='noreferrer'>
+                    <svg width='14' height='14' style={{ marginRight: '0.75rem' }}><use href='#github-logo' /></svg>
+                    GitHub
+                </a>
+                <a className='button' href='https://molstar.org/viewer' style={{ fontSize: '2rem', width: '100%' }}
+                    target='_blank' rel='noreferrer'>Open Mol* Viewer</a>
+            </div>
+        </div>
+
+        TODO Tutorial video which goes from "Open Mol* viewer to loading an extry for Cell*"
 
         <div className='row' style={{ textAlign: 'right', marginTop: 60, color: '#999' }}>
             Copyright 2022–now, Cell* Contributors | <a href='terms-of-use.html' style={{ color: '#999' }}>Terms of Use &
