@@ -39,7 +39,7 @@ export function LandingPage() {
                 <div className='examples'>
                     <div className='tooltip'>
                         <a href={resolveExampleSnapshotURL('emd-1181.molj')}
-                            target='_blank' rel='noreferrer'><img alt='EMD 1181' src='img/examples/emd-1181.png' /></a>
+                            target='_blank' rel='noreferrer'><img alt='EMD 1181' src='img/examples/ex-emd-1181.png' /></a>
                         <p className='tooltip-info'>
                             <a href='https://www.ebi.ac.uk/emdb/EMD-1181' target='_blank' rel='noreferrer'>
                                 EMD 1181
@@ -48,7 +48,7 @@ export function LandingPage() {
                     </div>
                     <div className='tooltip'>
                         <a href={resolveExampleSnapshotURL('empiar-10070.molj')} target='_blank' rel='noreferrer'><img 
-                            alt='EMPIAR 10070' src='img/examples/empiar-10070.png' /></a>
+                            alt='EMPIAR 10070' src='img/examples/ex-empiar-10070.png' /></a>
                         <p className='tooltip-info'>
                             <a href='https://www.ebi.ac.uk/empiar/EMPIAR-10070/' target='_blank' rel='noreferrer'>
                                 EMPIAR 10070
@@ -57,7 +57,7 @@ export function LandingPage() {
                     </div>
                     <div className='tooltip'>
                         <a href={resolveExampleSnapshotURL('idr-6001240.molj')}
-                            target='_blank' rel='noreferrer'><img alt='Zika+EM' src='img/examples/idr-6001240.png' /></a>
+                            target='_blank' rel='noreferrer'><img alt='Zika+EM' src='img/examples/ex-idr-6001240.png' /></a>
                         <p className='tooltip-info'>
                             <a href='https://idr.openmicroscopy.org/webclient/img_detail/6001240/?dataset=7754' target='_blank' rel='noreferrer'>
                                 IDR 6001240
