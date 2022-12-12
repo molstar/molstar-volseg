@@ -1,57 +1,6 @@
-# cellstar-volume-server
-Cell* Volume Server
+[![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](./LICENSE)
 
+# Cell* Volumes & Segmentations
 
-zarr package (a requirement for this project) requires C++ dev-kit in order to install (you can get with visual studio installer for example, mingw)
+Cell* Volumes & Segmentations is a [Mol*](https://molstar.org) extension which adds the support for large scale volumetric data & their segmentations. Building on the existing Mol* ecosystem, Cell* allows seamless integration of biomolecular data ranging from whole cell 3D reconstructions from light miscroscopy, all the way down to atomic level.
 
-
-# run server 
-
-
-```
-cd server
-python serve.py
-```
-
-or 
-
-```
-cd server
-uvicorn main:app --port 9000 --reload  # other params
-```
-
-## Settings
-
-Environment variables (with defaults):
-
-- `HOST=0.0.0.0` where to host the server
-- `PORT=9000` what port to run the app on
-- `DB_PATH=db` path to the root of the database
-- `DEV_MODE=False` if True, runs the server in reload mode
-
-Linux/Mac
-
-```
-cd server
-DEV_MODE=True python serve.py
-```
-
-Windows
-
-```
-cd server
-set DEV_MODE=True && python serve.py
-```
-
-# Conda/Mamba
-
-```
-conda env create -f environment.yaml  # or update
-conda activate cellstar-volume-server
-```
-
-Mamba is a lot faster for creating/updating envs:
-
-```
-mamba env create -f environment.yaml  # or update
-```

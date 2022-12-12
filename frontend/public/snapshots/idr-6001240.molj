@@ -1,0 +1,1242 @@
+{
+  "timestamp": 1670854002913,
+  "version": "3.25.1",
+  "current": "s9wIdTOwsgdjmqUwMwF2qA",
+  "playback": {
+    "isPlaying": false,
+    "nextSnapshotDelayInMs": 1500
+  },
+  "entries": [
+    {
+      "timestamp": 1670854002912,
+      "snapshot": {
+        "id": "s9wIdTOwsgdjmqUwMwF2qA",
+        "data": {
+          "tree": {
+            "transforms": [
+              {
+                "parent": "-=root=-",
+                "transformer": "build-in.root",
+                "params": {},
+                "ref": "-=root=-",
+                "version": "YtCiVYI1qEmnMkQDSJtk5Q"
+              },
+              {
+                "parent": "-=root=-",
+                "transformer": "ms-plugin.cellstar-entry-from-root",
+                "params": {
+                  "serverUrl": "https://cellstar.ncbr.muni.cz/v2",
+                  "source": "idr",
+                  "entryNumber": "6001240"
+                },
+                "ref": "nrXnM1bsK_CBTDWJ2ZpAHg",
+                "version": "M7CN7Zw08oYzEh0pdAWMeg"
+              },
+              {
+                "parent": "nrXnM1bsK_CBTDWJ2ZpAHg",
+                "transformer": "ms-plugin.cellstar-state-from-entry",
+                "params": {
+                  "opacity": 1,
+                  "selectedSegment": -1,
+                  "visibleSegments": [
+                    {
+                      "segmentId": 1
+                    },
+                    {
+                      "segmentId": 2
+                    },
+                    {
+                      "segmentId": 3
+                    },
+                    {
+                      "segmentId": 4
+                    },
+                    {
+                      "segmentId": 5
+                    },
+                    {
+                      "segmentId": 6
+                    },
+                    {
+                      "segmentId": 7
+                    },
+                    {
+                      "segmentId": 8
+                    },
+                    {
+                      "segmentId": 9
+                    },
+                    {
+                      "segmentId": 10
+                    },
+                    {
+                      "segmentId": 11
+                    },
+                    {
+                      "segmentId": 12
+                    },
+                    {
+                      "segmentId": 13
+                    },
+                    {
+                      "segmentId": 14
+                    },
+                    {
+                      "segmentId": 15
+                    },
+                    {
+                      "segmentId": 16
+                    },
+                    {
+                      "segmentId": 17
+                    },
+                    {
+                      "segmentId": 18
+                    },
+                    {
+                      "segmentId": 19
+                    },
+                    {
+                      "segmentId": 20
+                    },
+                    {
+                      "segmentId": 21
+                    },
+                    {
+                      "segmentId": 22
+                    },
+                    {
+                      "segmentId": 23
+                    },
+                    {
+                      "segmentId": 24
+                    },
+                    {
+                      "segmentId": 25
+                    },
+                    {
+                      "segmentId": 26
+                    },
+                    {
+                      "segmentId": 27
+                    },
+                    {
+                      "segmentId": 28
+                    },
+                    {
+                      "segmentId": 29
+                    },
+                    {
+                      "segmentId": 30
+                    },
+                    {
+                      "segmentId": 31
+                    },
+                    {
+                      "segmentId": 32
+                    },
+                    {
+                      "segmentId": 33
+                    },
+                    {
+                      "segmentId": 34
+                    },
+                    {
+                      "segmentId": 35
+                    },
+                    {
+                      "segmentId": 36
+                    },
+                    {
+                      "segmentId": 37
+                    },
+                    {
+                      "segmentId": 38
+                    },
+                    {
+                      "segmentId": 39
+                    },
+                    {
+                      "segmentId": 40
+                    },
+                    {
+                      "segmentId": 41
+                    },
+                    {
+                      "segmentId": 42
+                    },
+                    {
+                      "segmentId": 43
+                    },
+                    {
+                      "segmentId": 44
+                    },
+                    {
+                      "segmentId": 45
+                    },
+                    {
+                      "segmentId": 46
+                    },
+                    {
+                      "segmentId": 47
+                    },
+                    {
+                      "segmentId": 48
+                    },
+                    {
+                      "segmentId": 49
+                    },
+                    {
+                      "segmentId": 50
+                    },
+                    {
+                      "segmentId": 51
+                    },
+                    {
+                      "segmentId": 52
+                    },
+                    {
+                      "segmentId": 53
+                    },
+                    {
+                      "segmentId": 54
+                    },
+                    {
+                      "segmentId": 55
+                    },
+                    {
+                      "segmentId": 56
+                    },
+                    {
+                      "segmentId": 57
+                    },
+                    {
+                      "segmentId": 58
+                    },
+                    {
+                      "segmentId": 59
+                    },
+                    {
+                      "segmentId": 60
+                    },
+                    {
+                      "segmentId": 61
+                    }
+                  ],
+                  "visibleModels": []
+                },
+                "ref": "aBhOTLrB32FTDensahGjkw",
+                "version": "E9qt5-emmKl2Ram52jFXyQ"
+              },
+              {
+                "parent": "nrXnM1bsK_CBTDWJ2ZpAHg",
+                "transformer": "ms-plugin.create-group",
+                "params": {
+                  "label": "Volume",
+                  "description": ""
+                },
+                "state": {
+                  "isCollapsed": true
+                },
+                "tags": [
+                  "volume-group"
+                ],
+                "ref": "5NCH93KruO-ceJ0OEmWBww",
+                "version": "_ZusnDl4wNvDygZLLCIufg"
+              },
+              {
+                "parent": "5NCH93KruO-ceJ0OEmWBww",
+                "transformer": "ms-plugin.download",
+                "params": {
+                  "url": "https://cellstar.ncbr.muni.cz/v2/idr/idr-6001240/volume/cell?max_points=10000000",
+                  "label": "Volume Data: https://cellstar.ncbr.muni.cz/v2/idr/idr-6001240/volume/cell?max_points=10000000",
+                  "isBinary": true
+                },
+                "ref": "kKzF3gaXQmq-MsLx10aUuw",
+                "version": "bJOzRhyMyFwkaPFF2hj6VA"
+              },
+              {
+                "parent": "kKzF3gaXQmq-MsLx10aUuw",
+                "transformer": "ms-plugin.parse-cif",
+                "params": {},
+                "ref": "FViBI9YM8YTMc7zb9xhDVQ",
+                "version": "coAXKuYxCScJdyD4F0FbWA"
+              },
+              {
+                "parent": "FViBI9YM8YTMc7zb9xhDVQ",
+                "transformer": "ms-plugin.volume-from-density-server-cif",
+                "params": {
+                  "blockHeader": "VOLUME",
+                  "entryId": ""
+                },
+                "ref": "RKdCnpPvGEXpKBvwa_u-9g",
+                "version": "aY-OAlNOlz5JHBe0RjmHGA"
+              },
+              {
+                "parent": "RKdCnpPvGEXpKBvwa_u-9g",
+                "transformer": "ms-plugin.volume-representation-3d",
+                "params": {
+                  "type": {
+                    "name": "isosurface",
+                    "params": {
+                      "alpha": 0.2,
+                      "quality": "auto",
+                      "material": {
+                        "metalness": 0,
+                        "roughness": 1,
+                        "bumpiness": 0
+                      },
+                      "clip": {
+                        "variant": "pixel",
+                        "objects": []
+                      },
+                      "instanceGranularity": false,
+                      "doubleSided": false,
+                      "flipSided": false,
+                      "flatShaded": false,
+                      "ignoreLight": false,
+                      "xrayShaded": false,
+                      "transparentBackfaces": "off",
+                      "bumpFrequency": 1,
+                      "bumpAmplitude": 1,
+                      "isoValue": {
+                        "kind": "relative",
+                        "relativeValue": 1
+                      },
+                      "tryUseGpu": true,
+                      "sizeFactor": 3,
+                      "lineSizeAttenuation": false,
+                      "visuals": [
+                        "solid"
+                      ]
+                    }
+                  },
+                  "colorTheme": {
+                    "name": "uniform",
+                    "params": {
+                      "value": 1184274
+                    }
+                  },
+                  "sizeTheme": {
+                    "name": "uniform",
+                    "params": {
+                      "value": 1
+                    }
+                  }
+                },
+                "ref": "0kuFfwHdN--vVmtiN13GoQ",
+                "version": "wTlLKUdHt39YdYa7MiXcXA"
+              },
+              {
+                "parent": "nrXnM1bsK_CBTDWJ2ZpAHg",
+                "transformer": "ms-plugin.create-group",
+                "params": {
+                  "label": "Segmentation",
+                  "description": "Lattice"
+                },
+                "state": {
+                  "isCollapsed": true
+                },
+                "tags": [
+                  "lattice-segmentation-group"
+                ],
+                "ref": "VOzUfO3p4oOBbLuCny3b9A",
+                "version": "pYrDlIJTj9Ot6hRzQxIquA"
+              },
+              {
+                "parent": "VOzUfO3p4oOBbLuCny3b9A",
+                "transformer": "ms-plugin.download",
+                "params": {
+                  "url": "https://cellstar.ncbr.muni.cz/v2/idr/idr-6001240/segmentation/cell/0?max_points=10000000",
+                  "label": "Segmentation Data: https://cellstar.ncbr.muni.cz/v2/idr/idr-6001240/segmentation/cell/0?max_points=10000000",
+                  "isBinary": true
+                },
+                "ref": "0qMFBaOnXc3VNSzTuO_Xwg",
+                "version": "RqGqynsrXqM2tDkK46Z-rQ"
+              },
+              {
+                "parent": "0qMFBaOnXc3VNSzTuO_Xwg",
+                "transformer": "ms-plugin.parse-cif",
+                "params": {},
+                "ref": "FRfqW1yIIzrfZkLWLw7fjQ",
+                "version": "tl21mRq8E5cpC5mKBFVtIA"
+              },
+              {
+                "parent": "FRfqW1yIIzrfZkLWLw7fjQ",
+                "transformer": "ms-plugin.volume-from-segmentation-cif",
+                "params": {
+                  "blockHeader": "SEGMENTATION_DATA",
+                  "segmentLabels": [
+                    {
+                      "id": 1,
+                      "label": "<b>segment 1</b>"
+                    },
+                    {
+                      "id": 10,
+                      "label": "<b>segment 10</b>"
+                    },
+                    {
+                      "id": 11,
+                      "label": "<b>segment 11</b>"
+                    },
+                    {
+                      "id": 12,
+                      "label": "<b>segment 12</b>"
+                    },
+                    {
+                      "id": 13,
+                      "label": "<b>segment 13</b>"
+                    },
+                    {
+                      "id": 14,
+                      "label": "<b>segment 14</b>"
+                    },
+                    {
+                      "id": 15,
+                      "label": "<b>segment 15</b>"
+                    },
+                    {
+                      "id": 16,
+                      "label": "<b>segment 16</b>"
+                    },
+                    {
+                      "id": 17,
+                      "label": "<b>segment 17</b>"
+                    },
+                    {
+                      "id": 18,
+                      "label": "<b>segment 18</b>"
+                    },
+                    {
+                      "id": 19,
+                      "label": "<b>segment 19</b>"
+                    },
+                    {
+                      "id": 2,
+                      "label": "<b>segment 2</b>"
+                    },
+                    {
+                      "id": 20,
+                      "label": "<b>segment 20</b>"
+                    },
+                    {
+                      "id": 21,
+                      "label": "<b>segment 21</b>"
+                    },
+                    {
+                      "id": 22,
+                      "label": "<b>segment 22</b>"
+                    },
+                    {
+                      "id": 23,
+                      "label": "<b>segment 23</b>"
+                    },
+                    {
+                      "id": 24,
+                      "label": "<b>segment 24</b>"
+                    },
+                    {
+                      "id": 25,
+                      "label": "<b>segment 25</b>"
+                    },
+                    {
+                      "id": 26,
+                      "label": "<b>segment 26</b>"
+                    },
+                    {
+                      "id": 27,
+                      "label": "<b>segment 27</b>"
+                    },
+                    {
+                      "id": 28,
+                      "label": "<b>segment 28</b>"
+                    },
+                    {
+                      "id": 29,
+                      "label": "<b>segment 29</b>"
+                    },
+                    {
+                      "id": 3,
+                      "label": "<b>segment 3</b>"
+                    },
+                    {
+                      "id": 30,
+                      "label": "<b>segment 30</b>"
+                    },
+                    {
+                      "id": 31,
+                      "label": "<b>segment 31</b>"
+                    },
+                    {
+                      "id": 32,
+                      "label": "<b>segment 32</b>"
+                    },
+                    {
+                      "id": 33,
+                      "label": "<b>segment 33</b>"
+                    },
+                    {
+                      "id": 34,
+                      "label": "<b>segment 34</b>"
+                    },
+                    {
+                      "id": 35,
+                      "label": "<b>segment 35</b>"
+                    },
+                    {
+                      "id": 36,
+                      "label": "<b>segment 36</b>"
+                    },
+                    {
+                      "id": 37,
+                      "label": "<b>segment 37</b>"
+                    },
+                    {
+                      "id": 38,
+                      "label": "<b>segment 38</b>"
+                    },
+                    {
+                      "id": 39,
+                      "label": "<b>segment 39</b>"
+                    },
+                    {
+                      "id": 4,
+                      "label": "<b>segment 4</b>"
+                    },
+                    {
+                      "id": 40,
+                      "label": "<b>segment 40</b>"
+                    },
+                    {
+                      "id": 41,
+                      "label": "<b>segment 41</b>"
+                    },
+                    {
+                      "id": 42,
+                      "label": "<b>segment 42</b>"
+                    },
+                    {
+                      "id": 43,
+                      "label": "<b>segment 43</b>"
+                    },
+                    {
+                      "id": 44,
+                      "label": "<b>segment 44</b>"
+                    },
+                    {
+                      "id": 45,
+                      "label": "<b>segment 45</b>"
+                    },
+                    {
+                      "id": 46,
+                      "label": "<b>segment 46</b>"
+                    },
+                    {
+                      "id": 47,
+                      "label": "<b>segment 47</b>"
+                    },
+                    {
+                      "id": 48,
+                      "label": "<b>segment 48</b>"
+                    },
+                    {
+                      "id": 49,
+                      "label": "<b>segment 49</b>"
+                    },
+                    {
+                      "id": 5,
+                      "label": "<b>segment 5</b>"
+                    },
+                    {
+                      "id": 50,
+                      "label": "<b>segment 50</b>"
+                    },
+                    {
+                      "id": 51,
+                      "label": "<b>segment 51</b>"
+                    },
+                    {
+                      "id": 52,
+                      "label": "<b>segment 52</b>"
+                    },
+                    {
+                      "id": 53,
+                      "label": "<b>segment 53</b>"
+                    },
+                    {
+                      "id": 54,
+                      "label": "<b>segment 54</b>"
+                    },
+                    {
+                      "id": 55,
+                      "label": "<b>segment 55</b>"
+                    },
+                    {
+                      "id": 56,
+                      "label": "<b>segment 56</b>"
+                    },
+                    {
+                      "id": 57,
+                      "label": "<b>segment 57</b>"
+                    },
+                    {
+                      "id": 58,
+                      "label": "<b>segment 58</b>"
+                    },
+                    {
+                      "id": 59,
+                      "label": "<b>segment 59</b>"
+                    },
+                    {
+                      "id": 6,
+                      "label": "<b>segment 6</b>"
+                    },
+                    {
+                      "id": 60,
+                      "label": "<b>segment 60</b>"
+                    },
+                    {
+                      "id": 61,
+                      "label": "<b>segment 61</b>"
+                    },
+                    {
+                      "id": 7,
+                      "label": "<b>segment 7</b>"
+                    },
+                    {
+                      "id": 8,
+                      "label": "<b>segment 8</b>"
+                    },
+                    {
+                      "id": 9,
+                      "label": "<b>segment 9</b>"
+                    }
+                  ],
+                  "ownerId": "nrXnM1bsK_CBTDWJ2ZpAHg"
+                },
+                "ref": "igVZy2Dqu2QA6y-j5t1_sA",
+                "version": "s4wuuCssh5dbOD5LhWJObQ"
+              },
+              {
+                "parent": "igVZy2Dqu2QA6y-j5t1_sA",
+                "transformer": "ms-plugin.volume-representation-3d",
+                "params": {
+                  "type": {
+                    "name": "segment",
+                    "params": {
+                      "alpha": 1,
+                      "quality": "auto",
+                      "material": {
+                        "metalness": 0,
+                        "roughness": 1,
+                        "bumpiness": 0
+                      },
+                      "clip": {
+                        "variant": "pixel",
+                        "objects": []
+                      },
+                      "instanceGranularity": false,
+                      "doubleSided": false,
+                      "flipSided": false,
+                      "flatShaded": false,
+                      "ignoreLight": false,
+                      "xrayShaded": false,
+                      "transparentBackfaces": "off",
+                      "bumpFrequency": 1,
+                      "bumpAmplitude": 1,
+                      "segments": [
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        12,
+                        13,
+                        14,
+                        15,
+                        16,
+                        17,
+                        18,
+                        19,
+                        20,
+                        21,
+                        22,
+                        23,
+                        24,
+                        25,
+                        26,
+                        27,
+                        28,
+                        29,
+                        30,
+                        31,
+                        32,
+                        33,
+                        34,
+                        35,
+                        36,
+                        37,
+                        38,
+                        39,
+                        40,
+                        41,
+                        42,
+                        43,
+                        44,
+                        45,
+                        46,
+                        47,
+                        48,
+                        49,
+                        50,
+                        51,
+                        52,
+                        53,
+                        54,
+                        55,
+                        56,
+                        57,
+                        58,
+                        59,
+                        60,
+                        61
+                      ],
+                      "tryUseGpu": true,
+                      "visuals": [
+                        "segment"
+                      ]
+                    }
+                  },
+                  "colorTheme": {
+                    "name": "volume-segment",
+                    "params": {
+                      "palette": {
+                        "name": "colors",
+                        "params": {
+                          "list": {
+                            "kind": "set",
+                            "colors": [
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960,
+                              16776960
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "sizeTheme": {
+                    "name": "uniform",
+                    "params": {
+                      "value": 1
+                    }
+                  }
+                },
+                "tags": [
+                  "lattice-segment-repr"
+                ],
+                "ref": "R9yO9ej7x8V1wloSRvcVMg",
+                "version": "PRIbPM9__mgIZTGKngNXFw"
+              }
+            ]
+          }
+        },
+        "animation": {
+          "state": {
+            "params": {
+              "current": "built-in.animate-model-index"
+            },
+            "animationState": "stopped"
+          },
+          "current": {
+            "paramValues": {
+              "mode": {
+                "name": "loop",
+                "params": {
+                  "direction": "forward"
+                }
+              },
+              "duration": {
+                "name": "fixed",
+                "params": {
+                  "durationInS": 5
+                }
+              }
+            },
+            "state": {}
+          }
+        },
+        "camera": {
+          "current": {
+            "mode": "perspective",
+            "fov": 0.7853981633974483,
+            "position": [
+              1619154.7886635112,
+              2430306.7346696584,
+              881009.0382766279
+            ],
+            "up": [
+              -0.622986242048424,
+              0.2609392048414168,
+              0.7374271988441471
+            ],
+            "target": [
+              486537.5071764287,
+              513898.34658226755,
+              602284.7069040387
+            ],
+            "radius": 929277.743562131,
+            "radiusMax": 929277.743562131,
+            "fog": 15,
+            "clipFar": true,
+            "minNear": 5
+          },
+          "transitionStyle": "animate",
+          "transitionDurationInMs": 250
+        },
+        "canvas3d": {
+          "props": {
+            "camera": {
+              "mode": "perspective",
+              "helper": {
+                "axes": {
+                  "name": "on",
+                  "params": {
+                    "alpha": 0.51,
+                    "quality": "auto",
+                    "material": {
+                      "metalness": 0,
+                      "roughness": 1,
+                      "bumpiness": 0
+                    },
+                    "clip": {
+                      "variant": "pixel",
+                      "objects": []
+                    },
+                    "instanceGranularity": false,
+                    "doubleSided": false,
+                    "flipSided": false,
+                    "flatShaded": false,
+                    "ignoreLight": true,
+                    "xrayShaded": false,
+                    "transparentBackfaces": "off",
+                    "bumpFrequency": 0,
+                    "bumpAmplitude": 1,
+                    "colorX": 16711680,
+                    "colorY": 32768,
+                    "colorZ": 255,
+                    "scale": 0.33
+                  }
+                }
+              },
+              "stereo": {
+                "name": "off",
+                "params": {}
+              },
+              "fov": 45,
+              "manualReset": false
+            },
+            "cameraFog": {
+              "name": "on",
+              "params": {
+                "intensity": 15
+              }
+            },
+            "cameraClipping": {
+              "far": true,
+              "radius": 0,
+              "minNear": 5
+            },
+            "cameraResetDurationMs": 250,
+            "sceneRadiusFactor": 1,
+            "transparentBackground": false,
+            "dpoitIterations": 2,
+            "viewport": {
+              "name": "canvas",
+              "params": {}
+            },
+            "postprocessing": {
+              "occlusion": {
+                "name": "on",
+                "params": {
+                  "samples": 32,
+                  "radius": 5,
+                  "bias": 0.8,
+                  "blurKernelSize": 15,
+                  "resolutionScale": 1
+                }
+              },
+              "outline": {
+                "name": "off",
+                "params": {}
+              },
+              "antialiasing": {
+                "name": "smaa",
+                "params": {
+                  "edgeThreshold": 0.1,
+                  "maxSearchSteps": 16
+                }
+              },
+              "background": {
+                "variant": {
+                  "name": "off",
+                  "params": {}
+                }
+              }
+            },
+            "marking": {
+              "enabled": true,
+              "highlightEdgeColor": 13119595,
+              "selectEdgeColor": 51712,
+              "edgeScale": 1,
+              "ghostEdgeStrength": 0.3,
+              "innerEdgeFactor": 1.5
+            },
+            "multiSample": {
+              "mode": "temporal",
+              "sampleLevel": 2
+            },
+            "renderer": {
+              "backgroundColor": 16777215,
+              "pickingAlphaThreshold": 0.5,
+              "interiorDarkening": 0.5,
+              "interiorColorFlag": true,
+              "interiorColor": 5000268,
+              "colorMarker": true,
+              "highlightColor": 16737945,
+              "selectColor": 3407641,
+              "highlightStrength": 0.3,
+              "selectStrength": 0.3,
+              "markerPriority": 1,
+              "xrayEdgeFalloff": 1,
+              "light": [
+                {
+                  "inclination": 180,
+                  "azimuth": 0,
+                  "color": 16777215,
+                  "intensity": 0.6
+                }
+              ],
+              "ambientColor": 16777215,
+              "ambientIntensity": 0.4
+            },
+            "trackball": {
+              "noScroll": true,
+              "rotateSpeed": 5,
+              "zoomSpeed": 7,
+              "panSpeed": 1,
+              "animate": {
+                "name": "off",
+                "params": {}
+              },
+              "staticMoving": true,
+              "dynamicDampingFactor": 0.2,
+              "minDistance": 5,
+              "maxDistance": 9292777.43562131,
+              "gestureScaleFactor": 1,
+              "maxWheelDelta": 0.02,
+              "bindings": {
+                "dragRotate": {
+                  "triggers": [
+                    {
+                      "buttons": 1,
+                      "modifiers": {
+                        "shift": false,
+                        "alt": false,
+                        "control": false,
+                        "meta": false
+                      }
+                    }
+                  ],
+                  "action": "Rotate",
+                  "description": "Drag using ${triggers}"
+                },
+                "dragRotateZ": {
+                  "triggers": [
+                    {
+                      "buttons": 1,
+                      "modifiers": {
+                        "shift": true,
+                        "alt": false,
+                        "control": false,
+                        "meta": false
+                      }
+                    }
+                  ],
+                  "action": "Rotate around z-axis",
+                  "description": "Drag using ${triggers}"
+                },
+                "dragPan": {
+                  "triggers": [
+                    {
+                      "buttons": 2,
+                      "modifiers": {
+                        "shift": false,
+                        "alt": false,
+                        "control": false,
+                        "meta": false
+                      }
+                    },
+                    {
+                      "buttons": 1,
+                      "modifiers": {
+                        "shift": false,
+                        "alt": false,
+                        "control": true,
+                        "meta": false
+                      }
+                    }
+                  ],
+                  "action": "Pan",
+                  "description": "Drag using ${triggers}"
+                },
+                "dragZoom": {
+                  "triggers": [],
+                  "action": "",
+                  "description": ""
+                },
+                "dragFocus": {
+                  "triggers": [
+                    {
+                      "buttons": 8,
+                      "modifiers": {
+                        "shift": false,
+                        "alt": false,
+                        "control": false,
+                        "meta": false
+                      }
+                    }
+                  ],
+                  "action": "Focus",
+                  "description": "Drag using ${triggers}"
+                },
+                "dragFocusZoom": {
+                  "triggers": [
+                    {
+                      "buttons": 4,
+                      "modifiers": {
+                        "shift": false,
+                        "alt": false,
+                        "control": false,
+                        "meta": false
+                      }
+                    }
+                  ],
+                  "action": "Focus and zoom",
+                  "description": "Drag using ${triggers}"
+                },
+                "scrollZoom": {
+                  "triggers": [
+                    {
+                      "buttons": 4,
+                      "modifiers": {
+                        "shift": false,
+                        "alt": false,
+                        "control": false,
+                        "meta": false
+                      }
+                    }
+                  ],
+                  "action": "Zoom",
+                  "description": "Scroll using ${triggers}"
+                },
+                "scrollFocus": {
+                  "triggers": [
+                    {
+                      "buttons": 4,
+                      "modifiers": {
+                        "shift": true,
+                        "alt": false,
+                        "control": false,
+                        "meta": false
+                      }
+                    }
+                  ],
+                  "action": "Clip",
+                  "description": "Scroll using ${triggers}"
+                },
+                "scrollFocusZoom": {
+                  "triggers": [],
+                  "action": "",
+                  "description": ""
+                }
+              },
+              "autoAdjustMinMaxDistance": {
+                "name": "on",
+                "params": {
+                  "minDistanceFactor": 0,
+                  "minDistancePadding": 5,
+                  "maxDistanceFactor": 10,
+                  "maxDistanceMin": 20
+                }
+              }
+            },
+            "interaction": {
+              "maxFps": 30,
+              "preferAtomPixelPadding": 3
+            },
+            "debug": {
+              "sceneBoundingSpheres": false,
+              "visibleSceneBoundingSpheres": false,
+              "objectBoundingSpheres": false,
+              "instanceBoundingSpheres": false
+            },
+            "handle": {
+              "handle": {
+                "name": "off",
+                "params": {}
+              }
+            }
+          }
+        },
+        "interactivity": {
+          "props": {
+            "granularity": "residue"
+          }
+        },
+        "structureFocus": {},
+        "structureComponentManager": {
+          "options": {
+            "showHydrogens": true,
+            "visualQuality": "auto",
+            "ignoreLight": false,
+            "materialStyle": {
+              "metalness": 0,
+              "roughness": 1,
+              "bumpiness": 0
+            },
+            "clipObjects": {
+              "variant": "pixel",
+              "objects": []
+            },
+            "interactions": {
+              "providers": {
+                "ionic": {
+                  "name": "off",
+                  "params": {}
+                },
+                "pi-stacking": {
+                  "name": "on",
+                  "params": {
+                    "distanceMax": 5.5,
+                    "offsetMax": 2,
+                    "angleDevMax": 30
+                  }
+                },
+                "cation-pi": {
+                  "name": "on",
+                  "params": {
+                    "distanceMax": 6,
+                    "offsetMax": 2
+                  }
+                },
+                "halogen-bonds": {
+                  "name": "on",
+                  "params": {
+                    "distanceMax": 4,
+                    "angleMax": 30
+                  }
+                },
+                "hydrogen-bonds": {
+                  "name": "on",
+                  "params": {
+                    "distanceMax": 3.5,
+                    "backbone": true,
+                    "accAngleDevMax": 45,
+                    "donAngleDevMax": 45,
+                    "accOutOfPlaneAngleMax": 90,
+                    "donOutOfPlaneAngleMax": 45,
+                    "water": false,
+                    "sulfurDistanceMax": 4.1
+                  }
+                },
+                "weak-hydrogen-bonds": {
+                  "name": "off",
+                  "params": {}
+                },
+                "hydrophobic": {
+                  "name": "off",
+                  "params": {}
+                },
+                "metal-coordination": {
+                  "name": "on",
+                  "params": {
+                    "distanceMax": 3
+                  }
+                }
+              },
+              "contacts": {
+                "lineOfSightDistFactor": 1
+              }
+            }
+          }
+        },
+        "durationInMs": 1500
+      }
+    }
+  ]
+}

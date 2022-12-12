@@ -2,10 +2,9 @@ import { CifFile } from 'molstar/lib/mol-io/reader/cif';
 import { Volume } from 'molstar/lib/mol-model/volume';
 import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
 import { StateTransforms } from 'molstar/lib/mol-plugin-state/transforms';
-import { CreateGroup } from 'molstar/lib/mol-plugin-state/transforms/misc';
 import { PluginUIContext } from 'molstar/lib/mol-plugin-ui/context';
 import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/state';
-import { StateBuilder, StateObjectSelector, StateTransform, StateTransformer } from 'molstar/lib/mol-state';
+import { StateBuilder, StateObjectSelector, StateTransformer } from 'molstar/lib/mol-state';
 import { ParamDefinition as PD } from 'molstar/lib/mol-util/param-definition';
 
 import { Segment, type Metadata } from '../volume-api-client-lib/data';
