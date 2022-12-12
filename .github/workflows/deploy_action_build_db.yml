@@ -1,0 +1,22 @@
+name: Build db
+
+on: 
+  workflow_dispatch:
+    inputs:
+      args:
+        description: 'Arguments to the remote script'
+        required: false
+        type: string
+
+jobs:
+  build:
+    name: Build db
+    runs-on: ubuntu-latest
+    steps:
+    - name: executing remote ssh command in the background using SSH key
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        script: /sw/build_db.sh ${{ inputs.args }} &
