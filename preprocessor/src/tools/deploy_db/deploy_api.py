@@ -68,16 +68,11 @@ def run_api(args):
 
     return api_process
 
-def shut_down_ports(args):
-    _free_port(args.frontend_port)
+def deploy(args):
     if args.api_port:
         _free_port(args.api_port)
     else:
         _free_port(str(DEFAULT_PORT))
-
-
-def deploy(args):
-    shut_down_ports(args)
     api_process = run_api(args)
     api_process.communicate()
 
