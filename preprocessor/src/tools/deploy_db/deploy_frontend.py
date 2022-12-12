@@ -77,16 +77,8 @@ def run_frontend(args):
     # subprocess.call(lst)
     return frontend_process
 
-def shut_down_ports(args):
-    _free_port(args.frontend_port)
-    if args.api_port:
-        _free_port(args.api_port)
-    else:
-        _free_port(str(DEFAULT_PORT))
-
-
 def deploy(args):
-    shut_down_ports(args)
+    _free_port(args.frontend_port)
     frontend_process = run_frontend(args)
     frontend_process.communicate()
 
