@@ -11,7 +11,7 @@ export function LandingPage() {
             <div className='two columns'>&nbsp;</div>
             <div className='eight columns' style={{ borderTop: '1px solid #E0DDD4', paddingTop: 20 }}>
                 <h5 className='hero-heading'>
-                    A <a href='https://molstar.org' target='_blank' rel='noreferrer'>Mol*</a> extension focused on support for large-scale volumetric data and segmentations
+                    A <a href='https://molstar.org' target='_blank' rel='noreferrer'>Mol*</a> extension with support for large-scale volumetric data and segmentations
                 </h5>
             </div>
             <div className='two columns'>&nbsp;</div>
@@ -20,15 +20,15 @@ export function LandingPage() {
         <div className='row' style={{ marginTop: 0, display: 'flex' }}>
             <div className='twelve column'
                 style= {{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                <a href='viewer' target='_blank' title='Open Mol* Viewer'>
+                <a href={resolveExampleSnapshotURL('emd-1181.molj')} target='_blank' rel='noreferrer' title='Open Mol* Viewer'>
                     <video autoPlay loop style={{ maxHeight: '100%', maxWidth: '100%' }} width='450'>
                         <source src='/img/2C7D_state-snapshots.mp4' type='video/mp4' />
                     </video>
                 </a>
 
-                <div style={{ textAlign: 'justify', margin: 5 }}>
+                <div style={{ textAlign: 'center', margin: 5 }}>
                     Cell* Volumes & Segmentations is a Mol* extension which adds the support for large scale volumetric data & their segmentations. Building on the existing Mol* ecosystem, Cell* 
-                    allows seamless integration of biomolecular data ranging from whole cell 3D reconstructions from light miscroscopy all the way down to atomic scale.
+                    allows seamless integration of biomolecular data ranging from whole cell 3D reconstructions from light miscroscopy, all the way down to atomic level.
                 </div>
             </div>
         </div>
@@ -38,50 +38,57 @@ export function LandingPage() {
                 <h4 className='hero-heading' style={{ marginBottom: 40 }}><b>Interactive Examples</b></h4>
                 <div className='examples'>
                     <div className='tooltip'>
-                        <a href='https://molstar.org/viewer/?snapshot-url=https%3A%2F%2Fmolstar.org%2Fdemos%2Fstates%2Fhiv-simple-cut.molx&snapshot-url-type=molx'
-                            target='_blank'><img alt='HIV in blood serum' src='img/examples/e1.png' /></a>
+                        <a href={resolveExampleSnapshotURL('emd-1181.molj')}
+                            target='_blank' rel='noreferrer'><img alt='EMD 1181' src='img/examples/emd-1181.png' /></a>
                         <p className='tooltip-info'>
-                            CellPack model of enveloped HIV capsid with ~13M atoms.
+                            <a href='https://www.ebi.ac.uk/emdb/EMD-1181' target='_blank' rel='noreferrer'>
+                                EMD 1181
+                            </a>
                         </p>
                     </div>
                     <div className='tooltip'>
-                        <a href='demos/alpha-orbitals' target='_blank'><img
-                                alt='Alpha orbitals and density of Atorvastatin' src='img/examples/e2.png' /></a>
+                        <a href={resolveExampleSnapshotURL('empiar-10070.molj')} target='_blank' rel='noreferrer'><img 
+                            alt='EMPIAR 10070' src='img/examples/empiar-10070.png' /></a>
                         <p className='tooltip-info'>
-                            Alpha orbitals and density of Atorvastatin.
+                            <a href='https://www.ebi.ac.uk/empiar/EMPIAR-10070/' target='_blank' rel='noreferrer'>
+                                EMPIAR 10070
+                            </a>
                         </p>
                     </div>
                     <div className='tooltip'>
-                        <a href='https://molstar.org/viewer/?snapshot-url=https%3A%2F%2Fmolstar.org%2Fdemos%2Fstates%2Fzikaem.molx&snapshot-url-type=molx'
-                            target='_blank'><img alt='Zika+EM' src='img/examples/e3.png' /></a>
+                        <a href={resolveExampleSnapshotURL('idr-6001240.molj')}
+                            target='_blank' rel='noreferrer'><img alt='Zika+EM' src='img/examples/idr-6001240.png' /></a>
                         <p className='tooltip-info'>
-                            Zika virus assembly and Cryo-EM density.
-                        </p>
-                    </div>
-                    <div className='tooltip'>
-                        <a href='https://molstar.org/viewer/?snapshot-url=https%3A%2F%2Fmolstar.org%2Fdemos%2Fstates%2Fcytochromes.molx&snapshot-url-type=molx'
-                            target='_blank'><img alt='P-450 Superposition' src='img/examples/e4.png' /></a>
-                        <p className='tooltip-info'>
-                            Superposition and validation annotation of P-450 cytochromes.
+                            <a href='https://idr.openmicroscopy.org/webclient/img_detail/6001240/?dataset=7754' target='_blank' rel='noreferrer'>
+                                IDR 6001240
+                            </a> (experimental NGFF support)
                         </p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div className='row' style={{ marginTop: 30, display: 'flex' }}>
-            <div className='twelve column'
+        <div className='row' style={{ marginTop: 60, display: 'flex' }}>
+            <div className='twelve columns'
                 style= {{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                <a className='button button-primary' href='https://github.com/molstar/cellstar-volume-server/' style={{ fontSize: '2rem', width: '100%' }} target='_blank' rel='noreferrer'>
+                {/* <a className='button button-primary' href='https://github.com/molstar/cellstar-volume-server/' style={{ fontSize: '2rem', width: '100%' }} target='_blank' rel='noreferrer'>
                     <svg width='14' height='14' style={{ marginRight: '0.75rem' }}><use href='#github-logo' /></svg>
                     GitHub
-                </a>
-                <a className='button' href='https://molstar.org/viewer' style={{ fontSize: '2rem', width: '100%' }}
+                </a> */}
+                <a className='button' href={ViewerURL} style={{ fontSize: '2rem', width: '100%' }}
                     target='_blank' rel='noreferrer'>Open Mol* Viewer</a>
             </div>
         </div>
 
-        TODO Tutorial video which goes from "Open Mol* viewer to loading an extry for Cell*"
+        <div className='row' style={{ textAlign: 'center', marginTop: 20 }}>
+            <div className='twelve columns'>
+                {/* <h4 className='hero-heading' style={{ marginBottom: 40 }}><b>Quick Tutorial</b></h4> */}
+
+                <video controls loop style={{ maxHeight: '100%', maxWidth: '100%' }} width='550'>
+                    <source src='/img/quick-tutorial.mp4' type='video/mp4' />
+                </video>
+            </div>
+        </div>
 
         <div className='row' style={{ textAlign: 'right', marginTop: 60, color: '#999' }}>
             Copyright 2022–now, Cell* Contributors | <a href='terms-of-use.html' style={{ color: '#999' }}>Terms of Use &
@@ -96,4 +103,11 @@ export function LandingPage() {
             </defs>
         </svg>
     </div>
+}
+
+const ViewerURL = 'https://overprot.ncbr.muni.cz/data/cellstar/';
+
+function resolveExampleSnapshotURL(snapshot: string) {
+    const snapshotRoot = `${window.location.origin}/snapshots/`;
+    return `${ViewerURL}?snapshot-url=${encodeURIComponent(`${snapshotRoot}${snapshot}`)}&snapshot-url-type=molj`;
 }
