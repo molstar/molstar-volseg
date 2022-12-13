@@ -27,7 +27,7 @@ export function LandingPage() {
                 </a>
 
                 <div style={{ textAlign: 'center', margin: 5 }}>
-                    Cell* Volumes & Segmentations is a Mol* extension which adds the support for large scale volumetric data & their segmentations. Building on the existing Mol* ecosystem, Cell* 
+                    Mol* Volumes & Segmentations is a Mol* extension which adds the support for large scale volumetric data & their segmentations. Building on the existing Mol* ecosystem, the extension
                     allows seamless integration of biomolecular data ranging from whole cell 3D reconstructions from light miscroscopy, all the way down to atomic level.
                 </div>
             </div>
