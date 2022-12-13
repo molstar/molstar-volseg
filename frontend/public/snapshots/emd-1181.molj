@@ -1,16 +1,16 @@
 {
-  "timestamp": 1670853259288,
+  "timestamp": 1670972191989,
   "version": "3.25.1",
-  "current": "-r9a2Q09YZIkAMzy7C7pKQ",
+  "current": "MMT7nYxch5IAgJddX3OBJA",
   "playback": {
     "isPlaying": false,
     "nextSnapshotDelayInMs": 1500
   },
   "entries": [
     {
-      "timestamp": 1670853259288,
+      "timestamp": 1670972191988,
       "snapshot": {
-        "id": "-r9a2Q09YZIkAMzy7C7pKQ",
+        "id": "MMT7nYxch5IAgJddX3OBJA",
         "data": {
           "tree": {
             "transforms": [
@@ -19,21 +19,21 @@
                 "transformer": "build-in.root",
                 "params": {},
                 "ref": "-=root=-",
-                "version": "aY1t7iKpmC2YF9LG5NJSuA"
+                "version": "eU0qE00oxVrswnq4fREfBw"
               },
               {
                 "parent": "-=root=-",
                 "transformer": "ms-plugin.cellstar-entry-from-root",
                 "params": {
-                  "serverUrl": "https://cellstar.ncbr.muni.cz/v2",
+                  "serverUrl": "https://molstarvolseg.ncbr.muni.cz/v2",
                   "source": "emdb",
                   "entryNumber": "1181"
                 },
-                "ref": "fALzEtMrLK2X-OWWTRLnmA",
-                "version": "ebC-s9s5KlbARet8lb1iZQ"
+                "ref": "ccsD8MDAykWgO9D6GrtB-A",
+                "version": "evYEnEFjNSZfr8_rh2oWfw"
               },
               {
-                "parent": "fALzEtMrLK2X-OWWTRLnmA",
+                "parent": "ccsD8MDAykWgO9D6GrtB-A",
                 "transformer": "ms-plugin.cellstar-state-from-entry",
                 "params": {
                   "opacity": 1,
@@ -85,13 +85,17 @@
                       "segmentId": 5044
                     }
                   ],
-                  "visibleModels": []
+                  "visibleModels": [
+                    {
+                      "pdbId": "2c7d"
+                    }
+                  ]
                 },
-                "ref": "36t1TPAwdShcYJGx7k4NYg",
-                "version": "ldmeIbkaUR22Rn1xeumY7Q"
+                "ref": "dNqQomxOtxeYar4OXmXcpA",
+                "version": "VduLrCFETtxH9oH44LD8Lw"
               },
               {
-                "parent": "fALzEtMrLK2X-OWWTRLnmA",
+                "parent": "ccsD8MDAykWgO9D6GrtB-A",
                 "transformer": "ms-plugin.create-group",
                 "params": {
                   "label": "Volume",
@@ -103,39 +107,39 @@
                 "tags": [
                   "volume-group"
                 ],
-                "ref": "wgcH8KgqpG-NOyKgjlcp6w",
-                "version": "teH-qZjoowxKZcFAVMUtnQ"
+                "ref": "863XsSEuNUXimg9E4FDwrQ",
+                "version": "w1B_knNkFn3X2HmewXt9CA"
               },
               {
-                "parent": "wgcH8KgqpG-NOyKgjlcp6w",
+                "parent": "863XsSEuNUXimg9E4FDwrQ",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/emdb/emd-1181/volume/cell?max_points=10000000",
-                  "label": "Volume Data: https://cellstar.ncbr.muni.cz/v2/emdb/emd-1181/volume/cell?max_points=10000000",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/emdb/emd-1181/volume/cell?max_points=10000000",
+                  "label": "Volume Data: https://molstarvolseg.ncbr.muni.cz/v2/emdb/emd-1181/volume/cell?max_points=10000000",
                   "isBinary": true
                 },
-                "ref": "HXOLDGgmG39AYVKfj9S2GQ",
-                "version": "LZ43h7GbodWcDKWBCoWTbA"
+                "ref": "Eobx3MrAAiZDhOTK395XDA",
+                "version": "9M_nqEjIBDewXKFkkDnP5Q"
               },
               {
-                "parent": "HXOLDGgmG39AYVKfj9S2GQ",
+                "parent": "Eobx3MrAAiZDhOTK395XDA",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "I_FhKqNQ0E_OpCPHYITWEQ",
-                "version": "XUblJ5vNMyuGovp256sQVQ"
+                "ref": "lU_vc4kS5EpuQwjODLYUJg",
+                "version": "kBQK4ehqxECd1I-_eEZNvg"
               },
               {
-                "parent": "I_FhKqNQ0E_OpCPHYITWEQ",
+                "parent": "lU_vc4kS5EpuQwjODLYUJg",
                 "transformer": "ms-plugin.volume-from-density-server-cif",
                 "params": {
                   "blockHeader": "VOLUME",
                   "entryId": ""
                 },
-                "ref": "PakcPTenA9X2KMUel8rwLg",
-                "version": "_FFju4xYHtw3OmLUULcHbg"
+                "ref": "DJj9PQAtKr-LtZmL55KYvA",
+                "version": "79c7m6zAKStBMTSuEkROaA"
               },
               {
-                "parent": "PakcPTenA9X2KMUel8rwLg",
+                "parent": "DJj9PQAtKr-LtZmL55KYvA",
                 "transformer": "ms-plugin.volume-representation-3d",
                 "params": {
                   "type": {
@@ -186,11 +190,11 @@
                     }
                   }
                 },
-                "ref": "cIq-tdzXg9c1s4GQKFNySA",
-                "version": "ZqPPmaiOs6uV3-wCkYnvFQ"
+                "ref": "5bh1polxj1FAixZMECsL_g",
+                "version": "CZNzRJLtCQS7IcPfYLonxQ"
               },
               {
-                "parent": "fALzEtMrLK2X-OWWTRLnmA",
+                "parent": "ccsD8MDAykWgO9D6GrtB-A",
                 "transformer": "ms-plugin.create-group",
                 "params": {
                   "label": "Segmentation",
@@ -202,101 +206,101 @@
                 "tags": [
                   "lattice-segmentation-group"
                 ],
-                "ref": "ioFsajlpDb0ykeMd5zgZzA",
-                "version": "qQqVdVUG9zJfmYL5nLUYSg"
+                "ref": "00kCz0RjFPdnPSJwamccAA",
+                "version": "dqYzjD9sYMdILtVjbJ7SZg"
               },
               {
-                "parent": "ioFsajlpDb0ykeMd5zgZzA",
+                "parent": "00kCz0RjFPdnPSJwamccAA",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/emdb/emd-1181/segmentation/cell/0?max_points=10000000",
-                  "label": "Segmentation Data: https://cellstar.ncbr.muni.cz/v2/emdb/emd-1181/segmentation/cell/0?max_points=10000000",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/emdb/emd-1181/segmentation/cell/0?max_points=10000000",
+                  "label": "Segmentation Data: https://molstarvolseg.ncbr.muni.cz/v2/emdb/emd-1181/segmentation/cell/0?max_points=10000000",
                   "isBinary": true
                 },
-                "ref": "1sJOq2YdDCpykLl2bTLgGg",
-                "version": "ADSNK22YOtXIX16QyzFzrw"
+                "ref": "6HcEerkVWKFf1xFs6WAafg",
+                "version": "9mLHAkiN62Z0TB33GDyb9g"
               },
               {
-                "parent": "1sJOq2YdDCpykLl2bTLgGg",
+                "parent": "6HcEerkVWKFf1xFs6WAafg",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "KCX0Dz5eFXGkwp-rIC6pLg",
-                "version": "4d57nRQGLUtaelHIgI0_cA"
+                "ref": "OV_SS0y98yIY10BatxS05A",
+                "version": "PD40BoumhwyNCcBgIQZxcQ"
               },
               {
-                "parent": "KCX0Dz5eFXGkwp-rIC6pLg",
+                "parent": "OV_SS0y98yIY10BatxS05A",
                 "transformer": "ms-plugin.volume-from-segmentation-cif",
                 "params": {
                   "blockHeader": "SEGMENTATION_DATA",
                   "segmentLabels": [
                     {
                       "id": 4799,
-                      "label": "<b>null</b>"
+                      "label": ""
                     },
                     {
                       "id": 4987,
-                      "label": "<b>null</b>"
+                      "label": ""
                     },
                     {
                       "id": 4996,
-                      "label": "<b>null</b>"
+                      "label": ""
                     },
                     {
                       "id": 5000,
-                      "label": "<b>null</b>"
+                      "label": ""
                     },
                     {
                       "id": 5020,
-                      "label": "<b>null</b>"
+                      "label": ""
                     },
                     {
                       "id": 5022,
-                      "label": "<b>null</b>"
+                      "label": ""
                     },
                     {
                       "id": 5035,
-                      "label": "<b>null</b>"
+                      "label": ""
                     },
                     {
                       "id": 5037,
-                      "label": "<b>null</b>"
+                      "label": ""
                     },
                     {
                       "id": 5038,
-                      "label": "<b>null</b>"
+                      "label": ""
                     },
                     {
                       "id": 5039,
-                      "label": "<b>null</b>"
+                      "label": ""
                     },
                     {
                       "id": 5040,
-                      "label": "<b>null</b>"
+                      "label": ""
                     },
                     {
                       "id": 5041,
-                      "label": "<b>null</b>"
+                      "label": ""
                     },
                     {
                       "id": 5042,
-                      "label": "<b>null</b>"
+                      "label": ""
                     },
                     {
                       "id": 5043,
-                      "label": "<b>null</b>"
+                      "label": ""
                     },
                     {
                       "id": 5044,
-                      "label": "<b>null</b>"
+                      "label": ""
                     }
                   ],
-                  "ownerId": "fALzEtMrLK2X-OWWTRLnmA"
+                  "ownerId": "ccsD8MDAykWgO9D6GrtB-A"
                 },
-                "ref": "Kacbm0TGy79BfNp_O7wDxw",
-                "version": "imG_XpWEeeBVmKOAR2P0Nw"
+                "ref": "VSBoe_vSewEdzwFDSF6tfg",
+                "version": "hfcFIpCNI_xW4mRMa22m9w"
               },
               {
-                "parent": "Kacbm0TGy79BfNp_O7wDxw",
+                "parent": "VSBoe_vSewEdzwFDSF6tfg",
                 "transformer": "ms-plugin.volume-representation-3d",
                 "params": {
                   "type": {
@@ -385,11 +389,11 @@
                 "tags": [
                   "lattice-segment-repr"
                 ],
-                "ref": "KyJay8AMbLBnccVEoGkQwA",
-                "version": "IKJRnvXqhbds07t2mpcN_Q"
+                "ref": "_DPkx8QKf6_5veOpugLrXg",
+                "version": "nJbIIlHWRqQ3m7ZgdFvH9w"
               },
               {
-                "parent": "fALzEtMrLK2X-OWWTRLnmA",
+                "parent": "ccsD8MDAykWgO9D6GrtB-A",
                 "transformer": "ms-plugin.create-group",
                 "params": {
                   "label": "Fitted Models",
@@ -401,61 +405,49 @@
                 "tags": [
                   "fitted-models-group"
                 ],
-                "ref": "1FMlW8QhrnoH_F4cJLvCPA",
-                "version": "StElbwixxyh0V4vGSc_pcw"
+                "ref": "QZTjr5KBKd5Tt344Wuyi4Q",
+                "version": "isAclGAOCzcz8MDahYdm0Q"
               },
               {
-                "parent": "1FMlW8QhrnoH_F4cJLvCPA",
+                "parent": "QZTjr5KBKd5Tt344Wuyi4Q",
                 "transformer": "ms-plugin.download",
                 "params": {
                   "url": "https://www.ebi.ac.uk/pdbe/entry-files/download/2c7d.bcif",
                   "label": "",
                   "isBinary": true
                 },
-                "state": {
-                  "isHidden": true
-                },
                 "tags": [
                   "fitted-model-data",
                   "pdbid-2c7d"
                 ],
-                "ref": "TqLMa1rM80Q9cyxGcfwqsg",
-                "version": "QLTiMhVpoebFTMbLNtYpmw"
+                "ref": "txtVLw7wVXQhwGl3tqhaMg",
+                "version": "t9gKwETx0tI7EOlg3w8d8w"
               },
               {
-                "parent": "TqLMa1rM80Q9cyxGcfwqsg",
+                "parent": "txtVLw7wVXQhwGl3tqhaMg",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "state": {
-                  "isHidden": true
-                },
-                "ref": "coWDMIBJsQzz9dp3ILbHlQ",
-                "version": "rNkE1fC1kybDfqRKERCQ4g"
+                "ref": "mTvbp-cWilykhK2mK-7XwA",
+                "version": "GkmVqLNdTxE6mNvk_Y4w0Q"
               },
               {
-                "parent": "coWDMIBJsQzz9dp3ILbHlQ",
+                "parent": "mTvbp-cWilykhK2mK-7XwA",
                 "transformer": "ms-plugin.trajectory-from-mmcif",
                 "params": {},
-                "state": {
-                  "isHidden": true
-                },
-                "ref": "rzrQIPIiH9RU2lHjpsTrng",
-                "version": "tSRTsC5nJ9Ij7V22Y0rIXg"
+                "ref": "Il1scMxpItAeEI4EP-gcWw",
+                "version": "UhJbxSqFjdv65BDGTs7QsA"
               },
               {
-                "parent": "rzrQIPIiH9RU2lHjpsTrng",
+                "parent": "Il1scMxpItAeEI4EP-gcWw",
                 "transformer": "ms-plugin.model-from-trajectory",
                 "params": {
                   "modelIndex": 0
                 },
-                "state": {
-                  "isHidden": true
-                },
-                "ref": "xrILpI4A1El8NHqhqi0M4A",
-                "version": "plIFtEv5z9c0vYkf2KnFlg"
+                "ref": "FFrh9EArHJR6eQEjoDsT6A",
+                "version": "xaH6kubf09q9fO4GN2Yaew"
               },
               {
-                "parent": "xrILpI4A1El8NHqhqi0M4A",
+                "parent": "FFrh9EArHJR6eQEjoDsT6A",
                 "transformer": "ms-plugin.custom-model-properties",
                 "params": {
                   "autoAttach": [
@@ -488,14 +480,11 @@
                     }
                   }
                 },
-                "state": {
-                  "isHidden": true
-                },
-                "ref": "ulG5sxKlxZ4gL6AgoYs3eA",
-                "version": "0nKQ2opdVoNEAH4yJIcvWA"
+                "ref": "znd89kVjwe_oSx_-L0-46g",
+                "version": "bct6j49lSFonP_J9ntesRA"
               },
               {
-                "parent": "ulG5sxKlxZ4gL6AgoYs3eA",
+                "parent": "znd89kVjwe_oSx_-L0-46g",
                 "transformer": "ms-plugin.structure-from-model",
                 "params": {
                   "type": {
@@ -506,14 +495,11 @@
                     }
                   }
                 },
-                "state": {
-                  "isHidden": true
-                },
-                "ref": "umh7ex1Lo-bygr1RkWABiw",
-                "version": "vh_08nZAtztH1y52YnEDaQ"
+                "ref": "2aibOfmabBb8vZN0qkKs0A",
+                "version": "-BASXIaHDZTZ4431WNH48g"
               },
               {
-                "parent": "umh7ex1Lo-bygr1RkWABiw",
+                "parent": "2aibOfmabBb8vZN0qkKs0A",
                 "transformer": "ms-plugin.custom-structure-properties",
                 "params": {
                   "autoAttach": [],
@@ -615,14 +601,11 @@
                     }
                   }
                 },
-                "state": {
-                  "isHidden": true
-                },
-                "ref": "bzx6NrertlQHK5CFVxZDTw",
-                "version": "w4-6r3hUxXVRkigGRMTgjw"
+                "ref": "bCvlwnBPH3zozQ8OfMm66A",
+                "version": "ABuNHMYtqfnQjjtPI_iexQ"
               },
               {
-                "parent": "bzx6NrertlQHK5CFVxZDTw",
+                "parent": "bCvlwnBPH3zozQ8OfMm66A",
                 "transformer": "ms-plugin.structure-component",
                 "params": {
                   "type": {
@@ -632,17 +615,14 @@
                   "nullIfEmpty": true,
                   "label": ""
                 },
-                "state": {
-                  "isHidden": true
-                },
                 "tags": [
                   "structure-component-static-polymer"
                 ],
-                "ref": "Uq2YiGllP_7OUV8adEQ7xw",
-                "version": "Cv1PhqOLC6PhSnBhOWU8BQ"
+                "ref": "JIhegt5mVmMcv7GA2UHL9w",
+                "version": "gYVexazF9xZsnwlnQ65MmQ"
               },
               {
-                "parent": "Uq2YiGllP_7OUV8adEQ7xw",
+                "parent": "JIhegt5mVmMcv7GA2UHL9w",
                 "transformer": "ms-plugin.structure-representation-3d",
                 "params": {
                   "type": {
@@ -734,14 +714,11 @@
                     }
                   }
                 },
-                "state": {
-                  "isHidden": true
-                },
                 "tags": [
                   "polymer"
                 ],
-                "ref": "qbhdeNGCQznDoLDo1N1xMQ",
-                "version": "68Lm_BDQbWcE6CPArbrp4Q"
+                "ref": "DRmK2VOBlkBdtkc8cMBs9Q",
+                "version": "OCT6KmEJTgYGLkTCPWJeNg"
               }
             ]
           }
@@ -776,14 +753,14 @@
             "mode": "perspective",
             "fov": 0.7853981633974483,
             "position": [
-              185.3074499025776,
-              -296.7056297185071,
-              139.166555149427
+              -185.21136124799293,
+              -312.3828517591013,
+              80.12969346468353
             ],
             "up": [
-              -0.5692965571729448,
-              0.029804657082234724,
-              0.8215918161759181
+              -0.3866934781969106,
+              0.4375110206091936,
+              0.8118203377382736
             ],
             "target": [
               8.700523295021634e-15,

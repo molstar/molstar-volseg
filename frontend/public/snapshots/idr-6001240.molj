@@ -1,16 +1,16 @@
 {
-  "timestamp": 1670854002913,
+  "timestamp": 1670972349620,
   "version": "3.25.1",
-  "current": "s9wIdTOwsgdjmqUwMwF2qA",
+  "current": "DVv97OI0kfvOr9Nm_HAOUg",
   "playback": {
     "isPlaying": false,
     "nextSnapshotDelayInMs": 1500
   },
   "entries": [
     {
-      "timestamp": 1670854002912,
+      "timestamp": 1670972349620,
       "snapshot": {
-        "id": "s9wIdTOwsgdjmqUwMwF2qA",
+        "id": "DVv97OI0kfvOr9Nm_HAOUg",
         "data": {
           "tree": {
             "transforms": [
@@ -19,21 +19,21 @@
                 "transformer": "build-in.root",
                 "params": {},
                 "ref": "-=root=-",
-                "version": "YtCiVYI1qEmnMkQDSJtk5Q"
+                "version": "3D3xmOZXRM4SA4SWJ2GE2g"
               },
               {
                 "parent": "-=root=-",
                 "transformer": "ms-plugin.cellstar-entry-from-root",
                 "params": {
-                  "serverUrl": "https://cellstar.ncbr.muni.cz/v2",
+                  "serverUrl": "https://molstarvolseg.ncbr.muni.cz/v2",
                   "source": "idr",
                   "entryNumber": "6001240"
                 },
-                "ref": "nrXnM1bsK_CBTDWJ2ZpAHg",
-                "version": "M7CN7Zw08oYzEh0pdAWMeg"
+                "ref": "6Z2hpuqevBXyhrpJ53lG1Q",
+                "version": "y1VFD83iHUKKLg9Gkp_oIQ"
               },
               {
-                "parent": "nrXnM1bsK_CBTDWJ2ZpAHg",
+                "parent": "6Z2hpuqevBXyhrpJ53lG1Q",
                 "transformer": "ms-plugin.cellstar-state-from-entry",
                 "params": {
                   "opacity": 1,
@@ -225,11 +225,11 @@
                   ],
                   "visibleModels": []
                 },
-                "ref": "aBhOTLrB32FTDensahGjkw",
-                "version": "E9qt5-emmKl2Ram52jFXyQ"
+                "ref": "7a24Fp2omZPWwbWeSdVAYA",
+                "version": "3t2-0DhbG7vNHEpkARovMg"
               },
               {
-                "parent": "nrXnM1bsK_CBTDWJ2ZpAHg",
+                "parent": "6Z2hpuqevBXyhrpJ53lG1Q",
                 "transformer": "ms-plugin.create-group",
                 "params": {
                   "label": "Volume",
@@ -241,39 +241,39 @@
                 "tags": [
                   "volume-group"
                 ],
-                "ref": "5NCH93KruO-ceJ0OEmWBww",
-                "version": "_ZusnDl4wNvDygZLLCIufg"
+                "ref": "Jb8lTKkCFPxV8FmQQTDFEQ",
+                "version": "e0jmJEKV1zDj8y4zL6TMIQ"
               },
               {
-                "parent": "5NCH93KruO-ceJ0OEmWBww",
+                "parent": "Jb8lTKkCFPxV8FmQQTDFEQ",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/idr/idr-6001240/volume/cell?max_points=10000000",
-                  "label": "Volume Data: https://cellstar.ncbr.muni.cz/v2/idr/idr-6001240/volume/cell?max_points=10000000",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/idr/idr-6001240/volume/cell?max_points=10000000",
+                  "label": "Volume Data: https://molstarvolseg.ncbr.muni.cz/v2/idr/idr-6001240/volume/cell?max_points=10000000",
                   "isBinary": true
                 },
-                "ref": "kKzF3gaXQmq-MsLx10aUuw",
-                "version": "bJOzRhyMyFwkaPFF2hj6VA"
+                "ref": "SvWwjfgnMxbMLQnFvv69Aw",
+                "version": "pbMjRvoG9ywBz0JlzS4WNQ"
               },
               {
-                "parent": "kKzF3gaXQmq-MsLx10aUuw",
+                "parent": "SvWwjfgnMxbMLQnFvv69Aw",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "FViBI9YM8YTMc7zb9xhDVQ",
-                "version": "coAXKuYxCScJdyD4F0FbWA"
+                "ref": "WnDLTgEvC-txXBScuhEH0w",
+                "version": "4co_z_Gz63hnPN7MzXjwTQ"
               },
               {
-                "parent": "FViBI9YM8YTMc7zb9xhDVQ",
+                "parent": "WnDLTgEvC-txXBScuhEH0w",
                 "transformer": "ms-plugin.volume-from-density-server-cif",
                 "params": {
                   "blockHeader": "VOLUME",
                   "entryId": ""
                 },
-                "ref": "RKdCnpPvGEXpKBvwa_u-9g",
-                "version": "aY-OAlNOlz5JHBe0RjmHGA"
+                "ref": "-vudZTB0AuJ7CgtR5NMUWw",
+                "version": "HOs5FHcADK82BQSLtlQ80w"
               },
               {
-                "parent": "RKdCnpPvGEXpKBvwa_u-9g",
+                "parent": "-vudZTB0AuJ7CgtR5NMUWw",
                 "transformer": "ms-plugin.volume-representation-3d",
                 "params": {
                   "type": {
@@ -324,11 +324,11 @@
                     }
                   }
                 },
-                "ref": "0kuFfwHdN--vVmtiN13GoQ",
-                "version": "wTlLKUdHt39YdYa7MiXcXA"
+                "ref": "btvgNvcvuFNOMSWjOCHAxw",
+                "version": "aHjg3cwgJsfsjaUFdpdXFg"
               },
               {
-                "parent": "nrXnM1bsK_CBTDWJ2ZpAHg",
+                "parent": "6Z2hpuqevBXyhrpJ53lG1Q",
                 "transformer": "ms-plugin.create-group",
                 "params": {
                   "label": "Segmentation",
@@ -340,29 +340,29 @@
                 "tags": [
                   "lattice-segmentation-group"
                 ],
-                "ref": "VOzUfO3p4oOBbLuCny3b9A",
-                "version": "pYrDlIJTj9Ot6hRzQxIquA"
+                "ref": "EMbL7b9bll0uQiJLL46LCQ",
+                "version": "scqt6TjpchAw7YPj2ZA_Pw"
               },
               {
-                "parent": "VOzUfO3p4oOBbLuCny3b9A",
+                "parent": "EMbL7b9bll0uQiJLL46LCQ",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/idr/idr-6001240/segmentation/cell/0?max_points=10000000",
-                  "label": "Segmentation Data: https://cellstar.ncbr.muni.cz/v2/idr/idr-6001240/segmentation/cell/0?max_points=10000000",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/idr/idr-6001240/segmentation/cell/0?max_points=10000000",
+                  "label": "Segmentation Data: https://molstarvolseg.ncbr.muni.cz/v2/idr/idr-6001240/segmentation/cell/0?max_points=10000000",
                   "isBinary": true
                 },
-                "ref": "0qMFBaOnXc3VNSzTuO_Xwg",
-                "version": "RqGqynsrXqM2tDkK46Z-rQ"
+                "ref": "mSzoNX87XLtDw7ef81sITQ",
+                "version": "K4sw9H0NX5qYe5xHltcXKw"
               },
               {
-                "parent": "0qMFBaOnXc3VNSzTuO_Xwg",
+                "parent": "mSzoNX87XLtDw7ef81sITQ",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "FRfqW1yIIzrfZkLWLw7fjQ",
-                "version": "tl21mRq8E5cpC5mKBFVtIA"
+                "ref": "1FoDJUy1vWVQWdv9szIkxg",
+                "version": "dzfMK9Vk00GGk0Wl9715VQ"
               },
               {
-                "parent": "FRfqW1yIIzrfZkLWLw7fjQ",
+                "parent": "1FoDJUy1vWVQWdv9szIkxg",
                 "transformer": "ms-plugin.volume-from-segmentation-cif",
                 "params": {
                   "blockHeader": "SEGMENTATION_DATA",
@@ -612,13 +612,13 @@
                       "label": "<b>segment 9</b>"
                     }
                   ],
-                  "ownerId": "nrXnM1bsK_CBTDWJ2ZpAHg"
+                  "ownerId": "6Z2hpuqevBXyhrpJ53lG1Q"
                 },
-                "ref": "igVZy2Dqu2QA6y-j5t1_sA",
-                "version": "s4wuuCssh5dbOD5LhWJObQ"
+                "ref": "CvENF6CUkbA89aebbMxYRw",
+                "version": "Q3zctCGsnqJ8hE7M1_4_9w"
               },
               {
-                "parent": "igVZy2Dqu2QA6y-j5t1_sA",
+                "parent": "CvENF6CUkbA89aebbMxYRw",
                 "transformer": "ms-plugin.volume-representation-3d",
                 "params": {
                   "type": {
@@ -799,8 +799,8 @@
                 "tags": [
                   "lattice-segment-repr"
                 ],
-                "ref": "R9yO9ej7x8V1wloSRvcVMg",
-                "version": "PRIbPM9__mgIZTGKngNXFw"
+                "ref": "DkJy7Dm3LTp1RZvCCswtJg",
+                "version": "NS7k9kJfDDsFBixmbV-KRw"
               }
             ]
           }
@@ -835,14 +835,14 @@
             "mode": "perspective",
             "fov": 0.7853981633974483,
             "position": [
-              1619154.7886635112,
-              2430306.7346696584,
-              881009.0382766279
+              1638168.1995419147,
+              2596683.6467698547,
+              120113.53848292888
             ],
             "up": [
-              -0.622986242048424,
-              0.2609392048414168,
-              0.7374271988441471
+              -0.2928247015311353,
+              0.3663722788007468,
+              0.8831902668732001
             ],
             "target": [
               486537.5071764287,
@@ -961,7 +961,7 @@
               "sampleLevel": 2
             },
             "renderer": {
-              "backgroundColor": 16777215,
+              "backgroundColor": 16579577,
               "pickingAlphaThreshold": 0.5,
               "interiorDarkening": 0.5,
               "interiorColorFlag": true,

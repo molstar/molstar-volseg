@@ -1,16 +1,16 @@
 {
-  "timestamp": 1670853645627,
+  "timestamp": 1670972291897,
   "version": "3.25.1",
-  "current": "H73Z3IjXwFOEsXf49d533w",
+  "current": "ChVA0psDVVO72yt-O0B2pw",
   "playback": {
     "isPlaying": false,
     "nextSnapshotDelayInMs": 1500
   },
   "entries": [
     {
-      "timestamp": 1670853645627,
+      "timestamp": 1670972291896,
       "snapshot": {
-        "id": "H73Z3IjXwFOEsXf49d533w",
+        "id": "ChVA0psDVVO72yt-O0B2pw",
         "data": {
           "tree": {
             "transforms": [
@@ -19,21 +19,21 @@
                 "transformer": "build-in.root",
                 "params": {},
                 "ref": "-=root=-",
-                "version": "Laflyj9b7vRd4hO1dFzgDQ"
+                "version": "6WZGN3XLelTV-fI180hIrA"
               },
               {
                 "parent": "-=root=-",
                 "transformer": "ms-plugin.cellstar-entry-from-root",
                 "params": {
-                  "serverUrl": "https://cellstar.ncbr.muni.cz/v2",
+                  "serverUrl": "https://molstarvolseg.ncbr.muni.cz/v2",
                   "source": "empiar",
                   "entryNumber": "10070"
                 },
-                "ref": "5wjlRXhxMl9oEVG62M2CMA",
-                "version": "kc7NClZh2vF5zEbExPjt8g"
+                "ref": "5-MnNpj2im1crB_oGz8Fcw",
+                "version": "7oadyyhvnBjCpnqYVErsHQ"
               },
               {
-                "parent": "5wjlRXhxMl9oEVG62M2CMA",
+                "parent": "5-MnNpj2im1crB_oGz8Fcw",
                 "transformer": "ms-plugin.cellstar-state-from-entry",
                 "params": {
                   "opacity": 1,
@@ -93,11 +93,11 @@
                   ],
                   "visibleModels": []
                 },
-                "ref": "GUSWJILlxuVmMMmnKpz-zw",
-                "version": "ygtU3Blq1YgXjmfQox7NhA"
+                "ref": "gYsLTdkxSMVc61Puk1Oa1A",
+                "version": "uDsNELn0ciHI7oL6MlzPTw"
               },
               {
-                "parent": "5wjlRXhxMl9oEVG62M2CMA",
+                "parent": "5-MnNpj2im1crB_oGz8Fcw",
                 "transformer": "ms-plugin.create-group",
                 "params": {
                   "label": "Volume",
@@ -109,39 +109,39 @@
                 "tags": [
                   "volume-group"
                 ],
-                "ref": "UVjqQSNzbCsMO5sGfaarog",
-                "version": "gnoY4mMNJaMhHONMqlhNpA"
+                "ref": "lC100QPIunHmdxUw9UG5Yg",
+                "version": "CvBq6SV6SJL-0pF3EGB-Iw"
               },
               {
-                "parent": "UVjqQSNzbCsMO5sGfaarog",
+                "parent": "lC100QPIunHmdxUw9UG5Yg",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/volume/cell?max_points=10000000",
-                  "label": "Volume Data: https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/volume/cell?max_points=10000000",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/volume/cell?max_points=10000000",
+                  "label": "Volume Data: https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/volume/cell?max_points=10000000",
                   "isBinary": true
                 },
-                "ref": "B1WDNQOz8Fw2ArkbIzK1sg",
-                "version": "NzBc_LyHBIYoK14hMYecbQ"
+                "ref": "lHo46ru4IR_FBOFAv6hWdw",
+                "version": "xbFvsq9vi0KJ3-Ipa21LwA"
               },
               {
-                "parent": "B1WDNQOz8Fw2ArkbIzK1sg",
+                "parent": "lHo46ru4IR_FBOFAv6hWdw",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "ImcHrxn-4i1A0nFWk9qK5g",
-                "version": "wGXS9SB45cg9XB4vwfsC7w"
+                "ref": "F0FKd62HXeBKrmDBrakDNw",
+                "version": "uavVqt5btdx2r2O-JlbRcA"
               },
               {
-                "parent": "ImcHrxn-4i1A0nFWk9qK5g",
+                "parent": "F0FKd62HXeBKrmDBrakDNw",
                 "transformer": "ms-plugin.volume-from-density-server-cif",
                 "params": {
                   "blockHeader": "VOLUME",
                   "entryId": ""
                 },
-                "ref": "-SLFNy6cr0QbMbO3qqonOQ",
-                "version": "eO4hlQLDFaQVYharXXNCjw"
+                "ref": "bOMjUUmpbjRdSyDT3FJb2w",
+                "version": "stwBUVWMy9UfKa4Vkbj4rg"
               },
               {
-                "parent": "-SLFNy6cr0QbMbO3qqonOQ",
+                "parent": "bOMjUUmpbjRdSyDT3FJb2w",
                 "transformer": "ms-plugin.volume-representation-3d",
                 "params": {
                   "type": {
@@ -192,11 +192,11 @@
                     }
                   }
                 },
-                "ref": "rlHFbAV-c9zUycq_ejHiwA",
-                "version": "9yRz4pg-Ruw8HAONHoyLZw"
+                "ref": "oTz2TR8yBJ8bueeCHIZ4qw",
+                "version": "VRG4nViahHupKQZ47E4bug"
               },
               {
-                "parent": "5wjlRXhxMl9oEVG62M2CMA",
+                "parent": "5-MnNpj2im1crB_oGz8Fcw",
                 "transformer": "ms-plugin.create-group",
                 "params": {
                   "label": "Segmentation",
@@ -208,54 +208,54 @@
                 "tags": [
                   "mesh-segmentation-group"
                 ],
-                "ref": "iEAmo3q5t3KT06cohaGiAg",
-                "version": "McT-On5Ig8eIrM62kp1N3Q"
+                "ref": "m1Ruqcy7iqZISLaO2EMz7g",
+                "version": "IPMsNp2KlMxHyoz5ExRXog"
               },
               {
-                "parent": "iEAmo3q5t3KT06cohaGiAg",
+                "parent": "m1Ruqcy7iqZISLaO2EMz7g",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/1/5",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/1/5",
                   "label": "Downloaded Data 1",
                   "isBinary": true
                 },
                 "state": {
                   "isCollapsed": true
                 },
-                "ref": "kzVeae7OL3D645UMrmzMvg",
-                "version": "s9bI8udfuYGQNV1QhUO5GA"
+                "ref": "NbcNQzjtXTi0ifBniftDDw",
+                "version": "NTJ2FlIdbNgvRYkkemfw8Q"
               },
               {
-                "parent": "kzVeae7OL3D645UMrmzMvg",
+                "parent": "NbcNQzjtXTi0ifBniftDDw",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "EAfA8QZtOYzOALReVirmCA",
-                "version": "5rgOpQCnrG-k2u2n0bm0Kg"
+                "ref": "oopjbTA0uIBjXDBE9VsXfA",
+                "version": "dgPInvcrSohxpwqCvfMlPA"
               },
               {
-                "parent": "EAfA8QZtOYzOALReVirmCA",
+                "parent": "oopjbTA0uIBjXDBE9VsXfA",
                 "transformer": "cellstar.meshlist-from-string",
                 "params": {
                   "label": "Parsed Meshlist",
                   "segmentId": 1,
                   "segmentName": "<b>Mitochondrion</b>",
                   "detail": 5,
-                  "ownerId": "5wjlRXhxMl9oEVG62M2CMA"
+                  "ownerId": "5-MnNpj2im1crB_oGz8Fcw"
                 },
-                "ref": "H-5w8t0JTb171RTe1MfPfA",
-                "version": "b6fc0T9GzNKEtFMH2Md6-g"
+                "ref": "ER8p5e1zTAXoimrq9rm2kw",
+                "version": "_drLCskzl2mwNwPLDeKGOQ"
               },
               {
-                "parent": "H-5w8t0JTb171RTe1MfPfA",
+                "parent": "ER8p5e1zTAXoimrq9rm2kw",
                 "transformer": "cellstar.shape-from-meshlist",
                 "params": {
                   "color": 11393981
                 },
-                "ref": "qLazJuthih3ZOn2lYra7Zw",
-                "version": "HGOI-2d0MHR7DPfIo2YC6Q"
+                "ref": "fI1JI811rhauP7LkXrfhPQ",
+                "version": "TLAJFkpKqZ7zsoZLnCeHaA"
               },
               {
-                "parent": "qLazJuthih3ZOn2lYra7Zw",
+                "parent": "fI1JI811rhauP7LkXrfhPQ",
                 "transformer": "ms-plugin.shape-representation-3d",
                 "params": {
                   "alpha": 1,
@@ -283,54 +283,54 @@
                   "mesh-segment-visual",
                   "segment-1"
                 ],
-                "ref": "BVo9or7MyMcYmfjgAF9GfQ",
-                "version": "kSZJWQr6FLvDQgsGsBC4Aw"
+                "ref": "XvLpxR_NegQC0TtuY_sAFw",
+                "version": "1RPVurglPG3w0e-wgltTtA"
               },
               {
-                "parent": "iEAmo3q5t3KT06cohaGiAg",
+                "parent": "m1Ruqcy7iqZISLaO2EMz7g",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/2/5",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/2/5",
                   "label": "Downloaded Data 2",
                   "isBinary": true
                 },
                 "state": {
                   "isCollapsed": true
                 },
-                "ref": "USti6FWaB429qYtzHPlFQw",
-                "version": "M5c_WrnO1VMkS-wbYmDl_g"
+                "ref": "SIewGKQIzMxdzr6pXt0wgw",
+                "version": "dMtwnjQ7tjKlOOVk2R5kCQ"
               },
               {
-                "parent": "USti6FWaB429qYtzHPlFQw",
+                "parent": "SIewGKQIzMxdzr6pXt0wgw",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "u3N69x2uN4cSrjTafmapGg",
-                "version": "oJa5UBs_8ZY1EUxb22Rp_A"
+                "ref": "2fCh4JHeJoWDfXkYgDjN_Q",
+                "version": "VnzJbc1xI9LtjpXzbbtZtg"
               },
               {
-                "parent": "u3N69x2uN4cSrjTafmapGg",
+                "parent": "2fCh4JHeJoWDfXkYgDjN_Q",
                 "transformer": "cellstar.meshlist-from-string",
                 "params": {
                   "label": "Parsed Meshlist",
                   "segmentId": 2,
                   "segmentName": "<b>Mitochondrion</b>",
                   "detail": 5,
-                  "ownerId": "5wjlRXhxMl9oEVG62M2CMA"
+                  "ownerId": "5-MnNpj2im1crB_oGz8Fcw"
                 },
-                "ref": "xco0vmi2YvVxK2Tt4h87xw",
-                "version": "Cb64-DSnyrn7DC2-ShnvRg"
+                "ref": "MfA2Iq_hfUPX-LWZfB0yOg",
+                "version": "CWWGEU3jYU7UFLF3qgiajA"
               },
               {
-                "parent": "xco0vmi2YvVxK2Tt4h87xw",
+                "parent": "MfA2Iq_hfUPX-LWZfB0yOg",
                 "transformer": "cellstar.shape-from-meshlist",
                 "params": {
                   "color": 11198446
                 },
-                "ref": "4s3595wdCaMuL4L1AzhSBg",
-                "version": "eMcYdKN3dnIZMrQRdsV9Jw"
+                "ref": "Qz-JsVqVSA9dEKA4rulZKw",
+                "version": "_P3yJ5pCK4dhUKgNhcfGfw"
               },
               {
-                "parent": "4s3595wdCaMuL4L1AzhSBg",
+                "parent": "Qz-JsVqVSA9dEKA4rulZKw",
                 "transformer": "ms-plugin.shape-representation-3d",
                 "params": {
                   "alpha": 1,
@@ -358,54 +358,54 @@
                   "mesh-segment-visual",
                   "segment-2"
                 ],
-                "ref": "t8OqP5QeBbOkSSri9Lmtlg",
-                "version": "RKnEwrW23_nkqfIVVK_b-w"
+                "ref": "FPeSQ7e6Q5pyTsd4z4sA-A",
+                "version": "iO8aup61FrtDiKGk3bIfWQ"
               },
               {
-                "parent": "iEAmo3q5t3KT06cohaGiAg",
+                "parent": "m1Ruqcy7iqZISLaO2EMz7g",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/3/5",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/3/5",
                   "label": "Downloaded Data 3",
                   "isBinary": true
                 },
                 "state": {
                   "isCollapsed": true
                 },
-                "ref": "BIGrZV3aBJLUToBxPVAwsg",
-                "version": "40KOuOkI6aG3P6JMybSdRw"
+                "ref": "DjA3ZdMMwmzsOL8xpBL2mQ",
+                "version": "kA6Xh5WpF3aomBA3pB2Y5A"
               },
               {
-                "parent": "BIGrZV3aBJLUToBxPVAwsg",
+                "parent": "DjA3ZdMMwmzsOL8xpBL2mQ",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "RVn6kRKLaeE5wWyAiXa5zw",
-                "version": "bSSMyMMoQWCensZcvLij8A"
+                "ref": "aGKhHkVdiSxw7w9GtXyXGA",
+                "version": "oZPZ3Pk7EVFnK-G-CpxS4Q"
               },
               {
-                "parent": "RVn6kRKLaeE5wWyAiXa5zw",
+                "parent": "aGKhHkVdiSxw7w9GtXyXGA",
                 "transformer": "cellstar.meshlist-from-string",
                 "params": {
                   "label": "Parsed Meshlist",
                   "segmentId": 3,
                   "segmentName": "<b>Mitochondrion</b>",
                   "detail": 5,
-                  "ownerId": "5wjlRXhxMl9oEVG62M2CMA"
+                  "ownerId": "5-MnNpj2im1crB_oGz8Fcw"
                 },
-                "ref": "8uGqWgGGjFyrFI5ziFe0-g",
-                "version": "D5GIw--h7bv3Td_BiBaORg"
+                "ref": "PCqDQxicNdgfdcvpp4koyw",
+                "version": "OZ3Kt7uXpWpHfnT7yJW-7Q"
               },
               {
-                "parent": "8uGqWgGGjFyrFI5ziFe0-g",
+                "parent": "PCqDQxicNdgfdcvpp4koyw",
                 "transformer": "cellstar.shape-from-meshlist",
                 "params": {
                   "color": 14818127
                 },
-                "ref": "uY3ZAeM5AhsRoHWf073Gmw",
-                "version": "OjvNU5NheGaDkuHkrUN4_A"
+                "ref": "SVj4K7C80WC02smYsP6CoQ",
+                "version": "bk6F5dhOniRyKrviRE4eOQ"
               },
               {
-                "parent": "uY3ZAeM5AhsRoHWf073Gmw",
+                "parent": "SVj4K7C80WC02smYsP6CoQ",
                 "transformer": "ms-plugin.shape-representation-3d",
                 "params": {
                   "alpha": 1,
@@ -433,54 +433,54 @@
                   "mesh-segment-visual",
                   "segment-3"
                 ],
-                "ref": "gxg1mEqkeRhyAT1xVwHpLA",
-                "version": "gMCLMCInjVUxKsRJOkk-Yg"
+                "ref": "3J2Vjx0vPz1yQihTug44xA",
+                "version": "bTtN8d0f1uo962X-1ho0Ng"
               },
               {
-                "parent": "iEAmo3q5t3KT06cohaGiAg",
+                "parent": "m1Ruqcy7iqZISLaO2EMz7g",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/4/5",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/4/5",
                   "label": "Downloaded Data 4",
                   "isBinary": true
                 },
                 "state": {
                   "isCollapsed": true
                 },
-                "ref": "nmsdtMcyARHYKTI79pl6Gg",
-                "version": "ZOvJJeOHJr6LQ7hQmbwlOg"
+                "ref": "ldyJ2vvuaUfdrr8-AzBFhg",
+                "version": "f3VMW2L7AaqJhKnzwdLoOg"
               },
               {
-                "parent": "nmsdtMcyARHYKTI79pl6Gg",
+                "parent": "ldyJ2vvuaUfdrr8-AzBFhg",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "NkowS5g_inspK0pfsNg0_Q",
-                "version": "79HRgg9s0Z7pub853B-WdQ"
+                "ref": "MCNRF1xYVTmlkmBrkYWnhA",
+                "version": "kCWbOPXIg_gN-J0VJRfPUg"
               },
               {
-                "parent": "NkowS5g_inspK0pfsNg0_Q",
+                "parent": "MCNRF1xYVTmlkmBrkYWnhA",
                 "transformer": "cellstar.meshlist-from-string",
                 "params": {
                   "label": "Parsed Meshlist",
                   "segmentId": 4,
                   "segmentName": "<b>Mitochondrion</b>",
                   "detail": 5,
-                  "ownerId": "5wjlRXhxMl9oEVG62M2CMA"
+                  "ownerId": "5-MnNpj2im1crB_oGz8Fcw"
                 },
-                "ref": "aF0H8CCbKzbqVFRxeCCDVg",
-                "version": "cwUY8ijTUEFYBEAKRXoYBQ"
+                "ref": "QQVGsfh16ImsOr98fvWOJg",
+                "version": "dYWs3wpGA0BqfOwpYr0_DQ"
               },
               {
-                "parent": "aF0H8CCbKzbqVFRxeCCDVg",
+                "parent": "QQVGsfh16ImsOr98fvWOJg",
                 "transformer": "cellstar.shape-from-meshlist",
                 "params": {
                   "color": 231903
                 },
-                "ref": "F7zWmbvHaF73uA3KArtM5A",
-                "version": "2fUwUp2XTcplupIahI3GsA"
+                "ref": "qYldni4WY-rA7KO5RrUP1w",
+                "version": "GME_LyGlfe71iUuA_Fqa8A"
               },
               {
-                "parent": "F7zWmbvHaF73uA3KArtM5A",
+                "parent": "qYldni4WY-rA7KO5RrUP1w",
                 "transformer": "ms-plugin.shape-representation-3d",
                 "params": {
                   "alpha": 1,
@@ -508,54 +508,54 @@
                   "mesh-segment-visual",
                   "segment-4"
                 ],
-                "ref": "-xovmtMLSOmNMF4AANF_iA",
-                "version": "t_UfeeVARA-rjsMSQQcfsg"
+                "ref": "mlPUCbmjwHA5cw939i81LA",
+                "version": "8gD5bX4gPCsd7kR1-IBsEg"
               },
               {
-                "parent": "iEAmo3q5t3KT06cohaGiAg",
+                "parent": "m1Ruqcy7iqZISLaO2EMz7g",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/5/5",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/5/5",
                   "label": "Downloaded Data 5",
                   "isBinary": true
                 },
                 "state": {
                   "isCollapsed": true
                 },
-                "ref": "FeTRHM8mK5lW1thrckwsqQ",
-                "version": "GK0Y1SoikI4sTrFLi66tzw"
+                "ref": "Bl7OorZ8e65WnjYuk4_IAg",
+                "version": "1KPsqQ_I1tkdJYRXQuK7kA"
               },
               {
-                "parent": "FeTRHM8mK5lW1thrckwsqQ",
+                "parent": "Bl7OorZ8e65WnjYuk4_IAg",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "VMPqsdn5KfsGl1d4DXLKiA",
-                "version": "fqgntYRapI_A2GfExwOMyg"
+                "ref": "Wu8YOUpfrBkg_YEMuINlYg",
+                "version": "3JQ878Iy3dWd4AYVieLk3w"
               },
               {
-                "parent": "VMPqsdn5KfsGl1d4DXLKiA",
+                "parent": "Wu8YOUpfrBkg_YEMuINlYg",
                 "transformer": "cellstar.meshlist-from-string",
                 "params": {
                   "label": "Parsed Meshlist",
                   "segmentId": 5,
                   "segmentName": "<b>Mitochondrion</b>",
                   "detail": 5,
-                  "ownerId": "5wjlRXhxMl9oEVG62M2CMA"
+                  "ownerId": "5-MnNpj2im1crB_oGz8Fcw"
                 },
-                "ref": "wz3APjkHBk_7BE4LEzY0tw",
-                "version": "UHbhyloSudaDdqcsDAuexg"
+                "ref": "V_JC5N-2xDlH1AQykEHaVA",
+                "version": "RX4vCODE3RAG1ZXcCpgjRg"
               },
               {
-                "parent": "wz3APjkHBk_7BE4LEzY0tw",
+                "parent": "V_JC5N-2xDlH1AQykEHaVA",
                 "transformer": "cellstar.shape-from-meshlist",
                 "params": {
                   "color": 4878099
                 },
-                "ref": "qGjXI5nd49dXyNzTxAhbQg",
-                "version": "h3zqW054fRsRZmEksEn8bg"
+                "ref": "5nQEkReBEJbW6-Fg9NZuLA",
+                "version": "ZMVOHh8mDaLOhaUSEGUf5g"
               },
               {
-                "parent": "qGjXI5nd49dXyNzTxAhbQg",
+                "parent": "5nQEkReBEJbW6-Fg9NZuLA",
                 "transformer": "ms-plugin.shape-representation-3d",
                 "params": {
                   "alpha": 1,
@@ -583,54 +583,54 @@
                   "mesh-segment-visual",
                   "segment-5"
                 ],
-                "ref": "Ob78BImySYRgENVa6U5mWA",
-                "version": "4MWicGO6ev2oSpbMNzpyyw"
+                "ref": "MXyAJi0RK5zbp1OuA4li_g",
+                "version": "EinK5xLhxz259zS3tleyQw"
               },
               {
-                "parent": "iEAmo3q5t3KT06cohaGiAg",
+                "parent": "m1Ruqcy7iqZISLaO2EMz7g",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/6/5",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/6/5",
                   "label": "Downloaded Data 6",
                   "isBinary": true
                 },
                 "state": {
                   "isCollapsed": true
                 },
-                "ref": "YCPXCauyfVRFZ5RYQO9fSQ",
-                "version": "H-MJYwUf6WbNz2SJW-8N5w"
+                "ref": "PAY-cSCCXCrNYDeXuo6Ekw",
+                "version": "pMfPWJojLGWq7Xm-hrnazw"
               },
               {
-                "parent": "YCPXCauyfVRFZ5RYQO9fSQ",
+                "parent": "PAY-cSCCXCrNYDeXuo6Ekw",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "OdFoDF6gMDlr1sr3jr3YzA",
-                "version": "lIktFODeIIChFqHAM4FdOQ"
+                "ref": "5aOV4biJVA7Hg0_JuC-OGQ",
+                "version": "3VIy6m2Cm4UwhAqGen-FRA"
               },
               {
-                "parent": "OdFoDF6gMDlr1sr3jr3YzA",
+                "parent": "5aOV4biJVA7Hg0_JuC-OGQ",
                 "transformer": "cellstar.meshlist-from-string",
                 "params": {
                   "label": "Parsed Meshlist",
                   "segmentId": 6,
                   "segmentName": "<b>Mitochondrion</b>",
                   "detail": 5,
-                  "ownerId": "5wjlRXhxMl9oEVG62M2CMA"
+                  "ownerId": "5-MnNpj2im1crB_oGz8Fcw"
                 },
-                "ref": "5atHArJnDT1QjFY0BD6MAQ",
-                "version": "RXU1Sfifw9xitsnxNmhZZg"
+                "ref": "katbLXuTfB8OswbdX1SARQ",
+                "version": "7a33KdwLw8enX7EZwUGhcg"
               },
               {
-                "parent": "5atHArJnDT1QjFY0BD6MAQ",
+                "parent": "katbLXuTfB8OswbdX1SARQ",
                 "transformer": "cellstar.shape-from-meshlist",
                 "params": {
                   "color": 1169379
                 },
-                "ref": "fAfyJhfYqvE49gkaMxnHXQ",
-                "version": "9_tcAQw2iDFjfOuGMtbXoA"
+                "ref": "pA9D6Z_FtWB7nv7RYClwKg",
+                "version": "fK87Cp1F_TVG6wHZ61Br8w"
               },
               {
-                "parent": "fAfyJhfYqvE49gkaMxnHXQ",
+                "parent": "pA9D6Z_FtWB7nv7RYClwKg",
                 "transformer": "ms-plugin.shape-representation-3d",
                 "params": {
                   "alpha": 1,
@@ -658,54 +658,54 @@
                   "mesh-segment-visual",
                   "segment-6"
                 ],
-                "ref": "wC49Q9bkrrp_rvfzakKp5A",
-                "version": "n9JdIl-jtmDqEvC82NQGmA"
+                "ref": "HXe4PsVfV5NQKy9NiTz6Qw",
+                "version": "UI3jv3hnGvEsQxIIGr358w"
               },
               {
-                "parent": "iEAmo3q5t3KT06cohaGiAg",
+                "parent": "m1Ruqcy7iqZISLaO2EMz7g",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/7/5",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/7/5",
                   "label": "Downloaded Data 7",
                   "isBinary": true
                 },
                 "state": {
                   "isCollapsed": true
                 },
-                "ref": "xo-4TdfLKSji3Nw8R8jGLA",
-                "version": "moKG1PYcrVk65y4ID3n25A"
+                "ref": "NR6SXjiIDKLas6eNI4drgg",
+                "version": "sBwCUa8R7e7I-cs78icw-Q"
               },
               {
-                "parent": "xo-4TdfLKSji3Nw8R8jGLA",
+                "parent": "NR6SXjiIDKLas6eNI4drgg",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "y9IPZRwo2n021t5V-QZH8A",
-                "version": "fDdpYl5gtg2Ejbg6NNCR0g"
+                "ref": "RDCUUt7mJHr11RteSAvd7Q",
+                "version": "sxZJb1GEEvCP9-xMSpRUsw"
               },
               {
-                "parent": "y9IPZRwo2n021t5V-QZH8A",
+                "parent": "RDCUUt7mJHr11RteSAvd7Q",
                 "transformer": "cellstar.meshlist-from-string",
                 "params": {
                   "label": "Parsed Meshlist",
                   "segmentId": 7,
                   "segmentName": "<b>Mitochondrion</b>",
                   "detail": 5,
-                  "ownerId": "5wjlRXhxMl9oEVG62M2CMA"
+                  "ownerId": "5-MnNpj2im1crB_oGz8Fcw"
                 },
-                "ref": "ssxxrAYt27TkC1eVdMq1cg",
-                "version": "8FBi9AVsIvHF1aMOpC9ujQ"
+                "ref": "5wbAkqoiEBTlprdIOl8l2w",
+                "version": "rtkInxwidvSuMcB6yBo15w"
               },
               {
-                "parent": "ssxxrAYt27TkC1eVdMq1cg",
+                "parent": "5wbAkqoiEBTlprdIOl8l2w",
                 "transformer": "cellstar.shape-from-meshlist",
                 "params": {
                   "color": 15390116
                 },
-                "ref": "C3ynLnsENAtrZEPRyCCdww",
-                "version": "4xZsM30RNzt-BECHSIl5ZA"
+                "ref": "c-PZE9N09EtzWx1SbByQvQ",
+                "version": "1Qc-NqLQzdu-11dwc1kgkg"
               },
               {
-                "parent": "C3ynLnsENAtrZEPRyCCdww",
+                "parent": "c-PZE9N09EtzWx1SbByQvQ",
                 "transformer": "ms-plugin.shape-representation-3d",
                 "params": {
                   "alpha": 1,
@@ -733,54 +733,54 @@
                   "mesh-segment-visual",
                   "segment-7"
                 ],
-                "ref": "Z_Txvd5f5XDnOlNIZ-hy_g",
-                "version": "u9MYVhgBAGl8gGnpLx1urQ"
+                "ref": "7BaqFCs4xR21hqiY4vmLJw",
+                "version": "7jkeTVMc8K-maDmhIVJy-Q"
               },
               {
-                "parent": "iEAmo3q5t3KT06cohaGiAg",
+                "parent": "m1Ruqcy7iqZISLaO2EMz7g",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/8/5",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/8/5",
                   "label": "Downloaded Data 8",
                   "isBinary": true
                 },
                 "state": {
                   "isCollapsed": true
                 },
-                "ref": "gIw_IODB_WJ3QfDoViB-5g",
-                "version": "YEzIIlH5fvf4L75E_mEu7A"
+                "ref": "4Rxyg2uHMbxxRi0EHexXYA",
+                "version": "eENPVAxmbSBkPL4An1_GAQ"
               },
               {
-                "parent": "gIw_IODB_WJ3QfDoViB-5g",
+                "parent": "4Rxyg2uHMbxxRi0EHexXYA",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "0OqRLHG4vwu8TpZiKcsv0w",
-                "version": "_hjwHlgv6xZDxE9-3DfHfA"
+                "ref": "zsT6y8RNdV30jG37RhmH-Q",
+                "version": "4iGNU8Nq6wyMXrqJNkSu1w"
               },
               {
-                "parent": "0OqRLHG4vwu8TpZiKcsv0w",
+                "parent": "zsT6y8RNdV30jG37RhmH-Q",
                 "transformer": "cellstar.meshlist-from-string",
                 "params": {
                   "label": "Parsed Meshlist",
                   "segmentId": 8,
                   "segmentName": "<b>Mitochondrion</b>",
                   "detail": 5,
-                  "ownerId": "5wjlRXhxMl9oEVG62M2CMA"
+                  "ownerId": "5-MnNpj2im1crB_oGz8Fcw"
                 },
-                "ref": "_NK1AJZU0zvV1GnWXmHXzw",
-                "version": "ILJUz4hWijZSZFDDpXasWQ"
+                "ref": "zqw4YLgz-pEAfkdzCGGYjQ",
+                "version": "DuEAXZ6nHHBKpBapvvr3AA"
               },
               {
-                "parent": "_NK1AJZU0zvV1GnWXmHXzw",
+                "parent": "zqw4YLgz-pEAfkdzCGGYjQ",
                 "transformer": "cellstar.shape-from-meshlist",
                 "params": {
                   "color": 10914507
                 },
-                "ref": "_LXltsX6IodCinhK7G5ruQ",
-                "version": "6pV3pB52MXa4gMD1flBI6A"
+                "ref": "5C-hfwd_ONMPrHgSZuIeRg",
+                "version": "sniNQUvH11I5-AWAVKZogA"
               },
               {
-                "parent": "_LXltsX6IodCinhK7G5ruQ",
+                "parent": "5C-hfwd_ONMPrHgSZuIeRg",
                 "transformer": "ms-plugin.shape-representation-3d",
                 "params": {
                   "alpha": 1,
@@ -808,54 +808,54 @@
                   "mesh-segment-visual",
                   "segment-8"
                 ],
-                "ref": "Bs6WoqHto7G63FtH8MbJew",
-                "version": "ZWkKzIPATEF-PbQ33vPxOQ"
+                "ref": "mLIGLduZ2Zlzjj4hESVcQA",
+                "version": "uqxCATpyJxIUk6TqubR_Tw"
               },
               {
-                "parent": "iEAmo3q5t3KT06cohaGiAg",
+                "parent": "m1Ruqcy7iqZISLaO2EMz7g",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/9/5",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/9/5",
                   "label": "Downloaded Data 9",
                   "isBinary": true
                 },
                 "state": {
                   "isCollapsed": true
                 },
-                "ref": "Xc8B_rPCYRP5TL7xdECXEA",
-                "version": "XGUHXLsEfj0xLnRxG5b-FA"
+                "ref": "g2b09G_cLsEGArKEAdtR5w",
+                "version": "5HpuhImvoYK7ytLbjriJEg"
               },
               {
-                "parent": "Xc8B_rPCYRP5TL7xdECXEA",
+                "parent": "g2b09G_cLsEGArKEAdtR5w",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "_ZBKHuRoVQF93DhLwgANJA",
-                "version": "s-3089Cw-phPDG5xpBEbGg"
+                "ref": "nhPUhKryX63xLaaH500ItA",
+                "version": "0QxSn0zbHPlLmwLNeujsQA"
               },
               {
-                "parent": "_ZBKHuRoVQF93DhLwgANJA",
+                "parent": "nhPUhKryX63xLaaH500ItA",
                 "transformer": "cellstar.meshlist-from-string",
                 "params": {
                   "label": "Parsed Meshlist",
                   "segmentId": 9,
                   "segmentName": "<b>Mitochondrion</b>",
                   "detail": 5,
-                  "ownerId": "5wjlRXhxMl9oEVG62M2CMA"
+                  "ownerId": "5-MnNpj2im1crB_oGz8Fcw"
                 },
-                "ref": "O7VhPFZjOLPElQSygKKQrw",
-                "version": "jjJ77gLyc60zzRQ_dbqO9g"
+                "ref": "gXeY7cZZNi8AdZPAjeLbiQ",
+                "version": "vqnEHdrtZejZquv4QGSXfg"
               },
               {
-                "parent": "O7VhPFZjOLPElQSygKKQrw",
+                "parent": "gXeY7cZZNi8AdZPAjeLbiQ",
                 "transformer": "cellstar.shape-from-meshlist",
                 "params": {
                   "color": 8324471
                 },
-                "ref": "Kg9CrA1-k6mSmF93N36cuQ",
-                "version": "tA0B0XCCUaQrqFIkOMXjYw"
+                "ref": "UdGbA1P6JC471OJ6qof1Iw",
+                "version": "YYGttsoUAzBbcHixT7eSpA"
               },
               {
-                "parent": "Kg9CrA1-k6mSmF93N36cuQ",
+                "parent": "UdGbA1P6JC471OJ6qof1Iw",
                 "transformer": "ms-plugin.shape-representation-3d",
                 "params": {
                   "alpha": 1,
@@ -883,54 +883,54 @@
                   "mesh-segment-visual",
                   "segment-9"
                 ],
-                "ref": "_olmPNUdvFJL0kR9HFeZXg",
-                "version": "vZTKjPC6WMQGM76DIpFINQ"
+                "ref": "hwBLWyRJF8Pu-iPKykorjg",
+                "version": "31yRt1z8ZcidQrboNnDgNw"
               },
               {
-                "parent": "iEAmo3q5t3KT06cohaGiAg",
+                "parent": "m1Ruqcy7iqZISLaO2EMz7g",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/10/5",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/10/5",
                   "label": "Downloaded Data 10",
                   "isBinary": true
                 },
                 "state": {
                   "isCollapsed": true
                 },
-                "ref": "VHiXuiuwW0mP6met1zhEQg",
-                "version": "gsjg_sTavSVXmb17ftJPFA"
+                "ref": "MzyvsvYzcrlg0-zG0Rdr1w",
+                "version": "Bo39EGoHIdsI8R5ALjiNBA"
               },
               {
-                "parent": "VHiXuiuwW0mP6met1zhEQg",
+                "parent": "MzyvsvYzcrlg0-zG0Rdr1w",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "44pRwpoLru4G20DBfMfDBA",
-                "version": "bijZucSBn1vo_YPw9bli-Q"
+                "ref": "v9m7IFtph9W-k9_QDlPU4g",
+                "version": "Bd9zDOKSWkr208U5aXM9jg"
               },
               {
-                "parent": "44pRwpoLru4G20DBfMfDBA",
+                "parent": "v9m7IFtph9W-k9_QDlPU4g",
                 "transformer": "cellstar.meshlist-from-string",
                 "params": {
                   "label": "Parsed Meshlist",
                   "segmentId": 10,
                   "segmentName": "<b>Mitochondrion</b>",
                   "detail": 5,
-                  "ownerId": "5wjlRXhxMl9oEVG62M2CMA"
+                  "ownerId": "5-MnNpj2im1crB_oGz8Fcw"
                 },
-                "ref": "bDWfAX4jY9g5U7DxbPeFaw",
-                "version": "hWx3SMBXwv4uvDxejx2rhw"
+                "ref": "sSypnfB18K3O41txTUoxug",
+                "version": "a5ARnINn72VyMr6yoPr0rA"
               },
               {
-                "parent": "bDWfAX4jY9g5U7DxbPeFaw",
+                "parent": "sSypnfB18K3O41txTUoxug",
                 "transformer": "cellstar.shape-from-meshlist",
                 "params": {
                   "color": 1587193
                 },
-                "ref": "8N9FG5rOjQIbM1puA4oxAA",
-                "version": "EwIjrnzyrEKi_lKL_defVg"
+                "ref": "A_UgevvjgD3B7VqJAlqL9g",
+                "version": "YQFaqyYpPCwC74XqgadQoQ"
               },
               {
-                "parent": "8N9FG5rOjQIbM1puA4oxAA",
+                "parent": "A_UgevvjgD3B7VqJAlqL9g",
                 "transformer": "ms-plugin.shape-representation-3d",
                 "params": {
                   "alpha": 1,
@@ -958,54 +958,54 @@
                   "mesh-segment-visual",
                   "segment-10"
                 ],
-                "ref": "iNKXB5VI8f0LzSkuw1DI1w",
-                "version": "e6TIgXM_Ouz3OuYHeDjg4A"
+                "ref": "M29xTkjHQrPPZ5XWYTVNqQ",
+                "version": "Rx9V7M0CitBorZttSfb16w"
               },
               {
-                "parent": "iEAmo3q5t3KT06cohaGiAg",
+                "parent": "m1Ruqcy7iqZISLaO2EMz7g",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/11/5",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/11/5",
                   "label": "Downloaded Data 11",
                   "isBinary": true
                 },
                 "state": {
                   "isCollapsed": true
                 },
-                "ref": "3a6Nx9ehC6gkJEdDtcnw-w",
-                "version": "mvLsH2XV4IgV4whFDPWMPA"
+                "ref": "FrCSYUv1r4IcW5xSnHqZAg",
+                "version": "jXP31qiEcPx06e-3obxT3A"
               },
               {
-                "parent": "3a6Nx9ehC6gkJEdDtcnw-w",
+                "parent": "FrCSYUv1r4IcW5xSnHqZAg",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "77FwOOHa1hipT_UsDuDKHA",
-                "version": "qkv9ztXujvAzrnpLpUcqhA"
+                "ref": "OvlCV07BItrxDHOfkJAJ9w",
+                "version": "OqNb98xA9YtVr9h3DpFaHQ"
               },
               {
-                "parent": "77FwOOHa1hipT_UsDuDKHA",
+                "parent": "OvlCV07BItrxDHOfkJAJ9w",
                 "transformer": "cellstar.meshlist-from-string",
                 "params": {
                   "label": "Parsed Meshlist",
                   "segmentId": 11,
                   "segmentName": "<b>Mitochondrion</b>",
                   "detail": 5,
-                  "ownerId": "5wjlRXhxMl9oEVG62M2CMA"
+                  "ownerId": "5-MnNpj2im1crB_oGz8Fcw"
                 },
-                "ref": "zcE4Q3H-VVYoHyHG2_nKOg",
-                "version": "q2iFV4npE1Bud1qLIcG9qg"
+                "ref": "Q2JvWjZOBdYJN_Z11k_TfA",
+                "version": "2sLnTN4EPyKCp4VFHgV3Bw"
               },
               {
-                "parent": "zcE4Q3H-VVYoHyHG2_nKOg",
+                "parent": "Q2JvWjZOBdYJN_Z11k_TfA",
                 "transformer": "cellstar.shape-from-meshlist",
                 "params": {
                   "color": 6103394
                 },
-                "ref": "M5u75zJO7JQ0aRkrWvRvFQ",
-                "version": "BBMKoncQ_OyeOOTmgp4ZjQ"
+                "ref": "BCgrDJ4m_ZX-sF8RlKMjpg",
+                "version": "93lwvmHbwfDL3_WfoRsBeA"
               },
               {
-                "parent": "M5u75zJO7JQ0aRkrWvRvFQ",
+                "parent": "BCgrDJ4m_ZX-sF8RlKMjpg",
                 "transformer": "ms-plugin.shape-representation-3d",
                 "params": {
                   "alpha": 1,
@@ -1033,54 +1033,54 @@
                   "mesh-segment-visual",
                   "segment-11"
                 ],
-                "ref": "QhHIs5ZYAurNxQWHnseR6A",
-                "version": "kv2vV1aFi7sOErgfuzvefA"
+                "ref": "9sE2-9JV8_3cL-V73JK2Kw",
+                "version": "RH9u5VwlISHPFHgTDRlj8Q"
               },
               {
-                "parent": "iEAmo3q5t3KT06cohaGiAg",
+                "parent": "m1Ruqcy7iqZISLaO2EMz7g",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/12/5",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/12/5",
                   "label": "Downloaded Data 12",
                   "isBinary": true
                 },
                 "state": {
                   "isCollapsed": true
                 },
-                "ref": "SSFcxMSlmLMgUl1iKfx_gw",
-                "version": "z27yoLpDANwb082jBsOyBA"
+                "ref": "W-CxANXEWsF2YBoJGt4TKw",
+                "version": "IuwV6DQ_Cdow7bWkGkJ6Zg"
               },
               {
-                "parent": "SSFcxMSlmLMgUl1iKfx_gw",
+                "parent": "W-CxANXEWsF2YBoJGt4TKw",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "Ql78m3pmlfyaxwtLxwnPcw",
-                "version": "f6V4tjg_ZQ03HWGzwmTiFA"
+                "ref": "pYcWJaCuLpBQBho7pe7DVw",
+                "version": "a_OFAu_uaQqe1sbehNfTzQ"
               },
               {
-                "parent": "Ql78m3pmlfyaxwtLxwnPcw",
+                "parent": "pYcWJaCuLpBQBho7pe7DVw",
                 "transformer": "cellstar.meshlist-from-string",
                 "params": {
                   "label": "Parsed Meshlist",
                   "segmentId": 12,
                   "segmentName": "<b>Myocyte</b>",
                   "detail": 5,
-                  "ownerId": "5wjlRXhxMl9oEVG62M2CMA"
+                  "ownerId": "5-MnNpj2im1crB_oGz8Fcw"
                 },
-                "ref": "c4V0aCXfmjoEieJ5V33jdQ",
-                "version": "rrZQCfbci1W-jBN6Ez5isw"
+                "ref": "KbuJLY0FjWAUwNCPcJRxzg",
+                "version": "5I2-7LqIHebEDuJwurfzxg"
               },
               {
-                "parent": "c4V0aCXfmjoEieJ5V33jdQ",
+                "parent": "KbuJLY0FjWAUwNCPcJRxzg",
                 "transformer": "cellstar.shape-from-meshlist",
                 "params": {
                   "color": 9286214
                 },
-                "ref": "Ee25J8q-f_sTml7YQco2lA",
-                "version": "WtZyrsXmJ5RzbXgjHrE3jw"
+                "ref": "woApSFPkV04RXT1COQEcrg",
+                "version": "4rv3eOCRNoNTATTBf7m82w"
               },
               {
-                "parent": "Ee25J8q-f_sTml7YQco2lA",
+                "parent": "woApSFPkV04RXT1COQEcrg",
                 "transformer": "ms-plugin.shape-representation-3d",
                 "params": {
                   "alpha": 1,
@@ -1108,54 +1108,54 @@
                   "mesh-segment-visual",
                   "segment-12"
                 ],
-                "ref": "GCBcSZ3lolcdYjFBZ2lg_A",
-                "version": "K_PBhE0NNlaJx2TSntd8fg"
+                "ref": "6Y3OilM0qMsajnJpSF2xBw",
+                "version": "LrLX5ZBcwzJPPHw88SHzsg"
               },
               {
-                "parent": "iEAmo3q5t3KT06cohaGiAg",
+                "parent": "m1Ruqcy7iqZISLaO2EMz7g",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/13/5",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/13/5",
                   "label": "Downloaded Data 13",
                   "isBinary": true
                 },
                 "state": {
                   "isCollapsed": true
                 },
-                "ref": "qlDxWyudTDvVt_gfqOSLqQ",
-                "version": "GYC5dwakK1jBX48pw4gEtw"
+                "ref": "aJ8bc_izpFaf5DlH4KyZUg",
+                "version": "J4eRauiAkyN2JxX9h3lWow"
               },
               {
-                "parent": "qlDxWyudTDvVt_gfqOSLqQ",
+                "parent": "aJ8bc_izpFaf5DlH4KyZUg",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "1DF07KkGx2BcThBs8Oq8vg",
-                "version": "tY3Z0sQ9KyiUTWrUehbcHg"
+                "ref": "N3d6QMW_uAKW3yNf4KQNhQ",
+                "version": "evTL8m3-QMhAoTCEQz0KVw"
               },
               {
-                "parent": "1DF07KkGx2BcThBs8Oq8vg",
+                "parent": "N3d6QMW_uAKW3yNf4KQNhQ",
                 "transformer": "cellstar.meshlist-from-string",
                 "params": {
                   "label": "Parsed Meshlist",
                   "segmentId": 13,
                   "segmentName": "<b>Myofibrils surface</b>",
                   "detail": 5,
-                  "ownerId": "5wjlRXhxMl9oEVG62M2CMA"
+                  "ownerId": "5-MnNpj2im1crB_oGz8Fcw"
                 },
-                "ref": "GsfihP4rqHc_Oed0j2ZG0A",
-                "version": "yWoxT-p36DRKjoNB2NF6Sg"
+                "ref": "cRTzPyDoBQ9f83b9ULGLwA",
+                "version": "9YfXpnbfvktVaKPt28AdaA"
               },
               {
-                "parent": "GsfihP4rqHc_Oed0j2ZG0A",
+                "parent": "cRTzPyDoBQ9f83b9ULGLwA",
                 "transformer": "cellstar.shape-from-meshlist",
                 "params": {
                   "color": 10486183
                 },
-                "ref": "kvr1kNIpk_cesetHpnAwlQ",
-                "version": "R9yzaS5QESdL1SoknsygCg"
+                "ref": "7tPHz9Okiu5yHd7VoGcceA",
+                "version": "02RnhEcg67AbWDtqW7o39A"
               },
               {
-                "parent": "kvr1kNIpk_cesetHpnAwlQ",
+                "parent": "7tPHz9Okiu5yHd7VoGcceA",
                 "transformer": "ms-plugin.shape-representation-3d",
                 "params": {
                   "alpha": 0.2,
@@ -1183,54 +1183,54 @@
                   "mesh-segment-visual",
                   "segment-13"
                 ],
-                "ref": "p5hZR05n8xKrBzpMhdqgsA",
-                "version": "ZpEXpxX1wAZogdDBPH3oOA"
+                "ref": "O1m2A_iycFMjnxEt-Xxriw",
+                "version": "ZipEBHwFqBrmCRzsUKKSZg"
               },
               {
-                "parent": "iEAmo3q5t3KT06cohaGiAg",
+                "parent": "m1Ruqcy7iqZISLaO2EMz7g",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/14/5",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/14/5",
                   "label": "Downloaded Data 14",
                   "isBinary": true
                 },
                 "state": {
                   "isCollapsed": true
                 },
-                "ref": "XCgU0iwiCN7mTiLbTsVrCg",
-                "version": "fwIfF2wIOW4tJpr3QNvyrw"
+                "ref": "SCLMLur7AZKMLJx5Sh1m3g",
+                "version": "alPWkJ_ut9NNkfyd1rMZ7Q"
               },
               {
-                "parent": "XCgU0iwiCN7mTiLbTsVrCg",
+                "parent": "SCLMLur7AZKMLJx5Sh1m3g",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "nGPafs24z2N73YgRcxU8pQ",
-                "version": "a_0f9sAFbZVuQhN7rD1Nfg"
+                "ref": "-2e1NyXToc20ADdfoX_sbQ",
+                "version": "OYaBJUpI5jA1NBOh5oHw5w"
               },
               {
-                "parent": "nGPafs24z2N73YgRcxU8pQ",
+                "parent": "-2e1NyXToc20ADdfoX_sbQ",
                 "transformer": "cellstar.meshlist-from-string",
                 "params": {
                   "label": "Parsed Meshlist",
                   "segmentId": 14,
                   "segmentName": "<b>Nucleus surface</b>",
                   "detail": 5,
-                  "ownerId": "5wjlRXhxMl9oEVG62M2CMA"
+                  "ownerId": "5-MnNpj2im1crB_oGz8Fcw"
                 },
-                "ref": "Ta0i7AznrZWz01nvEooewA",
-                "version": "1Csp5MvN6rhHwHmVoJIT1g"
+                "ref": "HmZssbXNAAdmEJtczhA_cQ",
+                "version": "W4WTBiepWyvVhklv3kO3tw"
               },
               {
-                "parent": "Ta0i7AznrZWz01nvEooewA",
+                "parent": "HmZssbXNAAdmEJtczhA_cQ",
                 "transformer": "cellstar.shape-from-meshlist",
                 "params": {
                   "color": 10541562
                 },
-                "ref": "Pgec6u9jM5KY4J2pqL0L8g",
-                "version": "p7U59xYqWp2dDeikzOnzRQ"
+                "ref": "WSjUnveOSAC9PwSiAG6GoQ",
+                "version": "qh-oFcdOBTKLuweQtm1Rsw"
               },
               {
-                "parent": "Pgec6u9jM5KY4J2pqL0L8g",
+                "parent": "WSjUnveOSAC9PwSiAG6GoQ",
                 "transformer": "ms-plugin.shape-representation-3d",
                 "params": {
                   "alpha": 1,
@@ -1258,54 +1258,54 @@
                   "mesh-segment-visual",
                   "segment-14"
                 ],
-                "ref": "zLnsYJ00xyVFamywpZuJcA",
-                "version": "q4E84hPjnT2wIe_xXfQjJQ"
+                "ref": "nxuJdsgjqsYXjEk2TPScEw",
+                "version": "hWwP1xOHSO0w5S1ZbJkvTg"
               },
               {
-                "parent": "iEAmo3q5t3KT06cohaGiAg",
+                "parent": "m1Ruqcy7iqZISLaO2EMz7g",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/15/5",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/15/5",
                   "label": "Downloaded Data 15",
                   "isBinary": true
                 },
                 "state": {
                   "isCollapsed": true
                 },
-                "ref": "4z5OXOH34VvDdAcLipVypQ",
-                "version": "vkC84Tp3gdI5EfgTAd1JPg"
+                "ref": "xQY1vZvkdFixSGL0ncK_5w",
+                "version": "JLsuYBgya0_PpM00tuAb4A"
               },
               {
-                "parent": "4z5OXOH34VvDdAcLipVypQ",
+                "parent": "xQY1vZvkdFixSGL0ncK_5w",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "4-1eJV852HlTzaEIUt4eIg",
-                "version": "vU45v4rEk0FiNTSC4L6nLw"
+                "ref": "5vPZzCYm87xCiWJe2Ll-tQ",
+                "version": "lKNcUmhv1eGsceJoQ3IefQ"
               },
               {
-                "parent": "4-1eJV852HlTzaEIUt4eIg",
+                "parent": "5vPZzCYm87xCiWJe2Ll-tQ",
                 "transformer": "cellstar.meshlist-from-string",
                 "params": {
                   "label": "Parsed Meshlist",
                   "segmentId": 15,
                   "segmentName": "<b>Mitochondrion surface</b>",
                   "detail": 5,
-                  "ownerId": "5wjlRXhxMl9oEVG62M2CMA"
+                  "ownerId": "5-MnNpj2im1crB_oGz8Fcw"
                 },
-                "ref": "8a7EiTyzC3jdtwpiT3z-Zg",
-                "version": "hXvV29a_19xzA9M6aaDDow"
+                "ref": "vz5uwHOsSsP9yUNFgYcMdg",
+                "version": "7b_YiEibBIKqRKYPn_FpLQ"
               },
               {
-                "parent": "8a7EiTyzC3jdtwpiT3z-Zg",
+                "parent": "vz5uwHOsSsP9yUNFgYcMdg",
                 "transformer": "cellstar.shape-from-meshlist",
                 "params": {
                   "color": 13407938
                 },
-                "ref": "3-qyExfL7nMQ9k55Tkps7A",
-                "version": "H796Gxyvi-PcbCLheXVPsg"
+                "ref": "hojc4qWgxPuKndsW-ADc6A",
+                "version": "6J3CgU3iRKV6918C4HyJpw"
               },
               {
-                "parent": "3-qyExfL7nMQ9k55Tkps7A",
+                "parent": "hojc4qWgxPuKndsW-ADc6A",
                 "transformer": "ms-plugin.shape-representation-3d",
                 "params": {
                   "alpha": 0.2,
@@ -1333,54 +1333,54 @@
                   "mesh-segment-visual",
                   "segment-15"
                 ],
-                "ref": "X2tXLo7hULVJMM1CGzOZsA",
-                "version": "3xroKOnEloft9gQ1iT4rdQ"
+                "ref": "EmcjW0PRUbNl6j8hbsk92Q",
+                "version": "iRtXq-R8EnWqlsUPRwiU9w"
               },
               {
-                "parent": "iEAmo3q5t3KT06cohaGiAg",
+                "parent": "m1Ruqcy7iqZISLaO2EMz7g",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/16/5",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/16/5",
                   "label": "Downloaded Data 16",
                   "isBinary": true
                 },
                 "state": {
                   "isCollapsed": true
                 },
-                "ref": "QE7cH4CA3oDn5BW2re7a0A",
-                "version": "-1TgctOvsy5n6GHmFuUkGQ"
+                "ref": "LaEvkWcScaA6IUqTTr1MiQ",
+                "version": "hsk2QGftoynqkF99VEU9gQ"
               },
               {
-                "parent": "QE7cH4CA3oDn5BW2re7a0A",
+                "parent": "LaEvkWcScaA6IUqTTr1MiQ",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "AjZcRyrlQ2bK1EgmM9Xcpg",
-                "version": "f0jtP8C_87afu5OJ4Ui_9A"
+                "ref": "f-u6N0cOwbbPy7S1YyTyrw",
+                "version": "ve2QGg16oGmtCKl2Ou-jUw"
               },
               {
-                "parent": "AjZcRyrlQ2bK1EgmM9Xcpg",
+                "parent": "f-u6N0cOwbbPy7S1YyTyrw",
                 "transformer": "cellstar.meshlist-from-string",
                 "params": {
                   "label": "Parsed Meshlist",
                   "segmentId": 16,
                   "segmentName": "<b>RBC surface</b>",
                   "detail": 5,
-                  "ownerId": "5wjlRXhxMl9oEVG62M2CMA"
+                  "ownerId": "5-MnNpj2im1crB_oGz8Fcw"
                 },
-                "ref": "AamMF7TlOKFi1QjFTy2RAw",
-                "version": "00EBm8KzLAqzLqWlYyihWw"
+                "ref": "iS9PvGP9E5JwKelA-JyG5g",
+                "version": "j93mLywukF9UrS8o4nJ02Q"
               },
               {
-                "parent": "AamMF7TlOKFi1QjFTy2RAw",
+                "parent": "iS9PvGP9E5JwKelA-JyG5g",
                 "transformer": "cellstar.shape-from-meshlist",
                 "params": {
                   "color": 7556608
                 },
-                "ref": "fpc1PgSMlHII5HJbDNe4aQ",
-                "version": "pTbpZhN-PDxZa-vFUxw42A"
+                "ref": "IUec9fcZNeqGhtL3lRnU9A",
+                "version": "Q79g9c-eaUmG4SJ3zcjwXQ"
               },
               {
-                "parent": "fpc1PgSMlHII5HJbDNe4aQ",
+                "parent": "IUec9fcZNeqGhtL3lRnU9A",
                 "transformer": "ms-plugin.shape-representation-3d",
                 "params": {
                   "alpha": 1,
@@ -1408,54 +1408,54 @@
                   "mesh-segment-visual",
                   "segment-16"
                 ],
-                "ref": "HHfyP7ZMuMdIKYs9rV8axg",
-                "version": "3JJQVrHP2qxQ14Fwexv0qg"
+                "ref": "GQXJehqH6QYJvRbWeRvRNA",
+                "version": "k4vzp95oLZPSZ-0At6s2uQ"
               },
               {
-                "parent": "iEAmo3q5t3KT06cohaGiAg",
+                "parent": "m1Ruqcy7iqZISLaO2EMz7g",
                 "transformer": "ms-plugin.download",
                 "params": {
-                  "url": "https://cellstar.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/17/5",
+                  "url": "https://molstarvolseg.ncbr.muni.cz/v2/empiar/empiar-10070/mesh_bcif/17/5",
                   "label": "Downloaded Data 17",
                   "isBinary": true
                 },
                 "state": {
                   "isCollapsed": true
                 },
-                "ref": "7c3Md-R3OYFFkhHczXrN-Q",
-                "version": "erBwAWGIxMYfU_pFe74VVQ"
+                "ref": "YB-MQMjs6MHNpFyNYW_bPQ",
+                "version": "yqhOwrrhvkybEWHVsobeOA"
               },
               {
-                "parent": "7c3Md-R3OYFFkhHczXrN-Q",
+                "parent": "YB-MQMjs6MHNpFyNYW_bPQ",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "sApAykjkilKus28NZtncPw",
-                "version": "cDwXWYWPS7BJfieQ6M08CA"
+                "ref": "ootf41YY-EEA6hwk96bmIQ",
+                "version": "KFk3IjwoeEzAcgxeiIuAcw"
               },
               {
-                "parent": "sApAykjkilKus28NZtncPw",
+                "parent": "ootf41YY-EEA6hwk96bmIQ",
                 "transformer": "cellstar.meshlist-from-string",
                 "params": {
                   "label": "Parsed Meshlist",
                   "segmentId": 17,
                   "segmentName": "<b>Vessel surface</b>",
                   "detail": 5,
-                  "ownerId": "5wjlRXhxMl9oEVG62M2CMA"
+                  "ownerId": "5-MnNpj2im1crB_oGz8Fcw"
                 },
-                "ref": "Oeca6M51_eYZmTuvrR5HtQ",
-                "version": "yvsxciMzPeRnnM9IUCkAUA"
+                "ref": "gz_VucvMQQPSTFCgxW-ReA",
+                "version": "9FYR3jTKEK5hl2SxCICSlQ"
               },
               {
-                "parent": "Oeca6M51_eYZmTuvrR5HtQ",
+                "parent": "gz_VucvMQQPSTFCgxW-ReA",
                 "transformer": "cellstar.shape-from-meshlist",
                 "params": {
                   "color": 12652544
                 },
-                "ref": "IF5MyG83YlqTQMJuTr2HNw",
-                "version": "CDAnUvaXl6o8HHu6Mqwjyw"
+                "ref": "e0WDctmB9vk4qq-zQLmWhw",
+                "version": "8I85ajYOfbK5Ig2AGXpwyQ"
               },
               {
-                "parent": "IF5MyG83YlqTQMJuTr2HNw",
+                "parent": "e0WDctmB9vk4qq-zQLmWhw",
                 "transformer": "ms-plugin.shape-representation-3d",
                 "params": {
                   "alpha": 1,
@@ -1483,21 +1483,8 @@
                   "mesh-segment-visual",
                   "segment-17"
                 ],
-                "ref": "65CXj8jmH9KQg0vLkCF77A",
-                "version": "qf0XhVavStBL9lQa436MVw"
-              },
-              {
-                "parent": "-=root=-",
-                "transformer": "ms-plugin.create-group",
-                "params": {
-                  "label": "Measurements",
-                  "description": ""
-                },
-                "tags": [
-                  "measurement-group"
-                ],
-                "ref": "jFjL4Zn1bJE4J1e9TWbhig",
-                "version": "WgOjAyTkADz-rbvIxhii7w"
+                "ref": "OAd9Is4j5UaZT-V9HUZGzQ",
+                "version": "TZ0N_ISiV4ZpM6kFEq8u0Q"
               }
             ]
           }
@@ -1532,19 +1519,19 @@
             "mode": "perspective",
             "fov": 0.7853981633974483,
             "position": [
-              11827.501565916933,
-              -1453.6841650371498,
-              28627.81537658648
+              16141.728557065853,
+              -1719.2266558696774,
+              28118.309205073758
             ],
             "up": [
-              -0.4744060867055759,
-              0.8108618980008772,
-              0.342697895043337
+              -0.49343789795862353,
+              0.7652594310643268,
+              0.41339695696180484
             ],
             "target": [
-              7639.2424988454695,
-              7287.279645647321,
-              2147.7866654104114
+              7541.999999999999,
+              6742.285714285714,
+              2190
             ],
             "radius": 10790.979888830861,
             "radiusMax": 10790.979888830861,
@@ -1658,7 +1645,7 @@
               "sampleLevel": 2
             },
             "renderer": {
-              "backgroundColor": 16777215,
+              "backgroundColor": 16579577,
               "pickingAlphaThreshold": 0.5,
               "interiorDarkening": 0.5,
               "interiorColorFlag": true,
@@ -1693,7 +1680,7 @@
               "staticMoving": true,
               "dynamicDampingFactor": 0.2,
               "minDistance": 5,
-              "maxDistance": 107909.7988883086,
+              "maxDistance": 109438.74663621713,
               "gestureScaleFactor": 1,
               "maxWheelDelta": 0.02,
               "bindings": {
