@@ -21,7 +21,7 @@ export function LandingPage() {
             <div className='twelve column'
                 style= {{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                 <a href={resolveExampleSnapshotURL('emd-1181.molj')} target='_blank' rel='noreferrer' title='Open Mol* Viewer'>
-                    <video autoPlay loop style={{ maxHeight: '100%', maxWidth: '100%' }} width='450'>
+                    <video autoPlay controls loop style={{ maxHeight: '100%', maxWidth: '100%' }} width='450'>
                         <source src='/img/2C7D_state-snapshots.mp4' type='video/mp4' />
                     </video>
                 </a>
@@ -35,7 +35,11 @@ export function LandingPage() {
 
         <div className='row' style={{ textAlign: 'center', marginTop: 20 }}>
             <div className='twelve columns'>
-                <h4 className='hero-heading' style={{ marginBottom: 40 }}><b>Interactive Examples</b></h4>
+                <h4 className='hero-heading' style={{ marginBottom: 0 }}><b>Interactive Examples</b></h4>
+                <div style={{ fontSize: '0.95rem', maxWidth: 500, margin: '10px auto 40px auto', color: '#555' }}>
+                    WebGL2 support is required to view the interactive examples. The examples were tested in Firefox, Chrome & Safari on PC, Linux and MacOS/iOS.
+                    Some users experienced rendering problems with integrated Intel graphics cards.
+                </div>
                 <div className='examples'>
                     <div className='tooltip'>
                         <a href={resolveExampleSnapshotURL('emd-1181.molj')}
@@ -91,7 +95,7 @@ export function LandingPage() {
         </div>
 
         <div className='row' style={{ textAlign: 'right', marginTop: 60, color: '#999' }}>
-            Copyright 2022–now, Cell* Contributors | <a href='terms-of-use.html' style={{ color: '#999' }}>Terms of Use &
+            Copyright 2022–now, Mol* Volumes & Segmentations Contributors | <a href='terms-of-use.html' style={{ color: '#999' }}>Terms of Use &
                 GDPR</a>
         </div>
 
