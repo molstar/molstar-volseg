@@ -13,11 +13,23 @@ from app.api.requests import (
 )
 from app.core.service import VolumeServerService
 from app.serialization.json_numpy_response import JSONNumpyResponse
-
+from app.settings import settings
 HTTP_CODE_UNPROCESSABLE_ENTITY = 422
 
 
 def configure_endpoints(app: FastAPI, volume_server: VolumeServerService):
+    @app.get("/v2/version")
+    async def get_version():
+        # settings = app.settings
+        git_tag = settings.GIT_TAG
+        git_sha = settings.GIT_SHA
+
+        return {
+            'git_tag': git_tag,
+            'git_sha': git_sha
+        }
+
+
     @app.get("/v2/list_entries/{limit}")
     async def get_entries(limit: int = 100):
         request = EntriesRequest(limit=limit, keyword="")
