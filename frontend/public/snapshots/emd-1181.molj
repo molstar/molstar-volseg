@@ -1,16 +1,16 @@
 {
-  "timestamp": 1670972191989,
-  "version": "3.25.1",
-  "current": "MMT7nYxch5IAgJddX3OBJA",
+  "timestamp": 1671198398787,
+  "version": "3.26.0",
+  "current": "YUD0uLVVZApP3zOsQwcekQ",
   "playback": {
     "isPlaying": false,
     "nextSnapshotDelayInMs": 1500
   },
   "entries": [
     {
-      "timestamp": 1670972191988,
+      "timestamp": 1671198398787,
       "snapshot": {
-        "id": "MMT7nYxch5IAgJddX3OBJA",
+        "id": "YUD0uLVVZApP3zOsQwcekQ",
         "data": {
           "tree": {
             "transforms": [
@@ -19,7 +19,7 @@
                 "transformer": "build-in.root",
                 "params": {},
                 "ref": "-=root=-",
-                "version": "eU0qE00oxVrswnq4fREfBw"
+                "version": "iguU7exMv83o4tXIzjLcSA"
               },
               {
                 "parent": "-=root=-",
@@ -27,13 +27,13 @@
                 "params": {
                   "serverUrl": "https://molstarvolseg.ncbr.muni.cz/v2",
                   "source": "emdb",
-                  "entryNumber": "1181"
+                  "entryId": "emd-1181"
                 },
-                "ref": "ccsD8MDAykWgO9D6GrtB-A",
-                "version": "evYEnEFjNSZfr8_rh2oWfw"
+                "ref": "YAQyCA4r1-sPfSu33irmfQ",
+                "version": "8NQJv5qtMiyZvkfPAWnZvw"
               },
               {
-                "parent": "ccsD8MDAykWgO9D6GrtB-A",
+                "parent": "YAQyCA4r1-sPfSu33irmfQ",
                 "transformer": "ms-plugin.cellstar-state-from-entry",
                 "params": {
                   "opacity": 1,
@@ -91,11 +91,11 @@
                     }
                   ]
                 },
-                "ref": "dNqQomxOtxeYar4OXmXcpA",
-                "version": "VduLrCFETtxH9oH44LD8Lw"
+                "ref": "nTMLW1lHpOQgSGjU2LiRhA",
+                "version": "F5LMv2RZYCjLKZAYa1rGTw"
               },
               {
-                "parent": "ccsD8MDAykWgO9D6GrtB-A",
+                "parent": "YAQyCA4r1-sPfSu33irmfQ",
                 "transformer": "ms-plugin.create-group",
                 "params": {
                   "label": "Volume",
@@ -107,39 +107,39 @@
                 "tags": [
                   "volume-group"
                 ],
-                "ref": "863XsSEuNUXimg9E4FDwrQ",
-                "version": "w1B_knNkFn3X2HmewXt9CA"
+                "ref": "7a75VTlxRzVGS3uDcp5Keg",
+                "version": "-2RDJUNUAiygRmQccyXC-A"
               },
               {
-                "parent": "863XsSEuNUXimg9E4FDwrQ",
+                "parent": "7a75VTlxRzVGS3uDcp5Keg",
                 "transformer": "ms-plugin.download",
                 "params": {
                   "url": "https://molstarvolseg.ncbr.muni.cz/v2/emdb/emd-1181/volume/cell?max_points=10000000",
                   "label": "Volume Data: https://molstarvolseg.ncbr.muni.cz/v2/emdb/emd-1181/volume/cell?max_points=10000000",
                   "isBinary": true
                 },
-                "ref": "Eobx3MrAAiZDhOTK395XDA",
-                "version": "9M_nqEjIBDewXKFkkDnP5Q"
+                "ref": "Uk4x2HevgDUa2rVzQQpLQw",
+                "version": "9g8m8TG58GU5yiNcaqLH7g"
               },
               {
-                "parent": "Eobx3MrAAiZDhOTK395XDA",
+                "parent": "Uk4x2HevgDUa2rVzQQpLQw",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "lU_vc4kS5EpuQwjODLYUJg",
-                "version": "kBQK4ehqxECd1I-_eEZNvg"
+                "ref": "UEj2yutftPzMkX0IgKUISg",
+                "version": "hALpnJgPXDl3A8c_afh_MA"
               },
               {
-                "parent": "lU_vc4kS5EpuQwjODLYUJg",
+                "parent": "UEj2yutftPzMkX0IgKUISg",
                 "transformer": "ms-plugin.volume-from-density-server-cif",
                 "params": {
                   "blockHeader": "VOLUME",
                   "entryId": ""
                 },
-                "ref": "DJj9PQAtKr-LtZmL55KYvA",
-                "version": "79c7m6zAKStBMTSuEkROaA"
+                "ref": "vR0usQMmhLAfhYFBjVZtIw",
+                "version": "haLR8UpZwEzPlTk9xDytXw"
               },
               {
-                "parent": "DJj9PQAtKr-LtZmL55KYvA",
+                "parent": "vR0usQMmhLAfhYFBjVZtIw",
                 "transformer": "ms-plugin.volume-representation-3d",
                 "params": {
                   "type": {
@@ -190,11 +190,11 @@
                     }
                   }
                 },
-                "ref": "5bh1polxj1FAixZMECsL_g",
-                "version": "CZNzRJLtCQS7IcPfYLonxQ"
+                "ref": "PFTxtQe22GY4LVqzDTB-HQ",
+                "version": "D3pZbeBBvjjuIMn4m_q7Qg"
               },
               {
-                "parent": "ccsD8MDAykWgO9D6GrtB-A",
+                "parent": "YAQyCA4r1-sPfSu33irmfQ",
                 "transformer": "ms-plugin.create-group",
                 "params": {
                   "label": "Segmentation",
@@ -206,29 +206,29 @@
                 "tags": [
                   "lattice-segmentation-group"
                 ],
-                "ref": "00kCz0RjFPdnPSJwamccAA",
-                "version": "dqYzjD9sYMdILtVjbJ7SZg"
+                "ref": "Jlv6vBWtqe2zmmwB05wlXA",
+                "version": "NEbvGxbmq2PRLJz2Ha_wWw"
               },
               {
-                "parent": "00kCz0RjFPdnPSJwamccAA",
+                "parent": "Jlv6vBWtqe2zmmwB05wlXA",
                 "transformer": "ms-plugin.download",
                 "params": {
                   "url": "https://molstarvolseg.ncbr.muni.cz/v2/emdb/emd-1181/segmentation/cell/0?max_points=10000000",
                   "label": "Segmentation Data: https://molstarvolseg.ncbr.muni.cz/v2/emdb/emd-1181/segmentation/cell/0?max_points=10000000",
                   "isBinary": true
                 },
-                "ref": "6HcEerkVWKFf1xFs6WAafg",
-                "version": "9mLHAkiN62Z0TB33GDyb9g"
+                "ref": "bwkUZczaCJwj921iSo1abA",
+                "version": "y_heOHjT4Zr4WEpGwTdG9g"
               },
               {
-                "parent": "6HcEerkVWKFf1xFs6WAafg",
+                "parent": "bwkUZczaCJwj921iSo1abA",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "OV_SS0y98yIY10BatxS05A",
-                "version": "PD40BoumhwyNCcBgIQZxcQ"
+                "ref": "GuPS3Qg3ZFAVMWl2Iwkfcw",
+                "version": "Ssws1O-Ub1ZSEcqOIH_PcA"
               },
               {
-                "parent": "OV_SS0y98yIY10BatxS05A",
+                "parent": "GuPS3Qg3ZFAVMWl2Iwkfcw",
                 "transformer": "ms-plugin.volume-from-segmentation-cif",
                 "params": {
                   "blockHeader": "SEGMENTATION_DATA",
@@ -294,13 +294,13 @@
                       "label": ""
                     }
                   ],
-                  "ownerId": "ccsD8MDAykWgO9D6GrtB-A"
+                  "ownerId": "YAQyCA4r1-sPfSu33irmfQ"
                 },
-                "ref": "VSBoe_vSewEdzwFDSF6tfg",
-                "version": "hfcFIpCNI_xW4mRMa22m9w"
+                "ref": "kkIwEggsem3j1oPUNhVjkg",
+                "version": "cWjCW3tbvuQizr5z4-2B5A"
               },
               {
-                "parent": "VSBoe_vSewEdzwFDSF6tfg",
+                "parent": "kkIwEggsem3j1oPUNhVjkg",
                 "transformer": "ms-plugin.volume-representation-3d",
                 "params": {
                   "type": {
@@ -389,11 +389,11 @@
                 "tags": [
                   "lattice-segment-repr"
                 ],
-                "ref": "_DPkx8QKf6_5veOpugLrXg",
-                "version": "nJbIIlHWRqQ3m7ZgdFvH9w"
+                "ref": "ZDBN4zztEKmCuudkS53quQ",
+                "version": "qf6VNKpzpK8FONY8t8Fg5Q"
               },
               {
-                "parent": "ccsD8MDAykWgO9D6GrtB-A",
+                "parent": "YAQyCA4r1-sPfSu33irmfQ",
                 "transformer": "ms-plugin.create-group",
                 "params": {
                   "label": "Fitted Models",
@@ -405,11 +405,11 @@
                 "tags": [
                   "fitted-models-group"
                 ],
-                "ref": "QZTjr5KBKd5Tt344Wuyi4Q",
-                "version": "isAclGAOCzcz8MDahYdm0Q"
+                "ref": "fpacdCo4fvNPJ8bJWR0GCQ",
+                "version": "3B-y7gKCozvk7NpuNqjQ1Q"
               },
               {
-                "parent": "QZTjr5KBKd5Tt344Wuyi4Q",
+                "parent": "fpacdCo4fvNPJ8bJWR0GCQ",
                 "transformer": "ms-plugin.download",
                 "params": {
                   "url": "https://www.ebi.ac.uk/pdbe/entry-files/download/2c7d.bcif",
@@ -420,34 +420,34 @@
                   "fitted-model-data",
                   "pdbid-2c7d"
                 ],
-                "ref": "txtVLw7wVXQhwGl3tqhaMg",
-                "version": "t9gKwETx0tI7EOlg3w8d8w"
+                "ref": "-PBetiB1vd0syRXkGUdtAQ",
+                "version": "xlJpoBSP27Aacac0IJYJHA"
               },
               {
-                "parent": "txtVLw7wVXQhwGl3tqhaMg",
+                "parent": "-PBetiB1vd0syRXkGUdtAQ",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "mTvbp-cWilykhK2mK-7XwA",
-                "version": "GkmVqLNdTxE6mNvk_Y4w0Q"
+                "ref": "QXOOXZflpFaRO9a5EfiBrA",
+                "version": "H4LfWjWvQz77OUIcuRELxQ"
               },
               {
-                "parent": "mTvbp-cWilykhK2mK-7XwA",
+                "parent": "QXOOXZflpFaRO9a5EfiBrA",
                 "transformer": "ms-plugin.trajectory-from-mmcif",
                 "params": {},
-                "ref": "Il1scMxpItAeEI4EP-gcWw",
-                "version": "UhJbxSqFjdv65BDGTs7QsA"
+                "ref": "Vi0LmpZVNUqlpdOWGbEscQ",
+                "version": "UbRg5jZ1fa9WWUfcEyxelQ"
               },
               {
-                "parent": "Il1scMxpItAeEI4EP-gcWw",
+                "parent": "Vi0LmpZVNUqlpdOWGbEscQ",
                 "transformer": "ms-plugin.model-from-trajectory",
                 "params": {
                   "modelIndex": 0
                 },
-                "ref": "FFrh9EArHJR6eQEjoDsT6A",
-                "version": "xaH6kubf09q9fO4GN2Yaew"
+                "ref": "vU5IFu2qXRAa9XOdgOJFKg",
+                "version": "SVSH4l8Y9-_ab5-YZSb1Fw"
               },
               {
-                "parent": "FFrh9EArHJR6eQEjoDsT6A",
+                "parent": "vU5IFu2qXRAa9XOdgOJFKg",
                 "transformer": "ms-plugin.custom-model-properties",
                 "params": {
                   "autoAttach": [
@@ -480,11 +480,11 @@
                     }
                   }
                 },
-                "ref": "znd89kVjwe_oSx_-L0-46g",
-                "version": "bct6j49lSFonP_J9ntesRA"
+                "ref": "14ltuiNABPZj4OCyooMy2Q",
+                "version": "jSUYSCYW9zAX0JhwTZ_dKQ"
               },
               {
-                "parent": "znd89kVjwe_oSx_-L0-46g",
+                "parent": "14ltuiNABPZj4OCyooMy2Q",
                 "transformer": "ms-plugin.structure-from-model",
                 "params": {
                   "type": {
@@ -495,11 +495,11 @@
                     }
                   }
                 },
-                "ref": "2aibOfmabBb8vZN0qkKs0A",
-                "version": "-BASXIaHDZTZ4431WNH48g"
+                "ref": "ZmIoyNAstNEYwrgp7IZeFw",
+                "version": "XyYZ002cHstsU-uyZJz4tQ"
               },
               {
-                "parent": "2aibOfmabBb8vZN0qkKs0A",
+                "parent": "ZmIoyNAstNEYwrgp7IZeFw",
                 "transformer": "ms-plugin.custom-structure-properties",
                 "params": {
                   "autoAttach": [],
@@ -601,11 +601,11 @@
                     }
                   }
                 },
-                "ref": "bCvlwnBPH3zozQ8OfMm66A",
-                "version": "ABuNHMYtqfnQjjtPI_iexQ"
+                "ref": "fvdYPmF7oaaxocBYoCho3g",
+                "version": "irzVgMKDzLZZbh2tEVx5Lw"
               },
               {
-                "parent": "bCvlwnBPH3zozQ8OfMm66A",
+                "parent": "fvdYPmF7oaaxocBYoCho3g",
                 "transformer": "ms-plugin.structure-component",
                 "params": {
                   "type": {
@@ -618,11 +618,11 @@
                 "tags": [
                   "structure-component-static-polymer"
                 ],
-                "ref": "JIhegt5mVmMcv7GA2UHL9w",
-                "version": "gYVexazF9xZsnwlnQ65MmQ"
+                "ref": "U7D9dHoQ3dezBT9_hyYSDw",
+                "version": "4KS1gQQJ1zxd5KPO8UqrNg"
               },
               {
-                "parent": "JIhegt5mVmMcv7GA2UHL9w",
+                "parent": "U7D9dHoQ3dezBT9_hyYSDw",
                 "transformer": "ms-plugin.structure-representation-3d",
                 "params": {
                   "type": {
@@ -717,8 +717,8 @@
                 "tags": [
                   "polymer"
                 ],
-                "ref": "DRmK2VOBlkBdtkc8cMBs9Q",
-                "version": "OCT6KmEJTgYGLkTCPWJeNg"
+                "ref": "xyID9TOybqc1L-tnQeWbRA",
+                "version": "JjsrUy5PomniDM5Hm1OtMQ"
               }
             ]
           }
@@ -753,14 +753,14 @@
             "mode": "perspective",
             "fov": 0.7853981633974483,
             "position": [
-              -185.21136124799293,
-              -312.3828517591013,
-              80.12969346468353
+              192.9541773523037,
+              -330.61086510633817,
+              56.28821206615478
             ],
             "up": [
-              -0.3866934781969106,
-              0.4375110206091936,
-              0.8118203377382736
+              -0.4749898481879197,
+              -0.1290137940932606,
+              0.8704826736081998
             ],
             "target": [
               8.700523295021634e-15,
@@ -848,6 +848,10 @@
                   "resolutionScale": 1
                 }
               },
+              "shadow": {
+                "name": "off",
+                "params": {}
+              },
               "outline": {
                 "name": "off",
                 "params": {}
@@ -893,8 +897,8 @@
               "xrayEdgeFalloff": 1,
               "light": [
                 {
-                  "inclination": 180,
-                  "azimuth": 0,
+                  "inclination": 150,
+                  "azimuth": 320,
                   "color": 16777215,
                   "intensity": 0.6
                 }
