@@ -112,25 +112,26 @@ def process_mesh_segmentation_data(segm_data_gr: zarr.hierarchy.group, zarr_stru
         segment_id = str(int(segment.id[...]))
         single_segment_group = segm_data_gr.create_group(segment_id)
         single_detail_lvl_group = single_segment_group.create_group('1')
-        for mesh_name, mesh in segment.mesh_list.groups():
-            mesh_id = str(int(mesh.id[...]))
-            single_mesh_group = single_detail_lvl_group.create_group(mesh_id)
+        if 'mesh_list' in segment:
+            for mesh_name, mesh in segment.mesh_list.groups():
+                mesh_id = str(int(mesh.id[...]))
+                single_mesh_group = single_detail_lvl_group.create_group(mesh_id)
 
-            for mesh_component_name, mesh_component in mesh.groups():
-                if mesh_component_name != 'id':
-                    _write_mesh_component_data_to_zarr_arr(
-                        target_group=single_mesh_group,
-                        mesh=mesh,
-                        mesh_component_name=mesh_component_name,
-                        params_for_storing=params_for_storing
-                    )
-            # TODO: check in which units is area and volume
-            vertices = single_mesh_group['vertices'][...]
-            triangles = single_mesh_group['triangles'][...]
-            vedo_mesh_obj = Mesh([vertices, triangles])
-            single_mesh_group.attrs['num_vertices'] = single_mesh_group.vertices.attrs['num_vertices']
-            single_mesh_group.attrs['area'] = vedo_mesh_obj.area()
-            # single_mesh_group.attrs['volume'] = vedo_mesh_obj.volume()
+                for mesh_component_name, mesh_component in mesh.groups():
+                    if mesh_component_name != 'id':
+                        _write_mesh_component_data_to_zarr_arr(
+                            target_group=single_mesh_group,
+                            mesh=mesh,
+                            mesh_component_name=mesh_component_name,
+                            params_for_storing=params_for_storing
+                        )
+                # TODO: check in which units is area and volume
+                vertices = single_mesh_group['vertices'][...]
+                triangles = single_mesh_group['triangles'][...]
+                vedo_mesh_obj = Mesh([vertices, triangles])
+                single_mesh_group.attrs['num_vertices'] = single_mesh_group.vertices.attrs['num_vertices']
+                single_mesh_group.attrs['area'] = vedo_mesh_obj.area()
+                # single_mesh_group.attrs['volume'] = vedo_mesh_obj.volume()
     
 
     calc_mode = 'area'
