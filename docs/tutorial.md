@@ -60,7 +60,7 @@ Arguments description:
 	
 
 # Hosting
-## Hosting the Cell* VolumeServer
+## Hosting the Mol* VolumeServer
 To run the API, from .\server subdirectory, run `python serve.py`. Script uses the following environment variables (with defaults):
 - `HOST=0.0.0.0` where to host the server
 - `PORT=9000` what port to run the app on
@@ -83,9 +83,7 @@ cd server
 set DEV_MODE=True && python serve.py
 ```
 
-# Hosting/linking the Mol* client (TODO by Adam/David) 
-TODO: section highlighting how to use the server from Mol*
-
+To view the data, a Volumes and Segmentations extension is available as part of the [main Mol* Viewer](https://github.com/molstar/molstar).
 
 # All-in-one solution
 How to build database and run both API and frontend 

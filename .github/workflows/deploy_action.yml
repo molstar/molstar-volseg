@@ -1,4 +1,4 @@
-name: Run command on Cell* server
+name: Run command on Mol* server
 
 on: 
   workflow_dispatch:
