@@ -99,7 +99,7 @@ export function LandingPage() {
                 <div>
                     <a className='button' href={DocsLink} style={{ fontSize: '2rem', width: '100%' }}
                         target='_blank' rel='noreferrer'>Documentation</a>
-                    <a className='button' href='https://github.com/molstar/molstar-volseg/tree/master/docs' style={{ fontSize: '2rem', width: '100%' }}
+                    <a className='button' href='https://github.com/molstar/molstar-volseg/tree/master/docs/data-overview.md' style={{ fontSize: '2rem', width: '100%' }}
                         target='_blank' rel='noreferrer'>Data Overview</a>
                     <a className='button' href='https://github.com/molstar/molstar-volseg/issues' style={{ fontSize: '2rem', width: '100%', marginBottom: 0 }}
                         target='_blank' rel='noreferrer'>Issues and Feedback</a>
