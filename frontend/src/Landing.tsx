@@ -1,4 +1,10 @@
+import { useEffect, useState } from 'react';
+
+const DocsLink = 'https://molstar.org/viewer-docs/';
+
 export function LandingPage() {
+    const today = new Date();
+
     return <div className='container' style={{ marginBottom: 20 }}>
         <div className='row' style={{ textAlign: 'center', marginTop: 40 }}>
             <img style={{ maxWidth: 160, width: '100%', marginBottom: 20 }} src='img/molstar-logo.png' alt='logo' />
@@ -26,9 +32,10 @@ export function LandingPage() {
                     </video>
                 </a>
 
-                <div style={{ textAlign: 'center', margin: 5 }}>
-                    Mol* Volumes & Segmentations is a Mol* extension which adds the support for large scale volumetric data & their segmentations. Building on the existing Mol* ecosystem, the extension
-                    allows seamless integration of biomolecular data ranging from whole cell 3D reconstructions from light miscroscopy, all the way down to atomic level.
+                <div style={{ textAlign: 'justify', margin: 5 }}>
+                    Mol* Volumes & Segmentations (Mol*VS) is a Mol* extension which adds the support for large scale volumetric data & their segmentations. Building on the existing Mol* ecosystem, this extension
+                    allows seamless integration of biomolecular data ranging from whole cell 3D reconstructions from light miscroscopy, all the way down to atomic level. This website is free and open to all
+                    users and there is no login requirement.
                 </div>
             </div>
         </div>
@@ -74,27 +81,63 @@ export function LandingPage() {
 
         <div className='row' style={{ marginTop: 60, display: 'flex' }}>
             <div className='twelve columns'
-                style= {{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                {/* <a className='button button-primary' href='https://github.com/molstar/cellstar-volume-server/' style={{ fontSize: '2rem', width: '100%' }} target='_blank' rel='noreferrer'>
-                    <svg width='14' height='14' style={{ marginRight: '0.75rem' }}><use href='#github-logo' /></svg>
-                    GitHub
-                </a> */}
-                <a className='button' href={ViewerURL} style={{ fontSize: '2rem', width: '100%' }}
+                style= {{ textAlign: 'justify' }}>
+                <a className='button button-primary' href={ViewerURL} style={{ fontSize: '2rem', width: '100%' }}
                     target='_blank' rel='noreferrer'>Open Mol* Viewer</a>
             </div>
         </div>
 
-        <div className='row' style={{ textAlign: 'center', marginTop: 20 }}>
-            <div className='twelve columns'>
-                {/* <h4 className='hero-heading' style={{ marginBottom: 40 }}><b>Quick Tutorial</b></h4> */}
+        <div className='row' style={{ marginTop: 10 }}>
+            <div className='eight columns'
+                style= {{ textAlign: 'justify' }}>
+                Our internal database was last updated on 18/12/2022. As of {`${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`}, the Mol*VS internal database contains <EntryCount /> entries. 
+                We are actively cooperating with teams from <a href='https://www.ebi.ac.uk/emdb/'>EMDB</a>, <a href='https://www.ebi.ac.uk/empiar/'>EMPIAR</a>, and <a href='https://www.ebi.ac.uk/bioimage-archive/'>BioImageArchive</a> to ensure that Mol*VS always contains the latest
+                segmentation data available in these primary sources. If you encounter trouble with a specific entry, check our documentation, as
+                some of the source data may contain errors or not show well using default settings. To report issues or give suggestions, please get in touch with us.
+            </div>
+            <div className='four columns' style={{ display: 'flex', alignItems: 'center' }}>
+                <div>
+                    <a className='button' href={DocsLink} style={{ fontSize: '2rem', width: '100%' }}
+                        target='_blank' rel='noreferrer'>Documentation</a>
+                    <a className='button' href='https://github.com/molstar/molstar-volseg/tree/master/docs' style={{ fontSize: '2rem', width: '100%' }}
+                        target='_blank' rel='noreferrer'>Data Overview</a>
+                    <a className='button' href='https://github.com/molstar/molstar-volseg/issues' style={{ fontSize: '2rem', width: '100%', marginBottom: 0 }}
+                        target='_blank' rel='noreferrer'>Issues and Feedback</a>
+                </div>
+            </div>
+        </div>
 
+        <div style={{ borderTop: '1px solid #E0DDD4', margin: '30px 0' }} />
+
+        <div className='row' style={{ display: 'flex' }}>
+            <div className='four columns' style={{ display: 'flex', alignItems: 'center' }}>
+                <div>
+                    <a className='button button-primary' href='https://github.com/molstar/cellstar-volume-server/' style={{ fontSize: '2rem', width: '100%' }} target='_blank' rel='noreferrer'>
+                        <svg width='14' height='14' style={{ marginRight: '0.75rem' }}><use href='#github-logo' /></svg>
+                        GitHub
+                    </a>
+                    <a className='button' href='https://github.com/molstar/molstar-volseg/blob/master/docs/tutorial.md' style={{ fontSize: '2rem', width: '100%', marginBottom: 0 }}
+                        target='_blank' rel='noreferrer'>Run Mol*VS Locally</a>
+                </div>
+            </div>
+            <div className='eight columns'
+                style= {{ textAlign: 'justify', display: 'flex', alignItems: 'center' }}>
+                Mol*VS is an open-source project with a permissive MIT license.<br/>
+                Do you have volume or mesh segmentation data that you wish to visualize before/without submission to a public database? You can do so by running an independent instance of Mol* with the Volumes and Segmentations extension.
+            </div>
+        </div>
+
+        <div style={{ borderTop: '1px solid #E0DDD4', margin: '30px 0' }} />
+
+        {/* <div className='row' style={{ textAlign: 'center', marginTop: 20 }}>
+            <div className='twelve columns'>
                 <video controls loop style={{ maxHeight: '100%', maxWidth: '100%' }} width='550'>
                     <source src='/img/quick-tutorial.mp4' type='video/mp4' />
                 </video>
             </div>
-        </div>
+        </div> */}
 
-        <div className='row' style={{ textAlign: 'right', marginTop: 60, color: '#999' }}>
+        <div className='row' style={{ textAlign: 'right', color: '#999' }}>
             Copyright 2022–now, Mol* Volumes & Segmentations Contributors | <a href='terms-of-use.html' style={{ color: '#999' }}>Terms of Use &
                 GDPR</a>
         </div>
@@ -114,4 +157,22 @@ const ViewerURL = 'https://overprot.ncbr.muni.cz/data/cellstar/';
 function resolveExampleSnapshotURL(snapshot: string) {
     const snapshotRoot = `${window.location.origin}/snapshots/`;
     return `${ViewerURL}?snapshot-url=${encodeURIComponent(`${snapshotRoot}${snapshot}`)}&snapshot-url-type=molj`;
+}
+
+function EntryCount() {
+    const [count, setCount] = useState<any>('...');
+    useEffect(() => {
+        fetch('https://molstarvolseg.ncbr.muni.cz/v2/list_entries/10000')
+            .then(res => res.json())
+            .then(res => {
+                let count = 0;
+                for (const xs of Array.from(Object.values(res))) count += (xs as any).length ?? 0;
+                setCount(count);
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    });
+
+    return <>{count}</>;
 }
