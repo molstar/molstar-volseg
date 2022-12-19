@@ -28,7 +28,7 @@ export function LandingPage() {
         <div className='row' style={{ marginTop: 0, display: 'flex' }}>
             <div className='five columns'>
                 <video autoPlay controls loop style={{ maxHeight: '100%', maxWidth: '100%' }} width='450'>
-                    <source src='/img/intro.mp4' type='video/mp4' />
+                    <source src='img/intro.mp4' type='video/mp4' />
                 </video>
             </div>
             <div className='seven columns'  style= {{ display: 'flex', alignItems: 'center' }}>
@@ -173,6 +173,7 @@ export function LandingPage() {
 
 function resolveExampleSnapshotURL(snapshot: string) {
     const snapshotRoot = `${window.location.origin}/snapshots/`;
+    // const snapshotRoot = 'https://molstarvolseg.ncbr.muni.cz/snapshots/';
     return `${ViewerURL}?snapshot-url=${encodeURIComponent(`${snapshotRoot}${snapshot}`)}&snapshot-url-type=molj&prefer-webgl1=1`;
 }
 
