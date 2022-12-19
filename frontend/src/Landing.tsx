@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const DocsLink = 'https://molstar.org/viewer-docs/';
+const DocsLink = 'http://molstar.org/viewer-docs/volumes_and_segmentations/overview/';
 
 const ViewerURL = 'https://molstar.org/viewer/';
 
@@ -126,7 +126,7 @@ export function LandingPage() {
                 <div>
                     <a className='button' href={DocsLink} style={{ fontSize: '2rem', width: '100%' }}
                         target='_blank' rel='noreferrer'>Documentation</a>
-                    <a className='button' href='https://github.com/molstar/molstar-volseg/tree/master/docs/data-overview.md' style={{ fontSize: '2rem', width: '100%' }}
+                    <a className='button' href='http://molstar.org/viewer-docs/volumes_and_segmentations/database-contents/' style={{ fontSize: '2rem', width: '100%' }}
                         target='_blank' rel='noreferrer'>Data Overview</a>
                     <a className='button' href='https://github.com/molstar/molstar-volseg/issues' style={{ fontSize: '2rem', width: '100%', marginBottom: 0 }}
                         target='_blank' rel='noreferrer'>Issues and Feedback</a>
@@ -155,14 +155,6 @@ export function LandingPage() {
         </div>
 
         <div style={{ borderTop: '1px solid #E0DDD4', margin: '30px 0' }} />
-
-        {/* <div className='row' style={{ textAlign: 'center', marginTop: 20 }}>
-            <div className='twelve columns'>
-                <video controls loop style={{ maxHeight: '100%', maxWidth: '100%' }} width='550'>
-                    <source src='/img/quick-tutorial.mp4' type='video/mp4' />
-                </video>
-            </div>
-        </div> */}
 
         <div className='row' style={{ textAlign: 'right', color: '#999' }}>
             Copyright 2022–now, Mol* Volumes & Segmentations Contributors | <a href='terms-of-use.html' style={{ color: '#999' }}>Terms of Use &
