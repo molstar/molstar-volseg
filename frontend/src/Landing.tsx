@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 
 const DocsLink = 'https://molstar.org/viewer-docs/';
 
+const ViewerURL = 'https://molstar.org/viewer/';
+
 export function LandingPage() {
     const today = new Date();
 
@@ -24,62 +26,87 @@ export function LandingPage() {
         </div>
 
         <div className='row' style={{ marginTop: 0, display: 'flex' }}>
-            <div className='twelve column'
-                style= {{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                <a href={resolveExampleSnapshotURL('emd-1181.molj')} target='_blank' rel='noreferrer' title='Open Mol* Viewer'>
-                    <video autoPlay controls loop style={{ maxHeight: '100%', maxWidth: '100%' }} width='450'>
-                        <source src='/img/2C7D_state-snapshots.mp4' type='video/mp4' />
-                    </video>
-                </a>
-
+            <div className='five columns'>
+                <video autoPlay controls loop style={{ maxHeight: '100%', maxWidth: '100%' }} width='450'>
+                    <source src='/img/intro.mp4' type='video/mp4' />
+                </video>
+            </div>
+            <div className='seven columns'  style= {{ display: 'flex', alignItems: 'center' }}>
                 <div style={{ textAlign: 'justify', margin: 5 }}>
-                    Mol* Volumes & Segmentations (Mol*VS) is a Mol* extension which adds the support for large scale volumetric data & their segmentations. Building on the existing Mol* ecosystem, this extension
-                    allows seamless integration of biomolecular data ranging from whole cell 3D reconstructions from light miscroscopy, all the way down to atomic level. This website is free and open to all
-                    users and there is no login requirement.
+                    Mol* Volumes & Segmentations (Mol*VS) is a <a href='https://doi.org/10.1093/nar/gkab314'>Mol* Viewer</a> extension which adds support for large scale volumetric data & their segmentations.
+                    Building on the existing Mol* ecosystem, this extension allows seamless integration of biomolecular data from cellular to atomic scale. It provides the means to visualize 
+                    large-scale volumetric and segmentation data from cryo-EM, light miscroscopy, volume-EM, and other imagining experiments together with related
+                    3D model data and biological annotations. This website is free and open to all users and there is no login requirement.
                 </div>
             </div>
         </div>
 
+        <div style={{ borderTop: '1px solid #E0DDD4', margin: '30px 0' }} />
+
         <div className='row' style={{ textAlign: 'center', marginTop: 20 }}>
             <div className='twelve columns'>
-                <h4 className='hero-heading' style={{ marginBottom: 0 }}><b>Interactive Examples</b></h4>
-                <div style={{ fontSize: '0.95rem', maxWidth: 500, margin: '10px auto 40px auto', color: '#555' }}>
+                <h4 className='hero-heading' style={{ marginBottom: 30 }}><b>Interactive Examples</b></h4>
+                {/* <div style={{ fontSize: '0.95rem', maxWidth: 500, margin: '10px auto 40px auto', color: '#555' }}>
                     WebGL2 support is required to view the interactive examples. The examples were tested in Firefox, Chrome & Safari on PC, Linux and MacOS/iOS.
                     Some users experienced rendering problems with integrated Intel graphics cards.
-                </div>
+                </div> */}
                 <div className='examples'>
                     <div className='tooltip'>
-                        <a href={resolveExampleSnapshotURL('emd-1181.molj')}
-                            target='_blank' rel='noreferrer'><img alt='EMD 1181' src='img/examples/ex-emd-1181.png' /></a>
+                        <a href={resolveExampleSnapshotURL('emd-1014.molj')}
+                            target='_blank' rel='noreferrer'><img alt='EMD 1014' src='img/examples/emd-1014.png' /></a>
                         <p className='tooltip-info'>
-                            <a href='https://www.ebi.ac.uk/emdb/EMD-1181' target='_blank' rel='noreferrer'>
-                                EMD 1181
-                            </a>
+                            <b><a href='https://www.ebi.ac.uk/emdb/EMD-1014' target='_blank' rel='noreferrer'>
+                                EMD 1014
+                            </a></b> showing 
+                            combined EM/X-ray imaging yields a quasi-atomic model of the adenovirus-related bacteriophage PRD1 and key capsid and membrane interactions
                         </p>
                     </div>
                     <div className='tooltip'>
                         <a href={resolveExampleSnapshotURL('empiar-10070.molj')} target='_blank' rel='noreferrer'><img 
                             alt='EMPIAR 10070' src='img/examples/ex-empiar-10070.png' /></a>
                         <p className='tooltip-info'>
-                            <a href='https://www.ebi.ac.uk/empiar/EMPIAR-10070/' target='_blank' rel='noreferrer'>
+                            <b><a href='https://www.ebi.ac.uk/empiar/EMPIAR-10070/' target='_blank' rel='noreferrer'>
                                 EMPIAR 10070
-                            </a>
+                            </a></b> showing focused Ion Beam-Scanning Electron Microscopy of mitochondrial reticulum in murine skeletal muscle
                         </p>
                     </div>
                     <div className='tooltip'>
                         <a href={resolveExampleSnapshotURL('idr-6001240.molj')}
-                            target='_blank' rel='noreferrer'><img alt='Zika+EM' src='img/examples/ex-idr-6001240.png' /></a>
+                            target='_blank' rel='noreferrer'><img alt='IDR 6001240' src='img/examples/ex-idr-6001240.png' /></a>
                         <p className='tooltip-info'>
                             <a href='https://idr.openmicroscopy.org/webclient/img_detail/6001240/?dataset=7754' target='_blank' rel='noreferrer'>
                                 IDR 6001240
-                            </a> (experimental NGFF support)
+                            </a> showcasing NGFF support
+                        </p>
+                    </div>
+                    <div className='tooltip'>
+                        <a href={resolveExampleSnapshotURL('emd-9094.molj')}
+                            target='_blank' rel='noreferrer'><img alt='EMD 9094' src='img/examples/emd-9094.png' /></a>
+                        <p className='tooltip-info'>
+                            <b><a href='https://www.ebi.ac.uk/emdb/EMD-9094' target='_blank' rel='noreferrer'>
+                                EMD 9094
+                            </a></b> showing 
+                            Single-Molecule 3D Image of Two Human Plasma Intermediate-Density Lipoproteins in Complex with One Monoclonal Antibody MAB012 with Segmentations computed 
+                            by <a href='https://bio3d.colorado.edu/imod/' target='_blank' rel='noreferrer'>IMOD</a> and <a href='https://www.cgl.ucsf.edu/chimera/docs/ContributedSoftware/segger/segment.html' target='_blank' rel='noreferrer'>Segger</a>.
+                        </p>
+                    </div>
+                    <div className='tooltip'>
+                        <a href={resolveExampleSnapshotURL('empiar-10819.molj')} target='_blank' rel='noreferrer'><img 
+                            alt='EMPIAR 10819' src='img/examples/empiar-10819.png' /></a>
+                        <p className='tooltip-info'>
+                            <b><a href='https://www.ebi.ac.uk/empiar/EMPIAR-10819/' target='_blank' rel='noreferrer'>
+                                EMPIAR 10819
+                            </a></b> showing benchmark FIB SEM data of HeLa cells previously imaged by Zeiss LSM900 Airyscan microscopy
+                            visualized using direct volumetric rendering
                         </p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div className='row' style={{ marginTop: 60, display: 'flex' }}>
+        <div style={{ borderTop: '1px solid #E0DDD4', margin: '30px 0' }} />
+
+        <div className='row' style={{ marginTop: 0, display: 'flex' }}>
             <div className='twelve columns'
                 style= {{ textAlign: 'justify' }}>
                 <a className='button button-primary' href={ViewerURL} style={{ fontSize: '2rem', width: '100%' }}
@@ -90,7 +117,7 @@ export function LandingPage() {
         <div className='row' style={{ marginTop: 10 }}>
             <div className='eight columns'
                 style= {{ textAlign: 'justify' }}>
-                Our internal database was last updated on 18/12/2022. As of {`${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`}, the Mol*VS internal database contains <EntryCount /> entries. 
+                As of {`${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`}, the Mol*VS internal database contains <EntryCount /> entries. 
                 We are actively cooperating with teams from <a href='https://www.ebi.ac.uk/emdb/'>EMDB</a>, <a href='https://www.ebi.ac.uk/empiar/'>EMPIAR</a>, and <a href='https://www.ebi.ac.uk/bioimage-archive/'>BioImageArchive</a> to ensure that Mol*VS always contains the latest
                 segmentation data available in these primary sources. If you encounter trouble with a specific entry, check our documentation, as
                 some of the source data may contain errors or not show well using default settings. To report issues or give suggestions, please get in touch with us.
@@ -117,7 +144,7 @@ export function LandingPage() {
                         GitHub
                     </a>
                     <a className='button' href='https://github.com/molstar/molstar-volseg/blob/master/docs/tutorial.md' style={{ fontSize: '2rem', width: '100%', marginBottom: 0 }}
-                        target='_blank' rel='noreferrer'>Run Mol*VS Locally</a>
+                        target='_blank' rel='noreferrer'>Setup Mol*VS Locally</a>
                 </div>
             </div>
             <div className='eight columns'
@@ -152,11 +179,9 @@ export function LandingPage() {
     </div>
 }
 
-const ViewerURL = 'https://overprot.ncbr.muni.cz/data/cellstar/';
-
 function resolveExampleSnapshotURL(snapshot: string) {
     const snapshotRoot = `${window.location.origin}/snapshots/`;
-    return `${ViewerURL}?snapshot-url=${encodeURIComponent(`${snapshotRoot}${snapshot}`)}&snapshot-url-type=molj`;
+    return `${ViewerURL}?snapshot-url=${encodeURIComponent(`${snapshotRoot}${snapshot}`)}&snapshot-url-type=molj&prefer-webgl1=1`;
 }
 
 function EntryCount() {

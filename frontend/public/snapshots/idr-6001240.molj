@@ -1,16 +1,16 @@
 {
-  "timestamp": 1671183902531,
-  "version": "3.26.0",
-  "current": "cvbyqTpVrVKFTaLlU8iIbw",
+  "timestamp": 1671481896701,
+  "version": "3.27.0",
+  "current": "hi4yVNPN0b5v3r5ZjjLoZw",
   "playback": {
     "isPlaying": false,
     "nextSnapshotDelayInMs": 1500
   },
   "entries": [
     {
-      "timestamp": 1671183902531,
+      "timestamp": 1671481896700,
       "snapshot": {
-        "id": "cvbyqTpVrVKFTaLlU8iIbw",
+        "id": "hi4yVNPN0b5v3r5ZjjLoZw",
         "data": {
           "tree": {
             "transforms": [
@@ -19,24 +19,41 @@
                 "transformer": "build-in.root",
                 "params": {},
                 "ref": "-=root=-",
-                "version": "qGU4T9fLCH0wtJlqqL19SQ"
+                "version": "27pRyxFax6rWNn7pf5xQ9g"
               },
               {
                 "parent": "-=root=-",
-                "transformer": "ms-plugin.cellstar-entry-from-root",
+                "transformer": "ms-plugin.volseg-global-state-from-root",
+                "params": {
+                  "tryUseGpu": true,
+                  "selectionMode": true
+                },
+                "state": {
+                  "isGhost": true
+                },
+                "ref": "di7qlJiv4AoHGgcFEm9bBA",
+                "version": "Bx6ygez1OT20IxOSRT5Rkw"
+              },
+              {
+                "parent": "-=root=-",
+                "transformer": "ms-plugin.volseg-entry-from-root",
                 "params": {
                   "serverUrl": "https://molstarvolseg.ncbr.muni.cz/v2",
                   "source": "idr",
                   "entryId": "idr-6001240"
                 },
-                "ref": "Ka2TcKRO-p_8X-XN9fxOjA",
-                "version": "qOIMixZcX8PO2A1zB5RrRg"
+                "ref": "UiYtqkrE5OL84HEESC_1BA",
+                "version": "AxelW_SvPra_MY6uumpJgg"
               },
               {
-                "parent": "Ka2TcKRO-p_8X-XN9fxOjA",
-                "transformer": "ms-plugin.cellstar-state-from-entry",
+                "parent": "UiYtqkrE5OL84HEESC_1BA",
+                "transformer": "ms-plugin.volseg-state-from-entry",
                 "params": {
-                  "opacity": 1,
+                  "volumeType": "isosurface",
+                  "volumeIsovalueKind": "relative",
+                  "volumeIsovalueValue": 1,
+                  "volumeOpacity": 0.2,
+                  "segmentOpacity": 1,
                   "selectedSegment": -1,
                   "visibleSegments": [
                     {
@@ -225,11 +242,14 @@
                   ],
                   "visibleModels": []
                 },
-                "ref": "3gLPPXBfN1OYffs6PM9QjQ",
-                "version": "E1C_kqz7rdhm4UekV97Z0Q"
+                "state": {
+                  "isGhost": true
+                },
+                "ref": "1LW0g-fs6tjY6h3iMsDTTQ",
+                "version": "zFqkuhBCZzIDYWllEncwvw"
               },
               {
-                "parent": "Ka2TcKRO-p_8X-XN9fxOjA",
+                "parent": "UiYtqkrE5OL84HEESC_1BA",
                 "transformer": "ms-plugin.create-group",
                 "params": {
                   "label": "Volume",
@@ -241,39 +261,39 @@
                 "tags": [
                   "volume-group"
                 ],
-                "ref": "Mkfp9saUXQ3r4Ruucvnm8w",
-                "version": "0zAt5OjBSJ66bdL4W5PnbQ"
+                "ref": "ycRplkpIvBpb2kmKqI_-Kw",
+                "version": "KdVemfHn1oruvcezkuNTIw"
               },
               {
-                "parent": "Mkfp9saUXQ3r4Ruucvnm8w",
+                "parent": "ycRplkpIvBpb2kmKqI_-Kw",
                 "transformer": "ms-plugin.download",
                 "params": {
                   "url": "https://molstarvolseg.ncbr.muni.cz/v2/idr/idr-6001240/volume/cell?max_points=10000000",
                   "label": "Volume Data: https://molstarvolseg.ncbr.muni.cz/v2/idr/idr-6001240/volume/cell?max_points=10000000",
                   "isBinary": true
                 },
-                "ref": "rs_oPY0XtjBj3-kOWWkGMw",
-                "version": "uPXfU6jEkANdOyefpE6zLw"
+                "ref": "KwyoIUKC1wsEZA72qvIUmA",
+                "version": "i3c-K2rClZ-YFMRYTsc1Cg"
               },
               {
-                "parent": "rs_oPY0XtjBj3-kOWWkGMw",
+                "parent": "KwyoIUKC1wsEZA72qvIUmA",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "rl1WZWLgIeH4ULmH_tvSjg",
-                "version": "Hqbp7R-aK99AbtUQ0Eu92A"
+                "ref": "X5HoazBtkinCyOxv63dcIQ",
+                "version": "nsGmbxzxKJtU8n0vb9A-hA"
               },
               {
-                "parent": "rl1WZWLgIeH4ULmH_tvSjg",
+                "parent": "X5HoazBtkinCyOxv63dcIQ",
                 "transformer": "ms-plugin.volume-from-density-server-cif",
                 "params": {
                   "blockHeader": "VOLUME",
                   "entryId": ""
                 },
-                "ref": "4RDCMEB0apjCKLzbaQKs-w",
-                "version": "dIia-ZhBioDdU3OylpABvA"
+                "ref": "nOjQ-rkGXQGHQnACEJmLhQ",
+                "version": "-rsYxJWRf4L8Pc6OYqH-Rw"
               },
               {
-                "parent": "4RDCMEB0apjCKLzbaQKs-w",
+                "parent": "nOjQ-rkGXQGHQnACEJmLhQ",
                 "transformer": "ms-plugin.volume-representation-3d",
                 "params": {
                   "type": {
@@ -314,7 +334,7 @@
                   "colorTheme": {
                     "name": "uniform",
                     "params": {
-                      "value": 1184274
+                      "value": 8086783
                     }
                   },
                   "sizeTheme": {
@@ -324,11 +344,14 @@
                     }
                   }
                 },
-                "ref": "7w_AL4UCncO94bDoSZFZNg",
-                "version": "4yVzpeKMyRHxj3POfu3-8w"
+                "tags": [
+                  "volume-visual"
+                ],
+                "ref": "qjLBxrq95NxbyeZ1mkFlpQ",
+                "version": "3KL2VKrdseHl82BK4x15_g"
               },
               {
-                "parent": "Ka2TcKRO-p_8X-XN9fxOjA",
+                "parent": "UiYtqkrE5OL84HEESC_1BA",
                 "transformer": "ms-plugin.create-group",
                 "params": {
                   "label": "Segmentation",
@@ -340,29 +363,29 @@
                 "tags": [
                   "lattice-segmentation-group"
                 ],
-                "ref": "BGdq6p2PVucjgYS1NXh5yQ",
-                "version": "g9YJ7oU2GKDmGIJmGAgfbw"
+                "ref": "tSEqn-G3ux62tmhPfR783A",
+                "version": "6x6hg8CmXCSJ1zlRhSIAoQ"
               },
               {
-                "parent": "BGdq6p2PVucjgYS1NXh5yQ",
+                "parent": "tSEqn-G3ux62tmhPfR783A",
                 "transformer": "ms-plugin.download",
                 "params": {
                   "url": "https://molstarvolseg.ncbr.muni.cz/v2/idr/idr-6001240/segmentation/cell/0?max_points=10000000",
                   "label": "Segmentation Data: https://molstarvolseg.ncbr.muni.cz/v2/idr/idr-6001240/segmentation/cell/0?max_points=10000000",
                   "isBinary": true
                 },
-                "ref": "Aa3HbBrxNROLMQ1D1yF43w",
-                "version": "TE_24gt6RWhOX301-Ebccg"
+                "ref": "JtsDL6iLNgNCIkWhKcvKRA",
+                "version": "aX43QIScBw0JhMrZVQfjeQ"
               },
               {
-                "parent": "Aa3HbBrxNROLMQ1D1yF43w",
+                "parent": "JtsDL6iLNgNCIkWhKcvKRA",
                 "transformer": "ms-plugin.parse-cif",
                 "params": {},
-                "ref": "Vh4wnuMgXwd5SMAkjW9hXA",
-                "version": "5w-FENAOO0InIfmz0xauFg"
+                "ref": "zbHBgfb3FtSpSU0b_bxdzw",
+                "version": "b_79DeO70D_1lMV1u6_Hnw"
               },
               {
-                "parent": "Vh4wnuMgXwd5SMAkjW9hXA",
+                "parent": "zbHBgfb3FtSpSU0b_bxdzw",
                 "transformer": "ms-plugin.volume-from-segmentation-cif",
                 "params": {
                   "blockHeader": "SEGMENTATION_DATA",
@@ -612,13 +635,13 @@
                       "label": "<b>segment 9</b>"
                     }
                   ],
-                  "ownerId": "Ka2TcKRO-p_8X-XN9fxOjA"
+                  "ownerId": "UiYtqkrE5OL84HEESC_1BA"
                 },
-                "ref": "x6-GljdT5vntg-LIeQ0iww",
-                "version": "drIx0roGSUmQSZIuyrCRGQ"
+                "ref": "EwYDQstMWYAbfWh19i1xSg",
+                "version": "NInXbxHe4ZWyTB74aKZnVA"
               },
               {
-                "parent": "x6-GljdT5vntg-LIeQ0iww",
+                "parent": "EwYDQstMWYAbfWh19i1xSg",
                 "transformer": "ms-plugin.volume-representation-3d",
                 "params": {
                   "type": {
@@ -797,10 +820,10 @@
                   }
                 },
                 "tags": [
-                  "lattice-segment-repr"
+                  "lattice-segment-visual"
                 ],
-                "ref": "YeUCxQ-dc3mDIQngjGf4cw",
-                "version": "lDGZg_uzpcNUPdmt2J3ffQ"
+                "ref": "aRdaTAePoWQhRngn7rr4AA",
+                "version": "6rtRTBFU9MfyLciCgXMy_g"
               }
             ]
           }
@@ -835,14 +858,14 @@
             "mode": "perspective",
             "fov": 0.7853981633974483,
             "position": [
-              2745502.0441240654,
-              -372681.3141008036,
-              514008.8891040598
+              181314.45814513153,
+              2735945.690673689,
+              652031.6677175307
             ],
             "up": [
-              0.24719116408460487,
-              0.5504307931062814,
-              0.7974474718744066
+              -0.4877774137138604,
+              -0.08644952998981127,
+              0.8686769672525916
             ],
             "target": [
               486537.5071764287,
@@ -965,7 +988,7 @@
               "sampleLevel": 2
             },
             "renderer": {
-              "backgroundColor": 16579577,
+              "backgroundColor": 16777215,
               "pickingAlphaThreshold": 0.5,
               "interiorDarkening": 0.5,
               "interiorColorFlag": true,
@@ -1165,7 +1188,7 @@
         "structureFocus": {},
         "structureComponentManager": {
           "options": {
-            "showHydrogens": true,
+            "hydrogens": "all",
             "visualQuality": "auto",
             "ignoreLight": false,
             "materialStyle": {
