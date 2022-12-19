@@ -143,8 +143,8 @@ export function LandingPage() {
                         <svg width='14' height='14' style={{ marginRight: '0.75rem' }}><use href='#github-logo' /></svg>
                         GitHub
                     </a>
-                    <a className='button' href='https://github.com/molstar/molstar-volseg/blob/master/docs/tutorial.md' style={{ fontSize: '2rem', width: '100%', marginBottom: 0 }}
-                        target='_blank' rel='noreferrer'>Setup Mol*VS Locally</a>
+                    <a className='button' href='https://molstar.org/viewer-docs/volumes_and_segmentations/running-molstarvs-locally/' style={{ fontSize: '2rem', width: '100%', marginBottom: 0 }}
+                        target='_blank' rel='noreferrer'>Running Mol*VS Locally</a>
                 </div>
             </div>
             <div className='eight columns'
