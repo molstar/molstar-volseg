@@ -1,25 +1,38 @@
 # Introduction
-This tutorial will help you to set up your local copy of Cellstar server and explain how to use it (add entries, host server and frontend etc.)
+This tutorial will help you to set up your local copy of Mol* Volumes and Segmentations extension server and explain how to use it (add entries, host server and frontend etc.)
 
-# Getting local copy of Cellstar server
-Clone github repository: https://github.com/molstar/cellstar-volume-server
+# Getting local copy of Mol* Volumes and Segmentations Extension
+
+Clone this GitHub repository: 
+
+```
+git clone https://github.com/molstar/molstar-volseg
+cd molstar-volseg
+```
 
 # Setting up the environment
-Create conda environment from environment.yaml, e.g.:
+
+Create conda environment from `environment.yaml`, e.g.:
+
+You can use [Conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)
+
+```
 conda env create -f environment.yaml
+```
 
-You can use conda: https://conda.io/projects/conda/en/latest/user-guide/install/index.html
 
-Or mamba: 
-https://mamba.readthedocs.io/en/latest/installation.html
+Or [Mamba](https://mamba.readthedocs.io/en/latest/installation.html)
+
+```
 mamba env create -f environment.yaml
+```
 
 # Setting up the database
 ## Supported formats
 SFF (.hff) for segmentation data, CCP4 for volume data(.map, .mrc, .ccp4 files). Additionally, as an experimental feature, we support also segmentation data in .am, .mod, .seg, .stl formats through conversion to SFF (.hff).
 
 ## Adding an entry to the database
-To add entry to the database from root project directory (cellstar-volume-server by default) run preprocessor\main.py with the following arguments:
+To add entry to the database from root project directory (molstar-volseg by default) run preprocessor\main.py with the following arguments:
 
  - `--db_path` - path to folder with database, default -  - test-data/db
  - `--single_entry` - path to folder with input files (volume and segmentation)
@@ -42,10 +55,13 @@ Note that if you won’t delete application specific segmentation file from that
 
 ## Build database script
 Activate created conda environment, e.g.
+
 ```
 conda activate cellstar-volume-server
 ```
-From root project directory (cellstar-volume-server by default) run:
+
+From root project directory (molstar-volseg by default) run:
+
 ```
 python preprocessor/src/tools/deploy_db/build.py  --csv_with_entry_ids test-data/preprocessor/db_building_parameters_custom_entries.csv
 ```
@@ -99,7 +115,7 @@ molstar.Viewer.create('app', {
 
 # All-in-one solution
 How to build database and run both API and frontend 
-To build database, and to run both frontend and api, from cellstar-volume-server directory (default) run:
+To build database, and to run both frontend and api, from molstar-volseg directory (default) run:
 ```
 python preprocessor/src/tools/deploy_db/build_and_deploy.py  --csv_with_entry_ids test-data/preprocessor/db_building_parameters_custom_entries.csv	
 ```
@@ -114,9 +130,3 @@ Optionally, add arguments:
  - `--api_port API_PORT` - default api port - 9000
  - `--api_hostname` - default host - '0.0.0.0', localhost
  - `--frontend_port`  - default frontend port - 3000
-
-
-
-CSV example of required format:
-
-# TODO
