@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const DocsLink = 'http://molstar.org/viewer-docs/volumes_and_segmentations/overview/';
+const DocsLink = 'https://molstar.org/viewer-docs/volumes_and_segmentations/overview/';
 
 const ViewerURL = 'https://molstar.org/viewer/';
 
@@ -55,28 +55,29 @@ export function LandingPage() {
                         <a href={resolveExampleSnapshotURL('emd-1014.molj')}
                             target='_blank' rel='noreferrer'><img alt='EMD 1014' src='img/examples/emd-1014.png' /></a>
                         <p className='tooltip-info'>
-                            <b><a href='https://www.ebi.ac.uk/emdb/EMD-1014' target='_blank' rel='noreferrer'>
+                            <a href='https://www.cell.com/structure/fulltext/S0969-2126(01)00642-6'>San Martin et al.</a> conducted extensive cryo-EM imaging 
+                            and refined 3D reconstruction (<b><a href='https://www.ebi.ac.uk/emdb/EMD-1014' target='_blank' rel='noreferrer'>
                                 EMD 1014
-                            </a></b> showing 
-                            combined EM/X-ray imaging yields a quasi-atomic model of the adenovirus-related bacteriophage PRD1 and key capsid and membrane interactions
+                            </a></b>) of a large bacteriophage by fitting a crystalographic model of P3. They were then able to infer potential interactions between the capsid
+                            protein and an underlying membrane holding the genomic material of this bacteriophage, as well as to derive its model at quasi-atomic resolution.
                         </p>
                     </div>
                     <div className='tooltip'>
                         <a href={resolveExampleSnapshotURL('empiar-10070.molj')} target='_blank' rel='noreferrer'><img 
                             alt='EMPIAR 10070' src='img/examples/ex-empiar-10070.png' /></a>
                         <p className='tooltip-info'>
-                            <b><a href='https://www.ebi.ac.uk/empiar/EMPIAR-10070/' target='_blank' rel='noreferrer'>
+                            Exploring very large datasets from tissue microscopy experiments with clear annotations, <b><a href='https://www.ebi.ac.uk/empiar/EMPIAR-10070/' target='_blank' rel='noreferrer'>
                                 EMPIAR 10070
-                            </a></b> showing focused Ion Beam-Scanning Electron Microscopy of mitochondrial reticulum in murine skeletal muscle
+                            </a></b> shows focused Ion Beam-Scanning Electron Microscopy of mitochondrial reticulum in murine skeletal muscle.
                         </p>
                     </div>
                     <div className='tooltip'>
                         <a href={resolveExampleSnapshotURL('idr-6001240.molj')}
                             target='_blank' rel='noreferrer'><img alt='IDR 6001240' src='img/examples/ex-idr-6001240.png' /></a>
                         <p className='tooltip-info'>
-                            <a href='https://idr.openmicroscopy.org/webclient/img_detail/6001240/?dataset=7754' target='_blank' rel='noreferrer'>
+                            Exploring large datasets from light microscopy experiments <a href='https://idr.openmicroscopy.org/webclient/img_detail/6001240/?dataset=7754' target='_blank' rel='noreferrer'>
                                 IDR 6001240
-                            </a> showcasing NGFF support
+                            </a> showcases <a href='https://ngff.openmicroscopy.org/latest/'>OME NGFF</a> support.
                         </p>
                     </div>
                     <div className='tooltip'>
@@ -86,7 +87,7 @@ export function LandingPage() {
                             <b><a href='https://www.ebi.ac.uk/emdb/EMD-9094' target='_blank' rel='noreferrer'>
                                 EMD 9094
                             </a></b> showing 
-                            Single-Molecule 3D Image of Two Human Plasma Intermediate-Density Lipoproteins in Complex with One Monoclonal Antibody MAB012 with Segmentations computed 
+                            Single-Molecule 3D Image of Two Human Plasma Intermediate-Density Lipoproteins in Complex with One Monoclonal Antibody MAB012. The examples compares segmentations computed 
                             by <a href='https://bio3d.colorado.edu/imod/' target='_blank' rel='noreferrer'>IMOD</a> and <a href='https://www.cgl.ucsf.edu/chimera/docs/ContributedSoftware/segger/segment.html' target='_blank' rel='noreferrer'>Segger</a>.
                         </p>
                     </div>
@@ -97,7 +98,7 @@ export function LandingPage() {
                             <b><a href='https://www.ebi.ac.uk/empiar/EMPIAR-10819/' target='_blank' rel='noreferrer'>
                                 EMPIAR 10819
                             </a></b> showing benchmark FIB SEM data of HeLa cells previously imaged by Zeiss LSM900 Airyscan microscopy
-                            visualized using direct volumetric rendering
+                            visualized using direct volumetric rendering.
                         </p>
                     </div>
                 </div>
