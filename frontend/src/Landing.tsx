@@ -37,6 +37,10 @@ export function LandingPage() {
                     Building on the existing Mol* ecosystem, this extension allows seamless integration of biomolecular data from cellular to atomic scale. It provides the means to visualize 
                     large-scale volumetric and segmentation data from cryo-EM, light miscroscopy, volume-EM, and other imagining experiments together with related
                     3D model data and biological annotations. This website is free and open to all users and there is no login requirement.
+
+                    
+                    <a className='button button-primary' href={ViewerURL} style={{ fontSize: '2rem', width: '100%', marginTop: 16 }}
+                        target='_blank' rel='noreferrer'>Open Mol* Viewer with VS Extension</a>
                 </div>
             </div>
         </div>
@@ -107,13 +111,13 @@ export function LandingPage() {
 
         <div style={{ borderTop: '1px solid #E0DDD4', margin: '30px 0' }} />
 
-        <div className='row' style={{ marginTop: 0, display: 'flex' }}>
+        {/* <div className='row' style={{ marginTop: 0, display: 'flex' }}>
             <div className='twelve columns'
                 style= {{ textAlign: 'justify' }}>
                 <a className='button button-primary' href={ViewerURL} style={{ fontSize: '2rem', width: '100%' }}
                     target='_blank' rel='noreferrer'>Open Mol* Viewer</a>
             </div>
-        </div>
+        </div> */}
 
         <div className='row' style={{ marginTop: 10 }}>
             <div className='eight columns'
