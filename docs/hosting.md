@@ -1,4 +1,4 @@
-# Introduction
+# Hosting
 
 This page goes over setting up a local instance of Mol* Volumes and Segmentations server and frontend.
 
