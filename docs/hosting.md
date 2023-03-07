@@ -72,7 +72,7 @@ There are two options:
 
 Example:
 
-- Create a folder `inputs/emd-1832`
+- Create a folder `inputs/emd-9094`
 - Download [`emd_9094.map`](https://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-9094/map/emd_9094.map.gz) and extract it to `inputs/emd-9094/emd_9094.map`
 - Use [Segger](https://www.cgl.ucsf.edu/chimera/docs/ContributedSoftware/segger/segment.html) to compute a segmentation and store it in `inputs/emd-9094/emd_9094.seg`
 - Run
