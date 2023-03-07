@@ -57,7 +57,7 @@ Example:
 
 - Create a folder `inputs/emd-1832`
 - Download [MAP](https://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-1832/map/emd_1832.map.gz) and extract it to `inputs/emd-1832/emd_1832.map`
-- Download [Segmentation](TODO link) to `inputs/emd-1832/emd_1832.hff`
+- Download [Segmentation](https://www.ebi.ac.uk/em_static/emdb_sff/18/1832/emd_1832.hff.gz) and extract it to `inputs/emd-1832/emd_1832.hff`
 - Run
 
 ```
