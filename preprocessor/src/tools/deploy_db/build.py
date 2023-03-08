@@ -88,7 +88,6 @@ def build(args):
     remove_temp_zarr_hierarchy_storage_folder(temp_zarr_hierarchy_storage_path)
 
 if __name__ == '__main__':
-    print("DEFAULT PORTS ARE TEMPORARILY SET TO 4000 and 8000, CHANGE THIS AFTERWARDS")
     atexit.register(clean_up_processes, PROCESS_IDS_LIST)
     args = parse_script_args()
     build(args)
