@@ -91,6 +91,8 @@ python preprocessor/src/tools/deploy_db/build.py --csv_with_entry_ids test-data/
 
 This will build db with 11 EMDB entries, and using default values of all other arguments.
 
+Note that building this example may require a lot of RAM.
+
 Supported `build.py` arguments:
  - `--csv_with_entry_ids` - csv file with entry ids and info to preprocess
  - `--raw_input_files_dir` - path to raw input files to preprocess, defaults to `test-data/preprocessor/raw_input_files`
