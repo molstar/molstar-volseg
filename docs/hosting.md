@@ -127,11 +127,12 @@ cd server
 DEV_MODE=True python serve.py
 ```
 
-Windows:
+Windows (cmd):
 
 ```
 cd server
-set DEV_MODE=True && python serve.py
+set DEV_MODE=true
+python serve.py
 ```
 
 ## Setting up Mol* Viewer
