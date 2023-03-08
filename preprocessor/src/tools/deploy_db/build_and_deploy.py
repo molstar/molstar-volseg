@@ -83,7 +83,6 @@ def _deploy(args):
     return deploy_process
 
 if __name__ == '__main__':
-    print("DEFAULT PORTS ARE TEMPORARILY SET TO 4000 and 8000, CHANGE THIS AFTERWARDS")
     atexit.register(clean_up_processes, PROCESS_IDS_LIST)
     args = parse_script_args()
     build_process, deploy_process = build_and_deploy_db(args)
