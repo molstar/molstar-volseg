@@ -91,7 +91,7 @@ python preprocessor/src/tools/deploy_db/build.py --csv_with_entry_ids test-data/
 
 This will build db with 11 EMDB entries, and using default values of all other arguments.
 
-Note that building this example may require 32GB+ RAM.
+Note that building this example may require 16GB+ RAM.
 
 Supported `build.py` arguments:
  - `--csv_with_entry_ids` - csv file with entry ids and info to preprocess
@@ -138,22 +138,74 @@ python serve.py
 ## Setting up Mol* Viewer
 
 - To view the data, a [Volumes and Segmentations extension](https://github.com/molstar/molstar/tree/master/src/extensions/volumes-and-segmentations) is available as part of the [Mol* Viewer](https://github.com/molstar/molstar). 
-- Please refer to [Mol* Docs](https://molstar.org/docs/) for installing the plugin.
-- You can provide the URL to your server instance as `volumesAndSegmentationsDefaultServer` option when creating the [Viewer instance](https://molstar.org/docs/plugin/#viewer-wrapper), e.g.
-```ts
-molstar.Viewer.create('app', {
-    // other options
-    volumesAndSegmentationsDefaultServer: 'https://my.org/volumes-and-segmentations/v2'
-}).then(viewer => { 
-    // ...
-})
+- In order to install the plugin, run the following commands:
+```
+git clone https://github.com/molstar/molstar.git
+cd molstar
+npm install
+npm run build
 ```
 
-## Build & Host Script
 
-We use the [build_and_deploy.py](../preprocessor/src/tools/deploy_db/build_and_deploy.py) script to preprocess the database and host the API and Landing Page. Modifying this script might be useful when running the solution on your own data.
+- Prepare HTML file:
+```html
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <link rel="icon" href="./favicon.ico" type="image/x-icon">
+        <title>Embedded Volseg</title>
+        <style>
+            #app {
+                position: absolute;
+                left: 100px;
+                top: 100px;
+                width: 800px;
+                height: 600px;
+            }
+        </style>
+        <link rel="stylesheet" type="text/css" href="molstar.css" />
+    </head>
+    <body>
+        <div id="app"></div>
+        <script type="text/javascript" src="./molstar.js"></script>
+        <script type="text/javascript">
+            molstar.Viewer.create('app', {
+                // URL that points to server instance
+                volumesAndSegmentationsDefaultServer: 'http://localhost:9000/v2',
+                layoutIsExpanded: true,
+                layoutShowControls: true,
+                layoutShowRemoteState: false,
+                layoutShowSequence: true,
+                layoutShowLog: false,
+                layoutShowLeftPanel: true,
 
-To build database, and to run both frontend and api, from `molstar-volseg` directory (default) run:
+                viewportShowExpand: true,
+                viewportShowSelectionMode: false,
+                viewportShowAnimation: false,
+
+                pdbProvider: 'rcsb',
+                emdbProvider: 'rcsb',
+            })
+        </script>
+    </body>
+</html>
+```
+
+- Copy `molstar.js` and `molstar.css` from `build/viewer` directory of your local copy of molstar repository in the same directory where the prepared HTML file is located
+
+- Host Mol* Volumes and Segmentations Server as described above
+
+- Open the prepared HTML file in your web-browser, and view entries as described in [Tutorial](https://molstar.org/viewer-docs/volumes_and_segmentations/how-to/)
+
+
+
+## Internal script for preprocessing database, hosting API and Landing page
+
+We use the [build_and_deploy.py](../preprocessor/src/tools/deploy_db/build_and_deploy.py) script to preprocess the database and host the API and Landing Page. Note that it will not host the Mol* viewer locally. Nevertheless, this script with some modifications might be useful when running the solution on your own data. 
+
+To build database, host Landing Page and API, from `molstar-volseg` directory (default) run:
 
 ```
 python preprocessor/src/tools/deploy_db/build_and_deploy.py  --csv_with_entry_ids test-data/preprocessor/db_building_parameters_custom_entries.csv	
