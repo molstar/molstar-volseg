@@ -149,7 +149,7 @@ molstar.Viewer.create('app', {
 })
 ```
 
-## Script for preprocessing database and hosting API and Landing page
+## Internal script for preprocessing database and hosting API and Landing page
 
 We use the [build_and_deploy.py](../preprocessor/src/tools/deploy_db/build_and_deploy.py) script to preprocess the database and host the API and Landing Page. Note that it will not host the Mol* viewer locally. Nevertheless, this script with some modifications might be useful when running the solution on your own data. 
 
