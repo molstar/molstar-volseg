@@ -146,11 +146,11 @@ npm install
 npm run build
 ```
 
-- Download [Embedded Volseg HTML file](./embedded_volseg.html) to `build\viewer` directory in your local copy of molstar repository
+- Download [Embedded Volseg HTML file](./embedded_volseg.html) to `build/viewer` directory in your local copy of molstar repository
 
 - Host Mol* Volumes and Segmentations Server as described above
 
-- Open [Embedded Volseg HTML file](./embedded_volseg.html) in your web-browser, and view entries as described in [Tutorial](https://molstar.org/viewer-docs/volumes_and_segmentations/how-to/)
+- Open the downloaded [Embedded Volseg HTML file](./embedded_volseg.html) in your web-browser, and view entries as described in [Tutorial](https://molstar.org/viewer-docs/volumes_and_segmentations/how-to/)
 
 
 
