@@ -150,7 +150,7 @@ npm run build
 
 - Host Mol* Volumes and Segmentations Server as described above
 
-- Open the downloaded [Embedded Volseg HTML file](./embedded_volseg.html) in your web-browser, and view entries as described in [Tutorial](https://molstar.org/viewer-docs/volumes_and_segmentations/how-to/)
+- Open the prepared HTML file in your web-browser, and view entries as described in [Tutorial](https://molstar.org/viewer-docs/volumes_and_segmentations/how-to/)
 
 
 
