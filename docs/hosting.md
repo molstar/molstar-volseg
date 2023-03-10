@@ -145,17 +145,14 @@ cd molstar
 npm install
 npm run build
 ```
-You can refer to [Mol* Docs](https://molstar.org/docs/) for additional information.
 
-- You can provide the URL to your server instance as `volumesAndSegmentationsDefaultServer` option when creating the [Viewer instance](https://molstar.org/docs/plugin/#viewer-wrapper), e.g.
-```ts
-molstar.Viewer.create('app', {
-    // other options
-    volumesAndSegmentationsDefaultServer: 'https://my.org/volumes-and-segmentations/v2'
-}).then(viewer => { 
-    // ...
-})
-```
+- Download [Embedded Volseg HTML file](./embedded_volseg.html) to `build\viewer` directory in your local copy of molstar repository
+
+- Host Mol* Volumes and Segmentations Server as described above
+
+- Open [Embedded Volseg HTML file](./embedded_volseg.html) in your web-browser, and view entries as described in [Tutorial](https://molstar.org/viewer-docs/volumes_and_segmentations/how-to/)
+
+
 
 ## Internal script for preprocessing database and hosting API and Landing page
 
