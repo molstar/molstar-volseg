@@ -138,7 +138,15 @@ python serve.py
 ## Setting up Mol* Viewer
 
 - To view the data, a [Volumes and Segmentations extension](https://github.com/molstar/molstar/tree/master/src/extensions/volumes-and-segmentations) is available as part of the [Mol* Viewer](https://github.com/molstar/molstar). 
-- Please refer to [Mol* Docs](https://molstar.org/docs/) for installing the plugin.
+- In order to install the plugin, run the following commands:
+```
+git clone https://github.com/molstar/molstar.git
+cd molstar
+npm install
+npm run build
+```
+You can refer to [Mol* Docs](https://molstar.org/docs/) for additional information.
+
 - You can provide the URL to your server instance as `volumesAndSegmentationsDefaultServer` option when creating the [Viewer instance](https://molstar.org/docs/plugin/#viewer-wrapper), e.g.
 ```ts
 molstar.Viewer.create('app', {
