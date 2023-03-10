@@ -146,7 +146,54 @@ npm install
 npm run build
 ```
 
-- Download [Embedded Volseg HTML file](./embedded_volseg.html) to `build/viewer` directory in your local copy of molstar repository
+
+- Prepare HTML file:
+```html
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <link rel="icon" href="./favicon.ico" type="image/x-icon">
+        <title>Embedded Volseg</title>
+        <style>
+            #app {
+                position: absolute;
+                left: 100px;
+                top: 100px;
+                width: 800px;
+                height: 600px;
+            }
+        </style>
+        <link rel="stylesheet" type="text/css" href="molstar.css" />
+    </head>
+    <body>
+        <div id="app"></div>
+        <script type="text/javascript" src="./molstar.js"></script>
+        <script type="text/javascript">
+            molstar.Viewer.create('app', {
+                // URL that points to server instance
+                volumesAndSegmentationsDefaultServer: 'http://localhost:9000/v2',
+                layoutIsExpanded: true,
+                layoutShowControls: true,
+                layoutShowRemoteState: false,
+                layoutShowSequence: true,
+                layoutShowLog: false,
+                layoutShowLeftPanel: true,
+
+                viewportShowExpand: true,
+                viewportShowSelectionMode: false,
+                viewportShowAnimation: false,
+
+                pdbProvider: 'rcsb',
+                emdbProvider: 'rcsb',
+            })
+        </script>
+    </body>
+</html>
+```
+
+- Copy `molstar.js` and `molstar.css` from `build/viewer` directory of your local copy of molstar repository in the same directory where the prepared HTML file is located
 
 - Host Mol* Volumes and Segmentations Server as described above
 
