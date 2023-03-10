@@ -154,11 +154,11 @@ npm run build
 
 
 
-## Internal script for preprocessing database and hosting API and Landing page
+## Internal script for preprocessing database, hosting API and Landing page
 
 We use the [build_and_deploy.py](../preprocessor/src/tools/deploy_db/build_and_deploy.py) script to preprocess the database and host the API and Landing Page. Note that it will not host the Mol* viewer locally. Nevertheless, this script with some modifications might be useful when running the solution on your own data. 
 
-To build database, and to host Landing Page and API, from `molstar-volseg` directory (default) run:
+To build database, host Landing Page and API, from `molstar-volseg` directory (default) run:
 
 ```
 python preprocessor/src/tools/deploy_db/build_and_deploy.py  --csv_with_entry_ids test-data/preprocessor/db_building_parameters_custom_entries.csv	
