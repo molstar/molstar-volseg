@@ -1,6 +1,6 @@
 # Hosting
 
-This page goes over setting up a local instance of Mol* Volumes and Segmentations server and frontend. As this involves cloning the Mol\*VS and Mol* repositories, it is necessary to create a GitHub account and install a GitHub client.
+This page goes over setting up a local instance of Mol* Volumes and Segmentations server and frontend. As this involves cloning the Mol\*VS and Mol\* repositories, it is necessary to create a GitHub account and install a GitHub client.
 
 # Requirements for local hosting
 
