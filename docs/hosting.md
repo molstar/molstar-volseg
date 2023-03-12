@@ -1,6 +1,17 @@
 # Hosting
 
-This page goes over setting up a local instance of Mol* Volumes and Segmentations server and frontend.
+This page goes over setting up a local instance of Mol* Volumes and Segmentations server and frontend. As this involves cloning the Mol\*VS and Mol\* repositories, it is necessary to create a GitHub account and install a GitHub client.
+
+# Requirements for local hosting
+
+Recommended technical requirements:
+ - 16GB RAM or more
+ - 8 cores CPU or more
+ - At least 2GB of available storage (can be more, depending on the number of entries in the database and size of input data to be processed)
+ - Latest version of modern web-browser (e.g. Chrome)
+
+Other requirements:
+ - [Node.js and npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
 
 # Obtaining the code & setting up the environment
 
