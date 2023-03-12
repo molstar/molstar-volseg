@@ -4,9 +4,9 @@ This page goes over setting up a local instance of Mol* Volumes and Segmentation
 
 # Requirements for local hosting
 
-Optimal technical requirements:
+Recommended technical requirements:
  - 16GB RAM or more
- - 4 cores CPU or more
+ - 8 cores CPU or more
  - At least 2GB of available storage (can be more, depending on the number of entries in the database and size of input data to be processed)
  - Latest version of modern web-browser (e.g. Chrome)
 
