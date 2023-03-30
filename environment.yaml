@@ -32,6 +32,7 @@ dependencies:
 
   - pip:
     # - -r requirements.txt
+    - -e .
     - git+https://github.com/molstar/ciftools-python.git@b074526a8b418bc68d83ae5556a627d2d6ceabdb#egg=ciftools
     - sfftk==0.5.5.dev1
     - sfftk-rw==0.7.1
