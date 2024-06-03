@@ -23,7 +23,8 @@ dependencies:
   - starfile
   - starlette==0.17.1
   - uvicorn==0.17.6
-  - numba
+  # with 0.59.1 produces warning
+  - numba==0.58.1
   # there were issues with version of this package
   # uncomment if without it it would not work
   # - vtk==9.0.3
