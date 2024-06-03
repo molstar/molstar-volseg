@@ -1,4 +1,5 @@
 ### Custom
+temp_working_folder/*
 db/cellstar_db/tests/test_data/*
 test-data/preprocessor/db_building_parameters.json
 preprocessor/cellstar_preprocessor/tests/test_data/working_folder/*
