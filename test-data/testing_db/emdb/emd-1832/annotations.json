@@ -1,0 +1,421 @@
+{
+    "annotations": [
+        {
+            "color": [
+                0.521576881408691,
+                0.889867722988129,
+                0.848475754261017,
+                1.0
+            ],
+            "id": "ae8ec57c-6291-4ca0-9286-27567877b808",
+            "segment_id": 85,
+            "segment_kind": "lattice",
+            "segmentation_id": "0",
+            "time": 0
+        },
+        {
+            "color": [
+                0.504164099693298,
+                0.644178092479706,
+                0.78633439540863,
+                1.0
+            ],
+            "id": "5b0ba2f5-9eb6-4363-9f1f-e85eef27171e",
+            "segment_id": 93,
+            "segment_kind": "lattice",
+            "segmentation_id": "0",
+            "time": 0
+        },
+        {
+            "color": [
+                0.669882595539093,
+                0.86139714717865,
+                0.948218941688538,
+                1.0
+            ],
+            "id": "ea8f7e41-bee2-4039-9b46-eb49ca3cc237",
+            "segment_id": 97,
+            "segment_kind": "lattice",
+            "segmentation_id": "0",
+            "time": 0
+        },
+        {
+            "color": [
+                0.862361133098602,
+                0.965298295021057,
+                0.697644174098969,
+                1.0
+            ],
+            "id": "488248d6-1b16-405b-8477-bf42762bfea4",
+            "segment_id": 101,
+            "segment_kind": "lattice",
+            "segmentation_id": "0",
+            "time": 0
+        },
+        {
+            "color": [
+                0.706890761852264,
+                0.626759827136993,
+                0.604495763778687,
+                1.0
+            ],
+            "id": "5e477217-c469-4ecd-98dd-8e9ba89fdb02",
+            "segment_id": 103,
+            "segment_kind": "lattice",
+            "segmentation_id": "0",
+            "time": 0
+        },
+        {
+            "color": [
+                0.787909328937531,
+                0.924791157245636,
+                0.951091408729553,
+                1.0
+            ],
+            "id": "116ec868-b817-4efa-b1b5-bf8b4196f0d0",
+            "segment_id": 104,
+            "segment_kind": "lattice",
+            "segmentation_id": "0",
+            "time": 0
+        }
+    ],
+    "descriptions": {
+        "17fab12d-741e-422f-9414-952b574b6e3f": {
+            "description": null,
+            "external_references": [
+                {
+                    "accession": "GO_0006260",
+                    "description": "The cellular metabolic process in which a cell duplicates one or more molecules of DNA. DNA replication begins when specific sequences, known as origins of replication, are recognized and bound by initiation proteins, and ends when the original DNA molecule has been completely duplicated and the copies topologically separated. The unit of replication usually corresponds to the genome of the cell, an organelle, or a virus. The template for replication can either be an existing DNA molecule or RNA.",
+                    "id": 36,
+                    "label": "DNA replication",
+                    "resource": "go",
+                    "url": "http://purl.obolibrary.org/obo/GO_0006260"
+                },
+                {
+                    "accession": "GO_0030174",
+                    "description": "Any process that modulates the frequency, rate or extent of initiation of DNA-dependent DNA replication; the process in which DNA becomes competent to replicate. In eukaryotes, replication competence is established in early G1 and lost during the ensuing S phase.",
+                    "id": 37,
+                    "label": "regulation of DNA-dependent DNA replication initiation",
+                    "resource": "go",
+                    "url": "http://purl.obolibrary.org/obo/GO_0030174"
+                },
+                {
+                    "accession": "PR_000010249",
+                    "description": "A protein that is a translation product of the human MCM7 gene or a 1:1 ortholog thereof.",
+                    "id": 38,
+                    "label": "DNA replication licensing factor MCM7",
+                    "resource": "pr",
+                    "url": "http://purl.obolibrary.org/obo/PR_000010249"
+                },
+                {
+                    "accession": "NCIT_C33912",
+                    "description": "DNA replication licensing factor MCM7 (8719 aa, ~81 kDa) is encoded by the human MCM7 gene. This protein plays a role in the synthesis of a single copy of a genome before mitosis.",
+                    "id": 39,
+                    "label": "DNA Replication Licensing Factor MCM7",
+                    "resource": "ncit",
+                    "url": "http://purl.obolibrary.org/obo/NCIT_C33912"
+                },
+                {
+                    "accession": "Q9XYU0",
+                    "description": "undefined (Drosophila melanogaster (Fruit fly))",
+                    "id": 40,
+                    "label": "MCM7_DROME",
+                    "resource": "UniProt",
+                    "url": "https://www.uniprot.org/uniprot/Q9XYU0"
+                }
+            ],
+            "id": "17fab12d-741e-422f-9414-952b574b6e3f",
+            "is_hidden": null,
+            "metadata": null,
+            "name": "DNA replication licensing factor MCM7",
+            "target_id": {
+                "segment_id": 104,
+                "segmentation_id": "0"
+            },
+            "target_kind": "lattice",
+            "time": 0
+        },
+        "23b2bdae-de72-49c9-b102-e32621092ce2": {
+            "description": null,
+            "external_references": [
+                {
+                    "accession": "GO_0006260",
+                    "description": "The cellular metabolic process in which a cell duplicates one or more molecules of DNA. DNA replication begins when specific sequences, known as origins of replication, are recognized and bound by initiation proteins, and ends when the original DNA molecule has been completely duplicated and the copies topologically separated. The unit of replication usually corresponds to the genome of the cell, an organelle, or a virus. The template for replication can either be an existing DNA molecule or RNA.",
+                    "id": 41,
+                    "label": "DNA replication",
+                    "resource": "go",
+                    "url": "http://purl.obolibrary.org/obo/GO_0006260"
+                },
+                {
+                    "accession": "GO_0030174",
+                    "description": "Any process that modulates the frequency, rate or extent of initiation of DNA-dependent DNA replication; the process in which DNA becomes competent to replicate. In eukaryotes, replication competence is established in early G1 and lost during the ensuing S phase.",
+                    "id": 42,
+                    "label": "regulation of DNA-dependent DNA replication initiation",
+                    "resource": "go",
+                    "url": "http://purl.obolibrary.org/obo/GO_0030174"
+                },
+                {
+                    "accession": "PR_000010242",
+                    "description": "A protein that is a translation product of the human MCM2 gene or a 1:1 ortholog thereof.",
+                    "id": 43,
+                    "label": "DNA replication licensing factor MCM2",
+                    "resource": "pr",
+                    "url": "http://purl.obolibrary.org/obo/PR_000010242"
+                },
+                {
+                    "accession": "NCIT_C28642",
+                    "description": "DNA replication licensing factor MCM2 (904 aa, ~102 kDa) is encoded by the human MCM2 gene. This protein plays a role in cell cycle regulation.",
+                    "id": 44,
+                    "label": "DNA Replication Licensing Factor MCM2",
+                    "resource": "ncit",
+                    "url": "http://purl.obolibrary.org/obo/NCIT_C28642"
+                },
+                {
+                    "accession": "P49735",
+                    "description": "undefined (Drosophila melanogaster (Fruit fly))",
+                    "id": 45,
+                    "label": "MCM2_DROME",
+                    "resource": "UniProt",
+                    "url": "https://www.uniprot.org/uniprot/P49735"
+                }
+            ],
+            "id": "23b2bdae-de72-49c9-b102-e32621092ce2",
+            "is_hidden": null,
+            "metadata": null,
+            "name": "DNA replication licensing factor MCM2",
+            "target_id": {
+                "segment_id": 85,
+                "segmentation_id": "0"
+            },
+            "target_kind": "lattice",
+            "time": 0
+        },
+        "5b227a0e-9b1a-489c-9ab7-829ffb3d8551": {
+            "description": null,
+            "external_references": [
+                {
+                    "accession": "GO_0006260",
+                    "description": "The cellular metabolic process in which a cell duplicates one or more molecules of DNA. DNA replication begins when specific sequences, known as origins of replication, are recognized and bound by initiation proteins, and ends when the original DNA molecule has been completely duplicated and the copies topologically separated. The unit of replication usually corresponds to the genome of the cell, an organelle, or a virus. The template for replication can either be an existing DNA molecule or RNA.",
+                    "id": 51,
+                    "label": "DNA replication",
+                    "resource": "go",
+                    "url": "http://purl.obolibrary.org/obo/GO_0006260"
+                },
+                {
+                    "accession": "GO_0030174",
+                    "description": "Any process that modulates the frequency, rate or extent of initiation of DNA-dependent DNA replication; the process in which DNA becomes competent to replicate. In eukaryotes, replication competence is established in early G1 and lost during the ensuing S phase.",
+                    "id": 52,
+                    "label": "regulation of DNA-dependent DNA replication initiation",
+                    "resource": "go",
+                    "url": "http://purl.obolibrary.org/obo/GO_0030174"
+                },
+                {
+                    "accession": "PR_000010246",
+                    "description": "A protein that is a translation product of the human MCM4 gene or a 1:1 ortholog thereof.",
+                    "id": 53,
+                    "label": "DNA replication licensing factor MCM4",
+                    "resource": "pr",
+                    "url": "http://purl.obolibrary.org/obo/PR_000010246"
+                },
+                {
+                    "accession": "NCIT_C33909",
+                    "description": "DNA replication licensing factor MCM4 (863 aa, ~97 kDa) is encoded by the human MCM4 gene. This protein is involved in the initiation of DNA replication.",
+                    "id": 54,
+                    "label": "DNA Replication Licensing Factor MCM4",
+                    "resource": "ncit",
+                    "url": "http://purl.obolibrary.org/obo/NCIT_C33909"
+                },
+                {
+                    "accession": "Q26454",
+                    "description": "undefined (Drosophila melanogaster (Fruit fly))",
+                    "id": 55,
+                    "label": "MCM4_DROME",
+                    "resource": "UniProt",
+                    "url": "https://www.uniprot.org/uniprot/Q26454"
+                }
+            ],
+            "id": "5b227a0e-9b1a-489c-9ab7-829ffb3d8551",
+            "is_hidden": null,
+            "metadata": null,
+            "name": "DNA replication licensing factor MCM4",
+            "target_id": {
+                "segment_id": 97,
+                "segmentation_id": "0"
+            },
+            "target_kind": "lattice",
+            "time": 0
+        },
+        "69b81ef0-2737-4e82-8c93-dc4cea78b80d": {
+            "description": null,
+            "external_references": [
+                {
+                    "accession": "GO_0006260",
+                    "description": "The cellular metabolic process in which a cell duplicates one or more molecules of DNA. DNA replication begins when specific sequences, known as origins of replication, are recognized and bound by initiation proteins, and ends when the original DNA molecule has been completely duplicated and the copies topologically separated. The unit of replication usually corresponds to the genome of the cell, an organelle, or a virus. The template for replication can either be an existing DNA molecule or RNA.",
+                    "id": 26,
+                    "label": "DNA replication",
+                    "resource": "go",
+                    "url": "http://purl.obolibrary.org/obo/GO_0006260"
+                },
+                {
+                    "accession": "GO_0030174",
+                    "description": "Any process that modulates the frequency, rate or extent of initiation of DNA-dependent DNA replication; the process in which DNA becomes competent to replicate. In eukaryotes, replication competence is established in early G1 and lost during the ensuing S phase.",
+                    "id": 27,
+                    "label": "regulation of DNA-dependent DNA replication initiation",
+                    "resource": "go",
+                    "url": "http://purl.obolibrary.org/obo/GO_0030174"
+                },
+                {
+                    "accession": "PR_000010247",
+                    "description": "A protein that is a translation product of the human MCM5 gene or a 1:1 ortholog thereof.",
+                    "id": 28,
+                    "label": "DNA replication licensing factor MCM5",
+                    "resource": "pr",
+                    "url": "http://purl.obolibrary.org/obo/PR_000010247"
+                },
+                {
+                    "accession": "NCIT_C33910",
+                    "description": "DNA replication licensing factor MCM5 (734 aa, ~82 kDa) is encoded by the human MCM5 gene. This protein plays a role in DNA replication.",
+                    "id": 29,
+                    "label": "DNA Replication Licensing Factor MCM5",
+                    "resource": "ncit",
+                    "url": "http://purl.obolibrary.org/obo/NCIT_C33910"
+                },
+                {
+                    "accession": "Q9VGW6",
+                    "description": "undefined (Drosophila melanogaster (Fruit fly))",
+                    "id": 30,
+                    "label": "MCM5_DROME",
+                    "resource": "UniProt",
+                    "url": "https://www.uniprot.org/uniprot/Q9VGW6"
+                }
+            ],
+            "id": "69b81ef0-2737-4e82-8c93-dc4cea78b80d",
+            "is_hidden": null,
+            "metadata": null,
+            "name": "DNA replication licensing factor MCM5",
+            "target_id": {
+                "segment_id": 101,
+                "segmentation_id": "0"
+            },
+            "target_kind": "lattice",
+            "time": 0
+        },
+        "6f60dc0f-ca86-4f3a-9635-04a52d1ff78c": {
+            "description": null,
+            "external_references": [
+                {
+                    "accession": "GO_0006260",
+                    "description": "The cellular metabolic process in which a cell duplicates one or more molecules of DNA. DNA replication begins when specific sequences, known as origins of replication, are recognized and bound by initiation proteins, and ends when the original DNA molecule has been completely duplicated and the copies topologically separated. The unit of replication usually corresponds to the genome of the cell, an organelle, or a virus. The template for replication can either be an existing DNA molecule or RNA.",
+                    "id": 31,
+                    "label": "DNA replication",
+                    "resource": "go",
+                    "url": "http://purl.obolibrary.org/obo/GO_0006260"
+                },
+                {
+                    "accession": "GO_0030174",
+                    "description": "Any process that modulates the frequency, rate or extent of initiation of DNA-dependent DNA replication; the process in which DNA becomes competent to replicate. In eukaryotes, replication competence is established in early G1 and lost during the ensuing S phase.",
+                    "id": 32,
+                    "label": "regulation of DNA-dependent DNA replication initiation",
+                    "resource": "go",
+                    "url": "http://purl.obolibrary.org/obo/GO_0030174"
+                },
+                {
+                    "accession": "PR_000010248",
+                    "description": "A protein that is a translation product of the human MCM6 gene or a 1:1 ortholog thereof.",
+                    "id": 33,
+                    "label": "DNA replication licensing factor MCM6",
+                    "resource": "pr",
+                    "url": "http://purl.obolibrary.org/obo/PR_000010248"
+                },
+                {
+                    "accession": "NCIT_C33911",
+                    "description": "DNA replication licensing factor MCM6 (821 aa, ~93 kDa) is encoded by the human MCM6 gene. This protein is involved in DNA replication.",
+                    "id": 34,
+                    "label": "DNA Replication Licensing Factor MCM6",
+                    "resource": "ncit",
+                    "url": "http://purl.obolibrary.org/obo/NCIT_C33911"
+                },
+                {
+                    "accession": "Q9V461",
+                    "description": "undefined (Drosophila melanogaster (Fruit fly))",
+                    "id": 35,
+                    "label": "MCM6_DROME",
+                    "resource": "UniProt",
+                    "url": "https://www.uniprot.org/uniprot/Q9V461"
+                }
+            ],
+            "id": "6f60dc0f-ca86-4f3a-9635-04a52d1ff78c",
+            "is_hidden": null,
+            "metadata": null,
+            "name": "DNA replication licensing factor MCM6",
+            "target_id": {
+                "segment_id": 103,
+                "segmentation_id": "0"
+            },
+            "target_kind": "lattice",
+            "time": 0
+        },
+        "7579108f-acd5-41ac-bd39-662c8463b921": {
+            "description": null,
+            "external_references": [
+                {
+                    "accession": "GO_0006260",
+                    "description": "The cellular metabolic process in which a cell duplicates one or more molecules of DNA. DNA replication begins when specific sequences, known as origins of replication, are recognized and bound by initiation proteins, and ends when the original DNA molecule has been completely duplicated and the copies topologically separated. The unit of replication usually corresponds to the genome of the cell, an organelle, or a virus. The template for replication can either be an existing DNA molecule or RNA.",
+                    "id": 46,
+                    "label": "DNA replication",
+                    "resource": "go",
+                    "url": "http://purl.obolibrary.org/obo/GO_0006260"
+                },
+                {
+                    "accession": "GO_0030174",
+                    "description": "Any process that modulates the frequency, rate or extent of initiation of DNA-dependent DNA replication; the process in which DNA becomes competent to replicate. In eukaryotes, replication competence is established in early G1 and lost during the ensuing S phase.",
+                    "id": 47,
+                    "label": "regulation of DNA-dependent DNA replication initiation",
+                    "resource": "go",
+                    "url": "http://purl.obolibrary.org/obo/GO_0030174"
+                },
+                {
+                    "accession": "PR_000010243",
+                    "description": "A protein that is a translation product of the human MCM3 gene or a 1:1 ortholog thereof.",
+                    "id": 48,
+                    "label": "DNA replication licensing factor MCM3",
+                    "resource": "pr",
+                    "url": "http://purl.obolibrary.org/obo/PR_000010243"
+                },
+                {
+                    "accession": "NCIT_C28684",
+                    "description": "DNA replication licensing factor MCM3 (808aa, ~91 kDa) is encoded by the human MCM3 gene. This protein is involved in the modulation of the cell cycle.",
+                    "id": 49,
+                    "label": "DNA Replication Licensing Factor MCM3",
+                    "resource": "ncit",
+                    "url": "http://purl.obolibrary.org/obo/NCIT_C28684"
+                },
+                {
+                    "accession": "Q9XYU1",
+                    "description": "undefined (Drosophila melanogaster (Fruit fly))",
+                    "id": 50,
+                    "label": "MCM3_DROME",
+                    "resource": "UniProt",
+                    "url": "https://www.uniprot.org/uniprot/Q9XYU1"
+                }
+            ],
+            "id": "7579108f-acd5-41ac-bd39-662c8463b921",
+            "is_hidden": null,
+            "metadata": null,
+            "name": "DNA replication licensing factor MCM3",
+            "target_id": {
+                "segment_id": 93,
+                "segmentation_id": "0"
+            },
+            "target_kind": "lattice",
+            "time": 0
+        }
+    },
+    "details": "Drosophila melanogaster, recombinantly expressed in Baculovirus infected insect cells ",
+    "entry_id": {
+        "source_db_id": "emd-1832",
+        "source_db_name": "emdb"
+    },
+    "name": "Segmentation of Drosophila melanogaster CMG complex bound to ADP.BeF3",
+    "volume_channels_annotations": []
+}

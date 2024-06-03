@@ -1,4 +1,12 @@
 ### Custom
+db/cellstar_db/tests/test_data/*
+test-data/preprocessor/db_building_parameters.json
+preprocessor/cellstar_preprocessor/tests/test_data/working_folder/*
+non-preprocessed_data/
+vs_toolkit/tests/test_data/query_parameters/*
+# test-data/preprocessor/sample_volumes
+test-data/preprocessor/sample_segmentations
+test-data/preprocessor/sample_ome_tiff
 test-data/db/
 preprocessor.3.9.0/
 preprocessor/_old/sample_arr_plots/

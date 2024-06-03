@@ -1,0 +1,139 @@
+{
+    "segment_annotations": [
+        {
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                0.25098039215686274
+            ],
+            "id": "fa6f3fba-2e46-4ca5-a839-c1348b361cd9",
+            "segment_id": 2371559,
+            "segment_kind": "lattice",
+            "segmentation_id": "0",
+            "time": [
+                0,
+                1,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9
+            ]
+        }
+    ],
+    "descriptions": {
+        "41ac3f33-03dd-498a-9bfa-0b27d3885f0f": {
+            "details": null,
+            "external_references": [],
+            "id": "41ac3f33-03dd-498a-9bfa-0b27d3885f0f",
+            "is_hidden": null,
+            "metadata": null,
+            "name": "segment 2371559",
+            "target_id": {
+                "segment_id": 2371559,
+                "segmentation_id": "0"
+            },
+            "target_kind": "lattice",
+            "time": [
+                0,
+                1,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9
+            ]
+        }
+    },
+    "details": null,
+    "entry_id": {
+        "source_db_id": "idr-13457537",
+        "source_db_name": "idr"
+    },
+    "name": null,
+    "volume_channels_annotations": [
+        {
+            "channel_id": "0",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "label": "cy 1"
+        },
+        {
+            "channel_id": "1",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "label": "cy 2"
+        },
+        {
+            "channel_id": "2",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "label": "cy 3"
+        },
+        {
+            "channel_id": "3",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "label": "cy 4"
+        },
+        {
+            "channel_id": "4",
+            "color": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+            ],
+            "label": "DAPI"
+        },
+        {
+            "channel_id": "5",
+            "color": [
+                1.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "label": "Hyb probe"
+        }
+    ]
+}

@@ -1,0 +1,161 @@
+{
+    "entry_id": {
+        "source_db_id": "emd-1832",
+        "source_db_name": "emdb"
+    },
+    "geometric_segmentation": {
+        "segmentation_ids": [],
+        "time_info": {}
+    },
+    "segmentation_lattices": {
+        "segmentation_ids": [
+            "0"
+        ],
+        "segmentation_sampling_info": {
+            "0": {
+                "boxes": {
+                    "1": {
+                        "grid_dimensions": [
+                            64,
+                            64,
+                            64
+                        ],
+                        "origin": [
+                            -182.399995,
+                            -182.399995,
+                            -182.399995
+                        ],
+                        "voxel_size": [
+                            5.69999984375,
+                            5.69999984375,
+                            5.69999984375
+                        ]
+                    },
+                    "2": {
+                        "grid_dimensions": [
+                            32,
+                            32,
+                            32
+                        ],
+                        "origin": [
+                            -182.399995,
+                            -182.399995,
+                            -182.399995
+                        ],
+                        "voxel_size": [
+                            11.3999996875,
+                            11.3999996875,
+                            11.3999996875
+                        ]
+                    }
+                },
+                "original_axis_order": [
+                    0,
+                    1,
+                    2
+                ],
+                "source_axes_units": {},
+                "spatial_downsampling_levels": [
+                    1,
+                    2
+                ],
+                "time_transformations": []
+            }
+        },
+        "time_info": {
+            "0": {
+                "end": 0,
+                "kind": "range",
+                "start": 0,
+                "units": "millisecond"
+            }
+        }
+    },
+    "segmentation_meshes": {
+        "segmentation_ids": [],
+        "segmentation_metadata": {},
+        "time_info": {}
+    },
+    "volumes": {
+        "channel_ids": [
+            0
+        ],
+        "time_info": {
+            "end": 0,
+            "kind": "range",
+            "start": 0,
+            "units": "millisecond"
+        },
+        "volume_sampling_info": {
+            "boxes": {
+                "1": {
+                    "grid_dimensions": [
+                        64,
+                        64,
+                        64
+                    ],
+                    "origin": [
+                        -182.399995,
+                        -182.399995,
+                        -182.399995
+                    ],
+                    "voxel_size": [
+                        5.69999984375,
+                        5.69999984375,
+                        5.69999984375
+                    ]
+                },
+                "2": {
+                    "grid_dimensions": [
+                        32,
+                        32,
+                        32
+                    ],
+                    "origin": [
+                        -182.399995,
+                        -182.399995,
+                        -182.399995
+                    ],
+                    "voxel_size": [
+                        11.3999996875,
+                        11.3999996875,
+                        11.3999996875
+                    ]
+                }
+            },
+            "descriptive_statistics": {
+                "1": {
+                    "0": {
+                        "0": {
+                            "max": 2.0523305,
+                            "mean": -0.0024537898,
+                            "min": -0.15937988,
+                            "std": 0.15500118
+                        }
+                    }
+                },
+                "2": {
+                    "0": {
+                        "0": {
+                            "max": 1.3624439,
+                            "mean": -0.0024604741,
+                            "min": -0.15937988,
+                            "std": 0.12664187
+                        }
+                    }
+                }
+            },
+            "original_axis_order": [
+                0,
+                1,
+                2
+            ],
+            "source_axes_units": {},
+            "spatial_downsampling_levels": [
+                1,
+                2
+            ],
+            "time_transformations": []
+        }
+    }
+}
