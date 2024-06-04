@@ -1,0 +1,132 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "$defs": {
+        "DatasetSpecificData": {
+            "type": [
+                "object",
+                "null"
+            ]
+        },
+        "SegmentIDsToSegmentNamesMapping": {
+            "type": "object",
+            "propertyNames": {
+                "format": "string"
+            },
+            "additionalProperties": {
+                "type": "string"
+            }
+        },
+        "CustomSegmentIDsMapping": {
+            "type": "object",
+            "propertyNames": {
+                "format": "string"
+            },
+            "additionalProperties": {
+                "$ref": "#/$defs/SegmentIDsToSegmentNamesMapping"
+            }
+        },
+        "VolumeExtraData": {
+            "type": [
+                "object",
+                "null"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "voxel_size": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    },
+                    "minItems": 3,
+                    "maxItems": 3
+                },
+                "channel_ids_mapping": {
+                    "type": "object",
+                    "propertyNames": {
+                        "format": "string"
+                    },
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "dataset_specific_data": {
+                    "allOf": [
+                        {
+                            "$ref": "#/$defs/DatasetSpecificData"
+                        }
+                    ]
+                }
+            }
+        },
+        "SegmentationExtraData": {
+            "type": [
+                "object",
+                "null"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "voxel_size": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    },
+                    "minItems": 3,
+                    "maxItems": 3
+                },
+                "segmentation_ids_mapping": {
+                    "type": "object",
+                    "propertyNames": {
+                        "format": "string"
+                    },
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "dataset_specific_data": {
+                    "allOf": [
+                        {
+                            "$ref": "#/$defs/DatasetSpecificData"
+                        }
+                    ]
+                }
+            }
+        },
+        "EntryMetadata": {
+            "type": [
+                "object",
+                "null"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "description": {
+                    "type": ["string", "null"]
+                },
+                "url": {
+                    "type": ["string", "null"],
+                    "format": "uri"
+                }
+            }
+        }
+    },
+    "properties": {
+        "volume": {
+            "oneOf": [
+                {"type": "null"},
+                {"$ref": "#/$defs/VolumeExtraData"}
+            ]
+        },
+        "segmentation": {
+            "oneOf": [
+                {"type": "null"},
+                {"$ref": "#/$defs/SegmentationExtraData"}
+            ]
+        },
+        "entry_metadata": {
+            "oneOf": [
+                {"type": "null"},
+                {"$ref": "#/$defs/EntryMetadata"}
+            ]
+        }
+    }
+}

@@ -31,16 +31,12 @@ export function LandingPage() {
                     <source src='img/intro.mp4' type='video/mp4' />
                 </video>
             </div>
-            <div className='seven columns' style={{ display: 'flex', alignItems: 'center' }}>
+            <div className='seven columns'  style= {{ display: 'flex', alignItems: 'center' }}>
                 <div style={{ textAlign: 'justify', margin: 5 }}>
                     Mol* Volumes & Segmentations (Mol*VS) is a <a href='https://doi.org/10.1093/nar/gkab314'>Mol* Viewer</a> extension which adds support for large scale volumetric data & their segmentations.
-                    Building on the existing Mol* ecosystem, this extension allows seamless integration of biomolecular data from cellular to atomic scale. It provides the means to visualize
+                    Building on the existing Mol* ecosystem, this extension allows seamless integration of biomolecular data from cellular to atomic scale. It provides the means to visualize 
                     large-scale volumetric and segmentation data from cryo-EM, light miscroscopy, volume-EM, and other imagining experiments together with related
                     3D model data and biological annotations. This website is free and open to all users and there is no login requirement.
-
-
-                    <a className='button button-primary' href={ViewerURL} style={{ fontSize: '2rem', width: '100%', marginTop: 16 }}
-                        target='_blank' rel='noreferrer'>Open Mol* Viewer with VS Extension</a>
                 </div>
             </div>
         </div>
@@ -59,7 +55,7 @@ export function LandingPage() {
                         <a href={resolveExampleSnapshotURL('emd-1014.molj')}
                             target='_blank' rel='noreferrer'><img alt='EMD 1014' src='img/examples/emd-1014.png' /></a>
                         <p className='tooltip-info'>
-                            <a href='https://www.cell.com/structure/fulltext/S0969-2126(01)00642-6'>San Martin et al.</a> conducted extensive cryo-EM imaging
+                            <a href='https://www.cell.com/structure/fulltext/S0969-2126(01)00642-6'>San Martin et al.</a> conducted extensive cryo-EM imaging 
                             and refined 3D reconstruction (<b><a href='https://www.ebi.ac.uk/emdb/EMD-1014' target='_blank' rel='noreferrer'>
                                 EMD 1014
                             </a></b>) of a large bacteriophage by fitting a crystalographic model of P3. They were then able to infer potential interactions between the capsid
@@ -67,7 +63,7 @@ export function LandingPage() {
                         </p>
                     </div>
                     <div className='tooltip'>
-                        <a href={resolveExampleSnapshotURL('empiar-10070.molj')} target='_blank' rel='noreferrer'><img
+                        <a href={resolveExampleSnapshotURL('empiar-10070.molj')} target='_blank' rel='noreferrer'><img 
                             alt='EMPIAR 10070' src='img/examples/ex-empiar-10070.png' /></a>
                         <p className='tooltip-info'>
                             Exploring very large datasets from tissue microscopy experiments with clear annotations, <b><a href='https://www.ebi.ac.uk/empiar/EMPIAR-10070/' target='_blank' rel='noreferrer'>
@@ -90,13 +86,13 @@ export function LandingPage() {
                         <p className='tooltip-info'>
                             <b><a href='https://www.ebi.ac.uk/emdb/EMD-9094' target='_blank' rel='noreferrer'>
                                 EMD 9094
-                            </a></b> showing
-                            Single-Molecule 3D Image of Two Human Plasma Intermediate-Density Lipoproteins in Complex with One Monoclonal Antibody MAB012. The examples compares segmentations computed
+                            </a></b> showing 
+                            Single-Molecule 3D Image of Two Human Plasma Intermediate-Density Lipoproteins in Complex with One Monoclonal Antibody MAB012. The examples compares segmentations computed 
                             by <a href='https://bio3d.colorado.edu/imod/' target='_blank' rel='noreferrer'>IMOD</a> and <a href='https://www.cgl.ucsf.edu/chimera/docs/ContributedSoftware/segger/segment.html' target='_blank' rel='noreferrer'>Segger</a>.
                         </p>
                     </div>
                     <div className='tooltip'>
-                        <a href={resolveExampleSnapshotURL('empiar-10819.molj')} target='_blank' rel='noreferrer'><img
+                        <a href={resolveExampleSnapshotURL('empiar-10819.molj')} target='_blank' rel='noreferrer'><img 
                             alt='EMPIAR 10819' src='img/examples/empiar-10819.png' /></a>
                         <p className='tooltip-info'>
                             <b><a href='https://www.ebi.ac.uk/empiar/EMPIAR-10819/' target='_blank' rel='noreferrer'>
@@ -111,18 +107,18 @@ export function LandingPage() {
 
         <div style={{ borderTop: '1px solid #E0DDD4', margin: '30px 0' }} />
 
-        {/* <div className='row' style={{ marginTop: 0, display: 'flex' }}>
+        <div className='row' style={{ marginTop: 0, display: 'flex' }}>
             <div className='twelve columns'
                 style= {{ textAlign: 'justify' }}>
                 <a className='button button-primary' href={ViewerURL} style={{ fontSize: '2rem', width: '100%' }}
                     target='_blank' rel='noreferrer'>Open Mol* Viewer</a>
             </div>
-        </div> */}
+        </div>
 
         <div className='row' style={{ marginTop: 10 }}>
             <div className='eight columns'
-                style={{ textAlign: 'justify' }}>
-                As of {`${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`}, the Mol*VS internal database contains <EntryCount /> entries.
+                style= {{ textAlign: 'justify' }}>
+                As of {`${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`}, the Mol*VS internal database contains <EntryCount /> entries. 
                 We are actively cooperating with teams from <a href='https://www.ebi.ac.uk/emdb/'>EMDB</a>, <a href='https://www.ebi.ac.uk/empiar/'>EMPIAR</a>, and <a href='https://www.ebi.ac.uk/bioimage-archive/'>BioImageArchive</a> to ensure that Mol*VS always contains the latest
                 segmentation data available in these primary sources. If you encounter trouble with a specific entry, check our documentation, as
                 some of the source data may contain errors or not show well using default settings. To report issues or give suggestions, please get in touch with us.
@@ -153,24 +149,15 @@ export function LandingPage() {
                 </div>
             </div>
             <div className='eight columns'
-                style={{ textAlign: 'justify', display: 'flex', alignItems: 'center' }}>
-                Mol*VS is an open-source project with a permissive MIT license.<br />
+                style= {{ textAlign: 'justify', display: 'flex', alignItems: 'center' }}>
+                Mol*VS is an open-source project with a permissive MIT license.<br/>
                 Do you have volume or mesh segmentation data that you wish to visualize before/without submission to a public database? You can do so by running an independent instance of Mol* with the Volumes and Segmentations extension.
             </div>
         </div>
 
-        <div className='row' style={{ textAlign: 'center', marginTop: 40 }}>
-            <div className='twelve columns' style={{ borderTop: '1px solid #E0DDD4', paddingTop: 30 }}>
-                <div className='founders'>
-                    <a href="https://www.elixir-czech.cz/services"><img
-                        alt="Elixir"
-                        title="Mol* Volumes and Segmentations is a part of services provided by ELIXIR – European research infrastructure for biological information. For other services provided by ELIXIR's Czech Republic Node"
-                        src="img/elixir_logo.png" /></a>
-                </div>
-            </div>
-        </div>
+        <div style={{ borderTop: '1px solid #E0DDD4', margin: '30px 0' }} />
 
-        <div className='row' style={{ textAlign: 'right', color: '#999', marginTop: 20 }}>
+        <div className='row' style={{ textAlign: 'right', color: '#999' }}>
             Copyright 2022–now, Mol* Volumes & Segmentations Contributors | <a href='terms-of-use.html' style={{ color: '#999' }}>Terms of Use &
                 GDPR</a>
         </div>
@@ -186,8 +173,8 @@ export function LandingPage() {
 }
 
 function resolveExampleSnapshotURL(snapshot: string) {
-    // const snapshotRoot = `${window.location.origin}/snapshots/`;
-    const snapshotRoot = 'https://molstarvolseg.ncbr.muni.cz/snapshots/';
+    const snapshotRoot = `${window.location.origin}/snapshots/`;
+    // const snapshotRoot = 'https://molstarvolseg.ncbr.muni.cz/snapshots/';
     return `${ViewerURL}?snapshot-url=${encodeURIComponent(`${snapshotRoot}${snapshot}`)}&snapshot-url-type=molj&prefer-webgl1=1`;
 }
 
