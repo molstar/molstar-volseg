@@ -32,6 +32,7 @@ dependencies:
   - dask-image
   - pydantic
   - ome-zarr
+  - jupyterlab
 
   - pip:
     # - -r requirements.txt
