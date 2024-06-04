@@ -981,7 +981,7 @@ class Preprocessor:
         self._execute_tasks(tasks)
         return
 
-    def store_to_db(self):
+    def store_to_db(self, mode: PreprocessorMode):
         new_db_path = Path(self.preprocessor_input.db_path)
         if new_db_path.is_dir() == False:
             new_db_path.mkdir()
@@ -1029,8 +1029,10 @@ class Preprocessor:
                 db_edit_context.add_segmentation(id=id, kind="mesh")
             for id in geometric_segmentation_ids:
                 db_edit_context.add_segmentation(id=id, kind="geometric_segmentation")
-
-        print(f"Entry {self.preprocessor_input.entry_data.entry_id} stored to db")
+        if mode == PreprocessorMode.add:
+            print(f"Entry {self.preprocessor_input.entry_data.entry_id} stored to the database")
+        else:
+            print(f"Entry {self.preprocessor_input.entry_data.entry_id} in the database was expanded")
 
 
 async def main_preprocessor(
@@ -1101,7 +1103,7 @@ async def main_preprocessor(
 
     await preprocessor.initialization(mode=mode)
     preprocessor.preprocessing()
-    preprocessor.store_to_db()
+    preprocessor.store_to_db(mode)
 
 
 app = typer.Typer()
