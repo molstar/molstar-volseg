@@ -5,9 +5,10 @@ test-data/preprocessor/db_building_parameters.json
 preprocessor/cellstar_preprocessor/tests/test_data/working_folder/*
 non-preprocessed_data/
 vs_toolkit/tests/test_data/query_parameters/*
-# test-data/preprocessor/sample_volumes
-test-data/preprocessor/sample_segmentations
-test-data/preprocessor/sample_ome_tiff
+test-data/preprocessor/sample_volumes/*
+!test-data/preprocessor/sample_volumes/emdb/EMD-1832.map
+!test-data/preprocessor/sample_segmentations/emdb_sff/emd_1832.hff
+test-data/preprocessor/sample_segmentations/*
 test-data/db/
 preprocessor.3.9.0/
 preprocessor/_old/sample_arr_plots/
