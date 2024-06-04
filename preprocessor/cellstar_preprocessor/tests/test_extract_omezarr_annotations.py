@@ -5,7 +5,7 @@ from cellstar_db.models import (
     SegmentAnnotationData,
 )
 from cellstar_preprocessor.flows.common import (
-    convert_hex_to_rgba_fractional,
+    hex_to_rgba_normalized,
     open_zarr_structure_from_path,
 )
 from cellstar_preprocessor.flows.segmentation.ome_zarr_labels_preprocessing import (
@@ -81,7 +81,7 @@ def test_extract_omezarr_annotations(omezar_test_input: TestInput):
                 )
             )[0]
 
-            assert vol_ch_annotation["color"] == convert_hex_to_rgba_fractional(
+            assert vol_ch_annotation["color"] == hex_to_rgba_normalized(
                 channel["color"]
             )
             assert vol_ch_annotation["label"] == channel["label"]

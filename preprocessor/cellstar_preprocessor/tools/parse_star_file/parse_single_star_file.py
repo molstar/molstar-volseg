@@ -9,7 +9,7 @@ from cellstar_db.models import (
     ShapePrimitiveKind,
     SphereInputParams,
 )
-from cellstar_preprocessor.flows.common import convert_hex_to_rgba_fractional
+from cellstar_preprocessor.flows.common import hex_to_rgba_normalized
 
 # divisor = 4
 def parse_single_star_file(
@@ -59,7 +59,6 @@ def parse_script_args():
     parser.add_argument("--geometric_segmentation_input_file_path", type=str, help="")
     parser.add_argument("--sphere_radius", type=float)
     parser.add_argument("--segmentation_id", type=str)
-    # TODO: color as hex? => transform to list float
     parser.add_argument("--sphere_color_hex", type=str)
     parser.add_argument("--pixel_size", type=float)
     parser.add_argument("--star_file_coordinate_divisor", type=int, default=4)
@@ -77,7 +76,7 @@ def main(args: argparse.Namespace):
         args.geometric_segmentation_input_file_path
     )
 
-    sphere_color = convert_hex_to_rgba_fractional(sphere_color_hex)
+    sphere_color = hex_to_rgba_normalized(sphere_color_hex)
 
     lst = parse_single_star_file(
         path=star_file_path,
@@ -92,6 +91,5 @@ def main(args: argparse.Namespace):
 
 
 if __name__ == "__main__":
-    # lst = parse_single_star_file(STAR_FILE_PATH, 16, 16776960, 7.84, 4)
     args = parse_script_args()
     main(args)

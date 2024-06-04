@@ -544,7 +544,7 @@ def prepare_ometiff_for_writing(
     return prepared_data, artificial_channel_ids_dict
 
 
-def convert_hex_to_rgba_fractional(channel_color_hex):
+def hex_to_rgba_normalized(channel_color_hex):
     channel_color_rgba = ImageColor.getcolor(f"#{channel_color_hex}", "RGBA")
     channel_color_rgba_fractional = tuple([i / 255 for i in channel_color_rgba])
     return channel_color_rgba_fractional
@@ -557,7 +557,7 @@ def get_channel_annotations(ome_zarr_attrs: dict):
         volume_channel_annotations.append(
             {
                 "channel_id": str(channel_id),
-                "color": convert_hex_to_rgba_fractional(channel["color"]),
+                "color": hex_to_rgba_normalized(channel["color"]),
                 "label": label,
             }
         )
