@@ -11,15 +11,6 @@ from cellstar_db.models import (
 )
 from cellstar_preprocessor.flows.common import convert_hex_to_rgba_fractional
 
-STAR_FILE_PATH = Path(
-    "preprocessor/temp/pdbe_dataset_scripts/80S_bin1_cryoDRGN-ET_clean_tomo_9.star"
-)
-JSON_PATH = Path("preprocessor/temp/shape_primitives/shape_primitives_9rec_input.json")
-
-
-# TODO: use rln_ribosome_bin1_tomo_649.star
-
-
 # divisor = 4
 def parse_single_star_file(
     path: Path,
