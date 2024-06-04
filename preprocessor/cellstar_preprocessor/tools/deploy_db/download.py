@@ -28,9 +28,6 @@ from cellstar_preprocessor.tools.deploy_db.deploy_process_helper import (
 )
 from cellstar_preprocessor.tools.gunzip.gunzip import gunzip
 
-PROCESS_IDS_LIST = []
-
-
 def parse_script_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -225,7 +222,7 @@ def download(args: argparse.Namespace):
     return db_building_params
 
 
-def _store_db_building_params_to_json(
+def store_db_building_params_to_json(
     db_building_params: list[InputForBuildingDatabase], args: argparse.Namespace
 ):
     filename = Path(args.db_building_params_json).name
@@ -236,8 +233,7 @@ def _store_db_building_params_to_json(
 # test-data\preprocessor\download_raw_input_params.json
 if __name__ == "__main__":
     # print("DEFAULT PORTS ARE TEMPORARILY SET TO 4000 and 8000, CHANGE THIS AFTERWARDS")
-    atexit.register(clean_up_processes, PROCESS_IDS_LIST)
     args = parse_script_args()
     db_building_params = download(args)
-    _store_db_building_params_to_json(db_building_params, args)
+    store_db_building_params_to_json(db_building_params, args)
     # store it to json
