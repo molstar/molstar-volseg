@@ -57,3 +57,4 @@ dependencies:
     - -e ./server
     - h5py
     - vedo
+    - mkdocs-material
