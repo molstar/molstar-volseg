@@ -1,9 +1,3 @@
-# PLAN
-# get x y z coordinates
-# read to json with list of objects like:
-# { kind: 'sphere', center: [0, 0, 0], radius: 1, color: 0xff0000, label: 'S1' }
-
-
 import argparse
 import json
 from pathlib import Path
