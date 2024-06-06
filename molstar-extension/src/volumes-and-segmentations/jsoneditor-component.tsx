@@ -8,7 +8,9 @@ import React, { useEffect, useRef } from 'react';
 import JSONEditor, { JSONEditorOptions } from 'jsoneditor';
 import 'jsoneditor/dist/jsoneditor.css';
 import { VolsegEntryData } from './entry-root';
-import { Button } from '../../../mol-plugin-ui/controls/common';
+import { Button } from 'molstar/lib/mol-plugin-ui/controls/common';
+
+
 import { AnnotationMetadata } from './volseg-api/data';
 
 interface JSONEditorComponentProps {

@@ -5,21 +5,21 @@
  * @author Aliaksei Chareshneu <chareshneu.tech@gmail.com>
  */
 
-import { PluginStateObject } from '../../../mol-plugin-state/objects';
-import { CreateGroup } from '../../../mol-plugin-state/transforms/misc';
-import { ShapeRepresentation3D } from '../../../mol-plugin-state/transforms/representation';
-import { setSubtreeVisibility } from '../../../mol-plugin/behavior/static/state';
-import { PluginCommands } from '../../../mol-plugin/commands';
-import { Color } from '../../../mol-util/color';
-import { ColorNames } from '../../../mol-util/color/names';
-import { Box3D } from '../../../mol-math/geometry';
+import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
+import { CreateGroup } from 'molstar/lib/mol-plugin-state/transforms/misc';
+import { ShapeRepresentation3D } from 'molstar/lib/mol-plugin-state/transforms/representation';
+import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/state';
+import { PluginCommands } from 'molstar/lib/mol-plugin/commands';
+import { Color } from 'molstar/lib/mol-util/color';
+import { ColorNames } from 'molstar/lib/mol-util/color/names';
+import { Box3D } from 'molstar/lib/mol-math/geometry';
 
 // import { BACKGROUND_SEGMENT_VOLUME_THRESHOLD } from '../new-meshes/mesh-streaming/behavior';
 import { BACKGROUND_OPACITY, BACKGROUND_SEGMENT_VOLUME_THRESHOLD, CreateMeshlistStateObject, FOREROUND_OPACITY, MeshShapeTransformer, MeshlistData, VolsegMeshSegmentation, meshSegmentParamsValues } from '../meshes/mesh-extension';
 import { VolsegEntryData } from './entry-root';
 
 
-import { StateObjectSelector } from '../../../mol-state';
+import { StateObjectSelector } from 'molstar/lib/mol-state';
 import { ProjectMeshSegmentationDataParamsValues } from './transformers';
 
 export const DEFAULT_MESH_DETAIL: number | null = 5; // null means worst

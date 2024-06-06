@@ -4,12 +4,12 @@
  * @author Aliaksei Chareshneu <chareshneu.tech@gmail.com>
  */
 
-import { Volume } from '../../mol-model/volume';
-import { StateTransforms } from '../../mol-plugin-state/transforms';
-import { setSubtreeVisibility } from '../../mol-plugin/behavior/static/state';
-import { PluginContext } from '../../mol-plugin/context';
-import { Asset } from '../../mol-util/assets';
-import { Choice } from '../../mol-util/param-choice';
+import { Volume } from 'molstar/lib/mol-model/volume';
+import { StateTransforms } from 'molstar/lib/mol-plugin-state/transforms';
+import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/state';
+import { PluginContext } from 'molstar/lib/mol-plugin/context';
+import { Asset } from 'molstar/lib/mol-util/assets';
+import { Choice } from 'molstar/lib/mol-util/param-choice';
 import { VolsegEntryData } from './volumes-and-segmentations/entry-root';
 import { SEGMENT_VISUAL_TAG } from './volumes-and-segmentations/entry-segmentation';
 import { DescriptionData, ParsedSegmentKey } from './volumes-and-segmentations/volseg-api/data';

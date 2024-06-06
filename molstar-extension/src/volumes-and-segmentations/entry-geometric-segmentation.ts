@@ -5,13 +5,13 @@
  * @author Aliaksei Chareshneu <chareshneu.tech@gmail.com>
  */
 
-import { PluginStateObject } from '../../../mol-plugin-state/objects';
-import { StateTransforms } from '../../../mol-plugin-state/transforms';
-import { CreateGroup } from '../../../mol-plugin-state/transforms/misc';
-import { ShapeRepresentation3D } from '../../../mol-plugin-state/transforms/representation';
-import { setSubtreeVisibility } from '../../../mol-plugin/behavior/static/state';
-import { PluginCommands } from '../../../mol-plugin/commands';
-import { StateObjectSelector } from '../../../mol-state';
+import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
+import { StateTransforms } from 'molstar/lib/mol-plugin-state/transforms';
+import { CreateGroup } from 'molstar/lib/mol-plugin-state/transforms/misc';
+import { ShapeRepresentation3D } from 'molstar/lib/mol-plugin-state/transforms/representation';
+import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/state';
+import { PluginCommands } from 'molstar/lib/mol-plugin/commands';
+import { StateObjectSelector } from 'molstar/lib/mol-state';
 import { VolsegEntryData } from './entry-root';
 import { CreateShapePrimitiveProvider, VolsegGeometricSegmentation, VolsegShapePrimitivesData, _get_target_segment_color } from './shape_primitives';
 import { ProjectGeometricSegmentationDataParamsValues } from './transformers';

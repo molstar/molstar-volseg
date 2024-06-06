@@ -4,7 +4,7 @@
  * @author Aliaksei Chareshneu <chareshneu.tech@gmail.com>
  */
 
-import { PluginContext } from '../../../mol-plugin/context';
+import { PluginContext } from 'molstar/lib/mol-plugin/context';
 import { Source, parseCVSXJSON } from '../common';
 import { AnnotationMetadata, GridMetadata, ShapePrimitiveData } from '../volumes-and-segmentations/volseg-api/data';
 

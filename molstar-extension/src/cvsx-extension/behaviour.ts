@@ -4,9 +4,9 @@
  * @author Aliaksei Chareshneu <chareshneu.tech@gmail.com>
  */
 
-import { DataFormatProvider } from '../../../mol-plugin-state/formats/provider';
-import { PluginBehavior } from '../../../mol-plugin/behavior';
-import { ParamDefinition } from '../../../mol-util/param-definition';
+import { DataFormatProvider } from 'molstar/lib/mol-plugin-state/formats/provider';
+import { PluginBehavior } from 'molstar/lib/mol-plugin/behavior';
+import { ParamDefinition } from 'molstar/lib/mol-util/param-definition';
 import { CVSXFormatProvider } from './formats';
 
 /** Collection of things that can be register/unregistered in a plugin */

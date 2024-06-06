@@ -6,10 +6,10 @@
  */
 
 import { BehaviorSubject } from 'rxjs';
-import { PluginStateObject } from '../../../mol-plugin-state/objects';
-import { PluginBehavior } from '../../../mol-plugin/behavior';
-import { PluginContext } from '../../../mol-plugin/context';
-import { ParamDefinition as PD } from '../../../mol-util/param-definition';
+import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
+import { PluginBehavior } from 'molstar/lib/mol-plugin/behavior';
+import { PluginContext } from 'molstar/lib/mol-plugin/context';
+import { ParamDefinition as PD } from 'molstar/lib/mol-util/param-definition';
 import { VolsegEntry } from './entry-root';
 import { isDefined } from './helpers';
 
@@ -24,7 +24,7 @@ export type VolsegGlobalStateParamValues = PD.Values<typeof VolsegGlobalStatePar
 export class VolsegGlobalState extends PluginStateObject.CreateBehavior<VolsegGlobalStateData>({ name: 'Vol & Seg Global State' }) { }
 
 export class VolsegGlobalStateData extends PluginBehavior.WithSubscribers<VolsegGlobalStateParamValues> {
-    private ref: string;
+    private ref: string = '';
     currentState = new BehaviorSubject(PD.getDefaultValues(VolsegGlobalStateParams));
 
     constructor(plugin: PluginContext, params: VolsegGlobalStateParamValues) {

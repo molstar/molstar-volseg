@@ -5,8 +5,8 @@
  */
 
 import { loadCVSXFromAnything } from '.';
-import { DataFormatProvider } from '../../../mol-plugin-state/formats/provider';
-import { StateObjectRef } from '../../../mol-state';
+import { DataFormatProvider } from 'molstar/lib/mol-plugin-state/formats/provider';
+import { StateObjectRef } from 'molstar/lib/mol-state';
 
 /** Data format provider for CVSX format.
  */

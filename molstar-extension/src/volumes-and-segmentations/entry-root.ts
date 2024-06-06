@@ -7,18 +7,18 @@
 
 import { BehaviorSubject, distinctUntilChanged, Subject, throttleTime } from 'rxjs';
 import { NewVolsegVolumeServerConfig } from '.';
-import { Loci } from '../../../mol-model/loci';
+import { Loci } from 'molstar/lib/mol-model/loci';
 
-import { ShapeGroup } from '../../../mol-model/shape';
-import { Volume } from '../../../mol-model/volume';
-import { LociLabelProvider } from '../../../mol-plugin-state/manager/loci-label';
-import { PluginStateObject } from '../../../mol-plugin-state/objects';
-import { PluginBehavior } from '../../../mol-plugin/behavior';
-import { PluginCommands } from '../../../mol-plugin/commands';
-import { PluginContext } from '../../../mol-plugin/context';
-import { StateObjectCell, StateSelection, StateTransform } from '../../../mol-state';
-import { shallowEqualObjects } from '../../../mol-util';
-import { ParamDefinition } from '../../../mol-util/param-definition';
+import { ShapeGroup } from 'molstar/lib/mol-model/shape';
+import { Volume } from 'molstar/lib/mol-model/volume';
+import { LociLabelProvider } from 'molstar/lib/mol-plugin-state/manager/loci-label';
+import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
+import { PluginBehavior } from 'molstar/lib/mol-plugin/behavior';
+import { PluginCommands } from 'molstar/lib/mol-plugin/commands';
+import { PluginContext } from 'molstar/lib/mol-plugin/context';
+import { StateObjectCell, StateSelection, StateTransform } from 'molstar/lib/mol-state';
+import { shallowEqualObjects } from 'molstar/lib/mol-util';
+import { ParamDefinition } from 'molstar/lib/mol-util/param-definition';
 import { isMeshlistData, MeshlistData, VolsegMeshSegmentation } from '../meshes/mesh-extension';
 
 import { DEFAULT_VOLSEG_SERVER, VolumeApiV2 } from './volseg-api/api';
@@ -33,14 +33,14 @@ import * as ExternalAPIs from './external-api';
 import { VolsegGlobalStateData } from './global-state';
 import { applyEllipsis, isDefined, lazyGetter, splitEntryId } from './helpers';
 import { ProjectDataParamsValues, ProjectGeometricSegmentationDataParamsValues, ProjectMeshSegmentationDataParamsValues, ProjectLatticeSegmentationDataParamsValues, type VolsegStateFromEntry } from './transformers';
-import { StateTransforms } from '../../../mol-plugin-state/transforms';
-import { Asset } from '../../../mol-util/assets';
-import { PluginComponent } from '../../../mol-plugin-state/component';
+import { StateTransforms } from 'molstar/lib/mol-plugin-state/transforms';
+import { Asset } from 'molstar/lib/mol-util/assets';
+import { PluginComponent } from 'molstar/lib/mol-plugin-state/component';
 import { VolsegGeometricSegmentationData } from './entry-geometric-segmentation';
 import { CreateShapePrimitiveProviderParamsValues, isShapePrimitiveParamsValues, VolsegGeometricSegmentation } from './shape_primitives';
 import { actionSelectSegment, parseCVSXJSON } from '../common';
-import { RuntimeContext } from '../../../mol-task';
-import { unzip } from '../../../mol-util/zip/zip';
+import { RuntimeContext } from 'molstar/lib//mol-task';
+import { unzip } from 'molstar/lib/mol-util/zip/zip';
 import { CVSXData, CVSXFilesData, CVSXFilesIndex, QueryArgs } from '../cvsx-extension/data';
 import { SourceChoice } from '../common';
 import { Source } from '../common';
@@ -129,7 +129,7 @@ export interface StateHierarchyMirror {
 
 class RawTimeframesDataCache {
     private cache: Map<string, RawChannelData | RawSegmentationData> = new Map<string, RawChannelData | RawSegmentationData>();
-    private maxEntries: number;
+    private maxEntries: number = 0;
     private totalSizeLimitInBytes: number = 1_000_000_000;
 
     constructor(public entryData: VolsegEntryData, public kind: RawDataKind) {
@@ -244,7 +244,7 @@ export class VolsegEntryData extends PluginBehavior.WithSubscribers<VolsegEntryP
     /** Full entry ID; e.g. 'emd-1832' */
     entryId: string;
     // metadata: MetadataWrapper;
-    pdbs: string[];
+    pdbs: string[] = [];
     kind: 'api' | 'file' = 'api';
     filesData: CVSXFilesData | undefined = undefined;
 

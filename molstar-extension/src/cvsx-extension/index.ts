@@ -4,9 +4,9 @@
  * @author Aliaksei Chareshneu <chareshneu.tech@gmail.com>
  */
 
-import { PluginStateObject } from '../../../mol-plugin-state/objects';
-import { PluginContext } from '../../../mol-plugin/context';
-import { StateObjectRef } from '../../../mol-state';
+import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
+import { PluginContext } from 'molstar/lib/mol-plugin/context';
+import { StateObjectRef } from 'molstar/lib/mol-state';
 import { GEOMETRIC_SEGMENTATION_NODE_TAG, MESH_SEGMENTATION_NODE_TAG, LATTICE_SEGMENTATION_NODE_TAG, VOLUME_NODE_TAG } from '../volumes-and-segmentations/entry-root';
 import { ProjectGeometricSegmentationData, ProjectGeometricSegmentationDataParamsValues, ProjectLatticeSegmentationDataParamsValues, ProjectMeshData, ProjectMeshSegmentationDataParamsValues, ProjectSegmentationData, ProjectVolumeData, VolsegEntryFromFile, VolsegGlobalStateFromFile, VolsegStateFromEntry } from '../volumes-and-segmentations/transformers';
 import { getSegmentLabelsFromDescriptions } from '../volumes-and-segmentations/volseg-api/utils';

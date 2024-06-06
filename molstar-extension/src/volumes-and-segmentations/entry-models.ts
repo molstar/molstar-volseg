@@ -5,11 +5,11 @@
  * @author Aliaksei Chareshneu <chareshneu.tech@gmail.com>
  */
 
-import { Download, ParseCif } from '../../../mol-plugin-state/transforms/data';
-import { CreateGroup } from '../../../mol-plugin-state/transforms/misc';
-import { TrajectoryFromMmCif } from '../../../mol-plugin-state/transforms/model';
-import { setSubtreeVisibility } from '../../../mol-plugin/behavior/static/state';
-import { StateObjectRef, StateObjectSelector } from '../../../mol-state';
+import { Download, ParseCif } from 'molstar/lib/mol-plugin-state/transforms/data';
+import { CreateGroup } from 'molstar/lib/mol-plugin-state/transforms/misc';
+import { TrajectoryFromMmCif } from 'molstar/lib/mol-plugin-state/transforms/model';
+import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/state';
+import { StateObjectRef, StateObjectSelector } from 'molstar/lib/mol-state';
 
 import { VolsegEntryData } from './entry-root';
 

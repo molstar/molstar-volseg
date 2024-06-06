@@ -5,7 +5,7 @@
  * @author Aliaksei Chareshneu <chareshneu.tech@gmail.com>
  */
 
-import { Vec3 } from '../../../../mol-math/linear-algebra';
+import { Vec3 } from 'molstar/lib/mol-math/linear-algebra';
 import { Source } from '../../common';
 
 export interface GeometricSegmentationData {

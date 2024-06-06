@@ -1,21 +1,18 @@
+"use strict";
 /**
  * Copyright (c) 2018-2024 mol* contributors, licensed under MIT, See LICENSE file for more info.
  *
  * @author Adam Midlik <midlik@gmail.com>
  * @author Aliaksei Chareshneu <chareshneu.tech@gmail.com>
  */
-
-import { Column, Database } from 'molstar/lib/mol-data/db';
-import { CifFrame } from 'molstar/lib/mol-io/reader/cif';
-import { toDatabase } from 'molstar/lib/mol-io/reader/cif/schema';
-
-
-const int = Column.Schema.int;
-const float = Column.Schema.float;
-
-
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CIF_schema_mesh = exports.Mesh_Data_Schema = void 0;
+const db_1 = require("molstar/lib/mol-data/db");
+const schema_1 = require("molstar/lib/mol-io/reader/cif/schema");
+const int = db_1.Column.Schema.int;
+const float = db_1.Column.Schema.float;
 // TODO in future, move to molstar/src/mol-io/reader/cif/schema/mesh.ts
-export const Mesh_Data_Schema = {
+exports.Mesh_Data_Schema = {
     mesh: {
         id: int,
     },
@@ -33,9 +30,6 @@ export const Mesh_Data_Schema = {
         vertex_id: int,
     }
 };
-export type Mesh_Data_Schema = typeof Mesh_Data_Schema;
-export interface Mesh_Data_Database extends Database<Mesh_Data_Schema> {}
-
-
 // TODO in future, move to molstar/src/mol-io/reader/cif.ts: CIF.schema.mesh
-export const CIF_schema_mesh = (frame: CifFrame) => toDatabase<Mesh_Data_Schema, Mesh_Data_Database>(Mesh_Data_Schema, frame);
+const CIF_schema_mesh = (frame) => (0, schema_1.toDatabase)(exports.Mesh_Data_Schema, frame);
+exports.CIF_schema_mesh = CIF_schema_mesh;

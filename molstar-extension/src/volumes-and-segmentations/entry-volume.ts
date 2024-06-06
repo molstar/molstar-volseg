@@ -5,17 +5,17 @@
  * @author Aliaksei Chareshneu <chareshneu.tech@gmail.com>
  */
 
-import { Vec2 } from '../../../mol-math/linear-algebra';
-import { Volume } from '../../../mol-model/volume';
-import { createVolumeRepresentationParams } from '../../../mol-plugin-state/helpers/volume-representation-params';
-import { PluginStateObject } from '../../../mol-plugin-state/objects';
-import { StateTransforms } from '../../../mol-plugin-state/transforms';
-import { CreateGroup } from '../../../mol-plugin-state/transforms/misc';
-import { setSubtreeVisibility } from '../../../mol-plugin/behavior/static/state';
-import { PluginCommands } from '../../../mol-plugin/commands';
-import { StateObjectSelector, StateTransform } from '../../../mol-state';
-import { Color } from '../../../mol-util/color';
-import { ParamDefinition as PD } from '../../../mol-util/param-definition';
+import { Vec2 } from 'molstar/lib/mol-math/linear-algebra';
+import { Volume } from 'molstar/lib/mol-model/volume';
+import { createVolumeRepresentationParams } from 'molstar/lib/mol-plugin-state/helpers/volume-representation-params';
+import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
+import { StateTransforms } from 'molstar/lib/mol-plugin-state/transforms';
+import { CreateGroup } from 'molstar/lib/mol-plugin-state/transforms/misc';
+import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/state';
+import { PluginCommands } from 'molstar/lib/mol-plugin/commands';
+import { StateObjectSelector, StateTransform } from 'molstar/lib/mol-state';
+import { Color } from 'molstar/lib/mol-util/color';
+import { ParamDefinition as PD } from 'molstar/lib/mol-util/param-definition';
 
 import { VolsegEntryData } from './entry-root';
 import { VolumeTypeChoice } from './entry-state';

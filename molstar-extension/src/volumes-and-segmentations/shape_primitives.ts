@@ -4,22 +4,21 @@
  * @author Aliaksei Chareshneu <chareshneu.tech@gmail.com>
  */
 
-// import { StateTransformer } from '../../mol-state';
-import { PluginStateObject } from '../../../mol-plugin-state/objects';
-import { ParamDefinition as PD } from '../../../mol-util/param-definition';
-import { Mesh } from '../../../mol-geo/geometry/mesh/mesh';
-import { MeshBuilder } from '../../../mol-geo/geometry/mesh/mesh-builder';
-import { addSphere } from '../../../mol-geo/geometry/mesh/builder/sphere';
-import { Mat4, Vec3 } from '../../../mol-math/linear-algebra';
-import { Shape } from '../../../mol-model/shape';
-import { Color } from '../../../mol-util/color';
-import { StateTransformer } from '../../../mol-state';
-import { addCylinder } from '../../../mol-geo/geometry/mesh/builder/cylinder';
-import { Box } from '../../../mol-geo/primitive/box';
-import { Pyramid, TriangularPyramid } from '../../../mol-geo/primitive/pyramid';
-import { Primitive } from '../../../mol-geo/primitive/primitive';
-import { polygon } from '../../../mol-geo/primitive/polygon';
-import { addEllipsoid } from '../../../mol-geo/geometry/mesh/builder/ellipsoid';
+import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
+import { ParamDefinition as PD } from 'molstar/lib/mol-util/param-definition';
+import { Mesh } from 'molstar/lib/mol-geo/geometry/mesh/mesh';
+import { MeshBuilder } from 'molstar/lib/mol-geo/geometry/mesh/mesh-builder';
+import { addSphere } from 'molstar/lib/mol-geo/geometry/mesh/builder/sphere';
+import { Mat4, Vec3 } from 'molstar/lib/mol-math/linear-algebra';
+import { Shape } from 'molstar/lib/mol-model/shape';
+import { Color } from 'molstar/lib/mol-util/color';
+import { StateTransformer } from 'molstar/lib/mol-state';
+import { addCylinder } from 'molstar/lib/mol-geo/geometry/mesh/builder/cylinder';
+import { Box } from 'molstar/lib/mol-geo/primitive/box';
+import { Pyramid, TriangularPyramid } from 'molstar/lib/mol-geo/primitive/pyramid';
+import { Primitive } from 'molstar/lib/mol-geo/primitive/primitive';
+import { polygon } from 'molstar/lib/mol-geo/primitive/polygon';
+import { addEllipsoid } from 'molstar/lib/mol-geo/geometry/mesh/builder/ellipsoid';
 import { DescriptionData, SegmentAnnotationData, Cylinder, ShapePrimitiveData, Ellipsoid, PyramidPrimitive, Sphere, BoxPrimitive } from './volseg-api/data';
 
 

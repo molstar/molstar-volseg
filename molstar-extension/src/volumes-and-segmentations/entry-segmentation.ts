@@ -5,18 +5,18 @@
  * @author Aliaksei Chareshneu <chareshneu.tech@gmail.com>
  */
 
-import { Volume } from '../../../mol-model/volume';
-import { createVolumeRepresentationParams } from '../../../mol-plugin-state/helpers/volume-representation-params';
-import { StateTransforms } from '../../../mol-plugin-state/transforms';
-import { CreateGroup } from '../../../mol-plugin-state/transforms/misc';
-import { PluginCommands } from '../../../mol-plugin/commands';
-import { Color } from '../../../mol-util/color';
+import { Volume } from 'molstar/lib/mol-model/volume';
+import { createVolumeRepresentationParams } from 'molstar/lib/mol-plugin-state/helpers/volume-representation-params';
+import { StateTransforms } from 'molstar/lib/mol-plugin-state/transforms';
+import { CreateGroup } from 'molstar/lib/mol-plugin-state/transforms/misc';
+import { PluginCommands } from 'molstar/lib/mol-plugin/commands';
+import { Color } from 'molstar/lib/mol-util/color';
 
 import { VolsegEntryData } from './entry-root';
 import { VolumeVisualParams } from './entry-volume';
 import { VolsegGlobalStateData } from './global-state';
-import { StateObjectSelector } from '../../../mol-state';
-import { PluginStateObject } from '../../../mol-plugin-state/objects';
+import { StateObjectSelector } from 'molstar/lib/mol-state';
+import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
 import { ProjectLatticeSegmentationDataParamsValues } from './transformers';
 import { parseSegmentKey } from './volseg-api/utils';
 
@@ -30,7 +30,7 @@ const DEFAULT_SEGMENT_COLOR = Color.fromNormalizedRgb(0.8, 0.8, 0.8);
 export class VolsegLatticeSegmentationData {
     private entryData: VolsegEntryData;
     // should map segmentation Id to Map<number, Color>
-    private colorMap: Map<string, Map<number, Color>>;
+    private colorMap: Map<string, Map<number, Color>> = new Map();
 
     constructor(rootData: VolsegEntryData) {
         this.entryData = rootData;

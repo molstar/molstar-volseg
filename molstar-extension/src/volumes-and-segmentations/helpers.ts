@@ -5,11 +5,11 @@
  * @author Aliaksei Chareshneu <chareshneu.tech@gmail.com>
  */
 
-import { Volume } from '../../../mol-model/volume';
-import { PluginStateObject } from '../../../mol-plugin-state/objects';
-import { setSubtreeVisibility } from '../../../mol-plugin/behavior/static/state';
-import { StateBuilder, StateObjectSelector, StateTransformer } from '../../../mol-state';
-import { ParamDefinition } from '../../../mol-util/param-definition';
+import { Volume } from 'molstar/lib/mol-model/volume';
+import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
+import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/state';
+import { StateBuilder, StateObjectSelector, StateTransformer } from 'molstar/lib/mol-state';
+import { ParamDefinition } from 'molstar/lib/mol-util/param-definition';
 import { Source } from '../common';
 
 

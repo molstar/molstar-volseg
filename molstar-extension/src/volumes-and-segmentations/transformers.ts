@@ -4,15 +4,15 @@
  * @author Adam Midlik <midlik@gmail.com>
  * @author Aliaksei Chareshneu <chareshneu.tech@gmail.com>
  */
-import { CIF } from '../../../mol-io/reader/cif';
-import { DensityServer_Data_Schema } from '../../../mol-io/reader/cif/schema/density-server';
-import { volumeFromDensityServerData } from '../../../mol-model-formats/volume/density-server';
-import { volumeFromSegmentationData } from '../../../mol-model-formats/volume/segmentation';
-import { PluginStateObject } from '../../../mol-plugin-state/objects';
-import { PluginContext } from '../../../mol-plugin/context';
-import { StateTransformer } from '../../../mol-state';
-import { Task } from '../../../mol-task';
-import { ParamDefinition } from '../../../mol-util/param-definition';
+import { CIF } from 'molstar/lib/mol-io/reader/cif';
+import { DensityServer_Data_Schema } from 'molstar/lib/mol-io/reader/cif/schema/density-server';
+import { volumeFromDensityServerData } from 'molstar/lib/mol-model-formats/volume/density-server';
+import { volumeFromSegmentationData } from 'molstar/lib/mol-model-formats/volume/segmentation';
+import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
+import { PluginContext } from 'molstar/lib/mol-plugin/context';
+import { StateTransformer } from 'molstar/lib/mol-state';
+import { Task } from 'molstar/lib/mol-task';
+import { ParamDefinition } from 'molstar/lib/mol-util/param-definition';
 import { MeshData, VolsegMeshData, VolsegMeshDataParams, VolsegMeshSegmentation } from '../meshes/mesh-extension';
 
 import { RawMeshSegmentData, VolsegEntry, VolsegEntryData, createVolsegEntryParams } from './entry-root';
