@@ -10,8 +10,9 @@ import { StateObjectRef } from 'molstar/lib/mol-state';
 import { GEOMETRIC_SEGMENTATION_NODE_TAG, MESH_SEGMENTATION_NODE_TAG, LATTICE_SEGMENTATION_NODE_TAG, VOLUME_NODE_TAG } from '../volumes-and-segmentations/entry-root';
 import { ProjectGeometricSegmentationData, ProjectGeometricSegmentationDataParamsValues, ProjectLatticeSegmentationDataParamsValues, ProjectMeshData, ProjectMeshSegmentationDataParamsValues, ProjectSegmentationData, ProjectVolumeData, VolsegEntryFromFile, VolsegGlobalStateFromFile, VolsegStateFromEntry } from '../volumes-and-segmentations/transformers';
 import { getSegmentLabelsFromDescriptions } from '../volumes-and-segmentations/volseg-api/utils';
+import { PluginUIContext } from 'molstar/lib/mol-plugin-ui/context';
 
-export async function loadCVSXFromAnything(plugin: PluginContext, data: StateObjectRef<PluginStateObject.Data.Binary | PluginStateObject.Data.String>) {
+export async function loadCVSXFromAnything(plugin: PluginUIContext | PluginContext, data: StateObjectRef<PluginStateObject.Data.Binary | PluginStateObject.Data.String>) {
     await plugin.build().to(data).apply(VolsegGlobalStateFromFile, {}, { state: { isGhost: true } }).commit();
 
     const entryNode = await plugin.build().to(data).apply(VolsegEntryFromFile).commit();
