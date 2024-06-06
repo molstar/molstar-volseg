@@ -16,12 +16,13 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
+    "@types/jsoneditor": "^9.9.5",
+    "@types/node": "^18.19.31",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.0",
-    "@types/node": "^18.19.31",
-    "@types/jsoneditor": "^9.9.5",
     "jsoneditor": "^10.0.3",
     "molstar": "^4.3.0",
+    "reactjs-popup": "^2.0.6",
     "typescript": "^5.4.5"
   }
 }
