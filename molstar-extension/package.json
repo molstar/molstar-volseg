@@ -14,6 +14,8 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
+    "@types/jsoneditor": "^9.9.5",
+    "jsoneditor": "^10.0.3",
     "molstar": "^4.3.0"
   }
 }
