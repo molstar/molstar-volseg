@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
       "declaration": true,
-      "target": "es6",
+      "target": "es2018",
       "alwaysStrict": true,
       "noImplicitAny": true,
       "noImplicitThis": true,
