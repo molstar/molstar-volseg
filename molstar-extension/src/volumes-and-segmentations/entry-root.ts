@@ -6,7 +6,7 @@
  */
 
 import { BehaviorSubject, distinctUntilChanged, Subject, throttleTime } from 'rxjs';
-import { NewVolsegVolumeServerConfig } from '.';
+import { VolsegVolumeServerConfig } from '.';
 import { Loci } from 'molstar/lib/mol-model/loci';
 
 import { ShapeGroup } from 'molstar/lib/mol-model/shape';
@@ -57,7 +57,7 @@ export const VOLUME_NODE_TAG = 'volume-node-tag';
 export const LATTICE_SEGMENTATION_NODE_TAG = 'segmenation-node-tag';
 
 export function createLoadVolsegParams(plugin?: PluginContext, entrylists: { [source: string]: string[] } = {}) {
-    const defaultVolumeServer = plugin?.config.get(NewVolsegVolumeServerConfig.DefaultServer) ?? DEFAULT_VOLSEG_SERVER;
+    const defaultVolumeServer = plugin?.config.get(VolsegVolumeServerConfig.DefaultServer) ?? DEFAULT_VOLSEG_SERVER;
     return {
         serverUrl: ParamDefinition.Text(defaultVolumeServer),
         source: ParamDefinition.Mapped(SourceChoice.values[0], SourceChoice.options, src => entryParam(entrylists[src])),
@@ -75,7 +75,7 @@ type LoadVolsegParamValues = ParamDefinition.Values<ReturnType<typeof createLoad
 type RawDataKind = 'volume' | 'segmentation' | 'mesh' | 'primitive';
 
 export function createVolsegEntryParams(plugin?: PluginContext) {
-    const defaultVolumeServer = plugin?.config.get(NewVolsegVolumeServerConfig.DefaultServer) ?? DEFAULT_VOLSEG_SERVER;
+    const defaultVolumeServer = plugin?.config.get(VolsegVolumeServerConfig.DefaultServer) ?? DEFAULT_VOLSEG_SERVER;
     return {
         serverUrl: ParamDefinition.Text(defaultVolumeServer),
         source: SourceChoice.PDSelect(),

@@ -106,7 +106,7 @@ export class NodeManager {
 
 
 
-export const CreateTransformer = StateTransformer.builderFactory('new-volseg');
+export const CreateTransformer = StateTransformer.builderFactory('volseg');
 
 export const CreateVolume = CreateTransformer({
     name: 'new-create-transformer',

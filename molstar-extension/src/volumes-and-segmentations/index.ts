@@ -23,23 +23,23 @@ import { actionShowSegments } from '../common';
 // TODO: temp change, put there 'localhost'
 const DEBUGGING = typeof window !== 'undefined' ? window?.location?.hostname === 'localhost' || '127.0.0.1' : false;
 
-export const NewVolsegVolumeServerConfig = {
+export const VolsegVolumeServerConfig = {
     // DefaultServer: new PluginConfigItem('volseg-volume-server', DEFAULT_VOLUME_SERVER_V2),
     DefaultServer: new PluginConfigItem('volseg-volume-server', DEBUGGING ? 'http://localhost:9000/v1' : DEFAULT_VOLSEG_SERVER),
 };
 
 
-export const NewVolseg = PluginBehavior.create<{ autoAttach: boolean, showTooltip: boolean }>({
-    name: 'new-volseg',
+export const Volseg = PluginBehavior.create<{ autoAttach: boolean, showTooltip: boolean }>({
+    name: 'volseg',
     category: 'misc',
     display: {
-        name: 'New Volseg',
-        description: 'New Volseg'
+        name: 'Volseg',
+        description: 'Volseg'
     },
     ctor: class extends PluginBehavior.Handler<{ autoAttach: boolean, showTooltip: boolean }> {
         register() {
             this.ctx.state.data.actions.add(LoadVolseg);
-            this.ctx.customStructureControls.set('new-volseg', VolsegUI as any);
+            this.ctx.customStructureControls.set('volseg', VolsegUI as any);
             this.initializeEntryLists(); // do not await
 
             const entries = new Map<string, VolsegEntryData>();
@@ -56,10 +56,10 @@ export const NewVolseg = PluginBehavior.create<{ autoAttach: boolean, showToolti
         }
         unregister() {
             this.ctx.state.data.actions.remove(LoadVolseg);
-            this.ctx.customStructureControls.delete('new-volseg');
+            this.ctx.customStructureControls.delete('volseg');
         }
         private async initializeEntryLists() {
-            const apiUrl = this.ctx.config.get(NewVolsegVolumeServerConfig.DefaultServer) ?? DEFAULT_VOLSEG_SERVER;
+            const apiUrl = this.ctx.config.get(VolsegVolumeServerConfig.DefaultServer) ?? DEFAULT_VOLSEG_SERVER;
             const api = new VolumeApiV2(apiUrl);
             const entryLists = await api.getEntryList(10 ** 6);
             Object.values(entryLists).forEach(l => l.sort());
