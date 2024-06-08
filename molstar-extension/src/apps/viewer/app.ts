@@ -14,7 +14,7 @@ import { GeometryExport } from 'molstar/lib/extensions/geo-export';
 import { MAQualityAssessment, QualityAssessmentPLDDTPreset, QualityAssessmentQmeanPreset } from 'molstar/lib/extensions/model-archive/quality-assessment/behavior';
 import { QualityAssessment } from 'molstar/lib/extensions/model-archive/quality-assessment/prop';
 import { ModelExport } from 'molstar/lib/extensions/model-export';
-import { Mp4Export } from 'molstar/lib/extensions/mp4-export';
+// import { Mp4Export } from 'molstar/lib/extensions/mp4-export';
 import { MolViewSpec } from 'molstar/lib/extensions/mvs/behavior';
 import { loadMVSX } from 'molstar/lib/extensions/mvs/components/formats';
 import { loadMVS } from 'molstar/lib/extensions/mvs/load';
@@ -78,7 +78,7 @@ export const ExtensionMap = {
     'anvil-membrane-orientation': PluginSpec.Behavior(ANVILMembraneOrientation),
     'g3d': PluginSpec.Behavior(G3DFormat),
     'model-export': PluginSpec.Behavior(ModelExport),
-    'mp4-export': PluginSpec.Behavior(Mp4Export),
+    // 'mp4-export': PluginSpec.Behavior(Mp4Export),
     'geo-export': PluginSpec.Behavior(GeometryExport),
     'ma-quality-assessment': PluginSpec.Behavior(MAQualityAssessment),
     'zenodo-import': PluginSpec.Behavior(ZenodoImport),
