@@ -41,7 +41,6 @@
         <!-- <script type="module" src="./molstar.mjs"></script> -->
         <script type="module">
             import * as molstar from './molstar.mjs';
-            debugger;
             function getParam(name, regex) {
                 var r = new RegExp(name + '=' + '(' + regex + ')[&]?', 'i');
                 return decodeURIComponent(((window.location.search || '').match(r) || [])[1] || '');
