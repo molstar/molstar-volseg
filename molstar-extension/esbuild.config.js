@@ -8,7 +8,7 @@ const
 
 console.log(`${ productionMode ? 'production' : 'development' } build`);
 
-const buildSCSS = await esbuild.context({
+const buildCSS = await esbuild.context({
   entryPoints: ['src/apps/viewer/main.css'],
   bundle: true,
   target,
@@ -51,8 +51,8 @@ const buildTS = await esbuild.context({
 if (productionMode) {
 
   // single production build
-  // await buildCSS.rebuild();
-  // buildCSS.dispose();
+  await buildCSS.rebuild();
+  buildCSS.dispose();
 
   await buildTS.rebuild();
   buildTS.dispose();
@@ -62,10 +62,10 @@ else {
 
   // watch for file changes
   await buildTS.watch();
-  await buildSCSS.watch();
+  await buildCSS.watch();
 
   // development server
-  await buildSCSS.serve({
+  await buildCSS.serve({
     servedir: './build'
   });
 
