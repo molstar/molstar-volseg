@@ -33,8 +33,8 @@ export async function loadCVSXFromAnything(plugin: PluginUIContext | PluginConte
         }
         // always has Volumes
         const group = await entryNode.data.volumeData.createVolumeGroup();
-        const updatedChannelsData = [];
-        const results = [];
+        const updatedChannelsData: any = [];
+        const results: any = [];
         for (const channelId of channelIds) {
             const volumeParams = { timeframeIndex: timeframeIndex, channelId: channelId };
             const volumeNode = await plugin.build().to(group).apply(ProjectVolumeData, volumeParams, { tags: [VOLUME_NODE_TAG] }).commit();

@@ -15,7 +15,7 @@ import { Source } from '../common';
 
 export function objectToArray(o?: object) {
     if (o) {
-        const d = [];
+        const d: any = [];
         const arr = Object.entries(o);
         for (const obj of arr) {
             d.push(obj[1]);
@@ -106,7 +106,7 @@ export class NodeManager {
 
 
 
-export const CreateTransformer = StateTransformer.builderFactory('volseg');
+export const CreateTransformer = StateTransformer.builderFactory('volseg-v2');
 
 export const CreateVolume = CreateTransformer({
     name: 'new-create-transformer',

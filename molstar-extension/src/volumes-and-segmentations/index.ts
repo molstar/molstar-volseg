@@ -20,8 +20,8 @@ import { VolsegUI } from './ui';
 import { createSegmentKey, getSegmentLabelsFromDescriptions } from './volseg-api/utils';
 import { actionShowSegments } from '../common';
 
-// TODO: temp change, put there 'localhost'
-const DEBUGGING = typeof window !== 'undefined' ? window?.location?.hostname === 'localhost' || '127.0.0.1' : false;
+// const DEBUGGING = typeof window !== 'undefined' ? window?.location?.hostname === 'localhost' || '127.0.0.1' : false;
+const DEBUGGING = typeof window !== 'undefined' ? window?.location?.hostname === 'localhost' : false;
 
 export const VolsegVolumeServerConfig = {
     // DefaultServer: new PluginConfigItem('volseg-volume-server', DEFAULT_VOLUME_SERVER_V2),
@@ -30,7 +30,7 @@ export const VolsegVolumeServerConfig = {
 
 
 export const Volseg = PluginBehavior.create<{ autoAttach: boolean, showTooltip: boolean }>({
-    name: 'volseg',
+    name: 'volseg-v2',
     category: 'misc',
     display: {
         name: 'Volseg',
@@ -39,7 +39,7 @@ export const Volseg = PluginBehavior.create<{ autoAttach: boolean, showTooltip: 
     ctor: class extends PluginBehavior.Handler<{ autoAttach: boolean, showTooltip: boolean }> {
         register() {
             this.ctx.state.data.actions.add(LoadVolseg);
-            this.ctx.customStructureControls.set('volseg', VolsegUI as any);
+            this.ctx.customStructureControls.set('volseg-v2', VolsegUI as any);
             this.initializeEntryLists(); // do not await
 
             const entries = new Map<string, VolsegEntryData>();
@@ -56,7 +56,7 @@ export const Volseg = PluginBehavior.create<{ autoAttach: boolean, showTooltip: 
         }
         unregister() {
             this.ctx.state.data.actions.remove(LoadVolseg);
-            this.ctx.customStructureControls.delete('volseg');
+            this.ctx.customStructureControls.delete('volseg-v2');
         }
         private async initializeEntryLists() {
             const apiUrl = this.ctx.config.get(VolsegVolumeServerConfig.DefaultServer) ?? DEFAULT_VOLSEG_SERVER;
@@ -101,8 +101,8 @@ export const LoadVolseg = StateAction.build({
             const hasVolumes = entryNode.data.metadata.value!.raw.grid.volumes.volume_sampling_info.spatial_downsampling_levels.length > 0;
             if (hasVolumes) {
                 const group = await entryNode.data.volumeData.createVolumeGroup();
-                const updatedChannelsData = [];
-                const results = [];
+                const updatedChannelsData: any = [];
+                const results: any = [];
                 const channelIds = entryNode.data.metadata.value!.raw.grid.volumes.channel_ids;
                 for (const channelId of channelIds) {
                     const volumeParams = { timeframeIndex: 0, channelId: channelId };

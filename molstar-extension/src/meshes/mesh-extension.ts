@@ -30,7 +30,7 @@ export const BACKGROUND_SEGMENT_VOLUME_THRESHOLD = 0.5;
 export const BACKGROUND_OPACITY = 0.2;
 export const FOREROUND_OPACITY = 1;
 
-export const VolsegTransform: StateTransformer.Builder.Root = StateTransformer.builderFactory('volseg');
+export const VolsegTransform: StateTransformer.Builder.Root = StateTransformer.builderFactory('volseg-v2');
 
 
 // // // // // // // // // // // // // // // // // // // // // // // //
