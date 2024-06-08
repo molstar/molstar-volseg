@@ -9,8 +9,7 @@ const
 console.log(`${ productionMode ? 'production' : 'development' } build`);
 
 const buildSCSS = await esbuild.context({
-// TODO: change
-  entryPoints: [ 'node_modules/molstar/lib/mol-plugin-ui/skin/blue.scss' ],
+  entryPoints: ['src/apps/viewer/main.css'],
   bundle: true,
   target,
   // external: ['/images/*'],
@@ -24,33 +23,9 @@ const buildSCSS = await esbuild.context({
   sourcemap: !productionMode && 'linked',
   plugins: [sassPlugin()],
   outfile: './build/molstar.css'
-  // options: https://www.npmjs.com/package/esbuild-sass-plugin
-
-  // try local-css option
-
 });
 
-// bundle CSS
-// const buildCSS = await esbuild.context({
-
-//   entryPoints: [ './src/css/main.css' ],
-//   bundle: true,
-//   target,
-//   external: ['/images/*'],
-//   loader: {
-//     '.png': 'file',
-//     '.jpg': 'file',
-//     '.svg': 'dataurl'
-//   },
-//   logLevel: productionMode ? 'error' : 'info',
-//   minify: productionMode,
-//   sourcemap: !productionMode && 'linked',
-//   outdir: './build/css'
-
-// });
-
-
-// bundle JS
+// bundle TS
 const buildTS = await esbuild.context({
 
   entryPoints: [ 'src/apps/viewer/app.ts' ],
@@ -86,7 +61,6 @@ if (productionMode) {
 else {
 
   // watch for file changes
-  // await buildCSS.watch();
   await buildTS.watch();
   await buildSCSS.watch();
 

@@ -6,7 +6,8 @@
 
 import React, { useEffect, useRef } from 'react';
 import JSONEditor, { JSONEditorOptions } from 'jsoneditor';
-import 'jsoneditor/dist/jsoneditor.css';
+// import 'jsoneditor/dist/jsoneditor.css';
+// import '../../node_modules/jsoneditor/dist/jsoneditor.css'
 import { VolsegEntryData } from './entry-root';
 import { Button } from 'molstar/lib/mol-plugin-ui/controls/common';
 
