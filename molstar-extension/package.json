@@ -1,12 +1,16 @@
 {
   "name": "molstar-extension",
-  "version": "1.0.0",
+  "version": "1.0.0", 
+  "type": "module",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm run build-tsc && npm run build-extra && npm run build-webpack",
-    "build-tsc": "concurrently \"tsc --incremental\" \"tsc --build tsconfig.commonjs.json --incremental\""
+    "clean": "rm -rf ./build",
+    "init": "npm run clean && mkdir ./build && cp ./src/apps/viewer/index.html ./build/",
+    "bundle": "npm run init && node ./esbuild.config.js",
+    "build": "npm run bundle -- production",
+    "start": "npm run bundle -- development"
   },
   "keywords": [],
   "author": "",
@@ -16,13 +20,13 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@types/jsoneditor": "^9.9.5",
-    "@types/node": "^18.19.31",
+    "esbuild": "0.21.4",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.0",
-    "jsoneditor": "^10.0.3",
+    "@types/jsoneditor": "^9.9.5",
     "molstar": "^4.3.0",
     "reactjs-popup": "^2.0.6",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "esbuild-sass-plugin": "^3.3.1"
   }
 }
