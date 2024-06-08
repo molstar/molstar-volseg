@@ -1,5 +1,10 @@
 ### Custom
 molstar-extension/node_modules/
+molstar-extension/debug.log
+molstar-extension/npm-debug.log
+molstar-extension/tsconfig.tsbuildinfo
+molstar-extension/tsconfig.commonjs.tsbuildinfo
+!molstar-volseg/molstar-extension/scripts
 temp_working_folder/*
 db/cellstar_db/tests/test_data/*
 test-data/preprocessor/db_building_parameters.json
