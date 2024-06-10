@@ -1,0 +1,24 @@
+name: ci
+on:
+    workflow_dispatch:
+        inputs:
+          args:
+            description: 'Arguments to the remote script'
+            required: false
+            type: string
+#   push:
+#     branches:
+#       - master
+#       - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+      - run: cd docs
+      - run: pip install mkdocs-material
+      - run: git submodule update --init --recursive
+      - run: mkdocs gh-deploy --force
