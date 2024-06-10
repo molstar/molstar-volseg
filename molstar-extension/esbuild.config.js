@@ -28,7 +28,7 @@ const buildCSS = await esbuild.context({
 // bundle TS
 const buildTS = await esbuild.context({
 
-  entryPoints: [ 'src/apps/viewer/app.ts' ],
+  entryPoints: [ 'src/viewer/app.ts' ],
   format: "esm",
   bundle: true,
   target,
