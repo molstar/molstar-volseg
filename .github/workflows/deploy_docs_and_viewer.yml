@@ -1,11 +1,6 @@
 name: deploy docs and viewer
 on:
     workflow_dispatch:
-        inputs:
-          args:
-            description: 'Arguments to the remote script'
-            required: false
-            type: string
 #   push:
 #     branches:
 #       - master
