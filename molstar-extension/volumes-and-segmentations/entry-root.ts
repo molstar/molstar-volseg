@@ -38,12 +38,12 @@ import { Asset } from 'molstar/lib/mol-util/assets';
 import { PluginComponent } from 'molstar/lib/mol-plugin-state/component';
 import { VolsegGeometricSegmentationData } from './entry-geometric-segmentation';
 import { CreateShapePrimitiveProviderParamsValues, isShapePrimitiveParamsValues, VolsegGeometricSegmentation } from './shape_primitives';
-import { actionSelectSegment, parseCVSXJSON } from '../common';
+import { actionSelectSegment, parseCVSXJSON } from '../src/common';
 import { RuntimeContext } from 'molstar/lib//mol-task';
 import { unzip } from 'molstar/lib/mol-util/zip/zip';
 import { CVSXData, CVSXFilesData, CVSXFilesIndex, QueryArgs } from '../cvsx-extension/data';
-import { SourceChoice } from '../common';
-import { Source } from '../common';
+import { SourceChoice } from '../src/common';
+import { Source } from '../src/common';
 
 export const GEOMETRIC_SEGMENTATION_NODE_TAG = 'geometric-segmentation-node';
 export const MESH_SEGMENTATION_NODE_TAG = 'mesh-segmentation-node';

@@ -47,9 +47,9 @@ import { Asset } from 'molstar/lib/mol-util/assets';
 import { Color } from 'molstar/lib/mol-util/color';
 import 'molstar/lib/mol-util/polyfill';
 import { ObjectKeys } from 'molstar/lib/mol-util/type-helpers';
-import { Volseg } from '../volumes-and-segmentations';
-import { CVSXSpec } from '../cvsx-extension/behaviour';
-import { loadCVSXFromAnything } from '../cvsx-extension';
+import { Volseg } from '../../volumes-and-segmentations';
+import { CVSXSpec } from '../../cvsx-extension/behaviour';
+import { loadCVSXFromAnything } from '../../cvsx-extension';
 
 export { PLUGIN_VERSION as version } from 'molstar/lib/mol-plugin/version';
 export { consoleStats, setDebugMode, setProductionMode, setTimingMode } from 'molstar/lib/mol-util/debug';

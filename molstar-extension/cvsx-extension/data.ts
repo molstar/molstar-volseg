@@ -5,7 +5,7 @@
  */
 
 import { PluginContext } from 'molstar/lib/mol-plugin/context';
-import { Source, parseCVSXJSON } from '../common';
+import { Source, parseCVSXJSON } from '../src/common';
 import { AnnotationMetadata, GridMetadata, ShapePrimitiveData } from '../volumes-and-segmentations/volseg-api/data';
 
 export interface CVSXFilesData {

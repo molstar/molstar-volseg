@@ -6,7 +6,7 @@
  */
 
 import { Vec3 } from 'molstar/lib/mol-math/linear-algebra';
-import { Source } from '../../common';
+import { Source } from '../../src/common';
 
 export interface GeometricSegmentationData {
     segmentation_id: string

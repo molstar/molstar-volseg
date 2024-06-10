@@ -18,7 +18,7 @@ import { createEntryId } from './helpers';
 import { ProjectGeometricSegmentationData, ProjectGeometricSegmentationDataParamsValues, ProjectMeshData, ProjectMeshSegmentationDataParamsValues, ProjectSegmentationData, ProjectLatticeSegmentationDataParamsValues, ProjectVolumeData, VolsegEntryFromRoot, VolsegGlobalStateFromRoot, VolsegStateFromEntry } from './transformers';
 import { VolsegUI } from './ui';
 import { createSegmentKey, getSegmentLabelsFromDescriptions } from './volseg-api/utils';
-import { actionShowSegments } from '../common';
+import { actionShowSegments } from '../src/common';
 
 // const DEBUGGING = typeof window !== 'undefined' ? window?.location?.hostname === 'localhost' || '127.0.0.1' : false;
 const DEBUGGING = typeof window !== 'undefined' ? window?.location?.hostname === 'localhost' : false;
