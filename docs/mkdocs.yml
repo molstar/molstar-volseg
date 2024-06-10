@@ -58,5 +58,5 @@ nav:
   - Volumes & Segmentations Server API documentation:
     - Hosting Server API: 'server_api/overview.md'
 
-repo_url: https://github.com/molstar/docs
+repo_url: https://github.com/molstar/molstar-volseg
 dev_addr: '127.0.0.1:5000'
