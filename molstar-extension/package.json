@@ -18,14 +18,14 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^20.14.2",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "esbuild": "0.21.4",
+    "esbuild-sass-plugin": "^3.3.1"
   },
   "dependencies": {
     "@types/jsoneditor": "^9.9.5",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.0",
-    "esbuild": "0.21.4",
-    "esbuild-sass-plugin": "^3.3.1",
     "jsoneditor": "^10.0.3",
     "molstar": "^4.3.0",
     "reactjs-popup": "^2.0.6",
