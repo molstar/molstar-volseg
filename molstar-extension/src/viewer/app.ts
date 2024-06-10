@@ -215,126 +215,126 @@ export class Viewer {
         return new Viewer(plugin);
     }
 
-    setRemoteSnapshot(id: string) {
-        const url = `${this.plugin.config.get(PluginConfig.State.CurrentServer)}/get/${id}`;
-        return PluginCommands.State.Snapshots.Fetch(this.plugin, { url });
-    }
+    // setRemoteSnapshot(id: string) {
+    //     const url = `${this.plugin.config.get(PluginConfig.State.CurrentServer)}/get/${id}`;
+    //     return PluginCommands.State.Snapshots.Fetch(this.plugin, { url });
+    // }
 
-    loadSnapshotFromUrl(url: string, type: PluginState.SnapshotType) {
-        return PluginCommands.State.Snapshots.OpenUrl(this.plugin, { url, type });
-    }
+    // loadSnapshotFromUrl(url: string, type: PluginState.SnapshotType) {
+    //     return PluginCommands.State.Snapshots.OpenUrl(this.plugin, { url, type });
+    // }
 
-    loadStructureFromUrl(url: string, format: BuiltInTrajectoryFormat = 'mmcif', isBinary = false, options?: LoadStructureOptions & { label?: string }) {
-        const params = DownloadStructure.createDefaultParams(this.plugin.state.data.root.obj!, this.plugin);
-        return this.plugin.runTask(this.plugin.state.data.applyAction(DownloadStructure, {
-            source: {
-                name: 'url',
-                params: {
-                    url: Asset.Url(url),
-                    format: format as any,
-                    isBinary,
-                    label: options?.label,
-                    options: { ...params.source.params.options, representationParams: options?.representationParams as any },
-                }
-            }
-        }));
-    }
+    // loadStructureFromUrl(url: string, format: BuiltInTrajectoryFormat = 'mmcif', isBinary = false, options?: LoadStructureOptions & { label?: string }) {
+    //     const params = DownloadStructure.createDefaultParams(this.plugin.state.data.root.obj!, this.plugin);
+    //     return this.plugin.runTask(this.plugin.state.data.applyAction(DownloadStructure, {
+    //         source: {
+    //             name: 'url',
+    //             params: {
+    //                 url: Asset.Url(url),
+    //                 format: format as any,
+    //                 isBinary,
+    //                 label: options?.label,
+    //                 options: { ...params.source.params.options, representationParams: options?.representationParams as any },
+    //             }
+    //         }
+    //     }));
+    // }
 
-    async loadAllModelsOrAssemblyFromUrl(url: string, format: BuiltInTrajectoryFormat = 'mmcif', isBinary = false, options?: LoadStructureOptions) {
-        const plugin = this.plugin;
+    // async loadAllModelsOrAssemblyFromUrl(url: string, format: BuiltInTrajectoryFormat = 'mmcif', isBinary = false, options?: LoadStructureOptions) {
+    //     const plugin = this.plugin;
 
-        const data = await plugin.builders.data.download({ url, isBinary }, { state: { isGhost: true } });
-        const trajectory = await plugin.builders.structure.parseTrajectory(data, format);
+    //     const data = await plugin.builders.data.download({ url, isBinary }, { state: { isGhost: true } });
+    //     const trajectory = await plugin.builders.structure.parseTrajectory(data, format);
 
-        await this.plugin.builders.structure.hierarchy.applyPreset(trajectory, 'all-models', { useDefaultIfSingleModel: true, representationPresetParams: options?.representationParams });
-    }
+    //     await this.plugin.builders.structure.hierarchy.applyPreset(trajectory, 'all-models', { useDefaultIfSingleModel: true, representationPresetParams: options?.representationParams });
+    // }
 
-    async loadStructureFromData(data: string | number[], format: BuiltInTrajectoryFormat, options?: { dataLabel?: string }) {
-        const _data = await this.plugin.builders.data.rawData({ data, label: options?.dataLabel });
-        const trajectory = await this.plugin.builders.structure.parseTrajectory(_data, format);
-        await this.plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default');
-    }
+    // async loadStructureFromData(data: string | number[], format: BuiltInTrajectoryFormat, options?: { dataLabel?: string }) {
+    //     const _data = await this.plugin.builders.data.rawData({ data, label: options?.dataLabel });
+    //     const trajectory = await this.plugin.builders.structure.parseTrajectory(_data, format);
+    //     await this.plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default');
+    // }
 
-    loadPdb(pdb: string, options?: LoadStructureOptions) {
-        const params = DownloadStructure.createDefaultParams(this.plugin.state.data.root.obj!, this.plugin);
-        const provider = this.plugin.config.get(PluginConfig.Download.DefaultPdbProvider)!;
-        return this.plugin.runTask(this.plugin.state.data.applyAction(DownloadStructure, {
-            source: {
-                name: 'pdb' as const,
-                params: {
-                    provider: {
-                        id: pdb,
-                        server: {
-                            name: provider,
-                            params: PdbDownloadProvider[provider].defaultValue as any
-                        }
-                    },
-                    options: { ...params.source.params.options, representationParams: options?.representationParams as any },
-                }
-            }
-        }));
-    }
+    // loadPdb(pdb: string, options?: LoadStructureOptions) {
+    //     const params = DownloadStructure.createDefaultParams(this.plugin.state.data.root.obj!, this.plugin);
+    //     const provider = this.plugin.config.get(PluginConfig.Download.DefaultPdbProvider)!;
+    //     return this.plugin.runTask(this.plugin.state.data.applyAction(DownloadStructure, {
+    //         source: {
+    //             name: 'pdb' as const,
+    //             params: {
+    //                 provider: {
+    //                     id: pdb,
+    //                     server: {
+    //                         name: provider,
+    //                         params: PdbDownloadProvider[provider].defaultValue as any
+    //                     }
+    //                 },
+    //                 options: { ...params.source.params.options, representationParams: options?.representationParams as any },
+    //             }
+    //         }
+    //     }));
+    // }
 
-    loadPdbDev(pdbDev: string) {
-        const params = DownloadStructure.createDefaultParams(this.plugin.state.data.root.obj!, this.plugin);
-        return this.plugin.runTask(this.plugin.state.data.applyAction(DownloadStructure, {
-            source: {
-                name: 'pdb-dev' as const,
-                params: {
-                    provider: {
-                        id: pdbDev,
-                        encoding: 'bcif',
-                    },
-                    options: params.source.params.options,
-                }
-            }
-        }));
-    }
+    // loadPdbDev(pdbDev: string) {
+    //     const params = DownloadStructure.createDefaultParams(this.plugin.state.data.root.obj!, this.plugin);
+    //     return this.plugin.runTask(this.plugin.state.data.applyAction(DownloadStructure, {
+    //         source: {
+    //             name: 'pdb-dev' as const,
+    //             params: {
+    //                 provider: {
+    //                     id: pdbDev,
+    //                     encoding: 'bcif',
+    //                 },
+    //                 options: params.source.params.options,
+    //             }
+    //         }
+    //     }));
+    // }
 
-    loadEmdb(emdb: string, options?: { detail?: number }) {
-        const provider = this.plugin.config.get(PluginConfig.Download.DefaultEmdbProvider)!;
-        return this.plugin.runTask(this.plugin.state.data.applyAction(DownloadDensity, {
-            source: {
-                name: 'pdb-emd-ds' as const,
-                params: {
-                    provider: {
-                        id: emdb,
-                        server: provider,
-                    },
-                    detail: options?.detail ?? 3,
-                }
-            }
-        }));
-    }
+    // loadEmdb(emdb: string, options?: { detail?: number }) {
+    //     const provider = this.plugin.config.get(PluginConfig.Download.DefaultEmdbProvider)!;
+    //     return this.plugin.runTask(this.plugin.state.data.applyAction(DownloadDensity, {
+    //         source: {
+    //             name: 'pdb-emd-ds' as const,
+    //             params: {
+    //                 provider: {
+    //                     id: emdb,
+    //                     server: provider,
+    //                 },
+    //                 detail: options?.detail ?? 3,
+    //             }
+    //         }
+    //     }));
+    // }
 
-    loadAlphaFoldDb(afdb: string) {
-        const params = DownloadStructure.createDefaultParams(this.plugin.state.data.root.obj!, this.plugin);
-        return this.plugin.runTask(this.plugin.state.data.applyAction(DownloadStructure, {
-            source: {
-                name: 'alphafolddb' as const,
-                params: {
-                    id: afdb,
-                    options: {
-                        ...params.source.params.options,
-                        representation: 'preset-structure-representation-ma-quality-assessment-plddt'
-                    },
-                }
-            }
-        }));
-    }
+    // loadAlphaFoldDb(afdb: string) {
+    //     const params = DownloadStructure.createDefaultParams(this.plugin.state.data.root.obj!, this.plugin);
+    //     return this.plugin.runTask(this.plugin.state.data.applyAction(DownloadStructure, {
+    //         source: {
+    //             name: 'alphafolddb' as const,
+    //             params: {
+    //                 id: afdb,
+    //                 options: {
+    //                     ...params.source.params.options,
+    //                     representation: 'preset-structure-representation-ma-quality-assessment-plddt'
+    //                 },
+    //             }
+    //         }
+    //     }));
+    // }
 
-    loadModelArchive(id: string) {
-        const params = DownloadStructure.createDefaultParams(this.plugin.state.data.root.obj!, this.plugin);
-        return this.plugin.runTask(this.plugin.state.data.applyAction(DownloadStructure, {
-            source: {
-                name: 'modelarchive' as const,
-                params: {
-                    id,
-                    options: params.source.params.options,
-                }
-            }
-        }));
-    }
+    // loadModelArchive(id: string) {
+    //     const params = DownloadStructure.createDefaultParams(this.plugin.state.data.root.obj!, this.plugin);
+    //     return this.plugin.runTask(this.plugin.state.data.applyAction(DownloadStructure, {
+    //         source: {
+    //             name: 'modelarchive' as const,
+    //             params: {
+    //                 id,
+    //                 options: params.source.params.options,
+    //             }
+    //         }
+    //     }));
+    // }
 
     /**
      * @example Load X-ray density from volume server
@@ -375,49 +375,49 @@ export class Viewer {
             isLazy: true
         });
      */
-    async loadVolumeFromUrl({ url, format, isBinary }: { url: string, format: BuildInVolumeFormat, isBinary: boolean }, isovalues: VolumeIsovalueInfo[], options?: { entryId?: string | string[], isLazy?: boolean }) {
-        const plugin = this.plugin;
+    // async loadVolumeFromUrl({ url, format, isBinary }: { url: string, format: BuildInVolumeFormat, isBinary: boolean }, isovalues: VolumeIsovalueInfo[], options?: { entryId?: string | string[], isLazy?: boolean }) {
+    //     const plugin = this.plugin;
 
-        if (!plugin.dataFormats.get(format)) {
-            throw new Error(`Unknown density format: ${format}`);
-        }
+    //     if (!plugin.dataFormats.get(format)) {
+    //         throw new Error(`Unknown density format: ${format}`);
+    //     }
 
-        if (options?.isLazy) {
-            const update = this.plugin.build();
-            update.toRoot().apply(StateTransforms.Data.LazyVolume, {
-                url,
-                format,
-                entryId: options?.entryId,
-                isBinary,
-                isovalues: isovalues.map(v => ({ alpha: 1, volumeIndex: 0, ...v }))
-            });
-            return update.commit();
-        }
+    //     if (options?.isLazy) {
+    //         const update = this.plugin.build();
+    //         update.toRoot().apply(StateTransforms.Data.LazyVolume, {
+    //             url,
+    //             format,
+    //             entryId: options?.entryId,
+    //             isBinary,
+    //             isovalues: isovalues.map(v => ({ alpha: 1, volumeIndex: 0, ...v }))
+    //         });
+    //         return update.commit();
+    //     }
 
-        return plugin.dataTransaction(async () => {
-            const data = await plugin.builders.data.download({ url, isBinary }, { state: { isGhost: true } });
+    //     return plugin.dataTransaction(async () => {
+    //         const data = await plugin.builders.data.download({ url, isBinary }, { state: { isGhost: true } });
 
-            const parsed = await plugin.dataFormats.get(format)!.parse(plugin, data, { entryId: options?.entryId });
-            const firstVolume = (parsed.volume || parsed.volumes[0]) as StateObjectSelector<PluginStateObject.Volume.Data>;
-            if (!firstVolume?.isOk) throw new Error('Failed to parse any volume.');
+    //         const parsed = await plugin.dataFormats.get(format)!.parse(plugin, data, { entryId: options?.entryId });
+    //         const firstVolume = (parsed.volume || parsed.volumes[0]) as StateObjectSelector<PluginStateObject.Volume.Data>;
+    //         if (!firstVolume?.isOk) throw new Error('Failed to parse any volume.');
 
-            const repr = plugin.build();
-            for (const iso of isovalues) {
-                const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[iso.volumeIndex ?? 0] ?? parsed.volume;
-                const volumeData = volume.cell!.obj!.data;
-                repr
-                    .to(volume)
-                    .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, firstVolume.data!, {
-                        type: 'isosurface',
-                        typeParams: { alpha: iso.alpha ?? 1, isoValue: Volume.adjustedIsoValue(volumeData, iso.value, iso.type) },
-                        color: 'uniform',
-                        colorParams: { value: iso.color }
-                    }));
-            }
+    //         const repr = plugin.build();
+    //         for (const iso of isovalues) {
+    //             const volume: StateObjectSelector<PluginStateObject.Volume.Data> = parsed.volumes?.[iso.volumeIndex ?? 0] ?? parsed.volume;
+    //             const volumeData = volume.cell!.obj!.data;
+    //             repr
+    //                 .to(volume)
+    //                 .apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, firstVolume.data!, {
+    //                     type: 'isosurface',
+    //                     typeParams: { alpha: iso.alpha ?? 1, isoValue: Volume.adjustedIsoValue(volumeData, iso.value, iso.type) },
+    //                     color: 'uniform',
+    //                     colorParams: { value: iso.color }
+    //                 }));
+    //         }
 
-            await repr.commit();
-        });
-    }
+    //         await repr.commit();
+    //     });
+    // }
 
     /**
      * @example
@@ -427,87 +427,87 @@ export class Viewer {
      *      preset: 'all-models' // or 'default'
      *  });
      */
-    async loadTrajectory(params: LoadTrajectoryParams) {
-        const plugin = this.plugin;
+    // async loadTrajectory(params: LoadTrajectoryParams) {
+    //     const plugin = this.plugin;
 
-        let model: StateObjectSelector;
+    //     let model: StateObjectSelector;
 
-        if (params.model.kind === 'model-data' || params.model.kind === 'model-url') {
-            const data = params.model.kind === 'model-data'
-                ? await plugin.builders.data.rawData({ data: params.model.data, label: params.modelLabel })
-                : await plugin.builders.data.download({ url: params.model.url, isBinary: params.model.isBinary, label: params.modelLabel });
+    //     if (params.model.kind === 'model-data' || params.model.kind === 'model-url') {
+    //         const data = params.model.kind === 'model-data'
+    //             ? await plugin.builders.data.rawData({ data: params.model.data, label: params.modelLabel })
+    //             : await plugin.builders.data.download({ url: params.model.url, isBinary: params.model.isBinary, label: params.modelLabel });
 
-            const trajectory = await plugin.builders.structure.parseTrajectory(data, params.model.format ?? 'mmcif');
-            model = await plugin.builders.structure.createModel(trajectory);
-        } else {
-            const data = params.model.kind === 'topology-data'
-                ? await plugin.builders.data.rawData({ data: params.model.data, label: params.modelLabel })
-                : await plugin.builders.data.download({ url: params.model.url, isBinary: params.model.isBinary, label: params.modelLabel });
+    //         const trajectory = await plugin.builders.structure.parseTrajectory(data, params.model.format ?? 'mmcif');
+    //         model = await plugin.builders.structure.createModel(trajectory);
+    //     } else {
+    //         const data = params.model.kind === 'topology-data'
+    //             ? await plugin.builders.data.rawData({ data: params.model.data, label: params.modelLabel })
+    //             : await plugin.builders.data.download({ url: params.model.url, isBinary: params.model.isBinary, label: params.modelLabel });
 
-            const provider = plugin.dataFormats.get(params.model.format);
-            model = await provider!.parse(plugin, data);
-        }
+    //         const provider = plugin.dataFormats.get(params.model.format);
+    //         model = await provider!.parse(plugin, data);
+    //     }
 
-        const data = params.coordinates.kind === 'coordinates-data'
-            ? await plugin.builders.data.rawData({ data: params.coordinates.data, label: params.coordinatesLabel })
-            : await plugin.builders.data.download({ url: params.coordinates.url, isBinary: params.coordinates.isBinary, label: params.coordinatesLabel });
+    //     const data = params.coordinates.kind === 'coordinates-data'
+    //         ? await plugin.builders.data.rawData({ data: params.coordinates.data, label: params.coordinatesLabel })
+    //         : await plugin.builders.data.download({ url: params.coordinates.url, isBinary: params.coordinates.isBinary, label: params.coordinatesLabel });
 
-        const provider = plugin.dataFormats.get(params.coordinates.format);
-        const coords = await provider!.parse(plugin, data);
+    //     const provider = plugin.dataFormats.get(params.coordinates.format);
+    //     const coords = await provider!.parse(plugin, data);
 
-        const trajectory = await plugin.build().toRoot()
-            .apply(TrajectoryFromModelAndCoordinates, {
-                modelRef: model.ref,
-                coordinatesRef: coords.ref
-            }, { dependsOn: [model.ref, coords.ref] })
-            .commit();
+    //     const trajectory = await plugin.build().toRoot()
+    //         .apply(TrajectoryFromModelAndCoordinates, {
+    //             modelRef: model.ref,
+    //             coordinatesRef: coords.ref
+    //         }, { dependsOn: [model.ref, coords.ref] })
+    //         .commit();
 
-        const preset = await plugin.builders.structure.hierarchy.applyPreset(trajectory, params.preset ?? 'default');
+    //     const preset = await plugin.builders.structure.hierarchy.applyPreset(trajectory, params.preset ?? 'default');
 
-        return { model, coords, preset };
-    }
+    //     return { model, coords, preset };
+    // }
 
-    async loadMvsFromUrl(url: string, format: 'mvsj' | 'mvsx', options?: { replaceExisting?: boolean, keepCamera?: boolean }) {
-        if (format === 'mvsj') {
-            const data = await this.plugin.runTask(this.plugin.fetch({ url, type: 'string' }));
-            const mvsData = MVSData.fromMVSJ(data);
-            await loadMVS(this.plugin, mvsData, { sanityChecks: true, sourceUrl: url, ...options });
-        } else if (format === 'mvsx') {
-            const data = await this.plugin.runTask(this.plugin.fetch({ url, type: 'binary' }));
-            await this.plugin.runTask(Task.create('Load MVSX file', async ctx => {
-                const parsed = await loadMVSX(this.plugin, ctx, data);
-                await loadMVS(this.plugin, parsed.mvsData, { sanityChecks: true, sourceUrl: parsed.sourceUrl, ...options });
-            }));
-        } else {
-            throw new Error(`Unknown MolViewSpec format: ${format}`);
-        }
-    }
+    // async loadMvsFromUrl(url: string, format: 'mvsj' | 'mvsx', options?: { replaceExisting?: boolean, keepCamera?: boolean }) {
+    //     if (format === 'mvsj') {
+    //         const data = await this.plugin.runTask(this.plugin.fetch({ url, type: 'string' }));
+    //         const mvsData = MVSData.fromMVSJ(data);
+    //         await loadMVS(this.plugin, mvsData, { sanityChecks: true, sourceUrl: url, ...options });
+    //     } else if (format === 'mvsx') {
+    //         const data = await this.plugin.runTask(this.plugin.fetch({ url, type: 'binary' }));
+    //         await this.plugin.runTask(Task.create('Load MVSX file', async ctx => {
+    //             const parsed = await loadMVSX(this.plugin, ctx, data);
+    //             await loadMVS(this.plugin, parsed.mvsData, { sanityChecks: true, sourceUrl: parsed.sourceUrl, ...options });
+    //         }));
+    //     } else {
+    //         throw new Error(`Unknown MolViewSpec format: ${format}`);
+    //     }
+    // }
 
-    /** Load MolViewSpec from `data`.
-     * If `format` is 'mvsj', `data` must be a string or a Uint8Array containing a UTF8-encoded string.
-     * If `format` is 'mvsx', `data` must be a Uint8Array or a string containing base64-encoded binary data prefixed with 'base64,'. */
-    async loadMvsData(data: string | Uint8Array, format: 'mvsj' | 'mvsx', options?: { replaceExisting?: boolean, keepCamera?: boolean }) {
-        if (typeof data === 'string' && data.startsWith('base64')) {
-            data = Uint8Array.from(atob(data.substring(7)), c => c.charCodeAt(0)); // Decode base64 string to Uint8Array
-        }
-        if (format === 'mvsj') {
-            if (typeof data !== 'string') {
-                data = new TextDecoder().decode(data); // Decode Uint8Array to string using UTF8
-            }
-            const mvsData = MVSData.fromMVSJ(data);
-            await loadMVS(this.plugin, mvsData, { sanityChecks: true, sourceUrl: undefined, ...options });
-        } else if (format === 'mvsx') {
-            if (typeof data === 'string') {
-                throw new Error("loadMvsData: if `format` is 'mvsx', then `data` must be a Uint8Array or a base64-encoded string prefixed with 'base64,'.");
-            }
-            await this.plugin.runTask(Task.create('Load MVSX file', async ctx => {
-                const parsed = await loadMVSX(this.plugin, ctx, data as Uint8Array);
-                await loadMVS(this.plugin, parsed.mvsData, { sanityChecks: true, sourceUrl: parsed.sourceUrl, ...options });
-            }));
-        } else {
-            throw new Error(`Unknown MolViewSpec format: ${format}`);
-        }
-    }
+    // /** Load MolViewSpec from `data`.
+    //  * If `format` is 'mvsj', `data` must be a string or a Uint8Array containing a UTF8-encoded string.
+    //  * If `format` is 'mvsx', `data` must be a Uint8Array or a string containing base64-encoded binary data prefixed with 'base64,'. */
+    // async loadMvsData(data: string | Uint8Array, format: 'mvsj' | 'mvsx', options?: { replaceExisting?: boolean, keepCamera?: boolean }) {
+    //     if (typeof data === 'string' && data.startsWith('base64')) {
+    //         data = Uint8Array.from(atob(data.substring(7)), c => c.charCodeAt(0)); // Decode base64 string to Uint8Array
+    //     }
+    //     if (format === 'mvsj') {
+    //         if (typeof data !== 'string') {
+    //             data = new TextDecoder().decode(data); // Decode Uint8Array to string using UTF8
+    //         }
+    //         const mvsData = MVSData.fromMVSJ(data);
+    //         await loadMVS(this.plugin, mvsData, { sanityChecks: true, sourceUrl: undefined, ...options });
+    //     } else if (format === 'mvsx') {
+    //         if (typeof data === 'string') {
+    //             throw new Error("loadMvsData: if `format` is 'mvsx', then `data` must be a Uint8Array or a base64-encoded string prefixed with 'base64,'.");
+    //         }
+    //         await this.plugin.runTask(Task.create('Load MVSX file', async ctx => {
+    //             const parsed = await loadMVSX(this.plugin, ctx, data as Uint8Array);
+    //             await loadMVS(this.plugin, parsed.mvsData, { sanityChecks: true, sourceUrl: parsed.sourceUrl, ...options });
+    //         }));
+    //     } else {
+    //         throw new Error(`Unknown MolViewSpec format: ${format}`);
+    //     }
+    // }
 
     async loadCvsxFromUrl(urlString: string, format: 'cvsx') {
         if (format === 'cvsx') {
