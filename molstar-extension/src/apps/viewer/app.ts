@@ -6,27 +6,17 @@
  * @author Neli Fonseca <neli@ebi.ac.uk>
  */
 
-import { ANVILMembraneOrientation } from 'molstar/lib/extensions/anvil/behavior';
-import { Backgrounds } from 'molstar/lib/extensions/backgrounds';
-import { DnatcoNtCs } from 'molstar/lib/extensions/dnatco';
-import { G3DFormat, G3dProvider } from 'molstar/lib/extensions/g3d/format';
-import { GeometryExport } from 'molstar/lib/extensions/geo-export';
-import { MAQualityAssessment, QualityAssessmentPLDDTPreset, QualityAssessmentQmeanPreset } from 'molstar/lib/extensions/model-archive/quality-assessment/behavior';
+import { G3dProvider } from 'molstar/lib/extensions/g3d/format';
+import { QualityAssessmentPLDDTPreset, QualityAssessmentQmeanPreset } from 'molstar/lib/extensions/model-archive/quality-assessment/behavior';
 import { QualityAssessment } from 'molstar/lib/extensions/model-archive/quality-assessment/prop';
-import { ModelExport } from 'molstar/lib/extensions/model-export';
 // import { Mp4Export } from 'molstar/lib/extensions/mp4-export';
-import { MolViewSpec } from 'molstar/lib/extensions/mvs/behavior';
 import { loadMVSX } from 'molstar/lib/extensions/mvs/components/formats';
 import { loadMVS } from 'molstar/lib/extensions/mvs/load';
 import { MVSData } from 'molstar/lib/extensions/mvs/mvs-data';
-import { PDBeStructureQualityReport } from 'molstar/lib/extensions/pdbe';
-import { RCSBValidationReport } from 'molstar/lib/extensions/rcsb';
-import { AssemblySymmetry, AssemblySymmetryConfig } from 'molstar/lib/extensions/assembly-symmetry';
-import { SbNcbrPartialCharges, SbNcbrPartialChargesPreset, SbNcbrPartialChargesPropertyProvider, SbNcbrTunnels } from 'molstar/lib/extensions/sb-ncbr';
+import { AssemblySymmetryConfig } from 'molstar/lib/extensions/assembly-symmetry';
+import { SbNcbrPartialChargesPreset, SbNcbrPartialChargesPropertyProvider } from 'molstar/lib/extensions/sb-ncbr';
 import { VolsegVolumeServerConfig } from 'molstar/lib/extensions/volumes-and-segmentations';
-import { wwPDBChemicalComponentDictionary } from 'molstar/lib/extensions/wwpdb/ccd/behavior';
 import { wwPDBStructConnExtensionFunctions } from 'molstar/lib/extensions/wwpdb/struct-conn';
-import { ZenodoImport } from 'molstar/lib/extensions/zenodo';
 import { SaccharideCompIdMapType } from 'molstar/lib/mol-model/structure/structure/carbohydrates/constants';
 import { Volume } from 'molstar/lib/mol-model/volume';
 import { DownloadStructure, PdbDownloadProvider } from 'molstar/lib/mol-plugin-state/actions/structure';
@@ -70,23 +60,23 @@ const CustomFormats = [
 
 export const ExtensionMap = {
     'volseg': PluginSpec.Behavior(Volseg),
-    'backgrounds': PluginSpec.Behavior(Backgrounds),
-    'dnatco-ntcs': PluginSpec.Behavior(DnatcoNtCs),
-    'pdbe-structure-quality-report': PluginSpec.Behavior(PDBeStructureQualityReport),
-    'assembly-symmetry': PluginSpec.Behavior(AssemblySymmetry),
-    'rcsb-validation-report': PluginSpec.Behavior(RCSBValidationReport),
-    'anvil-membrane-orientation': PluginSpec.Behavior(ANVILMembraneOrientation),
-    'g3d': PluginSpec.Behavior(G3DFormat),
-    'model-export': PluginSpec.Behavior(ModelExport),
+    // 'backgrounds': PluginSpec.Behavior(Backgrounds),
+    // 'dnatco-ntcs': PluginSpec.Behavior(DnatcoNtCs),
+    // 'pdbe-structure-quality-report': PluginSpec.Behavior(PDBeStructureQualityReport),
+    // 'assembly-symmetry': PluginSpec.Behavior(AssemblySymmetry),
+    // 'rcsb-validation-report': PluginSpec.Behavior(RCSBValidationReport),
+    // 'anvil-membrane-orientation': PluginSpec.Behavior(ANVILMembraneOrientation),
+    // 'g3d': PluginSpec.Behavior(G3DFormat),
+    // 'model-export': PluginSpec.Behavior(ModelExport),
     // 'mp4-export': PluginSpec.Behavior(Mp4Export),
-    'geo-export': PluginSpec.Behavior(GeometryExport),
-    'ma-quality-assessment': PluginSpec.Behavior(MAQualityAssessment),
-    'zenodo-import': PluginSpec.Behavior(ZenodoImport),
-    'sb-ncbr-partial-charges': PluginSpec.Behavior(SbNcbrPartialCharges),
-    'wwpdb-chemical-component-dictionary': PluginSpec.Behavior(wwPDBChemicalComponentDictionary),
-    'mvs': PluginSpec.Behavior(MolViewSpec),
+    // 'geo-export': PluginSpec.Behavior(GeometryExport),
+    // 'ma-quality-assessment': PluginSpec.Behavior(MAQualityAssessment),
+    // 'zenodo-import': PluginSpec.Behavior(ZenodoImport),
+    // 'sb-ncbhemical-component-dictionary': PluginSpec.Behavior(wwPDBChemicalComponentDictionary),
+    // 'mvs': Pr-partial-charges': PluginSpec.Behavior(SbNcbrPartialCharges),
+    // 'wwpdb-cluginSpec.Behavior(MolViewSpec),
     'cvsx': PluginSpec.Behavior(CVSXSpec),
-    'tunnels': PluginSpec.Behavior(SbNcbrTunnels),
+    // 'tunnels': PluginSpec.Behavior(SbNcbrTunnels),
 };
 
 const DefaultViewerOptions = {
@@ -124,9 +114,9 @@ const DefaultViewerOptions = {
     saccharideCompIdMapType: 'default' as SaccharideCompIdMapType,
     volumesAndSegmentationsDefaultServer: VolsegVolumeServerConfig.DefaultServer.defaultValue,
     VolumesAndSegmentationsDefaultServer: VolsegVolumeServerConfig.DefaultServer.defaultValue,
-    rcsbAssemblySymmetryDefaultServerType: AssemblySymmetryConfig.DefaultServerType.defaultValue,
-    rcsbAssemblySymmetryDefaultServerUrl: AssemblySymmetryConfig.DefaultServerUrl.defaultValue,
-    rcsbAssemblySymmetryApplyColors: AssemblySymmetryConfig.ApplyColors.defaultValue,
+    // rcsbAssemblySymmetryDefaultServerType: AssemblySymmetryConfig.DefaultServerType.defaultValue,
+    // rcsbAssemblySymmetryDefaultServerUrl: AssemblySymmetryConfig.DefaultServerUrl.defaultValue,
+    // rcsbAssemblySymmetryApplyColors: AssemblySymmetryConfig.ApplyColors.defaultValue,
 };
 type ViewerOptions = typeof DefaultViewerOptions;
 
@@ -202,9 +192,9 @@ export class Viewer {
                 [PluginConfig.Structure.DefaultRepresentationPreset, ViewerAutoPreset.id],
                 [PluginConfig.Structure.SaccharideCompIdMapType, o.saccharideCompIdMapType],
                 [VolsegVolumeServerConfig.DefaultServer, o.volumesAndSegmentationsDefaultServer],
-                [AssemblySymmetryConfig.DefaultServerType, o.rcsbAssemblySymmetryDefaultServerType],
-                [AssemblySymmetryConfig.DefaultServerUrl, o.rcsbAssemblySymmetryDefaultServerUrl],
-                [AssemblySymmetryConfig.ApplyColors, o.rcsbAssemblySymmetryApplyColors],
+                // [AssemblySymmetryConfig.DefaultServerType, o.rcsbAssemblySymmetryDefaultServerType],
+                // [AssemblySymmetryConfig.DefaultServerUrl, o.rcsbAssemblySymmetryDefaultServerUrl],
+                // [AssemblySymmetryConfig.ApplyColors, o.rcsbAssemblySymmetryApplyColors],
             ]
         };
 
