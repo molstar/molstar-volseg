@@ -20,6 +20,6 @@
       "rootDir": "src",
       "outDir": "lib"
   },
-  "include": [ "src/**/*", "volumes-and-segmentations", "meshes", "cvsx-extension" ],
+  "include": [ "src/**/*", "src/extensions/volumes-and-segmentations", "src/extensions/meshes", "src/extensions/cvsx-extension" ],
   // "exclude": [ "src/servers/**/*", "src/perf-tests/*", "src/cli/**/*" ]
 }

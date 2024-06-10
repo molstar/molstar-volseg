@@ -32,8 +32,8 @@ import { parseSegmentKey } from './volseg-api/utils';
 import React from 'react';
 import { VolsegGeometricSegmentation } from './shape_primitives';
 import { VolsegMeshSegmentation } from '../meshes/mesh-extension';
-import { findNodesByRef } from '../src/common';
-import { DescriptionsList, EntryDescriptionUI, SelectedSegmentDescription } from '../src/common-ui';
+import { findNodesByRef } from '../../common';
+import { DescriptionsList, EntryDescriptionUI, SelectedSegmentDescription } from '../../common-ui';
 import { JSONEditorComponent } from './jsoneditor-component';
 import { combineLatest } from 'rxjs';
 

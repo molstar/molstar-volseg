@@ -10,7 +10,7 @@ import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects';
 import { setSubtreeVisibility } from 'molstar/lib/mol-plugin/behavior/static/state';
 import { StateBuilder, StateObjectSelector, StateTransformer } from 'molstar/lib/mol-state';
 import { ParamDefinition } from 'molstar/lib/mol-util/param-definition';
-import { Source } from '../src/common';
+import { Source } from '../../common';
 
 
 export function objectToArray(o?: object) {

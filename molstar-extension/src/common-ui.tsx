@@ -7,15 +7,15 @@
 import { Button, ExpandGroup, IconButton, TextInput } from 'molstar/lib/mol-plugin-ui/controls/common';
 import { sleep } from 'molstar/lib/mol-util/sleep';
 import { actionSelectSegment, actionToggleAllFilteredSegments, actionToggleSegment } from './common';
-import { WaitingButton } from '../volumes-and-segmentations/ui';
-import { createSegmentKey, parseSegmentKey } from '../volumes-and-segmentations/volseg-api/utils';
+import { WaitingButton } from './extensions/volumes-and-segmentations/ui';
+import { createSegmentKey, parseSegmentKey } from './extensions/volumes-and-segmentations/volseg-api/utils';
 import * as Icons from 'molstar/lib/mol-plugin-ui/controls/icons';
 import { useBehavior } from 'molstar/lib/mol-plugin-ui/hooks/use-behavior';
-import { VolsegEntryData } from '../volumes-and-segmentations/entry-root';
+import { VolsegEntryData } from './extensions/volumes-and-segmentations/entry-root';
 import Markdown from 'react-markdown';
 import { capitalize } from 'molstar/lib/mol-util/string';
 import { useState } from 'react';
-import { DescriptionData, DetailsText, ExternalReference } from '../volumes-and-segmentations/volseg-api/data';
+import { DescriptionData, DetailsText, ExternalReference } from './extensions/volumes-and-segmentations/volseg-api/data';
 
 export function DescriptionTextUI({ descriptionText: d }: { descriptionText: DetailsText }) {
     if (d.format === 'markdown') {
