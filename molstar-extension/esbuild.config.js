@@ -9,7 +9,7 @@ const
 console.log(`${ productionMode ? 'production' : 'development' } build`);
 
 const buildCSS = await esbuild.context({
-  entryPoints: ['src/apps/viewer/main.css'],
+  entryPoints: ['src/viewer/main.css'],
   bundle: true,
   target,
   // external: ['/images/*'],
