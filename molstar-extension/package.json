@@ -10,6 +10,7 @@
     "init": "npm run clean && mkdir ./build && cp ./src/apps/viewer/index.html ./build/",
     "bundle": "npm run init && node ./esbuild.config.js",
     "build": "npm run bundle -- production",
+    "build-site": "npm run bundle -- production && cp ./build/* ./site/.",
     "start": "npm run bundle -- development"
   },
   "keywords": [],
