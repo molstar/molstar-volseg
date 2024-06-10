@@ -19,6 +19,7 @@ jobs:
         with:
           python-version: 3.x
       - run: cd docs
+      - run: pwd
       - run: pip install mkdocs-material
       - run: git submodule update --init --recursive
       - run: mkdocs gh-deploy --force
