@@ -15,7 +15,7 @@ def download_and_build(
     
     build(args) 
     
-def parse_script_args(args: Namespace):
+def parse_script_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--raw_input_download_params",
