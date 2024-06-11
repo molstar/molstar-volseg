@@ -59,7 +59,7 @@ jobs:
       - name: 🚢 deploy docs
         uses: peaceiris/actions-gh-pages@v4
         with:
-          # deploy_key: ${{ secrets.DOCS_DEPLOY_KEY }}
+          deploy_key: ${{ secrets.DOCS_AND_VIEWER_ACTIONS_DEPLOY_KEY }}
           # external_repository: molstar/docs
           publish_branch: gh-pages
           publish_dir: ./docs/site 
