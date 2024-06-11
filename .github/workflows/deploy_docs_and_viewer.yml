@@ -1,23 +1,66 @@
-name: deploy docs and viewer
+name: Build & Deploy Docs
+
 on:
-    workflow_dispatch:
-        # inputs:
-        #   args:
-        #     description: 'Arguments to the remote script'
-        #     required: false
-        #     type: string
-#   push:
-#     branches:
-#       - master
-#       - main
+  workflow_dispatch:
+  # push:
+  #   branches: master
+  #   paths:
+  #     - docs/**
+  #     - ".github/workflows/docs.yml"
+  # pull_request:
+  #   branches: master
+  #   paths:
+  #     - docs/**
+  #     - ".github/workflows/docs.yml"
+
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - name: 👨🏼‍💻 checkout
+        uses: actions/checkout@v4
         with:
-          python-version: 3.x
-      - run: pip install mkdocs-material
-      - run: git submodule update --init --recursive
-      - run: mkdocs gh-deploy --config-file docs/mkdocs.yml --force --site-dir documentation
+          ref: documentation_v2
+
+      - name: 🐍 python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: ⛓️ dependencies
+        run: |
+          pip install mkdocs-material
+      - name: 🔧 build site
+        run: |
+          cd docs
+          mkdocs build
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - name: 👨🏼‍💻 checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: ⛓️ dependencies
+        run: |
+          pip install mkdocs-material
+      - name: 🔧 build site
+        run: |
+          cd docs
+          mkdocs build
+
+      - name: 🚢 deploy docs
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          deploy_key: ${{ secrets.DOCS_AND_VIEWER_ACTIONS_DEPLOY_KEY }}
+          # external_repository: molstar/docs
+          publish_branch: gh-pages
+          publish_dir: ./docs/site
+          destination_dir: documentation

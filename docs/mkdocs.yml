@@ -49,5 +49,5 @@ nav:
 
 repo_url: https://github.com/molstar/molstar-volseg
 # edit_uri: 
-site_url: https://molstar.github.io/molstar-volseg/documentation
+# site_url: https://molstar.github.io/molstar-volseg/documentation
 dev_addr: '127.0.0.1:5000'
