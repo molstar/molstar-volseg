@@ -33,6 +33,7 @@ dependencies:
   - pydantic
   - ome-zarr
   - jupyterlab
+  - mkdocs
 
   - pip:
     # - -r requirements.txt
@@ -56,3 +57,4 @@ dependencies:
     - -e ./server
     - h5py
     - vedo
+    - mkdocs-material

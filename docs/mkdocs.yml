@@ -1,0 +1,62 @@
+# site_name: MkLorum
+# nav:
+# # webpage for preprocessor
+# # webpage for query tool
+# # webpage for server?
+#   - Home: index.md
+#   # - About: about.md
+#   - Preprocessor: preprocessor.md
+#   - Server: server.md
+#   - Volumes & Segmentations Toolkit: vs_toolkit.md
+
+site_name: Mol* Volumes & Segmentations 2.0 Documentation
+theme:
+  name: material
+
+  # 404 page
+  static_templates:
+    - 404.html
+
+  # Necessary for search to work properly
+  include_search_page: false
+  search_index_only: true
+
+  # Default values, taken from mkdocs_theme.yml
+  language: en
+  font:
+    text: Roboto
+    code: Roboto Mono
+    # TODO: favicon
+  # favicon: assets/favicon.png
+  icon:
+    logo: logo
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+# Scripts for rendering Latex equations (in addition to pymdownx.arithmatex):
+extra_javascript:
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Installation: 'index.md'
+  - Preprocessor documentation:
+    - Preprocessor overview: 'preprocessor/overview.md'
+    - preprocess command: 'preprocessor/preprocess.md'
+    - delete command: 'preprocessor/delete.md'
+    - remove-segmentation command: 'preprocessor/remove_segmentation.md'
+    - remove-volume command: 'preprocessor/remove_volume.md'
+    - remove-segment-annotations command: 'preprocessor/remove_segment_annotations.md'
+    - remove-descriptions command: 'preprocessor/remove_descriptions.md'
+    - edit-segment-annotations command: 'preprocessor/edit_segment_annotations.md'
+    - edit-descriptions command: 'preprocessor/edit_descriptions.md'
+    - Advanced parameters: 'preprocessor/advanced.md'
+  - Volumes & Segmentations Toolkit documentation:
+    - Using Volumes & Segmentations Toolkit: 'vs_toolkit/overview.md'
+  - Volumes & Segmentations Server API documentation:
+    - Hosting Server API: 'server_api/overview.md'
+
+repo_url: https://github.com/molstar/molstar-volseg
+dev_addr: '127.0.0.1:5000'
