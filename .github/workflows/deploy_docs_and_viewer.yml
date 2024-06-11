@@ -27,9 +27,16 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: ⛓️ dependencies
+      - name: ⛓️ docs dependencies
         run: |
           pip install mkdocs-material
+      - name: install node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.14.2
+      - name: viewer dependencies
+        run: |
+          npm install
       - name: 🔧 build docs site
         run: |
           cd docs
