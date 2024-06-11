@@ -1,14 +1,3 @@
-# site_name: MkLorum
-# nav:
-# # webpage for preprocessor
-# # webpage for query tool
-# # webpage for server?
-#   - Home: index.md
-#   # - About: about.md
-#   - Preprocessor: preprocessor.md
-#   - Server: server.md
-#   - Volumes & Segmentations Toolkit: vs_toolkit.md
-
 site_name: Mol* Volumes & Segmentations 2.0 Documentation
 theme:
   name: material
@@ -59,4 +48,6 @@ nav:
     - Hosting Server API: 'server_api/overview.md'
 
 repo_url: https://github.com/molstar/molstar-volseg
+# edit_uri: 
+site_url: https://molstar.github.io/molstar-volseg/documentation
 dev_addr: '127.0.0.1:5000'
