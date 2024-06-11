@@ -1,4 +1,4 @@
-name: Build & Deploy Docs
+name: Build & Deploy Docs & Viewer
 
 on:
   workflow_dispatch:
