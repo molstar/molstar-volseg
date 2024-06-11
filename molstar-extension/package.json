@@ -19,7 +19,8 @@
   "devDependencies": {
     "@types/node": "^20",
     "typescript": "^5.4.5",
-    "esbuild": "0.21.4"
+    "esbuild": "0.21.4",
+    "esbuild-sass-plugin": "^3.3.1"
   },
   "dependencies": {
     "@types/jsoneditor": "^9.9.5",
