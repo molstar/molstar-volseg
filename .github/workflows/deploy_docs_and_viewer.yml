@@ -1,87 +1,87 @@
-name: deploy docs and viewer
-on:
-    workflow_dispatch:
-#   push:
-#     branches:
-#       - master
-#       - main
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.x
-    #   - run: cd docs
-    #   - run: pwd
-      - run: pip install mkdocs-material
-      - run: git submodule update --init --recursive
-    #   &?
-      - run: mkdocs gh-deploy --config-file docs/mkdocs.yml --force --site-dir site
-
-# name: Build & Deploy Docs
-
+# name: deploy docs and viewer
 # on:
-#   workflow_dispatch:
-#   # push:
-#   #   branches: master
-#   #   paths:
-#   #     - docs/**
-#   #     - ".github/workflows/docs.yml"
-#   # pull_request:
-#   #   branches: master
-#   #   paths:
-#   #     - docs/**
-#   #     - ".github/workflows/docs.yml"
-
+#     workflow_dispatch:
+# #   push:
+# #     branches:
+# #       - master
+# #       - main
 # jobs:
-#   build:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: 👨🏼‍💻 checkout
-#         uses: actions/checkout@v4
-#         with:
-#           ref: documentation_v2
-
-#       - name: 🐍 python
-#         uses: actions/setup-python@v5
-#         with:
-#           python-version: "3.10"
-
-#       - name: ⛓️ dependencies
-#         run: |
-#           pip install mkdocs-material
-#       - name: 🔧 build site
-#         run: |
-#           cd docs
-#           mkdocs build
-
 #   deploy:
 #     runs-on: ubuntu-latest
-#     needs: build
-#     if: github.ref == 'refs/heads/master'
 #     steps:
-#       - name: 👨🏼‍💻 checkout
-#         uses: actions/checkout@v4
-
-#       - name: 🐍 python
-#         uses: actions/setup-python@v5
+#       - uses: actions/checkout@v2
+#       - uses: actions/setup-python@v2
 #         with:
-#           python-version: "3.10"
+#           python-version: 3.x
+#     #   - run: cd docs
+#     #   - run: pwd
+#       - run: pip install mkdocs-material
+#       - run: git submodule update --init --recursive
+#     #   &?
+#       - run: mkdocs gh-deploy --config-file docs/mkdocs.yml --force --site-dir site
 
-#       - name: ⛓️ dependencies
-#         run: |
-#           pip install mkdocs-material
-#       - name: 🔧 build site
-#         run: |
-#           cd docs
-#           mkdocs build
+name: Build & Deploy Docs
 
-#       - name: 🚢 deploy docs
-#         uses: peaceiris/actions-gh-pages@v4
-#         with:
-#           # deploy_key: ${{ secrets.DOCS_DEPLOY_KEY }}
-#           # external_repository: molstar/docs
-#           publish_branch: gh-pages
-#           publish_dir: ./docs/site
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: master
+  #   paths:
+  #     - docs/**
+  #     - ".github/workflows/docs.yml"
+  # pull_request:
+  #   branches: master
+  #   paths:
+  #     - docs/**
+  #     - ".github/workflows/docs.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 👨🏼‍💻 checkout
+        uses: actions/checkout@v4
+        with:
+          ref: documentation_v2
+
+      - name: 🐍 python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: ⛓️ dependencies
+        run: |
+          pip install mkdocs-material
+      - name: 🔧 build site
+        run: |
+          cd docs
+          mkdocs build
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - name: 👨🏼‍💻 checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: ⛓️ dependencies
+        run: |
+          pip install mkdocs-material
+      - name: 🔧 build site
+        run: |
+          cd docs
+          mkdocs build
+
+      - name: 🚢 deploy docs
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          # deploy_key: ${{ secrets.DOCS_DEPLOY_KEY }}
+          # external_repository: molstar/docs
+          publish_branch: gh-pages
+          publish_dir: ./docs/site
