@@ -15,12 +15,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
       - uses: actions/setup-python@v5
       # - uses: actions/npm-cache
         with:
           python-version: 3.x
       - run: pip install mkdocs-material
       - run: git submodule update --init --recursive
-      - run: mkdir site
-      - run: mkdocs build --config-file docs/mkdocs.yml --site-dir molstar-extension/site/docs
+      - run: |
+          mkdir -p site/docs
+          mkdocs build --config-file docs/mkdocs.yml --site-dir site/docs
       # - run: mkdocs gh-deploy --config-file docs/mkdocs.yml --force --site-dir molstar-extension/site/docs
