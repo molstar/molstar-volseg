@@ -21,5 +21,5 @@ jobs:
       - run: pip install mkdocs-material
       - run: git submodule update --init --recursive
       - run: mkdir documentation
-      - run: mkdocs build --site-dir documentation
+      - run: mkdocs build --config-file docs/mkdocs.yml --site-dir documentation
       - run: mkdocs gh-deploy --config-file docs/mkdocs.yml --force --site-dir documentation
