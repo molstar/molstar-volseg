@@ -73,12 +73,14 @@ jobs:
         run: |
           mkdir -p ./public/docs
           mkdir -p ./public/viewer
-          cp -r docs/ ./public/docs
+          cp -r docs/site/* ./public/docs
           cp -r molstar-extension/ ./public/viewer
           
       - name: 🚢 deploy docs and viewer
         uses: peaceiris/actions-gh-pages@v4
         with:
+          # deploys docs to
+          # https://molstar.org/molstar-volseg/docs/docs/site/
           deploy_key: ${{ secrets.DOCS_ACTIONS_DEPLOY_KEY }}
           # external_repository: molstar/docs
           publish_branch: gh-pages
