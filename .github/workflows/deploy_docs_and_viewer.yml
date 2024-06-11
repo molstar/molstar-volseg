@@ -41,6 +41,7 @@ jobs:
       - name: viewer dependencies
         run: |
           cd molstar-extension
+          cat package.json
           npm ci
           npm list
       - name: build viewer site
