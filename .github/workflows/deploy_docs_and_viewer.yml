@@ -34,14 +34,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: viewer dependencies
-        run: |
-          npm install
       - name: 🔧 build docs site
         run: |
           cd docs
           mkdocs build
           pwd
+      - name: viewer dependencies
+        run: |
+          pwd
+          cd ../molstar-extension
+          npm install
       - name: build viewer site
         run: |
           pwd
