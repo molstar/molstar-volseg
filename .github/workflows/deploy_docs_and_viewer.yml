@@ -12,6 +12,8 @@ on:
   #   paths:
   #     - docs/**
   #     - ".github/workflows/docs.yml"
+  # push:
+  #   branches: master
 
 jobs:
   build:
@@ -41,9 +43,7 @@ jobs:
       - name: viewer dependencies
         run: |
           cd molstar-extension
-          cat package.json
           npm ci
-          npm list
       - name: build viewer site
         run: |
           cd molstar-extension
@@ -73,7 +73,7 @@ jobs:
       - name: 🚢 deploy docs
         uses: peaceiris/actions-gh-pages@v4
         with:
-          deploy_key: ${{ secrets.DOCS_AND_VIEWER_ACTIONS_DEPLOY_KEY }}
+          deploy_key: ${{ secrets.DOCS_ACTIONS_DEPLOY_KEY }}
           # external_repository: molstar/docs
           publish_branch: gh-pages
           publish_dir: ./docs/site
@@ -82,7 +82,7 @@ jobs:
       - name: 🚢 deploy viewer
         uses: peaceiris/actions-gh-pages@v4
         with:
-          deploy_key: ${{ secrets.DOCS_AND_VIEWER_ACTIONS_DEPLOY_KEY }}
+          deploy_key: ${{ secrets.VIEWER_ACTIONS_DEPLOY_KEY }}
           # external_repository: molstar/docs
           publish_branch: gh-pages
           publish_dir: ./molstar-extension/site
