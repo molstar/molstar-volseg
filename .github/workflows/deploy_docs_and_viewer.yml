@@ -63,4 +63,4 @@ jobs:
           # external_repository: molstar/docs
           publish_branch: gh-pages
           publish_dir: ./docs/site
-          destination_dir: documentation
+          destination_dir: docs
