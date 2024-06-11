@@ -20,7 +20,7 @@ jobs:
       - name: 👨🏼‍💻 checkout
         uses: actions/checkout@v4
         with:
-          ref: documentation_v2
+          ref: master
 
       - name: 🐍 python
         uses: actions/setup-python@v5
