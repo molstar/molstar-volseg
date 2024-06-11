@@ -51,7 +51,7 @@ python preprocessor/cellstar_preprocessor/preprocess.py preprocess --mode extend
 Note that the values of arguments `--entry-id`, `--source-db`, `--source-db-id`, `--source-db-name`, and `--db-path` should be exactly the same as the ones used when the entry was initially created using mode `add`. After using this command, the `emd-1832` entry will have not only volume data, but also lattice segmentation data based on the provided EMDB SFF file.
 
 
-## Examples of using preprocess command in mode `add`
+## Examples of using preprocess command in mode add
 
 ### EMD-1832
 <!-- - Create a folder `inputs/emd-1832`
