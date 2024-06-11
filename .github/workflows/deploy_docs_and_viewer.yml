@@ -30,10 +30,14 @@ jobs:
       - name: ⛓️ dependencies
         run: |
           pip install mkdocs-material
-      - name: 🔧 build site
+      - name: 🔧 build docs site
         run: |
           cd docs
           mkdocs build
+      - name: build viewer site
+        run: |
+          cd molstar-extension
+          npm run build-site
 
   deploy:
     runs-on: ubuntu-latest
@@ -64,3 +68,12 @@ jobs:
           publish_branch: gh-pages
           publish_dir: ./docs/site
           destination_dir: docs
+
+      - name: 🚢 deploy viewer
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          deploy_key: ${{ secrets.DOCS_AND_VIEWER_ACTIONS_DEPLOY_KEY }}
+          # external_repository: molstar/docs
+          publish_branch: gh-pages
+          publish_dir: ./molstar-extension/site
+          destination_dir: viewer

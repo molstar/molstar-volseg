@@ -1,4 +1,5 @@
 ### Custom
+molstar-extension/site/*
 molstar-extension/node_modules/
 molstar-extension/debug.log
 molstar-extension/npm-debug.log
