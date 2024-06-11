@@ -43,7 +43,7 @@ jobs:
           mkdocs build
       - name: build viewer site
         run: |
-          cd molstar-extension
+          cd ../molstar-extension
           npm run build-site
 
   deploy:
