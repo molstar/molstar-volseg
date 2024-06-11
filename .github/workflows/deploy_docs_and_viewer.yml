@@ -41,8 +41,10 @@ jobs:
         run: |
           cd docs
           mkdocs build
+          pwd
       - name: build viewer site
         run: |
+          pwd
           cd ../molstar-extension
           npm run build-site
 
