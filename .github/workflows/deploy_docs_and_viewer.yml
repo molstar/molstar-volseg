@@ -69,21 +69,27 @@ jobs:
         run: |
           cd docs
           mkdocs build
-
-      - name: 🚢 deploy docs
+      - name: Create public
+        run: |
+          mkdir -p ./public/docs
+          mkdir -p ./public/viewer
+          cp -r docs/site ./public/docs
+          cp -r molstar-extension/site ./public/viewer
+          
+      - name: 🚢 deploy docs and viewer
         uses: peaceiris/actions-gh-pages@v4
         with:
           deploy_key: ${{ secrets.DOCS_ACTIONS_DEPLOY_KEY }}
           # external_repository: molstar/docs
           publish_branch: gh-pages
-          publish_dir: ./docs/site
-          destination_dir: docs
+          publish_dir: ./public
+          # destination_dir: ./public
 
-      - name: 🚢 deploy viewer
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          deploy_key: ${{ secrets.VIEWER_ACTIONS_DEPLOY_KEY }}
-          # external_repository: molstar/docs
-          publish_branch: gh-pages
-          publish_dir: ./molstar-extension/site
-          destination_dir: viewer
+      # - name: 🚢 deploy viewer
+      #   uses: peaceiris/actions-gh-pages@v4
+      #   with:
+      #     deploy_key: ${{ secrets.VIEWER_ACTIONS_DEPLOY_KEY }}
+      #     # external_repository: molstar/docs
+      #     publish_branch: gh-pages
+      #     publish_dir: ./molstar-extension/site
+      #     destination_dir: viewer
