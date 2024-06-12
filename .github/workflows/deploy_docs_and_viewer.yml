@@ -48,6 +48,8 @@ jobs:
         run: |
           cd molstar-extension
           npm run build-site
+          ls -lt
+          ls site
 
   deploy:
     runs-on: ubuntu-latest
