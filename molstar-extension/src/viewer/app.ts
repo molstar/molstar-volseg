@@ -10,11 +10,8 @@ import { G3dProvider } from 'molstar/lib/extensions/g3d/format';
 import { QualityAssessmentPLDDTPreset, QualityAssessmentQmeanPreset } from 'molstar/lib/extensions/model-archive/quality-assessment/behavior';
 import { QualityAssessment } from 'molstar/lib/extensions/model-archive/quality-assessment/prop';
 // import { Mp4Export } from 'molstar/lib/extensions/mp4-export';
-import { loadMVS } from 'molstar/lib/extensions/mvs/load';
-import { MVSData } from 'molstar/lib/extensions/mvs/mvs-data';
 import { SbNcbrPartialChargesPreset, SbNcbrPartialChargesPropertyProvider } from 'molstar/lib/extensions/sb-ncbr';
 import { VolsegVolumeServerConfig } from 'molstar/lib/extensions/volumes-and-segmentations';
-import { wwPDBStructConnExtensionFunctions } from 'molstar/lib/extensions/wwpdb/struct-conn';
 import { SaccharideCompIdMapType } from 'molstar/lib/mol-model/structure/structure/carbohydrates/constants';
 import { PresetTrajectoryHierarchy } from 'molstar/lib/mol-plugin-state/builder/structure/hierarchy-preset';
 import { PresetStructureRepresentations, StructureRepresentationPresetProvider } from 'molstar/lib/mol-plugin-state/builder/structure/representation-preset';
@@ -569,7 +566,7 @@ export const ViewerAutoPreset = StructureRepresentationPresetProvider({
     }
 });
 
-export const PluginExtensions = {
-    wwPDBStructConn: wwPDBStructConnExtensionFunctions,
-    mvs: { MVSData, loadMVS },
-};
+// export const PluginExtensions = {
+//     wwPDBStructConn: wwPDBStructConnExtensionFunctions,
+//     mvs: { MVSData, loadMVS },
+// };
