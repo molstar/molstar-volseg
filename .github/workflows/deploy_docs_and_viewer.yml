@@ -1,19 +1,19 @@
 name: Build & Deploy Docs & Viewer
 
 on:
-  workflow_dispatch:
-  # push:
-  #   branches: master
-  #   paths:
-  #     - docs/**
-  #     - ".github/workflows/docs.yml"
-  # pull_request:
-  #   branches: master
-  #   paths:
-  #     - docs/**
-  #     - ".github/workflows/docs.yml"
-  # push:
-  #   branches: master
+  # workflow_dispatch:
+  push:
+    branches: master
+    paths:
+      - docs/**
+      - molstar-extension/**
+      - ".github/workflows/deploy_docs_and_viewer.yml"
+  pull_request:
+    branches: master
+    paths:
+      - docs/**
+      - molstar-extension/**
+      - ".github/workflows/deploy_docs_and_viewer.yml"
 
 jobs:
   build:
