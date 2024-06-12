@@ -12,6 +12,7 @@ jobs:
   build:
     name: Download input files and build database
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
     - name: executing remote ssh command in the background using SSH key
       uses: appleboy/ssh-action@master
