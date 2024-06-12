@@ -1042,25 +1042,25 @@
 - Download [Segmentation](https://www.ebi.ac.uk/em_static/emdb_sff/18/1832/emd_1832.hff.gz) and extract it to `inputs/emd-1832/emd_1832.hff` -->
 
 <ul>
-<li>To add an emd-1832 entry to the internal database, from root directory (<code>cellstar-volume-server-v2</code> by default) run:</li>
+<li>To add an emd-1832 entry to the internal database, from root directory (<code>molstar-volseg</code> by default) run:</li>
 </ul>
 <div class="highlight"><pre><span></span><code>python preprocessor/cellstar_preprocessor/preprocess.py preprocess --mode add --input-path test-data/preprocessor/sample_volumes/emdb/EMD-1832.map --input-kind map --input-path test-data/preprocessor/sample_segmentations/emdb_sff/emd_1832.hff --input-kind sff --entry-id emd-1832 --source-db emdb --source-db-id emd-1832 --source-db-name emdb --working-folder temp_working_folder --db-path preprocessor/temp/test_db --quantize-dtype-str u1
 </code></pre></div>
 <p>It will add entry <code>emd-1832</code> to the database and during preprocessing volume data will be quantized with <code>u1</code> option</p>
 <h3 id="idr-13457537">IDR-13457537</h3>
 <ul>
-<li>First unzip <code>test-data/preprocessor/sample_segmentations/idr/13457537.zarr.zip</code> file. E.g. from the root repository directory (<code>cellstar-volume-server-v2</code> by default) run:
+<li>First unzip <code>test-data/preprocessor/sample_segmentations/idr/13457537.zarr.zip</code> file. E.g. from the root repository directory (<code>molstar-volseg</code> by default) run:
 <div class="highlight"><pre><span></span><code>cd test-data/preprocessor/sample_segmentations/idr/idr-13457537
 unzip 13457537.zarr.zip
 </code></pre></div></li>
 </ul>
-<p>To add entry to the database, from the root repository directory (<code>cellstar-volume-server-v2</code> by default) run e.g.:
+<p>To add entry to the database, from the root repository directory (<code>molstar-volseg</code> by default) run e.g.:
 <div class="highlight"><pre><span></span><code>python preprocessor/cellstar_preprocessor/preprocess.py preprocess --mode add --input-path test-data/preprocessor/sample_segmentations/idr/idr-13457537/13457537.zarr --input-kind omezarr --entry-id idr-13457537 --source-db idr --source-db-id idr-13457537 --source-db-name idr --working-folder temp_working_folder --db-path preprocessor/temp/test_db
 </code></pre></div></p>
 <p>It will add entry <code>idr-13457537</code> to the database.</p>
 <h3 id="emd-1832-geometric-segmentation">EMD-1832-geometric-segmentation</h3>
 <ul>
-<li>To add an emd-1832 entry with artificially created geometric segmentation to the internal database, from root directory (<code>cellstar-volume-server-v2</code> by default) run e.g.:</li>
+<li>To add an emd-1832 entry with artificially created geometric segmentation to the internal database, from root directory (<code>molstar-volseg</code> by default) run e.g.:</li>
 </ul>
 <div class="highlight"><pre><span></span><code>python preprocessor/cellstar_preprocessor/preprocess.py preprocess --mode add --input-path test-data/preprocessor/sample_volumes/emdb/EMD-1832.map --input-kind map --input-path test-data/preprocessor/sample_segmentations/geometric_segmentations/geometric_segmentation_1.json --input-kind geometric_segmentation --input-path test-data/preprocessor/sample_segmentations/geometric_segmentations/geometric_segmentation_2.json --input-kind geometric_segmentation  --entry-id emd-1832-geometric-segmentation --source-db emdb --source-db-id emd-1832-geometric-segmentation --source-db-name emdb --working-folder temp_working_folder --db-path preprocessor/temp/test_db
 </code></pre></div>
@@ -1081,7 +1081,7 @@ unzip 13457537.zarr.zip
 </ul>
 </li>
 <li>
-<p>To add an <code>emd-1273</code> entry with segmentations based on masks to the internal database, from root directory (<code>cellstar-volume-server-v2</code> by default) run:</p>
+<p>To add an <code>emd-1273</code> entry with segmentations based on masks to the internal database, from root directory (<code>molstar-volseg</code> by default) run:</p>
 </li>
 </ol>
 <div class="highlight"><pre><span></span><code>python preprocessor/cellstar_preprocessor/preprocess.py preprocess --mode add --input-path test-data/preprocessor/sample_volumes/emdb/emd_1273.map --input-kind map --input-path test-data/preprocessor/sample_segmentations/emdb_masks/emd_1273_msk_1.map --input-kind mask --input-path test-data/preprocessor/sample_segmentations/emdb_masks/emd_1273_msk_2.map --input-kind mask --input-path test-data/preprocessor/sample_segmentations/emdb_masks/emd_1273_msk_3.map --input-kind mask --input-path test-data/preprocessor/sample_segmentations/emdb_masks/emd_1273_msk_4.map --input-kind mask --input-path test-data/preprocessor/sample_segmentations/emdb_masks/emd_1273_msk_5.map --input-kind mask --entry-id emd-1273 --source-db emdb --source-db-id emd-1273 --source-db-name emdb --working-folder temp_working_folder --db-path preprocessor/temp/test_db
@@ -1091,12 +1091,12 @@ unzip 13457537.zarr.zip
 <ol>
 <li>
 <p>Obtain the raw input files:</p>
-<p>Create <code>test-data/preprocessor/sample_volumes/empiar/empiar-10988</code> folder, change current directory to it, and download electron density map file. E.g. from the root repository directory (<code>cellstar-volume-server-v2</code> by default) run:</p>
+<p>Create <code>test-data/preprocessor/sample_volumes/empiar/empiar-10988</code> folder, change current directory to it, and download electron density map file. E.g. from the root repository directory (<code>molstar-volseg</code> by default) run:</p>
 <div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>test-data/preprocessor/sample_volumes/empiar/empiar-10988
 <span class="nb">cd</span><span class="w"> </span>test-data/preprocessor/sample_volumes/empiar/empiar-10988
 wget<span class="w"> </span>https://ftp.ebi.ac.uk/empiar/world_availability/10988/data/DEF/tomograms/TS_026.rec
 </code></pre></div>
-<p>Next, create <code>test-data/preprocessor/sample_segmentations/empiar/empiar-10988</code> directory, change current directory to it, and download electron density mask files. E.g. from the root repository directory (<code>cellstar-volume-server-v2</code> by default) run:</p>
+<p>Next, create <code>test-data/preprocessor/sample_segmentations/empiar/empiar-10988</code> directory, change current directory to it, and download electron density mask files. E.g. from the root repository directory (<code>molstar-volseg</code> by default) run:</p>
 <div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>test-data/preprocessor/sample_segmentations/empiar/empiar-10988
 <span class="nb">cd</span><span class="w"> </span>test-data/preprocessor/sample_segmentations/empiar/empiar-10988
 wget<span class="w"> </span>https://ftp.ebi.ac.uk/empiar/world_availability/10988/data/DEF/labels/TS_026.labels.mrc
@@ -1137,7 +1137,7 @@ wget<span class="w"> </span>https://ftp.ebi.ac.uk/empiar/world_availability/1098
 <ol>
 <li>
 <p>Add <code>empiar-10988</code> entry to the internal database</p>
-<p>In order to add an <code>empiar-10988</code> entry with segmentations based on masks to the internal database, from root directory (<code>cellstar-volume-server-v2</code> by default) run:</p>
+<p>In order to add an <code>empiar-10988</code> entry with segmentations based on masks to the internal database, from root directory (<code>molstar-volseg</code> by default) run:</p>
 </li>
 </ol>
 <div class="highlight"><pre><span></span><code><span class="w">    </span>python<span class="w"> </span>preprocessor/cellstar_preprocessor/preprocess.py<span class="w"> </span>preprocess<span class="w"> </span>--mode<span class="w"> </span>add<span class="w"> </span>--input-path<span class="w"> </span>extra_data_empiar_10988.json<span class="w"> </span>--input-kind<span class="w"> </span>extra_data<span class="w"> </span>--input-path<span class="w"> </span>test-data/preprocessor/sample_volumes/empiar/empiar-10988/TS_026.rec<span class="w"> </span>--input-kind<span class="w"> </span>map<span class="w"> </span>--input-path<span class="w"> </span>test-data/preprocessor/sample_segmentations/empiar/empiar-10988/TS_026.labels.mrc<span class="w"> </span>--input-kind<span class="w"> </span>mask<span class="w"> </span>--input-path<span class="w"> </span>test-data/preprocessor/sample_segmentations/empiar/empiar-10988/TS_026_membranes.mrc<span class="w"> </span>--input-kind<span class="w"> </span>mask<span class="w"> </span>--input-path<span class="w"> </span>test-data/preprocessor/sample_segmentations/empiar/empiar-10988/TS_026_fas.mrc<span class="w"> </span>--input-kind<span class="w"> </span>mask<span class="w"> </span>--input-path<span class="w"> </span>test-data/preprocessor/sample_segmentations/empiar/empiar-10988/TS_026_cytosol.mrc<span class="w"> </span>--input-kind<span class="w"> </span>mask<span class="w"> </span>--input-path<span class="w"> </span>test-data/preprocessor/sample_segmentations/empiar/empiar-10988/TS_026_cyto_ribosomes.mrc<span class="w"> </span>--input-kind<span class="w"> </span>mask<span class="w"> </span>--min-downsampling-level<span class="w"> </span><span class="m">4</span><span class="w"> </span>--remove-original-resolution<span class="w"> </span>--entry-id<span class="w"> </span>empiar-10988<span class="w"> </span>--source-db<span class="w"> </span>empiar<span class="w"> </span>--source-db-id<span class="w"> </span>empiar-10988<span class="w"> </span>--source-db-name<span class="w"> </span>empiar<span class="w"> </span>--working-folder<span class="w"> </span>temp_working_folder<span class="w"> </span>--db-path<span class="w"> </span>preprocessor/temp/test_db
@@ -1148,12 +1148,12 @@ wget<span class="w"> </span>https://ftp.ebi.ac.uk/empiar/world_availability/1098
 <ol>
 <li>
 <p>Obtain the raw input files</p>
-<p>Create <code>test-data/preprocessor/sample_volumes/empiar/empiar-11756</code> folder, change current directory to it, and download electron density map file. E.g. from the root repository directory (<code>cellstar-volume-server-v2</code> by default) run:</p>
+<p>Create <code>test-data/preprocessor/sample_volumes/empiar/empiar-11756</code> folder, change current directory to it, and download electron density map file. E.g. from the root repository directory (<code>molstar-volseg</code> by default) run:</p>
 <div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>test-data/preprocessor/sample_volumes/empiar/empiar-11756
 <span class="nb">cd</span><span class="w"> </span>test-data/preprocessor/sample_volumes/empiar/empiar-11756
 wget<span class="w"> </span>https://ftp.ebi.ac.uk/empiar/world_availability/11756/data/tomoman_minimal_project/cryocare_bin4_tomoname/17072022_BrnoKrios_Arctis_p3ar_grid_Position_35.mrc
 </code></pre></div>
-<p>Next, create <code>test-data/preprocessor/sample_segmentations/empiar/empiar-11756</code> directory, change current directory to it, and download two <code>.star</code> files. E.g. from the root repository directory (<code>cellstar-volume-server-v2</code> by default) run:</p>
+<p>Next, create <code>test-data/preprocessor/sample_segmentations/empiar/empiar-11756</code> directory, change current directory to it, and download two <code>.star</code> files. E.g. from the root repository directory (<code>molstar-volseg</code> by default) run:</p>
 <div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>test-data/preprocessor/sample_segmentations/empiar/empiar-11756
 <span class="nb">cd</span><span class="w"> </span>test-data/preprocessor/sample_segmentations/empiar/empiar-11756
 wget<span class="w"> </span>https://ftp.ebi.ac.uk/empiar/world_availability/11756/data/tomoman_minimal_project/17072022_BrnoKrios_Arctis_p3ar_grid_Position_35/metadata/particles/rln_nucleosome_bin1_tomo_649.star
@@ -1162,7 +1162,7 @@ wget<span class="w"> </span>https://ftp.ebi.ac.uk/empiar/world_availability/1175
 </li>
 <li>
 <p>Prepare input files.</p>
-<p>This EMPIAR entry contains relevant data that can be used to render geometric segmentation in <code>.star</code> format. To be able to use this data, .star files need to be parsed into the standard Mol* VS 2.0 format for geometric segmentations. This can be achieved by using custom script <code>preprocessor/cellstar_preprocessor/tools/parse_star_file/parse_single_star_file.py</code> that is part of our solution. In parallel, this script allows to set the biologically meaningful segmentation IDs for both geometric segmentations based on the data from EMPIAR entry webpage (i.e. <code>ribosomes</code> and <code>nucleosomes</code>). In order to parse both <code>.star</code> files, from the root repository directory (<code>cellstar-volume-server-v2</code> by default) run:</p>
+<p>This EMPIAR entry contains relevant data that can be used to render geometric segmentation in <code>.star</code> format. To be able to use this data, .star files need to be parsed into the standard Mol* VS 2.0 format for geometric segmentations. This can be achieved by using custom script <code>preprocessor/cellstar_preprocessor/tools/parse_star_file/parse_single_star_file.py</code> that is part of our solution. In parallel, this script allows to set the biologically meaningful segmentation IDs for both geometric segmentations based on the data from EMPIAR entry webpage (i.e. <code>ribosomes</code> and <code>nucleosomes</code>). In order to parse both <code>.star</code> files, from the root repository directory (<code>molstar-volseg</code> by default) run:</p>
 <div class="highlight"><pre><span></span><code>python<span class="w"> </span>preprocessor/cellstar_preprocessor/tools/parse_star_file/parse_single_star_file.py<span class="w"> </span>--star_file_path<span class="w"> </span>test-data/preprocessor/sample_segmentations/empiar/empiar-11756/rln_ribosome_bin1_tomo_649.star<span class="w"> </span>--geometric_segmentation_input_file_path<span class="w"> </span>test-data/preprocessor/sample_segmentations/empiar/empiar-11756/geometric_segmentation_input_1.json<span class="w"> </span>--sphere_radius<span class="w"> </span><span class="m">100</span><span class="w"> </span>--segmentation_id<span class="w"> </span>ribosomes<span class="w">  </span>--sphere_color_hex<span class="w"> </span>FFFF00<span class="w"> </span>--pixel_size<span class="w"> </span><span class="m">7</span>.84<span class="w"> </span>--star_file_coordinate_divisor<span class="w"> </span><span class="m">4</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code>python<span class="w"> </span>preprocessor/cellstar_preprocessor/tools/parse_star_file/parse_single_star_file.py<span class="w"> </span>--star_file_path<span class="w"> </span>test-data/preprocessor/sample_segmentations/empiar/empiar-11756/rln_nucleosome_bin1_tomo_649.star<span class="w"> </span>--geometric_segmentation_input_file_path<span class="w"> </span>test-data/preprocessor/sample_segmentations/empiar/empiar-11756/geometric_segmentation_input_2.json<span class="w"> </span>--sphere_radius<span class="w"> </span><span class="m">100</span><span class="w">  </span>--segmentation_id<span class="w"> </span>nucleosomes<span class="w"> </span>--sphere_color_hex<span class="w"> </span>FF0000<span class="w"> </span>--pixel_size<span class="w"> </span><span class="m">7</span>.84<span class="w"> </span>--star_file_coordinate_divisor<span class="w"> </span><span class="m">4</span>
@@ -1181,7 +1181,7 @@ wget<span class="w"> </span>https://ftp.ebi.ac.uk/empiar/world_availability/1175
 </li>
 <li>
 <p>Add empiar-11756 entry to the internal database</p>
-<p>To add an empiar-11756 entry with segmentations based on masks to the internal database, from root directory (<code>cellstar-volume-server-v2</code> by default) run:</p>
+<p>To add an empiar-11756 entry with segmentations based on masks to the internal database, from root directory (<code>molstar-volseg</code> by default) run:</p>
 <div class="highlight"><pre><span></span><code>python<span class="w"> </span>preprocessor/cellstar_preprocessor/preprocess.py<span class="w"> </span>preprocess<span class="w"> </span>--mode<span class="w"> </span>add<span class="w"> </span>--input-path<span class="w"> </span>test-data/preprocessor/sample_volumes/empiar/empiar-11756/empiar-11756-extra-data.json<span class="w"> </span>--input-kind<span class="w"> </span>extra_data<span class="w"> </span>--input-path<span class="w"> </span>test-data/preprocessor/sample_volumes/empiar/empiar-11756/17072022_BrnoKrios_Arctis_p3ar_grid_Position_35.mrc<span class="w"> </span>--input-kind<span class="w"> </span>map<span class="w"> </span>--input-path<span class="w"> </span>test-data/preprocessor/sample_segmentations/empiar/empiar-11756/geometric_segmentation_input_1.json<span class="w"> </span>--input-kind<span class="w"> </span>geometric_segmentation<span class="w"> </span>--input-path<span class="w"> </span>test-data/preprocessor/sample_segmentations/empiar/empiar-11756/geometric_segmentation_input_2.json<span class="w"> </span>--input-kind<span class="w"> </span>geometric_segmentation<span class="w"> </span>--entry-id<span class="w"> </span>empiar-11756<span class="w"> </span>--source-db<span class="w"> </span>empiar<span class="w"> </span>--source-db-id<span class="w"> </span>empiar-11756<span class="w"> </span>--source-db-name<span class="w"> </span>empiar<span class="w"> </span>--working-folder<span class="w"> </span>temp_working_folder<span class="w"> </span>--db-path<span class="w"> </span>preprocessor/temp/test_db
 </code></pre></div>
 <p>It will create a database entry with two geometric segmentations (segmentation IDs <code>ribosomes</code> and <code>nucleosomes</code>).</p>
@@ -1197,12 +1197,12 @@ wget<span class="w"> </span>https://ftp.ebi.ac.uk/empiar/world_availability/1175
 <ol>
 <li>
 <p>Obtain the raw input files</p>
-<p>Create <code>test-data/preprocessor/sample_volumes/custom/custom-hipsc_230741</code> folder, change current directory to it, and download OME-TIFF file with volume data. E.g. from the root repository directory (<code>cellstar-volume-server-v2</code> by default) run:</p>
+<p>Create <code>test-data/preprocessor/sample_volumes/custom/custom-hipsc_230741</code> folder, change current directory to it, and download OME-TIFF file with volume data. E.g. from the root repository directory (<code>molstar-volseg</code> by default) run:</p>
 <div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>test-data/preprocessor/sample_volumes/custom/custom-hipsc_230741
 <span class="nb">cd</span><span class="w"> </span>test-data/preprocessor/sample_volumes/custom/custom-hipsc_230741
 wget<span class="w"> </span>-O<span class="w"> </span>hipsc_230741_volume.ome.tif<span class="w"> </span>https://allencell.s3.amazonaws.com/aics/hipsc_single_cell_image_dataset/crop_raw/7922e74b69b77d6b51ea5f1627418397ab6007105a780913663ce1344905db5c_raw.ome.tif?versionId<span class="o">=</span>yQ6YaOj1YgDNgS4DpsnmrNAkOQ.4pgS6
 </code></pre></div>
-<p>Next, create <code>test-data/preprocessor/sample_segmentations/custom/custom-hipsc_230741</code> directory, change current directory to it, and download OME-TIFF file with segmentation data. E.g. from the root repository directory (<code>cellstar-volume-server-v2</code> by default) run: </p>
+<p>Next, create <code>test-data/preprocessor/sample_segmentations/custom/custom-hipsc_230741</code> directory, change current directory to it, and download OME-TIFF file with segmentation data. E.g. from the root repository directory (<code>molstar-volseg</code> by default) run: </p>
 <div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>test-data/preprocessor/sample_segmentations/custom/custom-hipsc_230741
 <span class="nb">cd</span><span class="w"> </span>test-data/preprocessor/sample_segmentations/custom/custom-hipsc_230741
 wget<span class="w"> </span>-O<span class="w"> </span>hipsc_230741_segmentation.ome.tif<span class="w"> </span>https://allencell.s3.amazonaws.com/aics/hipsc_single_cell_image_dataset/crop_seg/a9a2aa179450b1819f0dfc4d22411e6226f22e3c88f7a6c3f593d0c2599c2529_segmentation.ome.tif?versionId<span class="o">=</span>hf7gc1GKeDjgVYeNBEdmvV0w2NUJS38_
@@ -1295,7 +1295,7 @@ It is obvious that the number of dimensions (5) does not correspond to array sha
 </li>
 <li>
 <p>Add custom-hipsc_230741 entry to the internal database</p>
-<p>To add a custom-hipsc_230741 entry to the internal database, from root directory (<code>cellstar-volume-server-v2</code>) run:</p>
+<p>To add a custom-hipsc_230741 entry to the internal database, from root directory (<code>molstar-volseg</code>) run:</p>
 <div class="highlight"><pre><span></span><code>python<span class="w"> </span>preprocessor/cellstar_preprocessor/preprocess.py<span class="w"> </span>preprocess<span class="w"> </span>--mode<span class="w"> </span>add<span class="w"> </span>--input-path<span class="w"> </span>test-data/preprocessor/sample_segmentations/custom/custom-hipsc_230741/extra_data.json<span class="w"> </span>--input-kind<span class="w"> </span>extra_data<span class="w"> </span>--input-path<span class="w"> </span>test-data/preprocessor/sample_volumes/custom/custom-hipsc_230741/hipsc_230741_volume.ome.tif<span class="w"> </span>--input-kind<span class="w"> </span>ometiff_image<span class="w"> </span>--input-path<span class="w"> </span>test-data/preprocessor/sample_segmentations/custom/custom-hipsc_230741/hipsc_230741_segmentation.ome.tif<span class="w"> </span>--input-kind<span class="w"> </span>ometiff_segmentation<span class="w"> </span>--entry-id<span class="w"> </span>custom-hipsc_230741<span class="w"> </span>--source-db<span class="w"> </span>custom<span class="w"> </span>--source-db-id<span class="w"> </span>custom-hipsc_230741<span class="w"> </span>--source-db-name<span class="w"> </span>custom<span class="w"> </span>--working-folder<span class="w"> </span>temp_working_folder<span class="w"> </span>--db-path<span class="w"> </span>preprocessor/temp/test_db
 </code></pre></div>
 </li>
