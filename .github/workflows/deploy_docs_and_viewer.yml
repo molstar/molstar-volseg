@@ -76,7 +76,7 @@ jobs:
         run: |
           pwd
           ls -lt
-          ls molstar-extension
+          ls docs/site/
           mkdir -p ./public/docs
           mkdir -p ./public/viewer
           cp -r docs/site/* ./public/docs
