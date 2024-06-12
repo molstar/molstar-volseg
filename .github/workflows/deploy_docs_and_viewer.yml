@@ -48,6 +48,7 @@ jobs:
         run: |
           cd molstar-extension
           npm run build-site
+          pwd
           ls -lt
           ls site
 
@@ -75,6 +76,7 @@ jobs:
         run: |
           pwd
           ls -lt
+          ls site
           mkdir -p ./public/docs
           mkdir -p ./public/viewer
           cp -r docs/site/* ./public/docs
