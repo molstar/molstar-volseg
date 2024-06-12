@@ -10,7 +10,6 @@ This command allows editing (adding or modifying) descriptions in `annotations.j
 
 [![](description_schema.jpg)](description_schema.jpg)
 
-<!-- TODO: insert scheme with data model  -->
 ```shell
 [
     {

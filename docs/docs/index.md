@@ -3,7 +3,6 @@ This page explains how to install Mol\* Volumes & Segmentations 2.0
 # Install the server
 To install the server, clone the Github repository and change current directory to the root repository directory (`molstar-volseg` by default):
 
-<!-- TODO: update repo link to volseg -->
 ```shell
 git clone https://github.com/molstar/molstar-volseg.git
 cd molstar-volseg
