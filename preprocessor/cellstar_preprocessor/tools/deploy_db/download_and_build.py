@@ -30,7 +30,7 @@ def parse_script_args():
         help="dir with raw input files",
     )
     parser.add_argument(
-        "--db_building_params_json",
+        "--db_building_parameters_json",
         type=str,
         default=DB_BUILDING_PARAMETERS_JSON,
         help="",
