@@ -5,7 +5,7 @@
  * @author Aliaksei Chareshneu <chareshneu.tech@gmail.com>
  */
 import Popup from 'reactjs-popup';
-import 'reactjs-popup/dist/index.css';
+// import 'reactjs-popup/dist/index.css';
 import { useCallback, useEffect, useRef, useState } from 'react';
 // import { ParamDefinition as PD } from 'molstar/lib/mol-util/param-definition';
 
