@@ -4,7 +4,7 @@ To run the Volumes & Segmentations toolkit and produce the static files suitable
 
 1. Build the internal database by adding desired entries using preprocessor (see [Documentation for preprocess command of Preprocessor](../preprocessor/preprocess.md) and [examples on how to add entries to the internal database](../preprocessor/preprocess.md#examples-of-using-preprocess-command-in-mode-add.md)) 
 
-2. From repository root (`cellstar-volume-server-v2` by default) run:
+2. From repository root (`molstar-volseg` by default) run:
 ```shell
     python --db_path PATH_TO_DB --out OUTPUT_FILE --json-params-path PATH_TO_JSON_WITH_PARAMETERS
 ```

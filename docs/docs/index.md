@@ -1,12 +1,12 @@
 This page explains how to install Mol\* Volumes & Segmentations 2.0
 
 # Install the server
-To install the server, clone the Github repository and change current directory to the root repository directory (`cellstar-volume-server-v2` by default):
+To install the server, clone the Github repository and change current directory to the root repository directory (`molstar-volseg` by default):
 
 <!-- TODO: update repo link to volseg -->
 ```shell
-git clone https://github.com/aliaksei-chareshneu/cellstar-volume-server-v2.git
-cd cellstar-volume-server-v2
+git clone https://github.com/molstar/molstar-volseg.git
+cd molstar-volseg
 ```
 # Set up and activate the environment
 Set up the environment using either Conda:
@@ -24,5 +24,5 @@ mamba env create -f environment.yaml
 Activate the created environment:
 
 ```shell
-conda activate cellstar-volume-server-3.10
+conda activate cellstar-volume-server
 ```
