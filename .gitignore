@@ -7,6 +7,7 @@ molstar-extension/tsconfig.tsbuildinfo
 molstar-extension/tsconfig.commonjs.tsbuildinfo
 !molstar-volseg/molstar-extension/scripts
 temp_working_folder/*
+!test-data/preprocessor/sample_segmentations/empiar/empiar-11756
 db/cellstar_db/tests/test_data/*
 test-data/preprocessor/db_building_parameters.json
 preprocessor/cellstar_preprocessor/tests/test_data/working_folder/*
