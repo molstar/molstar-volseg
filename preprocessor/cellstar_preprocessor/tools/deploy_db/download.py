@@ -81,7 +81,7 @@ def _download(uri: str, final_path: Path, kind: InputKind):
     if kind == InputKind.omezarr:
         complete_path = final_path / filename
         if complete_path.exists():
-            shutil.rmtree(complete_path)
+            shutil.rmtree(complete_path, ignore_errors=True)
 
         # NOTE: using final_path here as it requires the directory inside
         # of which another directory will be created (idr-XXXX.zarr)
@@ -94,7 +94,7 @@ def _download(uri: str, final_path: Path, kind: InputKind):
             complete_path = final_path / filename
             if complete_path.exists():
                 if complete_path.is_dir():
-                    shutil.rmtree(complete_path)
+                    shutil.rmtree(complete_path, ignore_errors=True)
                 else:
                     complete_path.unlink()
             if not final_path.exists():
@@ -167,7 +167,7 @@ def download(args: argparse.Namespace):
             if path.is_file():
                 path.unlink()
             elif path.is_dir():
-                shutil.rmtree(path)
+                shutil.rmtree(path, ignore_errors=True)
 
     download_params_file_path = Path(args.raw_input_download_params)
     download_params = _parse_raw_input_download_params_file(download_params_file_path)
