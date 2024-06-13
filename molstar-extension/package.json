@@ -1,8 +1,16 @@
 {
   "name": "molstar-volseg",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "type": "module",
-  "description": "",
+  "description": "MolStar extension for visualizing volumetric and segmentation data",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/molstar/molstar-volseg.git",
+    "directory": "molstar-extension"
+  },
+  "bugs": {
+    "url": "https://github.com/molstar/molstar-volseg/issues"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -rf ./build && rm -rf ./site",
@@ -12,14 +20,27 @@
     "build-site": "npm run bundle -- production && mkdir ./site && cp ./build/* ./site/.",
     "start": "npm run bundle -- development"
   },
+  "files": [
+    "lib/",
+    "build/"
+  ],
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Mol* Contributors",
+  "contributors": [
+    "David Sehnal <david.sehnal@gmail.com>",
+    "Aliaksei Chareshneu <chareshneu.tech@gmail.com>",
+    "Adam Midlik <midlik@gmail.com>",
+    "Dominik Tichy <tichydominik451@gmail.com>"
+  ],
+  "license": "MIT",
   "devDependencies": {
+    "@chialab/esbuild-plugin-html": "^0.18.2",
+    "@craftamap/esbuild-plugin-html": "^0.7.0",
     "@types/node": "^20",
-    "typescript": "^5.4.5",
     "esbuild": "0.21.4",
-    "esbuild-sass-plugin": "^3"
+    "esbuild-copy-static-files": "^0.1.0",
+    "esbuild-sass-plugin": "^3",
+    "typescript": "^5.4.5"
   },
   "dependencies": {
     "@types/jsoneditor": "^9.9.5",
