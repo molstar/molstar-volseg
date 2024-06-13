@@ -43,7 +43,7 @@ def parse_script_args():
         help="dir with raw input files",
     )
     parser.add_argument(
-        "--db_building_params_json",
+        "--db_building_parameters_json",
         type=str,
         default=DB_BUILDING_PARAMETERS_JSON,
         help="",
@@ -225,8 +225,8 @@ def download(args: argparse.Namespace):
 def store_db_building_params_to_json(
     db_building_params: list[InputForBuildingDatabase], args: argparse.Namespace
 ):
-    filename = Path(args.db_building_params_json).name
-    folder = Path(args.db_building_params_json).parent
+    filename = Path(args.db_building_parameters_json).name
+    folder = Path(args.db_building_parameters_json).parent
     save_dict_to_json_file(db_building_params, filename, folder)
 
 
