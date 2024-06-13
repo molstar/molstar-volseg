@@ -105,7 +105,10 @@
                 if (mvsUrl && mvsData) console.error('Cannot specify mvs-url and mvs-data URL parameters at the same time. Ignoring both.');
                 else if (mvsUrl) viewer.loadMvsFromUrl(mvsUrl, mvsFormat);
                 else if (mvsData) viewer.loadMvsData(mvsData, mvsFormat);
-
+                
+                var cvsxUrl = getParam('cvsx-url', '[^&]+').trim();
+                var cvsxFormat = getParam('cvsx-format', '[^&]+').trim() || 'cvsx';
+                if (cvsxUrl) viewer.loadCvsxFromUrl(cvsxUrl, cvsxFormat)
 
                 var pdb = getParam('pdb', '[^&]+').trim();
                 if (pdb) viewer.loadPdb(pdb);
