@@ -1,0 +1,60 @@
+name: cellstar-volume-server-PRODUCTION
+channels:
+  - https://conda.anaconda.org/conda-forge
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+  - https://repo.anaconda.com/pkgs/msys2
+dependencies:
+  - python==3.10.0
+  - pip
+  - asgiref==3.5.0
+  - dask==2022.2.1
+  - fastapi==0.73.0
+  - gemmi==0.5.3
+  - matplotlib==3.5.1
+  - mrcfile==1.4.0
+  - numcodecs==0.9.1
+  - numpy==1.23.5
+  - pytest==7.1.2
+  - pytest-asyncio==0.18.3
+  - pytest-benchmark==3.4.1
+  - scikit-image==0.19.1
+  - scipy
+  - starfile
+  - starlette==0.17.1
+  - uvicorn==0.17.6
+  # with 0.59.1 produces warning
+  - numba==0.58.1
+  # there were issues with version of this package
+  # uncomment if without it it would not work
+  # - vtk==9.0.3
+  - zarr==2.11.1
+  - dask-image
+  - pydantic
+  - ome-zarr
+  - jupyterlab
+  - mkdocs
+
+  - pip:
+    # - -r requirements.txt
+    - git+https://github.com/molstar/ciftools-python.git@b074526a8b418bc68d83ae5556a627d2d6ceabdb#egg=ciftools
+    - sfftk==0.5.5.dev1
+    - sfftk-rw==0.7.1
+    - SimpleParse @ git+https://github.com/mcfletch/simpleparse.git@57c8d734bdc165581fbacfeecabe25a66c3452a4
+    - tensorstore==0.1.18
+    - killport
+    - Pillow
+    - typer==0.7.0
+    - autoflake
+    - isort
+    - black
+    - pyometiff
+    - nibabel
+    - seaborn
+    - -e ./preprocessor
+    - -e ./db
+    - -e ./query
+    - -e ./server
+    - h5py
+    - vedo
+    - mkdocs-material
