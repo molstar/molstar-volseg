@@ -62,7 +62,7 @@ def run_api(args):
         "python", "serve.py"
     ]
     
-    api_process = subprocess.Popen(lst, env=deploy_env, cwd='server/')
+    api_process = subprocess.Popen(lst, env=deploy_env, cwd='server/cellstar_server/')
     # PROCESS_IDS_LIST.append(api_process.pid)
     print(f'API is running with args {vars(args)}')
     return api_process
