@@ -7,8 +7,8 @@ from sys import platform
 
 
 from cellstar_db.file_system.constants import DEFAULT_PORT, DEFAULT_HOST
-from preprocessor.cellstar_preprocessor.flows.constants import DEFAULT_DB_PATH
-from preprocessor.cellstar_preprocessor.tools.deploy_db.deploy_process_helper import clean_up_processes
+from cellstar_preprocessor.flows.constants import DEFAULT_DB_PATH
+from cellstar_preprocessor.tools.deploy_db.deploy_process_helper import clean_up_processes
 
 PROCESS_IDS_LIST = []
 
