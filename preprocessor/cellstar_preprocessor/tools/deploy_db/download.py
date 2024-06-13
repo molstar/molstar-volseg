@@ -86,19 +86,23 @@ def _download(uri: str, final_path: Path, kind: InputKind):
         ome_zarr.utils.download(uri, str(final_path.resolve()))
         return complete_path
     else:
+        try:
         # regular download
         # filename construct based on last component of uri
-        complete_path = final_path / filename
-        if complete_path.exists():
-            if complete_path.is_dir():
-                shutil.rmtree(complete_path)
-            else:
-                complete_path.unlink()
-        if not final_path.exists():
-            final_path.mkdir(parents=True)
-        urllib.request.urlretrieve(uri, str(complete_path.resolve()))
-        #  check if returns filename
-        return complete_path
+            complete_path = final_path / filename
+            if complete_path.exists():
+                if complete_path.is_dir():
+                    shutil.rmtree(complete_path)
+                else:
+                    complete_path.unlink()
+            if not final_path.exists():
+                final_path.mkdir(parents=True)
+            urllib.request.urlretrieve(uri, str(complete_path.resolve()))
+            #  check if returns filename
+            return complete_path
+        except Exception as e:
+            print(f'uri: {uri}, final_path: {final_path}, kind: {kind}')
+            
 
 
 def _copy_file(uri: str, final_path: Path, kind: InputKind):
