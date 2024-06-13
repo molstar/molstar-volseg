@@ -1,6 +1,7 @@
 import { argv } from 'node:process';
 import * as esbuild from 'esbuild';
 import {sassPlugin} from 'esbuild-sass-plugin'
+import copyStaticFiles from 'esbuild-copy-static-files';
 
 const
   productionMode = ('development' !== (argv[2] || process.env.NODE_ENV)),
@@ -8,11 +9,26 @@ const
 
 console.log(`${ productionMode ? 'production' : 'development' } build`);
 
+const staticFilesPluginOptions = {
+  src: './src',
+  dest: './lib',
+}
+
+const buildLib = await esbuild.context({
+  entryPoints: ['src/**/*.ts'],
+  bundle: false,
+  minify: false,
+  sourcemap: true,
+  outdir: './lib',
+  platform: 'browser',
+  tsconfig: 'tsconfig.json',
+  plugins: [copyStaticFiles(staticFilesPluginOptions)]
+})
+
 const buildCSS = await esbuild.context({
   entryPoints: ['src/viewer/main.css'],
   bundle: true,
   target,
-  // external: ['/images/*'],
   loader: {
     '.png': 'file',
     '.jpg': 'file',
@@ -57,6 +73,8 @@ if (productionMode) {
   await buildTS.rebuild();
   buildTS.dispose();
 
+  await buildLib.rebuild();
+  buildLib.dispose();
 }
 else {
 
