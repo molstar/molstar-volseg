@@ -15,4 +15,4 @@ GEOMETRIC_SEGMENTATION_FILENAME = "geometric_segmentation.json"
 GEOMETRIC_SEGMENTATIONS_ZATTRS = "geometric_segmentations"
 
 DEFAULT_HOST = '0.0.0.0'  # 0.0.0.0 = localhost
-DEFAULT_PORT = 9000
+DEFAULT_PORT = '9000'
