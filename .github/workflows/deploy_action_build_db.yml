@@ -19,4 +19,5 @@ jobs:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.DEPLOY_KEY }}
+        passphrase: ${{ secrets.DEV_PASSPHRASE }}
         script: /sw/build_db.sh ${{ inputs.args }} &

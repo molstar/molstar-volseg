@@ -16,7 +16,8 @@ jobs:
     - name: executing remote ssh command in the background using SSH key
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.DEPLOY_KEY }}
+        host: ${{ secrets.DEV_HOST }}
+        username: ${{ secrets.DEV_USERNAME }}
+        key: ${{ secrets.DEV_DEPLOY_KEY }}
+        passphrase: ${{ secrets.DEV_PASSPHRASE }}
         script: /sw/deploy_api.sh ${{ inputs.args }} &
