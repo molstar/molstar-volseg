@@ -6,6 +6,8 @@ import shutil
 import urllib.request
 import zipfile
 from pathlib import Path
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 
 import ome_zarr
 import ome_zarr.utils
