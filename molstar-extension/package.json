@@ -1,6 +1,6 @@
 {
   "name": "molstar-volseg",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "description": "MolStar extension for visualizing volumetric and segmentation data",
   "repository": {
@@ -24,7 +24,13 @@
     "lib/",
     "build/"
   ],
-  "keywords": ["macromolecules", "visualization", "volume", "segmentation", "annotation"],
+  "keywords": [
+    "macromolecules",
+    "visualization",
+    "volume",
+    "segmentation",
+    "annotation"
+  ],
   "author": "Mol* Contributors",
   "contributors": [
     "David Sehnal <david.sehnal@gmail.com>",
