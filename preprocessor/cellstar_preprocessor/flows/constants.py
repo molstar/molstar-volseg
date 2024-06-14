@@ -5,8 +5,8 @@ from cellstar_db.models import AnnotationsMetadata, Metadata
 CSV_WITH_ENTRY_IDS_FILE = Path(
     "test-data/preprocessor/db_building_parameters_custom_entries.csv"
 )
-DEFAULT_DB_PATH = "/mnt/data_backup_ceph/test_db_build_by_script"
-RAW_INPUT_FILES_DIR = "/mnt/data_backup_ceph/raw_input_files"
+DEFAULT_DB_PATH = "preprocessor/temp/test_db"
+RAW_INPUT_FILES_DIR = "preprocessor/temp/raw_input_files_dir"
 DB_BUILDING_PARAMETERS_JSON = "test-data/preprocessor/db_building_parameters.json"
 RAW_INPUT_DOWNLOAD_PARAMS_JSON = "test-data/preprocessor/download_raw_input_params.json"
 TEMP_ZARR_HIERARCHY_STORAGE_PATH = "preprocessor/temp/temp_zarr_hierarchy_storage"
