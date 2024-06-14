@@ -24,7 +24,7 @@
     "lib/",
     "build/"
   ],
-  "keywords": [],
+  "keywords": ["macromolecules", "visualization", "volume", "segmentation", "annotation"],
   "author": "Mol* Contributors",
   "contributors": [
     "David Sehnal <david.sehnal@gmail.com>",
