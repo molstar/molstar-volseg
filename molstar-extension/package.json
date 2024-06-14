@@ -5,7 +5,7 @@
   "description": "MolStar extension for visualizing volumetric and segmentation data",
   "repository": {
     "type": "git",
-    "url": "https://github.com/molstar/molstar-volseg.git",
+    "url": "git+https://github.com/molstar/molstar-volseg.git",
     "directory": "molstar-extension"
   },
   "bugs": {
