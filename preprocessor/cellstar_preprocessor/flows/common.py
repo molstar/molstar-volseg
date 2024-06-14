@@ -165,9 +165,12 @@ def get_downsamplings(data_group: zarr.Group) -> list[DownsamplingLevelInfo]:
 
 
 def save_dict_to_json_file(d: dict | list, filename: str, path: Path) -> None:
-    with (path / filename).open("w") as fp:
-        json.dump(d, fp, indent=4)
+    output_file = path / filename
+    if not output_file.parent.exists():
+        output_file.parent.mkdir(parents=True)
 
+    with open(str((path / filename).resolve()), "w", encoding="utf-8") as fp:
+        json.dump(d, fp, indent=4)
 
 def open_json_file(path: Path):
     with open(path.resolve(), "r", encoding="utf-8") as f:
