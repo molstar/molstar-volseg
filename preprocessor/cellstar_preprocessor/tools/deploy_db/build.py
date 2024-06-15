@@ -55,10 +55,8 @@ def parse_script_args():
 def _preprocessor_internal_wrapper(
     input_for_building: InputForBuildingDatabase, db_path: str, working_folder: str
 ):
-    # TODO: run as function
-    # main_preprocessor
-    # before that convert some arguments types used in main_preprocessor
-    # input_for_building = defaultdict(str, input_for_building_raw)
+    entry_id = input_for_building["entry_id"]
+    print(f'Internal wrapper is adding {entry_id} to the database')
     quantize_downsampling_levels = None
     if "quantize_downsampling_levels" in input_for_building:
         quantize_downsampling_levels = []
@@ -66,21 +64,10 @@ def _preprocessor_internal_wrapper(
             str(item) for item in input_for_building["quantize_downsampling_levels"]
         )
 
-    # TODO: replace all absent values with None
-    # if not 'quantize_dtype_str' in input_for_building:
-    #     input_for_building['quantize_dtype_str'] = None
-    # if input_for_building['quantize_dtype_str'] == 'u1':
-    #     input_for_building['quantize_dtype_str'] = QuantizationDtype.u1
-    # if input_for_building['quantize_dtype_str'] == 'u2':
-    #     input_for_building['quantize_dtype_str'] = QuantizationDtype.u2
-
-    # there is a list
-    # each item is tuple
-    # need to get two lists
     inputs = input_for_building["inputs"]
     input_pathes_list = [Path(i[0]) for i in inputs]
     input_kinds_list = [i[1] for i in inputs]
-    # TODO: use starmap?
+
     asyncio.run(
         main_preprocessor(
             mode=PreprocessorMode.add,
@@ -108,51 +95,15 @@ def _preprocessor_internal_wrapper(
             input_kinds=input_kinds_list,
         )
     )
-
-    # lst = [
-    #     "python", "preprocessor/main.py",
-    #     "--db_path", input,
-    #     # "--single_entry", entry['single_entry'],
-    #     "--entry_id", entry['entry_id'],
-    #     "--source_db", entry['source_db'],
-    #     "--source_db_id", entry['source_db_id'],
-    #     "--source_db_name", entry['source_db_name']
-    # ]
-
-    # if entry['force_volume_dtype']:
-    #     lst.extend(['--force_volume_dtype', entry['force_volume_dtype']])
-
-    # if entry['quantization_dtype']:
-    #     lst.extend(['--quantize_volume_data_dtype_str', entry['quantization_dtype']])
-
-    # if entry['temp_zarr_hierarchy_storage_path']:
-    #     lst.extend(['--temp_zarr_hierarchy_storage_path', entry['temp_zarr_hierarchy_storage_path']])
-
-    # if entry['source_db'] == 'idr':
-    #     lst.extend(['--ome_zarr_path', entry['ome_zarr_path']])
-
-    # if entry['source_db'] == DB_NAME_FOR_OME_TIFF:
-    #     lst.extend(['--ome_tiff_path', entry['ome_tiff_path']])
-
-    # TODO: can run as function instead?
-    # process = subprocess.Popen(lst)
-    # global PROCESS_IDS_LIST
-    # PROCESS_IDS_LIST.append(process.pid)
-
-    # return process.communicate()
-
+    print(f'Internal wrapper have added {entry_id} to the database')
+    
 
 def _preprocessor_external_wrapper(
     arguments_list: list[tuple[InputForBuildingDatabase, str, str]]
 ):
-    # need to provide that input:
-    # input: InputForBuildingDatabase, db_path: str, working_folder: str
-    # as list to starmap
-    # arguments_list: list[tuple[InputForBuildingDatabase, str, str]] = []
+    print('External preprocessor wrapper launched')
     with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
-        # TODO: use starmap?
         p.starmap(_preprocessor_internal_wrapper, arguments_list)
-        # print(123)
 
     p.join()
 
@@ -177,22 +128,19 @@ def build(args):
 
     # clean_up_raw_input_files_dir(args.raw_input_files_dir)
 
-    # NOTE: this function should parse JSON to list[tuple[InputForBuildingDatabase]
     config = json_to_list_of_inputs_for_building(Path(args.db_building_parameters_json))
-
-    # this function should create arguments list
-    # arguments_list: list[tuple[InputForBuildingDatabase, str, str]]
-    # from parsed list of InputForBuildingDatabase
-    # and args.db_path and args temp_zarr_hierarchy_storage_path
+    print('JSON with building parameters was parsed')
+    
     arguments_list = prepare_input_for_preprocessor(
         config=config,
         db_path=args.db_path,
         temp_zarr_hierarchy_storage_path=temp_zarr_hierarchy_storage_path,
     )
-
-    # print('Input files have been downloaded')
+    print('Arguments list for preprocessor external wrapper was prepared')
+    
     _preprocessor_external_wrapper(arguments_list)
 
+    print('Preprocessor external wrapper preprocessed all entries')
     # TODO: this should be done only after everything is build
     shutil.rmtree(temp_zarr_hierarchy_storage_path, ignore_errors=True)
 

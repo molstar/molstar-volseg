@@ -11,12 +11,11 @@ def download_and_build(
     args: Namespace
 ):
     params = download(args)
-    # at this point seem not to work?
-    # no db building params json is created
     print('Raw input files was downloaded')
     store_db_building_params_to_json(params, args)
     print('Building parameters stored to JSON')
     build(args)
+    # NOTE: database is not build, breaks here
     print('Database was build') 
     
 def parse_script_args():
