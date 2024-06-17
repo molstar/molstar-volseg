@@ -1,5 +1,5 @@
 from decimal import ROUND_CEILING, Decimal, getcontext
-
+import zarr
 import dask.array as da
 import numpy as np
 from cellstar_db.models import (
@@ -56,7 +56,7 @@ def _ccp4_words_to_dict_mrcfile(mrc_header: object) -> dict:
 
 
 def _get_origin_and_voxel_sizes_from_map_header(
-    mrc_header: object, volume_downsamplings: list[DownsamplingLevelInfo]
+    mrc_header: object, downsamplings: list[DownsamplingLevelInfo]
 ):
     d = _ccp4_words_to_dict_mrcfile(mrc_header)
     ao = {d["MAPC"] - 1: 0, d["MAPR"] - 1: 1, d["MAPS"] - 1: 2}
@@ -74,7 +74,7 @@ def _get_origin_and_voxel_sizes_from_map_header(
     )
 
     voxel_sizes_in_downsamplings: dict = {}
-    for level in volume_downsamplings:
+    for level in downsamplings:
         rate = level["level"]
         voxel_sizes_in_downsamplings[rate] = tuple(
             [float(Decimal(i) * Decimal(rate)) for i in original_voxel_size]
@@ -91,64 +91,64 @@ def _get_origin_and_voxel_sizes_from_map_header(
     return origin, voxel_sizes_in_downsamplings
 
 
-def _get_volume_sampling_info(
-    root_data_group,
-    sampling_info_dict,
+# TODO: modify to do it for masks
+# get origin from mask
+def _get_mask_segmentation_sampling_info(
+    root_data_group: zarr.Group,
+    sampling_info: SamplingInfo,
     mrc_header: object,
-    volume_downsamplings: list[VolumeSamplingInfo],
+    downsamplings: list[VolumeSamplingInfo],
 ):
-    # TODO: modify it such that voxel sizes are calculated on each iteration
     origin, voxel_sizes_in_downsamplings = _get_origin_and_voxel_sizes_from_map_header(
-        mrc_header=mrc_header, volume_downsamplings=volume_downsamplings
+        mrc_header=mrc_header, downsamplings=downsamplings
     )
     for res_gr_name, res_gr in root_data_group.groups():
-        # create layers (time gr, channel gr)
-        sampling_info_dict["boxes"][res_gr_name] = {
+        sampling_info["boxes"][res_gr_name] = {
             "origin": origin,
             "voxel_size": voxel_sizes_in_downsamplings[int(res_gr_name)],
             "grid_dimensions": None,
             # 'force_dtype': None
         }
 
-        sampling_info_dict["descriptive_statistics"][res_gr_name] = {}
+        sampling_info["descriptive_statistics"][res_gr_name] = {}
 
         for time_gr_name, time_gr in res_gr.groups():
             first_group_key = sorted(time_gr.array_keys())[0]
 
-            sampling_info_dict["boxes"][res_gr_name]["grid_dimensions"] = time_gr[
+            sampling_info["boxes"][res_gr_name]["grid_dimensions"] = time_gr[
                 first_group_key
             ].shape
             # sampling_info_dict['boxes'][res_gr_name]['force_dtype'] = time_gr[first_group_key].dtype.str
 
-            sampling_info_dict["descriptive_statistics"][res_gr_name][time_gr_name] = {}
-            for channel_arr_name, channel_arr in time_gr.arrays():
-                assert (
-                    sampling_info_dict["boxes"][res_gr_name]["grid_dimensions"]
-                    == channel_arr.shape
-                )
-                # assert sampling_info_dict['boxes'][res_gr_name]['force_dtype'] == channel_arr.dtype.str
+            # sampling_info_dict["descriptive_statistics"][res_gr_name][time_gr_name] = {}
+            # for channel_arr_name, channel_arr in time_gr.arrays():
+            #     assert (
+            #         sampling_info_dict["boxes"][res_gr_name]["grid_dimensions"]
+            #         == channel_arr.shape
+            #     )
+            #     # assert sampling_info_dict['boxes'][res_gr_name]['force_dtype'] == channel_arr.dtype.str
 
-                arr_view = channel_arr[...]
-                if QUANTIZATION_DATA_DICT_ATTR_NAME in channel_arr.attrs:
-                    data_dict = channel_arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME]
-                    data_dict["data"] = arr_view
-                    arr_view = decode_quantized_data(data_dict)
-                    if isinstance(arr_view, da.Array):
-                        arr_view = arr_view.compute()
+            #     arr_view = channel_arr[...]
+            #     if QUANTIZATION_DATA_DICT_ATTR_NAME in channel_arr.attrs:
+            #         data_dict = channel_arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME]
+            #         data_dict["data"] = arr_view
+            #         arr_view = decode_quantized_data(data_dict)
+            #         if isinstance(arr_view, da.Array):
+            #             arr_view = arr_view.compute()
 
-                mean_val = float(str(np.mean(arr_view)))
-                std_val = float(str(np.std(arr_view)))
-                max_val = float(str(arr_view.max()))
-                min_val = float(str(arr_view.min()))
+            #     mean_val = float(str(np.mean(arr_view)))
+            #     std_val = float(str(np.std(arr_view)))
+            #     max_val = float(str(arr_view.max()))
+            #     min_val = float(str(arr_view.min()))
 
-                sampling_info_dict["descriptive_statistics"][res_gr_name][time_gr_name][
-                    channel_arr_name
-                ] = {
-                    "mean": mean_val,
-                    "std": std_val,
-                    "max": max_val,
-                    "min": min_val,
-                }
+            #     sampling_info_dict["descriptive_statistics"][res_gr_name][time_gr_name][
+            #         channel_arr_name
+            #     ] = {
+            #         "mean": mean_val,
+            #         "std": std_val,
+            #         "max": max_val,
+            #         "min": min_val,
+            #     }
 
 
 def extract_metadata_from_mask(internal_segmentation: InternalSegmentation):
@@ -176,39 +176,22 @@ def extract_metadata_from_mask(internal_segmentation: InternalSegmentation):
         downsamplings = get_downsamplings(data_group=lattice_gr)
         lattice_ids.append(lattice_id)
 
-        sampling_info: SamplingInfo = {
-            "spatial_downsampling_levels": downsamplings,
-            "boxes": {},
-            "time_transformations": [],
-            "source_axes_units": source_axes_units,
-            # TODO: original axes order?
-            "original_axis_order": [0, 1, 2],
-        }
-        segmentation_lattices_metadata["segmentation_sampling_info"][
-            str(lattice_id)
-        ] = sampling_info
         segmentation_lattices_metadata["time_info"][
             str(lattice_id)
         ] = time_info_for_all_lattices
 
-        # _get_segmentation_sampling_info(
-        #     root_data_group=lattice_gr,
-        #     sampling_info_dict=segmentation_lattices_metadata["segmentation_sampling_info"][str(lattice_id)],
-        #     volume_sampling_info_dict=metadata_dict["volumes"][
-        #         "volume_sampling_info"
-        #     ],
-        # )
-
+        # add boxes
         segmentation_sampling_info = SamplingInfo(
             spatial_downsampling_levels=downsamplings,
             boxes={},
-            # descriptive_statistics={},
             time_transformations=[],
             source_axes_units=source_axes_units,
             original_axis_order=_get_axis_order_mrcfile(
-                internal_segmentation.map_header
+                internal_segmentation.map_headers[lattice_id]
             ),
         )
+        
+        _get_mask_segmentation_sampling_info(lattice_gr, segmentation_sampling_info, internal_segmentation.map_headers[lattice_id], downsamplings)
 
         segmentation_lattices_metadata["segmentation_sampling_info"][
             str(lattice_id)
@@ -216,47 +199,6 @@ def extract_metadata_from_mask(internal_segmentation: InternalSegmentation):
 
     segmentation_lattices_metadata["segmentation_ids"] = lattice_ids
     metadata_dict["segmentation_lattices"] = segmentation_lattices_metadata
-
-    # root = open_zarr_structure_from_path(
-    #     internal_segmentation.intermediate_zarr_structure_path
-    # )
-    # source_db_name = internal_segmentation.entry_data.source_db_name
-    # source_db_id = internal_segmentation.entry_data.source_db_id
-    # # map has one channel
-    # channel_ids = [0]
-    # start_time = 0
-    # end_time = 0
-    # time_units = "millisecond"
-
-    # map_header = internal_segmentation.map_header
-
-    # volume_downsamplings = get_downsamplings(data_group=root[VOLUME_DATA_GROUPNAME])
-    # # TODO: check - some units are defined (spatial?)
-    # source_axes_units = {}
-    # metadata_dict = root.attrs["metadata_dict"]
-    # metadata_dict["entry_id"]["source_db_name"] = source_db_name
-    # metadata_dict["entry_id"]["source_db_id"] = source_db_id
-    # metadata_dict["volumes"] = VolumesMetadata(
-    #     channel_ids=channel_ids,
-    #     time_info=TimeInfo(
-    #         kind="range", start=start_time, end=end_time, units=time_units
-    #     ),
-    #     volume_sampling_info=SamplingInfo(
-    #         spatial_downsampling_levels=volume_downsamplings,
-    #         boxes={},
-    #         # descriptive_statistics={},
-    #         time_transformations=[],
-    #         source_axes_units=source_axes_units,
-    #         original_axis_order=_get_axis_order_mrcfile(map_header),
-    #     ),
-    # )
-
-    # _get_volume_sampling_info(
-    #     root_data_group=root[VOLUME_DATA_GROUPNAME],
-    #     sampling_info_dict=metadata_dict["volumes"]["volume_sampling_info"],
-    #     mrc_header=map_header,
-    #     volume_downsamplings=volume_downsamplings,
-    # )
 
     root.attrs["metadata_dict"] = metadata_dict
 

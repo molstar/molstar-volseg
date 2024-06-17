@@ -78,7 +78,10 @@ def mask_segmentation_preprocessing(internal_segmentation: InternalSegmentation)
 
             data = _normalize_axis_order_mrcfile_numpy(arr=data, mrc_header=header)
             internal_segmentation.value_to_segment_id_dict[lattice_id] = {}
-            internal_segmentation.map_header = header
+            # sets header to last segmentation
+            # should append object with keys lattice ids
+            # and values mask headers
+            internal_segmentation.map_headers[lattice_id] = header
 
             # fix this part?
             # for multiple lattices we do not need this, just astype i4?
