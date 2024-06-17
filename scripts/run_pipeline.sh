@@ -2,14 +2,15 @@
 TIMESTAMP=`date '+%Y-%m-%d-%H-%M-%S'`
 echo $TIMESTAMP
 
-cd /sw/cellstar-volume-server
+# set up
+cd /sw/molstar-volseg
+git fetch origin
 git reset --hard origin/master
 git pull
 
-source /sw/mambaforge/bin/activate cellstar-volume-server
-mamba env update --file environment.yaml --prune
+/home/ubuntu/mambaforge/condabin/mamba env create --file environment_production.yaml \
+|| /home/ubuntu/mambaforge/condabin/mamba env update --file environment_production.yaml --prune
+source /home/ubuntu/mambaforge/bin/activate cellstar-volume-server-PRODUCTION
 
-pip install -e .
-
-python preprocessor/src/tools/deploy_db/build_and_deploy.py "$@" &> /sw/log_$TIMESTAMP.txt 
-
+# run script
+python preprocessor/cellstar_preprocessor/tools/deploy_db/download_and_build.py "$@" &> /sw/log_$TIMESTAMP.txt 
