@@ -110,8 +110,6 @@ def _get_mask_segmentation_sampling_info(
             # 'force_dtype': None
         }
 
-        sampling_info["descriptive_statistics"][res_gr_name] = {}
-
         for time_gr_name, time_gr in res_gr.groups():
             first_group_key = sorted(time_gr.array_keys())[0]
 
