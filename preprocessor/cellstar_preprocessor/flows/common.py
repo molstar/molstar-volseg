@@ -38,37 +38,6 @@ def _is_channels_correct(source_ometiff_metadata):
 def _get_ome_tiff_channel_ids_dict(root: zarr.Group, internal_volume: InternalVolume):
     return internal_volume.custom_data["channel_ids_mapping"]
 
-    # elif 'ometiff' in internal_volume.custom_data:
-    #     ometiff_custom_data: OMETIFFExtraData = internal_volume.custom_data['ometiff']
-    #     ome_tiff_metadata = ometiff_custom_data['ometiff_source_metadata']
-
-    # #     # TODO: fix this part later
-    # #     if _is_channels_correct(ome_tiff_metadata):
-    # #         # TODO: check if this works
-    # #         print('"Channels" in ometiff metadata are correct')
-    # #         # channels is a dict
-    # #         channels = ome_tiff_metadata['Channels']
-    # #         # for now just return 0
-    # #         # return [0]
-    # #         channel_ids = []
-    # #         for key in channels:
-    # #             channel = channels[key]
-    # #             # NOTE: assumes the order is the same?
-    # #             # or parse
-    # #             channel_id = channel['Name']
-    # #             # channel_id = _parse_ome_tiff_channel_id(channel['ID'])
-    # #             # TODO: do something like
-    # #             #
-    # #             channel_ids.append(channel_id)
-
-    # #         return channel_ids
-    # #     # get artificial ones
-    #     # else:
-    #     keys: list[int] = ometiff_custom_data['artificial_channel_ids']
-    #     return dict(zip(str(keys), str(keys)))
-    # return ometiff_custom_data['artificial_channel_ids']
-
-
 def _parse_ome_tiff_channel_id(ometiff_channel_id: str):
     channel_id = re.sub(r"\W+", "", ometiff_channel_id)
     return channel_id
