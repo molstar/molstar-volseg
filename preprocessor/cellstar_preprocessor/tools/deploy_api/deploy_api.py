@@ -10,7 +10,7 @@ from cellstar_db.file_system.constants import DEFAULT_PORT, DEFAULT_HOST
 from cellstar_preprocessor.flows.constants import DEFAULT_DB_PATH
 from cellstar_preprocessor.tools.deploy_db.deploy_process_helper import clean_up_processes
 
-# PROCESS_IDS_LIST = []
+PROCESS_IDS_LIST = []
 
 # source: https://stackoverflow.com/a/21901260/13136429
 def _get_git_revision_hash() -> str:
@@ -63,7 +63,7 @@ def run_api(args):
     ]
     
     api_process = subprocess.Popen(lst, env=deploy_env, cwd='server/cellstar_server/')
-    # PROCESS_IDS_LIST.append(api_process.pid)
+    PROCESS_IDS_LIST.append(api_process.pid)
     print(f'API is running with args {vars(args)}')
     return api_process
 
@@ -76,7 +76,7 @@ def deploy(args):
     api_process.communicate()
 
 if __name__ == '__main__':
-    # atexit.register(clean_up_processes, PROCESS_IDS_LIST)
+    atexit.register(clean_up_processes, PROCESS_IDS_LIST)
     args = parse_script_args()
     deploy(args)
 
