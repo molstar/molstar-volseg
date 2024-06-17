@@ -47,9 +47,6 @@ def mask_segmentation_preprocessing(internal_segmentation: InternalSegmentation)
         LATTICE_SEGMENTATION_DATA_GROUPNAME
     )
 
-    # TODO: process masks as multiple lattices
-    # PLAN: iterate over masks
-
     # artificially create value_to_segment_id_dict
     internal_segmentation.value_to_segment_id_dict = {}
 
@@ -116,3 +113,6 @@ def mask_segmentation_preprocessing(internal_segmentation: InternalSegmentation)
                 ],
                 params_for_storing=params_for_storing,
             )
+
+    print("Mask segmentation processed")
+    print(f"Mask headers: {internal_segmentation.map_headers}")
