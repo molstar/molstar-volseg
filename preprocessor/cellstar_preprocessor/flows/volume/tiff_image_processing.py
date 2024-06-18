@@ -14,7 +14,7 @@ from cellstar_preprocessor.model.volume import InternalVolume
 
 from preprocessor.cellstar_preprocessor.tools.tiff_stack_to_da_arr.tiff_stack_to_da_arr import tiff_stack_to_da_arr
 
-def tiff_image_processing(internal_volume: InternalVolume):
+def tiff_image_stack_dir_processing(internal_volume: InternalVolume):
     zarr_structure: zarr.Group = open_zarr_structure_from_path(
         internal_volume.intermediate_zarr_structure_path
     )

@@ -136,7 +136,7 @@ from cellstar_preprocessor.tools.convert_app_specific_segm_to_sff.convert_app_sp
 from pydantic import BaseModel
 from typing_extensions import Annotated
 
-from preprocessor.cellstar_preprocessor.flows.volume import tiff_image_processing
+from preprocessor.cellstar_preprocessor.flows.volume.tiff_image_processing import tiff_image_stack_dir_processing|
 
 
 class PreprocessorMode(str, Enum):
@@ -151,7 +151,7 @@ class InputT(BaseModel):
 class OMETIFFImageInput(InputT):
     pass
 
-class TIFFImageInput(InputT):
+class TIFFImageStackDirInput(InputT):
     pass
 
 class OMETIFFSegmentationInput(InputT):
@@ -398,13 +398,13 @@ class NIIProcessVolumeTask(TaskBase):
         # in processing part do
         volume_downsampling(volume)
 
-class TIFFImageProcessingTask(TaskBase):
+class TIFFImageStackDirProcessingTask(TaskBase):
     def __init__(self, internal_volume: InternalVolume):
         self.internal_volume = internal_volume
 
     def execute(self) -> None:
         volume = self.internal_volume
-        tiff_image_processing(internal_volume=volume)
+        tiff_image_stack_dir_processing(internal_volume=volume)
         volume_downsampling(internal_volume=volume)
 
 
@@ -466,6 +466,14 @@ class OMETIFFSegmentationAnnotationsExtractionTask(TaskBase):
         extract_ome_tiff_segmentation_annotations(
             internal_segmentation=internal_segmentation
         )
+
+class TIFFImageStackDirMetadataExtractionTask(TaskBase):
+    def __init__(self, internal_volume: InternalVolume):
+        self.internal_volume = internal_volume
+
+    def execute(self) -> None:
+        volume = self.internal_volume
+        extract_tiff_image_stack_dir_metadata(internal_volume=volume)
 
 
 class ProcessExtraDataTask(TaskBase):
@@ -754,6 +762,37 @@ class Preprocessor:
                         internal_segmentation=self.get_internal_segmentation()
                     )
                 )
+                
+            elif isinstance(input, TIFFImageStackDirInput):
+                self.store_internal_volume(
+                    internal_volume=InternalVolume(
+                        intermediate_zarr_structure_path=self.intermediate_zarr_structure,
+                        volume_input_path=input.input_path,
+                        params_for_storing=self.preprocessor_input.storing_params,
+                        volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
+                        quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
+                        downsampling_parameters=self.preprocessor_input.downsampling,
+                        entry_data=self.preprocessor_input.entry_data,
+                        quantize_downsampling_levels=self.preprocessor_input.volume.quantize_downsampling_levels,
+                    )
+                )
+                tasks.append(
+                    TIFFImageStackDirProcessingTask(
+                        internal_volume=self.get_internal_volume()
+                    )
+                )
+                # tasks.append(
+                #     OMETIFFImageMetadataExtractionTask(
+                #         internal_volume=self.get_internal_volume()
+                #     )
+                # )
+                # # TODO: remove - after processing segmentation
+                # tasks.append(
+                #     OMETIFFImageAnnotationsExtractionTask(
+                #         internal_volume=self.get_internal_volume()
+                #     )
+                # )
+                
             elif isinstance(input, NIIVolumeInput):
                 self.store_internal_volume(
                     internal_volume=InternalVolume(
