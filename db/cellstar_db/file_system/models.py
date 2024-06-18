@@ -41,14 +41,17 @@ class FileSystemVolumeMedatada(VolumeMetadata):
     def segmentation_downsamplings(
         self, lattice_id: str
     ) -> List[DownsamplingLevelInfo]:
-        s = []
-        try:
-            s = self.raw_metadata["segmentation_lattices"][
-                "segmentation_sampling_info"
-            ][lattice_id]["spatial_downsampling_levels"]
-        except Exception as e:
-            logging.error(e, stack_info=True, exc_info=True)
-        return s
+        if len(self.segmentation_lattice_ids()) > 0:
+            s = []
+            try:
+                s = self.raw_metadata["segmentation_lattices"][
+                    "segmentation_sampling_info"
+                ][lattice_id]["spatial_downsampling_levels"]
+            except Exception as e:
+                logging.error(e, stack_info=True, exc_info=True)
+            return s
+        else:
+            return []
 
     def volume_downsamplings(self) -> List[DownsamplingLevelInfo]:
         return self.raw_metadata["volumes"]["volume_sampling_info"][
