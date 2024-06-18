@@ -22,6 +22,8 @@ from cellstar_query.serialization.cif import (
     serialize_volume_slice,
 )
 
+from db.cellstar_db.models import DownsamplingLevelInfo
+
 __MAX_DOWN_SAMPLING_VALUE__ = 1000000
 
 
@@ -255,7 +257,14 @@ class VolumeServerService:
         for downsampling_level_info in metadata.volume_downsamplings():
             if downsampling_level_info["available"] == False:
                 continue
-
+            
+            level = downsampling_level_info["level"]
+            segm_downsamplings: list[DownsamplingLevelInfo] = metadata.segmentation_downsamplings()
+            
+            right_downsampling: DownsamplingLevelInfo = list(filter(lambda i: i["level"] == level, segm_downsamplings))
+            if right_downsampling["available"] == False:
+                continue
+            
             downsampling_rate = downsampling_level_info["level"]
             if req_box:
                 box = calc_slice_box(
