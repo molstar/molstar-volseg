@@ -1,3 +1,4 @@
+from decimal import Decimal
 import dask.array as da
 import zarr
 from cellstar_db.models import (
@@ -15,6 +16,8 @@ from cellstar_preprocessor.flows.common import (
 )
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
 from cellstar_preprocessor.model.volume import InternalVolume
+
+from db.cellstar_db.models import DownsamplingLevelInfo
 
 SHORT_UNIT_NAMES_TO_LONG = {
     "µm": "micrometer",
@@ -101,12 +104,31 @@ SHORT_UNIT_NAMES_TO_LONG = {
 #     return axes_units
 
 
-def _get_volume_sampling_info(root_data_group: zarr.Group, sampling_info_dict):
+
+def _get_voxel_sizes_in_downsamplings(
+    original_voxel_size: list[float, float, float],
+    volume_downsamplings: list[DownsamplingLevelInfo]
+):
+    voxel_sizes_in_downsamplings: dict = {}
+    for level in volume_downsamplings:
+        rate = level["level"]
+        voxel_sizes_in_downsamplings[rate] = tuple(
+            [float(Decimal(float(i)) * Decimal(rate)) for i in original_voxel_size]
+        )
+    return voxel_sizes_in_downsamplings
+
+def _get_volume_sampling_info(root_data_group: zarr.Group, sampling_info_dict, internal_volume: InternalVolume):
+    volume_downsamplings = get_downsamplings(root_data_group)
+    if "voxel_size" in internal_volume.custom_data:
+        voxel_sizes_in_downsamplings = _get_voxel_sizes_in_downsamplings(internal_volume.custom_data["voxel_size"], volume_downsamplings)
+    else:
+        raise Exception('Voxel size should be specified for TIFF stack image processing')
+    
     for res_gr_name, res_gr in root_data_group.groups():
         # create layers (time gr, channel gr)
         sampling_info_dict["boxes"][res_gr_name] = {
-            "origin": None,
-            "voxel_size": None,
+            "origin": [0, 0, 0],
+            "voxel_size": voxel_sizes_in_downsamplings[int(res_gr_name)],
             "grid_dimensions": None,
             # 'force_dtype': None
         }
@@ -196,13 +218,13 @@ def extract_tiff_image_stack_dir_metadata(internal_volume: InternalVolume):
             descriptive_statistics={},
             time_transformations=[],
             source_axes_units=source_axes_units,
-            # TODO: get it from metadata
             original_axis_order=(0, 1, 2),
         ),
     )
     _get_volume_sampling_info(
         root_data_group=root[VOLUME_DATA_GROUPNAME],
         sampling_info_dict=metadata_dict["volumes"]["volume_sampling_info"],
+        internal_volume=internal_volume
     )
 
     # _get_ome_tiff_voxel_sizes_in_downsamplings(
@@ -217,10 +239,11 @@ def extract_tiff_image_stack_dir_metadata(internal_volume: InternalVolume):
     #     original_voxel_size_in_micrometers=original_voxel_size_in_micrometers
     # )
 
-    get_ome_tiff_origins(
-        boxes_dict=metadata_dict["volumes"]["volume_sampling_info"]["boxes"],
-        downsamplings=volume_downsamplings,
-    )
+    # TODO: get origins
+    # get_ome_tiff_origins(
+    #     boxes_dict=metadata_dict["volumes"]["volume_sampling_info"]["boxes"],
+    #     downsamplings=volume_downsamplings,
+    # )
 
     root.attrs["metadata_dict"] = metadata_dict
     return metadata_dict

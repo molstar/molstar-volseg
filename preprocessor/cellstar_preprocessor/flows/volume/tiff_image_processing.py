@@ -24,7 +24,7 @@ def tiff_image_stack_dir_processing(internal_volume: InternalVolume):
 
     # need to specify path to folder with tiff stack
     img_array = tiff_stack_to_da_arr(internal_volume.volume_input_path)
-    
+   
     volume_data_group: zarr.Group = zarr_structure.create_group(VOLUME_DATA_GROUPNAME)
 
     store_volume_data_in_zarr_stucture(

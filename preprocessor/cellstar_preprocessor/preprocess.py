@@ -136,7 +136,8 @@ from cellstar_preprocessor.tools.convert_app_specific_segm_to_sff.convert_app_sp
 from pydantic import BaseModel
 from typing_extensions import Annotated
 
-from preprocessor.cellstar_preprocessor.flows.volume.tiff_image_processing import tiff_image_stack_dir_processing|
+from preprocessor.cellstar_preprocessor.flows.volume.extract_tiff_image_stack_dir_metadata import extract_tiff_image_stack_dir_metadata
+from preprocessor.cellstar_preprocessor.flows.volume.tiff_image_processing import tiff_image_stack_dir_processing
 
 
 class PreprocessorMode(str, Enum):
@@ -781,11 +782,11 @@ class Preprocessor:
                         internal_volume=self.get_internal_volume()
                     )
                 )
-                # tasks.append(
-                #     OMETIFFImageMetadataExtractionTask(
-                #         internal_volume=self.get_internal_volume()
-                #     )
-                # )
+                tasks.append(
+                    TIFFImageStackDirMetadataExtractionTask(
+                        internal_volume=self.get_internal_volume()
+                    )
+                )
                 # # TODO: remove - after processing segmentation
                 # tasks.append(
                 #     OMETIFFImageAnnotationsExtractionTask(
