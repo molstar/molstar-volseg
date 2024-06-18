@@ -36,6 +36,7 @@ class InputKind(str, Enum):
     ometiff_segmentation = "ometiff_segmentation"
     # allencell_metadata_csv = 'extra_data'
     extra_data = "extra_data"
+    tiff_image_stack_dir = "tiff_image_stack_dir"
 
 
 class QuantizationDtype(str, Enum):
