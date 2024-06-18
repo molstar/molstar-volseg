@@ -218,6 +218,11 @@ class VolumeServerService:
     # for each lattice available check, if at least in some it is missing, return false
         for lattice_id in metadata.segmentation_lattice_ids():
             segm_downsamplings: list[DownsamplingLevelInfo] = metadata.segmentation_downsamplings(lattice_id)
+            # check if downsampling exists
+            exists = any(i["level"] == level for i in segm_downsamplings)
+            # check if 
+            if not exists:
+                return False
             right_downsampling: DownsamplingLevelInfo = list(filter(lambda i: i["level"] == level, segm_downsamplings))[0]
             if right_downsampling["available"] == False:
                 return False
