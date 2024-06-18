@@ -136,6 +136,8 @@ from cellstar_preprocessor.tools.convert_app_specific_segm_to_sff.convert_app_sp
 from pydantic import BaseModel
 from typing_extensions import Annotated
 
+from preprocessor.cellstar_preprocessor.flows.volume import tiff_image_processing
+
 
 class PreprocessorMode(str, Enum):
     add = "add"
@@ -149,6 +151,8 @@ class InputT(BaseModel):
 class OMETIFFImageInput(InputT):
     pass
 
+class TIFFImageInput(InputT):
+    pass
 
 class OMETIFFSegmentationInput(InputT):
     pass
@@ -393,6 +397,15 @@ class NIIProcessVolumeTask(TaskBase):
         nii_preprocessing(volume)
         # in processing part do
         volume_downsampling(volume)
+
+class TIFFImageProcessingTask(TaskBase):
+    def __init__(self, internal_volume: InternalVolume):
+        self.internal_volume = internal_volume
+
+    def execute(self) -> None:
+        volume = self.internal_volume
+        tiff_image_processing(internal_volume=volume)
+        volume_downsampling(internal_volume=volume)
 
 
 class OMETIFFImageProcessingTask(TaskBase):
