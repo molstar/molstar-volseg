@@ -17,7 +17,7 @@ from cellstar_preprocessor.flows.common import (
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
 from cellstar_preprocessor.model.volume import InternalVolume
 
-from db.cellstar_db.models import DownsamplingLevelInfo
+from cellstar_db.models import DownsamplingLevelInfo
 
 SHORT_UNIT_NAMES_TO_LONG = {
     "µm": "micrometer",
