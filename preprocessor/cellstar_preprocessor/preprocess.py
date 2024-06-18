@@ -963,6 +963,11 @@ class Preprocessor:
                 analyzed_inputs.append(
                     OMETIFFSegmentationInput(input_path=input_item[0])
                 )
+            elif input_item[1] == InputKind.tiff_image_stack_dir:
+                analyzed_inputs.append(TIFFImageStackDirInput(input_path=input_item[0])
+                )
+            else:
+                raise Exception('Input kind is not recognized')
 
         return analyzed_inputs
 
