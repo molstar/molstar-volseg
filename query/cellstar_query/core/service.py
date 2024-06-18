@@ -22,7 +22,7 @@ from cellstar_query.serialization.cif import (
     serialize_volume_slice,
 )
 
-from db.cellstar_db.models import DownsamplingLevelInfo
+from cellstar_db.models import DownsamplingLevelInfo
 
 __MAX_DOWN_SAMPLING_VALUE__ = 1000000
 
