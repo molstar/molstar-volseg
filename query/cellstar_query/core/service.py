@@ -22,6 +22,8 @@ from cellstar_query.serialization.cif import (
     serialize_volume_slice,
 )
 
+from cellstar_db.models import DownsamplingLevelInfo
+
 __MAX_DOWN_SAMPLING_VALUE__ = 1000000
 
 
@@ -212,6 +214,21 @@ class VolumeServerService:
         return meshes
         # cif = convert_meshes(meshes, metadata, req.detail_lvl(), [10, 10, 10])  # TODO: replace 10,10,10 with cell size
 
+    def _check_if_downsampling_exists_in_segmentations(self, level: int, metadata: VolumeMetadata):
+    # for each lattice available check, if at least in some it is missing, return false
+        for lattice_id in metadata.segmentation_lattice_ids():
+            segm_downsamplings: list[DownsamplingLevelInfo] = metadata.segmentation_downsamplings(lattice_id)
+            # check if downsampling exists
+            exists = any(i["level"] == level for i in segm_downsamplings)
+            # check if 
+            if not exists:
+                return False
+            right_downsampling: DownsamplingLevelInfo = list(filter(lambda i: i["level"] == level, segm_downsamplings))[0]
+            if right_downsampling["available"] == False:
+                return False
+            
+        return True
+    
     def _extract_segments_detail_levels(
         self, meta: VolumeMetadata, timeframe: int, segmentation_id: str
     ) -> dict[int, list[int]]:
@@ -255,7 +272,13 @@ class VolumeServerService:
         for downsampling_level_info in metadata.volume_downsamplings():
             if downsampling_level_info["available"] == False:
                 continue
-
+            
+            if len(metadata.segmentation_lattice_ids()) > 0:
+                level = downsampling_level_info["level"]
+                exists = self._check_if_downsampling_exists_in_segmentations(level, metadata)
+                if not exists:
+                    continue
+            
             downsampling_rate = downsampling_level_info["level"]
             if req_box:
                 box = calc_slice_box(
