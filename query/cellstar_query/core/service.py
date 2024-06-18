@@ -214,7 +214,7 @@ class VolumeServerService:
         return meshes
         # cif = convert_meshes(meshes, metadata, req.detail_lvl(), [10, 10, 10])  # TODO: replace 10,10,10 with cell size
 
-    def _check_if_downsampling_exists_in_segmentations(level: int, metadata: VolumeMetadata):
+    def _check_if_downsampling_exists_in_segmentations(self, level: int, metadata: VolumeMetadata):
     # for each lattice available check, if at least in some it is missing, return false
         for lattice_id in metadata.segmentation_lattice_ids():
             segm_downsamplings: list[DownsamplingLevelInfo] = metadata.segmentation_downsamplings(lattice_id)
