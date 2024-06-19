@@ -73,8 +73,6 @@ def downsample_categorical_data(
     max_coords = np.subtract(previous_level_grid.shape, (1, 1, 1))
     # loop over voxels, c = coords of a single voxel
     for start_coords in target_voxels_coords:
-        # end coords for start_coords 0,0,0 are 2,2,2
-        # (it will actually select from 0,0,0 to 1,1,1 as slicing end index is non-inclusive)
         end_coords = start_coords + 2
         if (end_coords < origin_coords).any():
             end_coords = np.fmax(end_coords, origin_coords)
@@ -86,6 +84,10 @@ def downsample_categorical_data(
             start_coords[1] : end_coords[1],
             start_coords[2] : end_coords[2],
         ]
+        
+        # exclude block if any dimension = 0
+        if any(i == 0 for i in block.shape):
+            continue
 
         new_id: int = downsample_2x2x2_block(
             block, current_set_table, previous_level_set_table
@@ -120,6 +122,11 @@ def downsample_2x2x2_block(
     current_table: SegmentationSetTable,
     previous_table: SegmentationSetTable,
 ) -> int:
+    # TODO: can try to optimize compute_union
+    # by changing its args to block, categories
+    # i.e. get categories ouside the function and pass it in
+    # as numpy arrays
+    
     potentially_new_category: set = compute_union(block, previous_table)
     category_id: int = current_table.resolve_category(potentially_new_category)
     return category_id
