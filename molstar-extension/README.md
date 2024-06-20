@@ -1,3 +1,5 @@
+# Mol* Volumes & Segmentations
+Mol\* Volumes & Segmentations 2.0 (Mol\* VS 2.0) is a next iteration of web application designed for real-time visualization of large-scale volumetric, segmentation, and annotation data.
 
 # Running Mol\* viewer with Mol* Volumes & Segmentations extension
 
