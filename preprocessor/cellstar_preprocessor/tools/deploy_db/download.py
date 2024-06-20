@@ -216,11 +216,11 @@ def _create_db_building_params(updated_download_items: list[InputItemParams]):
                     "source_db_name": item["source_db_name"],
                     "inputs": single_input,
                 }
-            
-            for param in i["preprocessor_parameters"]:
-                input_for_building_db[param] = i["preprocessor_parameters"][
-                    param
-                ]
+            if "preprocessor_parameters" in i:
+                for param in i["preprocessor_parameters"]:
+                    input_for_building_db[param] = i["preprocessor_parameters"][
+                        param
+                    ]
             
             db_building_params.append(input_for_building_db)
             
