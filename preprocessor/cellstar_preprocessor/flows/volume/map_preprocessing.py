@@ -70,7 +70,6 @@ def map_preprocessing(internal_volume: InternalVolume):
         resolution="1",
         time_frame="0",
         channel="0",
-        quantize_dtype_str=internal_volume.quantize_dtype_str
     )
 
     internal_volume.map_header = header
