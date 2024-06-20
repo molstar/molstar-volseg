@@ -1,12 +1,18 @@
 import argparse
 import atexit
+import copy
 import json
+import multiprocessing
 import os
 import shutil
+from turtle import down
+from typing import TypedDict
 import urllib.request
 import zipfile
 from pathlib import Path
 import ssl
+
+from db.cellstar_db.models import PreprocessorParameters
 ssl._create_default_https_context = ssl._create_unverified_context
 
 import ome_zarr
@@ -74,6 +80,17 @@ def _get_filename_from_uri(uri: str):
     filename = parsed[-1]
     return filename
 
+# Should do starmap instead
+# download all 
+
+
+# 1
+
+def _get_url(uri: str, complete_path: Path):
+    try:
+        urllib.request.urlretrieve(uri, str(complete_path.resolve()))
+    except Exception as e:
+        raise(e)
 
 def _download(uri: str, final_path: Path, kind: InputKind):
     filename = _get_filename_from_uri(uri)
@@ -88,6 +105,7 @@ def _download(uri: str, final_path: Path, kind: InputKind):
         ome_zarr.utils.download(uri, str(final_path.resolve()))
         return complete_path
     else:
+        # TODO: download with pool
         try:
         # regular download
         # filename construct based on last component of uri
@@ -99,8 +117,8 @@ def _download(uri: str, final_path: Path, kind: InputKind):
                     complete_path.unlink()
             if not final_path.exists():
                 final_path.mkdir(parents=True)
-            urllib.request.urlretrieve(uri, str(complete_path.resolve()))
-            #  check if returns filename
+            # urllib.request.urlretrieve(uri, str(complete_path.resolve()))
+            # _get_url(uri, complete_path)
             return complete_path
         except Exception as e:
             print(f'uri: {uri}, final_path: {final_path}, kind: {kind}')
@@ -147,17 +165,82 @@ def _unzip_multiseries_ometiff_zip(zip_path: Path, kind: InputKind):
 # it should download file and copy file
 def _get_file(input_file_info: RawInputFileInfo, final_path: Path) -> Path:
     resource = input_file_info["resource"]
+    uri = resource["uri"]
     if resource["kind"] == "external":
+        print(f'Downloading {uri}')
         complete_path = _download(
             input_file_info["resource"]["uri"], final_path, input_file_info["kind"]
         )
         return complete_path
     elif resource["kind"] == "local":
+        print(f'Copying {uri}')
         complete_path = _copy_file(resource["uri"], final_path, input_file_info["kind"])
         # shutil.copy2(resource['uri'], final_path)
         return complete_path
 
 
+class InputItemParams(TypedDict):
+    # entry_folder_path: Path
+    raw_input_file_info: RawInputFileInfo
+    final_path: Path | None
+    complete_path: Path | None
+    raw_input_files_download_params: RawInputFilesDownloadParams
+    preprocessor_parameters: PreprocessorParameters | None
+
+# https://stackoverflow.com/a/40184718/13136429
+def _get_file_pool_wrapper(params: InputItemParams):
+    raw_input = params["raw_input_file_info"]
+    final_path = params["final_path"]
+    complete_path = _get_file(raw_input, final_path)
+    updated_params: InputItemParams = copy.deepcopy(params)
+    updated_params["complete_path"] = complete_path
+    return updated_params
+
+def _create_db_building_params(updated_download_items: list[InputItemParams])
+    # check if there is no such thing i
+    db_building_params: list[InputForBuildingDatabase] = []
+    for i in updated_download_items:
+        item = i["raw_input_files_download_params"]
+        complete_path = i["complete_path"]
+        kind = i["raw_input_file_info"]["kind"]
+        # check if object exist in list
+        target_item_idx = None
+        for idx, p in enumerate(db_building_params):
+            if p["entry_id"] == item["entry_id"] and p["source_db"] == p["source_db"]:
+                target_item_idx = idx
+                break
+        
+        single_input = [(str(complete_path.resolve()), kind)]
+        if target_item_idx == None:
+            input_for_building_db: InputForBuildingDatabase = {
+                    "entry_id": item["entry_id"],
+                    "source_db": item["source_db"],
+                    "source_db_id": item["source_db_id"],
+                    "source_db_name": item["source_db_name"],
+                    "inputs": single_input,
+                }
+            
+            for param in i["preprocessor_parameters"]:
+                input_for_building_db[param] = i["preprocessor_parameters"][
+                    param
+                ]
+            
+            db_building_params.append(input_for_building_db)
+            
+        else:
+            f = list(filter(lambda p: p["entry_id"] == item["entry_id"] and p["source_db"] == p["source_db"], db_building_params))
+            assert len(f) == 1, 'There must be a single item in the list of inputs for building db'
+            # modify list item in place
+            old_item = db_building_params[target_item_idx]
+            old_inputs = old_item["inputs"]
+            old_inputs.append(single_input)
+            old_item["inputs"] = old_inputs
+            db_building_params[target_item_idx] = old_item
+            new_inputs_content = db_building_params[target_item_idx]["inputs"]
+            print(f"New inputs content: {new_inputs_content} for ")
+            
+    return db_building_params
+    
 def download(args: argparse.Namespace):
     db_building_params: list[InputForBuildingDatabase] = []
 
@@ -174,58 +257,119 @@ def download(args: argparse.Namespace):
 
     # Pathes:
     # raw_input_files_dir / source / entry id / kind / files
+    
+    # In this loop should collect all required arguments in e.g. dict
+    # 1. entry_folder_path
+    # 2. raw inputs\
+        
+    # basically each single file should be mentioned once 
+    # in list of typped dicts
+    # each typed dict has all required arguments
+    # 1. does unzip if needed
+    download_items: list[InputItemParams] = []
+    
     for item in download_params:
         entry_folder_path = raw_unput_files_dir / item["source_db"] / item["entry_id"]
-        # several files
-        raw_inputs = item["inputs"]
-        # create inputs_list
-        # tuple str path, inputKind
-        inputs_list: list[tuple[str, InputKind]] = []
+        for raw_input in item["inputs"]:
+            d: InputItemParams = {
+                "raw_input_file_info": raw_input,
+                "final_path": entry_folder_path / raw_input["kind"],
+                "raw_input_files_download_params": item
+            }
 
-        for raw_input in raw_inputs:
-            kind = raw_input["kind"]
-            # here it should be ometiff_image
-            final_path = entry_folder_path / kind
+            if "preprocessor_parameters" in raw_input:
+                d["preprocessor_parameters"] = raw_input["preprocessor_parameters"]
+            
+            download_items.append(d)
+            
+    with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
+        updated_download_items = p.starmap(_get_file_pool_wrapper, download_items)
 
-            complete_path = _get_file(raw_input, final_path)
+    del download_items
+    
+    p.join()
+    
 
-            # here it is ...something.zip
-            # gunzip if needed
-            if complete_path.suffix == ".gz":
-                complete_path = gunzip(complete_path)
+    # then here run pool
+    
+    # iterate over download_items again,
+    # 1. check complete_path, do unzip do gunzip
+    for i in updated_download_items:
+        complete_path = i["complete_path"]
+        if complete_path.suffix == ".gz":
+            complete_path = gunzip(complete_path)
 
-            if complete_path.suffix == ".zip":
-                # complete_path is path to zip file
-                complete_path = _unzip_multiseries_ometiff_zip(
-                    complete_path, raw_input["kind"]
-                )
-
-            inputs_list.append(
-                # TODO:
-                # TODO:
-                # TODO:
-                # need to make it relative to cellstar dev dir?
-                (str(complete_path.resolve()), kind)
+        if complete_path.suffix == ".zip":
+            # complete_path is path to zip file
+            complete_path = _unzip_multiseries_ometiff_zip(
+                complete_path, raw_input["kind"]
             )
 
-        input_for_building_db: InputForBuildingDatabase = {
-            "entry_id": item["entry_id"],
-            "source_db": item["source_db"],
-            "source_db_id": item["source_db_id"],
-            "source_db_name": item["source_db_name"],
-            "inputs": inputs_list,
-        }
-
-        if "preprocessor_parameters" in raw_input:
-            # iterate over keys
-            for param in raw_input["preprocessor_parameters"]:
-                input_for_building_db[param] = raw_input["preprocessor_parameters"][
-                    param
-                ]
-
-        db_building_params.append(input_for_building_db)
-
+    # 2. separate function for creating db_building_params
+    db_building_params = _create_db_building_params(updated_download_items)
+    
     return db_building_params
+    
+#     for item in download_params:
+#         entry_folder_path = raw_unput_files_dir / item["source_db"] / item["entry_id"]
+#         # several files
+#         raw_inputs = item["inputs"]
+#         # create inputs_list
+#         # tuple str path, inputKind
+#         inputs_list: list[tuple[str, InputKind]] = []
+
+#         for raw_input in raw_inputs:
+#             kind = raw_input["kind"]
+#             # here it should be ometiff_image
+#             final_path = entry_folder_path / kind
+
+            
+#             complete_path = _get_file(raw_input, final_path)
+
+#             if complete_path == None:
+#                 print("Was downloading:")
+#                 print(item)
+#                 raise Exception('complete_path == None')
+            
+#             # here it is ...something.zip
+#             # gunzip if needed
+#             if complete_path.suffix == ".gz":
+#                 complete_path = gunzip(complete_path)
+
+#             if complete_path.suffix == ".zip":
+#                 # complete_path is path to zip file
+#                 complete_path = _unzip_multiseries_ometiff_zip(
+#                     complete_path, raw_input["kind"]
+#                 )
+
+#             inputs_list.append(
+#                 # TODO:
+#                 # TODO:
+#                 # TODO:
+#                 # need to make it relative to cellstar dev dir?
+#                 (str(complete_path.resolve()), kind)
+#             )
+
+#         input_for_building_db: InputForBuildingDatabase = {
+#             "entry_id": item["entry_id"],
+#             "source_db": item["source_db"],
+#             "source_db_id": item["source_db_id"],
+#             "source_db_name": item["source_db_name"],
+#             "inputs": inputs_list,
+#         }
+
+
+# # TODO: this as well
+#         if "preprocessor_parameters" in raw_input:
+#             # irate over keys
+#             for param in raw_input["preprocessor_parameters"]:
+#                 input_for_building_db[param] = raw_input["preprocessor_parameters"][
+#                     param
+#                 ]
+
+#         db_building_params.append(input_for_building_db)
+
+#     return db_building_params
 
 
 def store_db_building_params_to_json(
