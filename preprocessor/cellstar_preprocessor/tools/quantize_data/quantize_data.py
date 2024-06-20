@@ -42,6 +42,7 @@ def _convert_data_dict_to_python_dtypes(data_dict: dict) -> dict:
 def quantize_data(
     data: Union[da.Array, np.ndarray], output_dtype: Union[str, type]
 ) -> dict:
+    
     if isinstance(output_dtype, str):
         output_dtype = np.dtype(output_dtype)
         bits_in_dtype = output_dtype.itemsize * 8
@@ -59,7 +60,7 @@ def quantize_data(
     one = np.array([1], dtype=data.dtype)[0]
     data = da.add(data, one)
     # log transform
-    data = da.log(data)
+    data = da.log(data, where=(data != 0))
 
     max_value = data.max()
     min_value = data.min()
