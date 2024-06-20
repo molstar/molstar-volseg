@@ -56,6 +56,6 @@ def ometiff_image_processing(internal_volume: InternalVolume):
             resolution="1",
             time_frame=str(data_item["time"]),
             channel=channel_id,
-            # quantize_dtype_str=internal_volume.quantize_dtype_str
+            quantize_dtype_str=internal_volume.quantize_dtype_str
         )
     print("Volume processed")
