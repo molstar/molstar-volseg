@@ -911,6 +911,9 @@ class Preprocessor:
                 analyzed_inputs.append(
                     OMETIFFSegmentationInput(input_path=input_item[0])
                 )
+            else:
+                raise Exception('Input kind is not recognized')
+
 
         return analyzed_inputs
 
