@@ -65,7 +65,9 @@ def run_api(args):
     if args.ssl_certfile and args.ssl_keyfile:
         lst.extend(
             [
+                "--ssl_keyfile",
                 str(Path(args.ssl_keyfile).resolve()),
+                "--ssl_certfile",
                 str(Path(args.ssl_certfile).resolve())
             ]
         )
