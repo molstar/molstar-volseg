@@ -12,6 +12,8 @@ from cellstar_preprocessor.tools.magic_kernel_downsampling_3d.magic_kernel_downs
     MagicKernel3dDownsampler,
 )
 
+from functools import reduce
+from numba import njit
 
 def store_downsampling_levels_in_zarr(
     levels_list: list[DownsamplingLevelDict],
@@ -86,7 +88,7 @@ def downsample_categorical_data(
         ]
         
         # exclude block if any dimension = 0
-        if any(i == 0 for i in block.shape):
+        if any(i == 0 or i == 1 for i in block.shape):
             continue
 
         new_id: int = downsample_2x2x2_block(
@@ -116,26 +118,64 @@ def downsample_categorical_data(
     # and return that dict (will have a new grid and a new set table)
     return new_dict
 
-
 def downsample_2x2x2_block(
     block: np.ndarray,
     current_table: SegmentationSetTable,
     previous_table: SegmentationSetTable,
 ) -> int:
-    # TODO: can try to optimize compute_union
-    # by changing its args to block, categories
-    # i.e. get categories ouside the function and pass it in
-    # as numpy arrays
+    block_values = tuple(block.flatten())
+    categories: tuple[set] = previous_table.get_categories(block_values)
+    # move loop here 
     
-    potentially_new_category: set = compute_union(block, previous_table)
+    # res = reduce(np.union1d, (arr1, arr2, arr3))
+    # convert tuple of sets to tuple of np arrays
+    arrays_tuple = [np.fromiter(a, int, len(a)) for a in categories]
+    # arrays_tuple = [np.array(list(a)) for a in categories]
+    res = reduce(np.union1d, arrays_tuple)
+    
+    # print(res)
+    # first_category: set = categories[0]
+    # u = first_category.union(categories[1])
+    # u = np.ndarray(u)
+    
+    # TODO: union of all arrays
+    # res = reduce(np.union1d, (arr1, arr2, arr3))
+    
+    
+    # for idx in range(1, len(categories)):
+    #     s1 = np.ndarray(u)
+    #     s2 = np.ndarray()
+    #     u = _compute_union(u, categories[idx])
+    potentially_new_category: set = set(res.tolist())
     category_id: int = current_table.resolve_category(potentially_new_category)
     return category_id
 
+# TODO: try timeit.timeit("list(set(itertools.chain.from_iterable(big)))", setup="big = [ [10,20,30,40] for ele in range(10000)]", number=30)
+# 0.040056066849501804
+@njit
 
-def compute_union(block: np.ndarray, previous_table: SegmentationSetTable) -> set:
+# TODO: use numpy arrays instead, convert to sets afterwards?
+def _compute_union(s1: np.ndarray, s2: np.ndarray) -> np.ndarray:
     # in general, where x y z are sets
     # result = x.union(y, z)
-    block_values: tuple = tuple(block.flatten())
-    categories: tuple = previous_table.get_categories(block_values)
-    union: set = set().union(*categories)
-    return union
+    # categories: tuple = previous_table.get_categories(block_values)
+    # OPTION 1: do set union with categories one by one?
+    # u = categories[0].union(categories[1])
+    # return s1.union(s2)
+    return np.union1d(s1, s2)
+    # for idx in range(1, len(categories)):
+        # u = u.union(categories[idx])
+    #     s1 = categories[idx - 1]
+    #     s2 = categories[idx]
+    #     union = set().union(s1, s2)
+    # for idx, s in enumerate(categories):
+    #     categories[0]
+    #     union = set().union()
+    # union: set = set().union(*categories)
+    # return u
+
+# block_values = block.flatten()
+#     categories = previous_table.get_categories(block_values)
+#     potentially_new_category: set = set().union(*categories)
+#     category_id: int = current_table.resolve_category(potentially_new_category)
+#     return category_id

@@ -42,6 +42,14 @@ class SegmentationSetTable:
 
         return d
 
+    # def get_categories(self, ids: np.ndarray) -> np.ndarray:
+    #     """
+    #     Returns sets from the dict of sets (entries) based on provided IDs
+    #     """
+    #     # by integer access dict and returns set
+    #     t = tuple([self.entries[i] for i in ids])
+    #     return np.array(t)
+    
     def get_categories(self, ids: Tuple) -> Tuple:
         """
         Returns sets from the dict of sets (entries) based on provided IDs
