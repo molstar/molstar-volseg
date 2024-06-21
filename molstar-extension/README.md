@@ -13,7 +13,7 @@ cd molstar-volseg-viewer
 ```
 3. Initialize new npm package:
 ```sh
-npm init
+npm init -y
 ```
 4. Install Mol\* and Mol* Volumes & Segmentations extension npm packages:
 ```
