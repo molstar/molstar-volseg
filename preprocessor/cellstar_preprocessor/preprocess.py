@@ -560,19 +560,19 @@ class Preprocessor:
         tasks = []
         nii_segmentation_inputs: list[NIISegmentationInput] = []
         mask_segmentation_inputs: list[MaskInput] = []
-        for input in inputs:
-            if isinstance(input, ExtraDataInput):
+        for i in inputs:
+            if isinstance(i, ExtraDataInput):
                 tasks.append(
                     ProcessExtraDataTask(
-                        path=input.input_path,
+                        path=i.input_path,
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
                     )
                 )
-            elif isinstance(input, MAPInput):
+            elif isinstance(i, MAPInput):
                 self.store_internal_volume(
                     internal_volume=InternalVolume(
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        volume_input_path=input.input_path,
+                        volume_input_path=i.input_path,
                         params_for_storing=self.preprocessor_input.storing_params,
                         volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
                         quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
@@ -589,11 +589,11 @@ class Preprocessor:
                         internal_volume=self.get_internal_volume()
                     )
                 )
-            elif isinstance(input, SFFInput):
+            elif isinstance(i, SFFInput):
                 self.store_internal_segmentation(
                     internal_segmentation=InternalSegmentation(
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        segmentation_input_path=input.input_path,
+                        segmentation_input_path=i.input_path,
                         params_for_storing=self.preprocessor_input.storing_params,
                         downsampling_parameters=self.preprocessor_input.downsampling,
                         entry_data=self.preprocessor_input.entry_data,
@@ -615,33 +615,14 @@ class Preprocessor:
                     )
                 )
 
-            elif isinstance(input, MaskInput):
-                mask_segmentation_inputs.append(input)
-                # self.store_internal_segmentation(
-                #     internal_segmentation=InternalSegmentation(
-                #         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                #         segmentation_input_path=input.input_path,
-                #         params_for_storing=self.preprocessor_input.storing_params,
-                #         downsampling_parameters=self.preprocessor_input.downsampling,
-                #         entry_data=self.preprocessor_input.entry_data,
-                #     )
-                # )
-                # tasks.append(
-                #     MaskProcessSegmentationTask(
-                #         internal_segmentation=self.get_internal_segmentation()
-                #     )
-                # )
-                # tasks.append(
-                #     MaskMetadataCollectionTask(
-                #         internal_segmentation=self.get_internal_segmentation()
-                #     )
-                # )
+            elif isinstance(i, MaskInput):
+                mask_segmentation_inputs.append(i)
 
-            elif isinstance(input, OMEZARRInput):
+            elif isinstance(i, OMEZARRInput):
                 self.store_internal_volume(
                     internal_volume=InternalVolume(
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        volume_input_path=input.input_path,
+                        volume_input_path=i.input_path,
                         params_for_storing=self.preprocessor_input.storing_params,
                         volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
                         quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
@@ -657,7 +638,7 @@ class Preprocessor:
                     self.store_internal_segmentation(
                         internal_segmentation=InternalSegmentation(
                             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                            segmentation_input_path=input.input_path,
+                            segmentation_input_path=i.input_path,
                             params_for_storing=self.preprocessor_input.storing_params,
                             downsampling_parameters=self.preprocessor_input.downsampling,
                             entry_data=self.preprocessor_input.entry_data,
@@ -676,11 +657,11 @@ class Preprocessor:
                     OMEZARRAnnotationsCollectionTask(self.get_internal_volume())
                 )
 
-            elif isinstance(input, GeometricSegmentationInput):
+            elif isinstance(i, GeometricSegmentationInput):
                 self.store_internal_segmentation(
                     internal_segmentation=InternalSegmentation(
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        segmentation_input_path=input.input_path,
+                        segmentation_input_path=i.input_path,
                         params_for_storing=self.preprocessor_input.storing_params,
                         downsampling_parameters=self.preprocessor_input.downsampling,
                         entry_data=self.preprocessor_input.entry_data,
@@ -689,11 +670,11 @@ class Preprocessor:
                 tasks.append(
                     ProcessGeometricSegmentationTask(self.get_internal_segmentation())
                 )
-            elif isinstance(input, OMETIFFImageInput):
+            elif isinstance(i, OMETIFFImageInput):
                 self.store_internal_volume(
                     internal_volume=InternalVolume(
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        volume_input_path=input.input_path,
+                        volume_input_path=i.input_path,
                         params_for_storing=self.preprocessor_input.storing_params,
                         volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
                         quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
@@ -718,11 +699,11 @@ class Preprocessor:
                         internal_volume=self.get_internal_volume()
                     )
                 )
-            elif isinstance(input, OMETIFFSegmentationInput):
+            elif isinstance(i, OMETIFFSegmentationInput):
                 self.store_internal_segmentation(
                     internal_segmentation=InternalSegmentation(
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        segmentation_input_path=input.input_path,
+                        segmentation_input_path=i.input_path,
                         params_for_storing=self.preprocessor_input.storing_params,
                         downsampling_parameters=self.preprocessor_input.downsampling,
                         entry_data=self.preprocessor_input.entry_data,
@@ -741,11 +722,11 @@ class Preprocessor:
                         internal_segmentation=self.get_internal_segmentation()
                     )
                 )
-            elif isinstance(input, NIIVolumeInput):
+            elif isinstance(i, NIIVolumeInput):
                 self.store_internal_volume(
                     internal_volume=InternalVolume(
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        volume_input_path=input.input_path,
+                        volume_input_path=i.input_path,
                         params_for_storing=self.preprocessor_input.storing_params,
                         volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
                         quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
@@ -763,31 +744,12 @@ class Preprocessor:
                     )
                 )
 
-            elif isinstance(input, NIISegmentationInput):
-                nii_segmentation_inputs.append(input)
-                # self.store_internal_segmentation(
-                #     internal_segmentation=InternalSegmentation(
-                #         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                #         segmentation_input_path=input.input_path,
-                #         params_for_storing=self.preprocessor_input.storing_params,
-                #         downsampling_parameters=self.preprocessor_input.downsampling,
-                #         entry_data=self.preprocessor_input.entry_data,
-                #     )
-                # )
-                # tasks.append(
-                #     NIIProcessSegmentationTask(
-                #         internal_segmentation=self.get_internal_segmentation()
-                #     )
-                # )
-                # tasks.append(
-                #     NIISegmentationMetadataCollectionTask(
-                #         internal_segmentation=self.get_internal_segmentation()
-                #     )
-                # )
-            elif isinstance(input, CustomAnnotationsInput):
+            elif isinstance(i, NIISegmentationInput):
+                nii_segmentation_inputs.append(i)
+            elif isinstance(i, CustomAnnotationsInput):
                 tasks.append(
                     CustomAnnotationsCollectionTask(
-                        input_path=input.input_path,
+                        input_path=i.input_path,
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
                     )
                 )
@@ -854,7 +816,7 @@ class Preprocessor:
                 )
             )
 
-        if any(isinstance(input, GeometricSegmentationInput) for input in inputs):
+        if any(isinstance(i, GeometricSegmentationInput) for i in inputs):
             # tasks.append(SaveGeometricSegmentationSets(self.intermediate_zarr_structure))
             tasks.append(
                 GeometricSegmentationAnnotationsCollectionTask(
@@ -876,10 +838,17 @@ class Preprocessor:
         for task in tasks:
             task.execute()
 
+    def __check_if_inputs_exists(self, raw_inputs_list: list[tuple[Path, InputKind]]):
+        for input_item in raw_inputs_list:
+            p = input_item[0]
+            assert p.exists(), f'Input file {p} does not exist'
+
     def _analyse_preprocessor_input(self) -> list[InputT]:
         raw_inputs_list = self.preprocessor_input.inputs.files
         analyzed_inputs: list[InputT] = []
 
+        self.__check_if_inputs_exists(raw_inputs_list)
+        
         for input_item in raw_inputs_list:
             if input_item[1] == InputKind.extra_data:
                 analyzed_inputs.append(ExtraDataInput(input_path=input_item[0]))
