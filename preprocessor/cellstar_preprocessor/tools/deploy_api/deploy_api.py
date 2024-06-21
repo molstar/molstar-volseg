@@ -27,7 +27,8 @@ def parse_script_args():
     parser.add_argument("--db_path", type=str, default=DEFAULT_DB_PATH, help='path to db folder')
     parser.add_argument("--api_port", type=str, help='api port', default=DEFAULT_PORT,)
     parser.add_argument("--api_hostname", type=str, default=DEFAULT_HOST, help='default host')
-    
+    parser.add_argument("--ssl-keyfile", type=str)
+    parser.add_argument("--ssl-certfile", type=str)
     args=parser.parse_args()
     return args
 
@@ -57,10 +58,19 @@ def run_api(args):
         
     if args.api_port:
         deploy_env['PORT'] = args.api_port
-
     lst = [
-        "python", "serve.py"
+        "python", "serve.py", 
     ]
+    
+    if args.ssl_certfile and args.ssl_keyfile:
+        lst.extend(
+            [
+                "--ssl_keyfile",
+                str(Path(args.ssl_keyfile).resolve()),
+                "--ssl_certfile",
+                str(Path(args.ssl_certfile).resolve())
+            ]
+        )
     
     api_process = subprocess.Popen(lst, env=deploy_env, cwd='server/cellstar_server/')
     PROCESS_IDS_LIST.append(api_process.pid)
