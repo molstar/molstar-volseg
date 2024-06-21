@@ -180,8 +180,7 @@ def _get_file_pool_wrapper(params: InputItemParams):
     final_path = params["final_path"]
     complete_path = _get_file(raw_input, final_path)
     updated_params: InputItemParams = copy.deepcopy(params)
-    updated_params["complete_path"] = complete_path
-
+    
     if complete_path.suffix == ".gz":
         complete_path = gunzip(complete_path)
 
@@ -191,6 +190,7 @@ def _get_file_pool_wrapper(params: InputItemParams):
             complete_path, raw_input["kind"]
         )
     
+    updated_params["complete_path"] = complete_path
     return updated_params
 
 def _create_db_building_params(updated_download_items: list[InputItemParams]):
