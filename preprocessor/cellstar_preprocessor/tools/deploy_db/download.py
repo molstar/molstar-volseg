@@ -207,14 +207,14 @@ def _create_db_building_params(updated_download_items: list[InputItemParams]):
                 target_item_idx = idx
                 break
         
-        single_input = [(str(complete_path.resolve()), kind)]
+        single_input = (str(complete_path.resolve()), kind)
         if target_item_idx == None:
             input_for_building_db: InputForBuildingDatabase = {
                     "entry_id": item["entry_id"],
                     "source_db": item["source_db"],
                     "source_db_id": item["source_db_id"],
                     "source_db_name": item["source_db_name"],
-                    "inputs": single_input,
+                    "inputs": [single_input],
                 }
             if "preprocessor_parameters" in i:
                 for param in i["preprocessor_parameters"]:

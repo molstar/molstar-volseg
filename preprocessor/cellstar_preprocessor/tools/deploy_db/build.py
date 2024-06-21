@@ -65,6 +65,9 @@ def _preprocessor_internal_wrapper(
         )
 
     inputs = input_for_building["inputs"]
+    # for i in inputs:
+    #     if isinstance(i[0], list):
+    #         print(input_for_building)
     input_pathes_list = [Path(i[0]) for i in inputs]
     input_kinds_list = [i[1] for i in inputs]
 
