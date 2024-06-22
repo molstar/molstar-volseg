@@ -168,9 +168,9 @@ cp node_modules/molstar-volseg/build/molstar.mjs .
 
 
 
-7. Install `http-server` NPM module
+7. Install `http-server` NPM module globally:
 ```sh
-npm install http-server
+npm install http-server -g
 ```
 
 8. Serve the `index.html` webpage using `http-server`. From `molstar-volseg-viewer` directory run:
