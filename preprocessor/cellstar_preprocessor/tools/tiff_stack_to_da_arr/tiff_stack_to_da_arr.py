@@ -8,8 +8,9 @@
 from pathlib import Path
 # import dask.array as da
 # from skimage.io import imread
-from dask.array.image import imread
-
+from dask.array.image import imread as imread_array
+from dask_image.imread import imread as imread_image
+import tifffile
 # Image.MAX_IMAGE_PIXELS = None
 
 def tiff_stack_to_da_arr(dir_path: Path):
@@ -31,7 +32,12 @@ def tiff_stack_to_da_arr(dir_path: Path):
 
     # NOTE: Approach 2: works
     # TODO: .tif too
-    im = imread(str((dir_path / '*.tiff').resolve()))  
+    
+    # TODO: Lazily load images with Dask Array
+    # tifffile.memmap
+    
+    # im = imread_array(str((dir_path / '*.tiff').resolve()))  
+    im = imread_image(str((dir_path / '*.tiff').resolve()))
     # print(im.shape)
     return im
 
