@@ -213,9 +213,13 @@ class EntryId(TypedDict):
     source_db_id: str
 
 
+class ExtraMetadata(TypedDict):
+    pre_downsampling_factor: int
+
 class Metadata(TypedDict):
     entry_id: EntryId
     volumes: VolumesMetadata
+    extra_metadata: ExtraMetadata | None
     segmentation_lattices: Optional[SegmentationLatticesMetadata]
     segmentation_meshes: Optional[MeshSegmentationSetsMetadata]
     geometric_segmentation: Optional[GeometricSegmentationSetsMetadata]

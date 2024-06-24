@@ -142,6 +142,8 @@ from typing_extensions import Annotated
 from cellstar_preprocessor.flows.volume.extract_tiff_image_stack_dir_metadata import extract_tiff_image_stack_dir_metadata
 from cellstar_preprocessor.flows.volume.tiff_image_processing import tiff_image_stack_dir_processing
 
+from cellstar_db.models import ExtraMetadata
+
 class PreprocessorMode(str, Enum):
     add = "add"
     extend = "extend"
@@ -1033,7 +1035,7 @@ class Preprocessor:
 
         return exists
 
-    async def initialization(self, mode: PreprocessorMode):
+    async def initialization(self, mode: PreprocessorMode, extra_metadata: ExtraMetadata):
         self.intermediate_zarr_structure = (
             self.preprocessor_input.working_folder
             / self.preprocessor_input.entry_data.entry_id
@@ -1066,7 +1068,8 @@ class Preprocessor:
 
             elif mode == PreprocessorMode.add:
                 root.attrs["metadata_dict"] = INIT_METADATA_DICT
-
+                
+                root.attrs["metadata_dict"]["extra_metadata"] = extra_metadata
                 root.attrs["annotations_dict"] = INIT_ANNOTATIONS_DICT
             else:
                 raise Exception("Preprocessor mode is not supported")
@@ -1157,7 +1160,7 @@ async def main_preprocessor(
     db_path: str,
     input_paths: list[str],
     input_kinds: list[InputKind],
-    pre_downsample_data_factor: typing.Optional[int],
+    pre_downsampling_factor: typing.Optional[int],
     min_size_per_downsampling_lvl_mb: typing.Optional[float] = 5.0,
 ):
     if quantize_downsampling_levels:
@@ -1166,9 +1169,11 @@ async def main_preprocessor(
             [int(level) for level in quantize_downsampling_levels]
         )
 
-    if pre_downsample_data_factor:
+    extra_metadata: ExtraMetadata = {}
+    if pre_downsampling_factor:
+        extra_metadata['pre_downsampling_factor'] = pre_downsampling_factor
         # should not exclude extra data a
-        input_paths = pre_downsample_data(input_paths, input_kinds, pre_downsample_data_factor, working_folder)
+        input_paths = pre_downsample_data(input_paths, input_kinds, pre_downsampling_factor, working_folder)
         
     preprocessor_input = PreprocessorInput(
         inputs=Inputs(files=[]),
@@ -1211,7 +1216,7 @@ async def main_preprocessor(
             )
         assert mode == PreprocessorMode.extend, "Preprocessor mode is not supported"
 
-    await preprocessor.initialization(mode=mode)
+    await preprocessor.initialization(mode=mode, extra_metadata=extra_metadata)
     preprocessor.preprocessing()
     preprocessor.store_to_db(mode)
 
@@ -1277,7 +1282,7 @@ def main(
             remove_original_resolution=remove_original_resolution,
             # add_segmentation_to_entry=add_segmentation_to_entry,
             # add_custom_annotations=add_custom_annotations,
-            pre_downsample_data_factor=pre_downsample_data_factor
+            pre_downsampling_factor=pre_downsample_data_factor
         )
     )
 

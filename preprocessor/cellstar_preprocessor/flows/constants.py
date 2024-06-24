@@ -67,6 +67,8 @@ INIT_METADATA_DICT: Metadata = {
         "segmentation_ids": [],
         "time_info": {},
     },
+    "extra_metadata": {},
+    "entry_metadata": {}
 }
 
 GEOMETRIC_SEGMENTATIONS_ZATTRS = "geometric_segmentations"
