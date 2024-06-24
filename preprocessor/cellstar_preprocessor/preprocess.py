@@ -6,6 +6,9 @@ from argparse import ArgumentError
 from enum import Enum
 from pathlib import Path
 
+from cellstar_preprocessor.flows.segmentation.extract_tiff_segmentation_stack_dir_metadata import extract_tiff_segmentation_stack_dir_metadata
+from cellstar_preprocessor.flows.segmentation.tiff_segmentation_stack_dir_processing import tiff_segmentation_stack_dir_processing
+from cellstar_preprocessor.flows.volume.pre_downsample_data import pre_downsample_data
 import typer
 import zarr
 from cellstar_db.file_system.annotations_context import AnnnotationsEditContext
@@ -152,6 +155,9 @@ class OMETIFFImageInput(InputT):
     pass
 
 class TIFFImageStackDirInput(InputT):
+    pass
+
+class TIFFSegmentationStackDirInput(InputT):
     pass
 
 class OMETIFFSegmentationInput(InputT):
@@ -407,6 +413,15 @@ class TIFFImageStackDirProcessingTask(TaskBase):
         tiff_image_stack_dir_processing(internal_volume=volume)
         volume_downsampling(internal_volume=volume)
 
+class TIFFSegmentationStackDirProcessingTask(TaskBase):
+    def __init__(self, internal_segmentation: InternalSegmentation):
+        self.internal_segmentation = internal_segmentation
+
+    def execute(self) -> None:
+        internal_segmentation = self.internal_segmentation
+        tiff_segmentation_stack_dir_processing(internal_segmentation)
+        sff_segmentation_downsampling(internal_segmentation)
+
 
 class OMETIFFImageProcessingTask(TaskBase):
     def __init__(self, internal_volume: InternalVolume):
@@ -474,6 +489,20 @@ class TIFFImageStackDirMetadataExtractionTask(TaskBase):
     def execute(self) -> None:
         volume = self.internal_volume
         extract_tiff_image_stack_dir_metadata(internal_volume=volume)
+
+class TIFFSegmentationStackDirMetadataExtractionTask(TaskBase):
+    def __init__(self, internal_segmentation: InternalSegmentation):
+        self.internal_segmentation = internal_segmentation
+
+    def execute(self) -> None:
+        extract_tiff_segmentation_stack_dir_metadata(self.internal_segmentation)
+
+class TIFFSegmentationStackDirAnnotationCreationTask(TaskBase):
+    def __init__(self, internal_segmentation: InternalSegmentation):
+        self.internal_segmentation = internal_segmentation
+
+    def execute(self) -> None:
+        mask_annotation_creation(internal_segmentation=self.internal_segmentation)
 
 
 class ProcessExtraDataTask(TaskBase):
@@ -786,12 +815,30 @@ class Preprocessor:
                         internal_volume=self.get_internal_volume()
                     )
                 )
-                # # TODO: remove - after processing segmentation
-                # tasks.append(
-                #     OMETIFFImageAnnotationsExtractionTask(
-                #         internal_volume=self.get_internal_volume()
-                #     )
-                # )
+            
+            # TODO: annotation extraction 
+            elif isinstance(input, TIFFSegmentationStackDirInput):
+                self.store_internal_segmentation(
+                    internal_volume=InternalVolume(
+                        internal_segmentation=InternalSegmentation(
+                        intermediate_zarr_structure_path=self.intermediate_zarr_structure,
+                        segmentation_input_path=input.input_path,
+                        params_for_storing=self.preprocessor_input.storing_params,
+                        downsampling_parameters=self.preprocessor_input.downsampling,
+                        entry_data=self.preprocessor_input.entry_data,
+                    )
+                    )
+                )
+                tasks.append(
+                    TIFFSegmentationStackDirProcessingTask(
+                        self.get_internal_segmentation()
+                    )
+                )
+                tasks.append(
+                    TIFFSegmentationStackDirMetadataExtractionTask(
+                        self.get_internal_segmentation()
+                    )
+                )
                 
             elif isinstance(input, NIIVolumeInput):
                 self.store_internal_volume(
@@ -966,6 +1013,9 @@ class Preprocessor:
             elif input_item[1] == InputKind.tiff_image_stack_dir:
                 analyzed_inputs.append(TIFFImageStackDirInput(input_path=input_item[0])
                 )
+            elif input_item[1] == InputKind.tiff_segmentation_stack_dir:
+                analyzed_inputs.append(TIFFSegmentationStackDirInput(input_path=input_item[0])
+                )
             else:
                 raise Exception('Input kind is not recognized')
 
@@ -1109,6 +1159,7 @@ async def main_preprocessor(
     db_path: str,
     input_paths: list[str],
     input_kinds: list[InputKind],
+    pre_downsample_data_factor: typing.Optional[int],
     min_size_per_downsampling_lvl_mb: typing.Optional[float] = 5.0,
 ):
     if quantize_downsampling_levels:
@@ -1117,6 +1168,10 @@ async def main_preprocessor(
             [int(level) for level in quantize_downsampling_levels]
         )
 
+    if pre_downsample_data_factor:
+        input_paths = pre_downsample_data(input_paths, input_kinds, pre_downsample_data_factor, working_folder)
+        print(f'Downsized pathes: {input_paths}')
+    
     preprocessor_input = PreprocessorInput(
         inputs=Inputs(files=[]),
         volume=VolumeParams(
@@ -1197,6 +1252,9 @@ def main(
     db_path: str = typer.Option(default=...),
     input_path: list[str] = typer.Option(default=...),
     input_kind: list[InputKind] = typer.Option(default=...),
+    pre_downsample_data_factor: Annotated[
+        typing.Optional[int], typer.Option(None)
+    ] = None 
     # add_segmentation_to_entry: bool = typer.Option(default=False),
     # add_custom_annotations: bool = typer.Option(default=False),
 ):
@@ -1220,7 +1278,8 @@ def main(
             max_downsampling_level=max_downsampling_level,
             remove_original_resolution=remove_original_resolution,
             # add_segmentation_to_entry=add_segmentation_to_entry,
-            # add_custom_annotations=add_custom_annotations
+            # add_custom_annotations=add_custom_annotations,
+            pre_downsample_data_factor=pre_downsample_data_factor
         )
     )
 
