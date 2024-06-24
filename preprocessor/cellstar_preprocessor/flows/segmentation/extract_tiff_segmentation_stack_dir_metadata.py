@@ -261,7 +261,7 @@ def extract_tiff_segmentation_stack_dir_metadata(internal_segmentation: Internal
             original_axis_order=(0, 1, 2)
         )
         
-        _get_tiff_segmentation_sampling_info(lattice_gr, segmentation_sampling_info, internal_segmentation.map_headers[lattice_id], downsamplings)
+        _get_tiff_segmentation_sampling_info(lattice_gr, segmentation_sampling_info, downsamplings, internal_segmentation)
 
         segmentation_lattices_metadata["segmentation_sampling_info"][
             str(lattice_id)
