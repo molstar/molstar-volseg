@@ -819,8 +819,7 @@ class Preprocessor:
             # TODO: annotation extraction 
             elif isinstance(input, TIFFSegmentationStackDirInput):
                 self.store_internal_segmentation(
-                    internal_volume=InternalVolume(
-                        internal_segmentation=InternalSegmentation(
+                    internal_segmentation=InternalSegmentation(
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
                         segmentation_input_path=input.input_path,
                         params_for_storing=self.preprocessor_input.storing_params,
@@ -828,7 +827,6 @@ class Preprocessor:
                         entry_data=self.preprocessor_input.entry_data,
                     )
                     )
-                )
                 tasks.append(
                     TIFFSegmentationStackDirProcessingTask(
                         self.get_internal_segmentation()
@@ -1169,9 +1167,9 @@ async def main_preprocessor(
         )
 
     if pre_downsample_data_factor:
+        # should not exclude extra data a
         input_paths = pre_downsample_data(input_paths, input_kinds, pre_downsample_data_factor, working_folder)
-        print(f'Downsized pathes: {input_paths}')
-    
+        
     preprocessor_input = PreprocessorInput(
         inputs=Inputs(files=[]),
         volume=VolumeParams(

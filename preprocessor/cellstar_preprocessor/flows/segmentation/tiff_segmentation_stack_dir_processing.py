@@ -44,13 +44,15 @@ def tiff_segmentation_stack_dir_processing(internal_segmentation: InternalSegmen
 
     set_segmentation_custom_data(internal_segmentation, our_zarr_structure)
 
+    
     # should be dict str to str with all channel ids
     if "segmentation_ids_mapping" not in internal_segmentation.custom_data:
-        list_of_sesgmentation_pathes: list[Path] = (
-            internal_segmentation.segmentation_input_path
-        )
+        # list_of_sesgmentation_pathes: list[Path] = (
+        #     internal_segmentation.segmentation_input_path
+        # )
         internal_segmentation.custom_data["segmentation_ids_mapping"] = {
-            s.stem: s.stem for s in list_of_sesgmentation_pathes
+            internal_segmentation.segmentation_input_path.stem: internal_segmentation.segmentation_input_path.stem
+            # s.stem: s.stem for s in list_of_sesgmentation_pathes
         }
 
     segmentation_ids_mapping: dict[str, str] = internal_segmentation.custom_data[
@@ -69,8 +71,10 @@ def tiff_segmentation_stack_dir_processing(internal_segmentation: InternalSegmen
             int(value)
         ] = int(value)
     
+    
+    # TODO: dask array to memmap
     store_segmentation_data_in_zarr_structure(
-        original_data=img_array,
+        original_data=img_array.compute(),
         lattice_data_group=lattice_gr,
         value_to_segment_id_dict_for_specific_lattice_id=internal_segmentation.value_to_segment_id_dict[
             lattice_id
