@@ -273,51 +273,55 @@ def extract_tiff_segmentation_stack_dir_metadata(internal_segmentation: Internal
     root.attrs["metadata_dict"] = metadata_dict
     
     
-    
-    
-    
-    root = open_zarr_structure_from_path(
-        internal_segmentation.intermediate_zarr_structure_path
-    )
-    
-    source_db_name = internal_segmentation.entry_data.source_db_name
-    source_db_id = internal_segmentation.entry_data.source_db_id
-
-    start_time = 0
-    end_time = 0
-    time_units = "millisecond"
-
-    volume_downsamplings = get_downsamplings(data_group=root[VOLUME_DATA_GROUPNAME])
-
-    # TODO:
-    source_axes_units = {}
-    
-    metadata_dict = root.attrs["metadata_dict"]
-    metadata_dict["entry_id"]["source_db_name"] = source_db_name
-    metadata_dict["entry_id"]["source_db_id"] = source_db_id
-    
-    # channel_ids = ['0']
-    
-    # TODO: change
-    metadata_dict["volumes"] = VolumesMetadata(
-        channel_ids=channel_ids,
-        time_info=TimeInfo(
-            kind="range", start=start_time, end=end_time, units=time_units
-        ),
-        volume_sampling_info=VolumeSamplingInfo(
-            spatial_downsampling_levels=volume_downsamplings,
-            boxes={},
-            descriptive_statistics={},
-            time_transformations=[],
-            source_axes_units=source_axes_units,
-            original_axis_order=(0, 1, 2),
-        ),
-    )
-    _get_volume_sampling_info(
-        root_data_group=root[VOLUME_DATA_GROUPNAME],
-        sampling_info_dict=metadata_dict["volumes"]["volume_sampling_info"],
-        internal_volume=internal_volume
-    )
-
-    root.attrs["metadata_dict"] = metadata_dict
     return metadata_dict
+    
+    
+    # root = open_zarr_structure_from_path(
+    #     internal_segmentation.intermediate_zarr_structure_path
+    # )
+    
+    # source_db_name = internal_segmentation.entry_data.source_db_name
+    # source_db_id = internal_segmentation.entry_data.source_db_id
+
+    # start_time = 0
+    # end_time = 0
+    # time_units = "millisecond"
+
+    # volume_downsamplings = get_downsamplings(data_group=root[VOLUME_DATA_GROUPNAME])
+
+    # # TODO:
+    # source_axes_units = {}
+    
+    # metadata_dict = root.attrs["metadata_dict"]
+    # metadata_dict["entry_id"]["source_db_name"] = source_db_name
+    # metadata_dict["entry_id"]["source_db_id"] = source_db_id
+    
+    # # channel_ids = ['0']
+    
+    # # TODO: change
+    # metadata_dict["volumes"] = SegmentationLatticesMetadata(
+    #     segmentation_ids=
+    # )
+    
+    # VolumesMetadata(
+    #     channel_ids=channel_ids,
+    #     time_info=TimeInfo(
+    #         kind="range", start=start_time, end=end_time, units=time_units
+    #     ),
+    #     volume_sampling_info=VolumeSamplingInfo(
+    #         spatial_downsampling_levels=volume_downsamplings,
+    #         boxes={},
+    #         descriptive_statistics={},
+    #         time_transformations=[],
+    #         source_axes_units=source_axes_units,
+    #         original_axis_order=(0, 1, 2),
+    #     ),
+    # )
+    # _get_volume_sampling_info(
+    #     root_data_group=root[VOLUME_DATA_GROUPNAME],
+    #     sampling_info_dict=metadata_dict["volumes"]["volume_sampling_info"],
+    #     internal_volume=internal_volume
+    # )
+
+    # root.attrs["metadata_dict"] = metadata_dict
+    # return metadata_dict

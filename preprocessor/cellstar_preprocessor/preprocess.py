@@ -839,6 +839,11 @@ class Preprocessor:
                         self.get_internal_segmentation()
                     )
                 )
+                tasks.append(
+                    TIFFSegmentationStackDirAnnotationCreationTask(
+                        self.get_internal_segmentation()
+                    )
+                )
                 
             elif isinstance(input, NIIVolumeInput):
                 self.store_internal_volume(
