@@ -14,7 +14,11 @@ def pre_downsample_data(input_paths: list[str], input_kinds: list[InputKind], pr
     # downsized_pathes: list[Path] = []
     for idx, i_path in enumerate(input_paths):
         # TODO: other types
-        downsized_input_path = Path(working_folder) / TEMP_DOWNSIZED_FOLDER_NAME_STR / str(Path(i_path).stem + '_downsized' + Path(i_path).suffix)
+        temp_downsized_folder_path = Path(working_folder) / TEMP_DOWNSIZED_FOLDER_NAME_STR
+        if not temp_downsized_folder_path.exists():
+            temp_downsized_folder_path.mkdir(parents=True)
+        
+        downsized_input_path = temp_downsized_folder_path / str(Path(i_path).stem + '_downsized' + Path(i_path).suffix)
         if input_kinds[idx] == InputKind.tiff_image_stack_dir:
             # downsized_pathes.append(downsized_stack_folder_path)
             input_paths[idx] = downsized_input_path

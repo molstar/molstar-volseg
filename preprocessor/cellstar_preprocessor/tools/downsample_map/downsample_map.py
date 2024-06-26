@@ -3,6 +3,7 @@
 
 import math
 from pathlib import Path
+import shutil
 from dask_image.ndfilters import convolve as dask_convolve
 import numpy as np
 import mrcfile
@@ -25,11 +26,20 @@ def downsample_map(in_map: Path, out_map: Path, factor: int, kernel: np.ndarray)
             current_level_data = downsampled_data
             
     # write 
-    with mrcfile.mmap(
-        str(out_map.resolve()), "w+"
-    ) as mrc_original:
-        mrc_original.set_data(current_level_data)
-
+    
+    if out_map.exists():
+        if out_map.is_file():
+            out_map.unlink()
+        else:
+            shutil.rmtree(out_map)
+        
+    # with mrcfile.mmap(
+    #     str(out_map.resolve()), "w+"
+    # ) as mrc_original:
+    #     mrc_original.set_data(current_level_data)
+    with mrcfile.new(str(out_map.resolve())) as mrc:
+        mrc.set_data(current_level_data)
+    
 # check if works  
     
     # return current_level_data
