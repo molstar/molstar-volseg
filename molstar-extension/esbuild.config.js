@@ -1,13 +1,14 @@
 import { argv } from 'node:process';
 import * as esbuild from 'esbuild';
-import {sassPlugin} from 'esbuild-sass-plugin'
+import { sassPlugin } from 'esbuild-sass-plugin'
 import copyStaticFiles from 'esbuild-copy-static-files';
+import { dtsPlugin } from 'esbuild-plugin-d.ts'
 
 const
   productionMode = ('development' !== (argv[2] || process.env.NODE_ENV)),
   target = 'chrome100,firefox100,safari15'.split(',');
 
-console.log(`${ productionMode ? 'production' : 'development' } build`);
+console.log(`${productionMode ? 'production' : 'development'} build`);
 
 const staticFilesPluginOptions = {
   src: './src',
@@ -22,7 +23,7 @@ const buildLib = await esbuild.context({
   outdir: './lib',
   platform: 'browser',
   tsconfig: 'tsconfig.json',
-  plugins: [copyStaticFiles(staticFilesPluginOptions)]
+  plugins: [copyStaticFiles(staticFilesPluginOptions), dtsPlugin()]
 })
 
 const buildCSS = await esbuild.context({
@@ -44,7 +45,7 @@ const buildCSS = await esbuild.context({
 // bundle TS
 const buildTS = await esbuild.context({
 
-  entryPoints: [ 'src/viewer/app.ts' ],
+  entryPoints: ['src/viewer/app.ts'],
   format: "esm",
   bundle: true,
   target,

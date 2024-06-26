@@ -1,6 +1,6 @@
 {
   "name": "molstar-volseg",
-  "version": "0.0.7",
+  "version": "0.0.9",
   "type": "module",
   "description": "MolStar extension for visualizing volumetric and segmentation data",
   "repository": {
@@ -20,7 +20,8 @@
     "build-site": "npm run bundle -- production && mkdir ./site && cp ./build/* ./site/.",
     "start": "npm run bundle -- development",
     "rebuild": "npm run clean && npm run build",
-    "version": "npm run rebuild && cpx .npmignore lib/"
+    "version": "npm run rebuild && cpx .npmignore lib/",
+    "build:types": "tsc -d --declarationDir dist/lib --declarationMap --emitDeclarationOnly"
   },
   "files": [
     "lib/",
@@ -48,6 +49,7 @@
     "cpx2": "^7.0.1",
     "esbuild": "0.21.4",
     "esbuild-copy-static-files": "^0.1.0",
+    "esbuild-plugin-d.ts": "^1.2.3",
     "esbuild-sass-plugin": "^3",
     "typescript": "^5.4.5"
   },
