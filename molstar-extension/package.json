@@ -18,7 +18,9 @@
     "bundle": "npm run init && node ./esbuild.config.js",
     "build": "npm run bundle -- production",
     "build-site": "npm run bundle -- production && mkdir ./site && cp ./build/* ./site/.",
-    "start": "npm run bundle -- development"
+    "start": "npm run bundle -- development",
+    "rebuild": "npm run clean && npm run build",
+    "version": "npm run rebuild && cpx .npmignore lib/"
   },
   "files": [
     "lib/",

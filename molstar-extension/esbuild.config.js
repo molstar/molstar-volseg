@@ -9,10 +9,10 @@ const
 
 console.log(`${ productionMode ? 'production' : 'development' } build`);
 
-const staticFilesPluginOptions = {
-  src: './src',
-  dest: './lib',
-}
+// const staticFilesPluginOptions = {
+//   src: './src',
+//   dest: './lib',
+// }
 
 // const buildLib = await esbuild.context({
 //   entryPoints: ['src/**/*.ts'],
