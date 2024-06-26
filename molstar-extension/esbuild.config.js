@@ -9,21 +9,21 @@ const
 
 console.log(`${ productionMode ? 'production' : 'development' } build`);
 
-// const staticFilesPluginOptions = {
-//   src: './src',
-//   dest: './lib',
-// }
+const staticFilesPluginOptions = {
+  src: './src',
+  dest: './lib',
+}
 
-// const buildLib = await esbuild.context({
-//   entryPoints: ['src/**/*.ts'],
-//   bundle: false,
-//   minify: false,
-//   sourcemap: true,
-//   outdir: './lib',
-//   platform: 'browser',
-//   tsconfig: 'tsconfig.json',
-//   plugins: [copyStaticFiles(staticFilesPluginOptions)]
-// })
+const buildLib = await esbuild.context({
+  entryPoints: ['src/**/*.ts'],
+  bundle: false,
+  minify: false,
+  sourcemap: true,
+  outdir: './lib',
+  platform: 'browser',
+  tsconfig: 'tsconfig.json',
+  plugins: [copyStaticFiles(staticFilesPluginOptions)]
+})
 
 const buildCSS = await esbuild.context({
   entryPoints: ['src/viewer/main.css'],
@@ -73,8 +73,8 @@ if (productionMode) {
   await buildTS.rebuild();
   buildTS.dispose();
 
-  // await buildLib.rebuild();
-  // buildLib.dispose();
+  await buildLib.rebuild();
+  buildLib.dispose();
 }
 else {
 
