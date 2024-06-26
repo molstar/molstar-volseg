@@ -10,9 +10,14 @@ const
 
 console.log(`${productionMode ? 'production' : 'development'} build`);
 
-const staticFilesPluginOptions = {
+const staticLib = {
   src: './src',
   dest: './lib',
+}
+
+const staticLibCJS = {
+  src: './src',
+  dest: './lib/commonjs',
 }
 
 const buildLib = await esbuild.context({
@@ -23,7 +28,18 @@ const buildLib = await esbuild.context({
   outdir: './lib',
   platform: 'browser',
   tsconfig: 'tsconfig.json',
-  plugins: [copyStaticFiles(staticFilesPluginOptions), dtsPlugin()]
+  plugins: [copyStaticFiles(staticLib), dtsPlugin()]
+})
+
+const buildLibCJS = await esbuild.context({
+  entryPoints: ['src/**/*.ts'],
+  bundle: false,
+  minify: false,
+  sourcemap: true,
+  outdir: './lib/commonjs',
+  platform: 'node',
+  tsconfig: 'tsconfig.commonjs.json',
+  plugins: [copyStaticFiles(staticLibCJS), dtsPlugin()]
 })
 
 const buildCSS = await esbuild.context({
@@ -76,6 +92,9 @@ if (productionMode) {
 
   await buildLib.rebuild();
   buildLib.dispose();
+
+  await buildLibCJS.rebuild();
+  buildLibCJS.dispose();
 }
 else {
 
