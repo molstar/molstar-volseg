@@ -149,7 +149,7 @@ class PreprocessorMode(str, Enum):
 
 
 class InputT(BaseModel):
-    input_path: Path
+    input_path: Path | list[Path]
     input_kind: InputKind
 
 
@@ -893,48 +893,48 @@ class Preprocessor:
         #     )
 
         # masks
-        if mask_segmentation_inputs:
-            mask_segmentation_input_paths = [
-                i.input_path for i in mask_segmentation_inputs
-            ]
-            self.store_internal_segmentation(
-                internal_segmentation=InternalSegmentation(
-                    intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                    segmentation_input_path=mask_segmentation_input_paths,
-                    params_for_storing=self.preprocessor_input.storing_params,
-                    downsampling_parameters=self.preprocessor_input.downsampling,
-                    entry_data=self.preprocessor_input.entry_data,
-                )
-            )
-            tasks.append(
-                MaskProcessSegmentationTask(
-                    internal_segmentation=self.get_internal_segmentation()
-                )
-            )
-            tasks.append(
-                MaskMetadataCollectionTask(
-                    internal_segmentation=self.get_internal_segmentation()
-                )
-            )
+        # if mask_segmentation_inputs:
+        #     mask_segmentation_input_paths = [
+        #         i.input_path for i in mask_segmentation_inputs
+        #     ]
+        #     self.store_internal_segmentation(
+        #         internal_segmentation=InternalSegmentation(
+        #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
+        #             segmentation_input_path=mask_segmentation_input_paths,
+        #             params_for_storing=self.preprocessor_input.storing_params,
+        #             downsampling_parameters=self.preprocessor_input.downsampling,
+        #             entry_data=self.preprocessor_input.entry_data,
+        #         )
+        #     )
+        #     tasks.append(
+        #         MaskProcessSegmentationTask(
+        #             internal_segmentation=self.get_internal_segmentation()
+        #         )
+        #     )
+        #     tasks.append(
+        #         MaskMetadataCollectionTask(
+        #             internal_segmentation=self.get_internal_segmentation()
+        #         )
+        #     )
 
-            tasks.append(
-                MaskAnnotationCreationTask(
-                    internal_segmentation=self.get_internal_segmentation()
-                )
-            )
+        #     tasks.append(
+        #         MaskAnnotationCreationTask(
+        #             internal_segmentation=self.get_internal_segmentation()
+        #         )
+        #     )
 
-        if any(isinstance(i, GeometricSegmentationInput) for i in inputs):
-            # tasks.append(SaveGeometricSegmentationSets(self.intermediate_zarr_structure))
-            tasks.append(
-                GeometricSegmentationAnnotationsCollectionTask(
-                    self.get_internal_segmentation()
-                )
-            )
-            tasks.append(
-                GeometricSegmentationMetadataCollectionTask(
-                    self.get_internal_segmentation()
-                )
-            )
+        # if any(isinstance(i, GeometricSegmentationInput) for i in inputs):
+        #     # tasks.append(SaveGeometricSegmentationSets(self.intermediate_zarr_structure))
+        #     tasks.append(
+        #         GeometricSegmentationAnnotationsCollectionTask(
+        #             self.get_internal_segmentation()
+        #         )
+        #     )
+        #     tasks.append(
+        #         GeometricSegmentationMetadataCollectionTask(
+        #             self.get_internal_segmentation()
+        #         )
+        #     )
 
         # tasks.append(SaveMetadataTask(self.intermediate_zarr_structure))
         # tasks.append(SaveAnnotationsTask(self.intermediate_zarr_structure))
@@ -952,50 +952,72 @@ class Preprocessor:
 
     def _analyse_preprocessor_input(self) -> list[InputT]:
         raw_inputs_list = self.preprocessor_input.inputs.files
-        analyzed_inputs: list[InputT] = []
+        # analyzed_inputs: list[InputT] = []
 
         self.__check_if_inputs_exists(raw_inputs_list)
         
-        for i in raw_inputs_list:
+        pre_analyzed_inputs_list: list[InputT] = []
+        
+        extra_data = list(filter(lambda i: i[1] == InputKind.extra_data, raw_inputs_list))
+        assert len(extra_data) <= 1, 'There must be no more than one extra data input'
+        if (len(extra_data) == 1):
+            pre_analyzed_inputs_list.append(extra_data[0])
+            
+        if any(i[1] == InputKind.mask for i in raw_inputs_list):
+            all_mask_input_pathes = [i[0] for i in raw_inputs_list if i[1] == InputKind.mask]
+            joint_mask_input = MaskInput(input_path=all_mask_input_pathes, input_kind=InputKind.mask)
+            pre_analyzed_inputs_list.append(joint_mask_input)
+            
+        if any(isinstance(i, GeometricSegmentationInput) for i in raw_inputs_list):
+            all_gs_pathes = [i[0] for i in raw_inputs_list if i[1] == InputKind.geometric_segmentation]
+            joint_geometric_segmentation_input = GeometricSegmentationInput(all_gs_pathes, InputKind.geometric_segmentation)
+            pre_analyzed_inputs_list.append(joint_geometric_segmentation_input)
+        
+        # TODO: three maps etc.?
+        
+        # for now copy all other inputs
+
+    
+        for i in pre_analyzed_inputs_list:
             k = i[1]
-            if k == InputKind.extra_data:
-                analyzed_inputs.append(ExtraDataInput(input_path=i[0], input_kind=k))
-            elif k == InputKind.map:
-                analyzed_inputs.append(MAPInput(input_path=i[0], input_kind=k))
+            # if k == InputKind.extra_data:
+            #     analyzed_inputs.append(ExtraDataInput(input_path=i[0], input_kind=k))
+            if k == InputKind.map:
+                pre_analyzed_inputs_list.append(MAPInput(input_path=i[0], input_kind=k))
             elif k == InputKind.sff:
-                analyzed_inputs.append(SFFInput(input_path=i[0], input_kind=k))
-            elif k == InputKind.mask:
-                # TODO: here check all inputs and append a single mask input
+                pre_analyzed_inputs_list.append(SFFInput(input_path=i[0], input_kind=k))
+            # elif k == InputKind.mask:
+            #     # TODO: here check all inputs and append a single mask input
                 
-                analyzed_inputs.append(MaskInput(input_path=i[0], input_kind=k))
+            #     analyzed_inputs.append(MaskInput(input_path=i[0], input_kind=k))
             elif k == InputKind.omezarr:
-                analyzed_inputs.append(OMEZARRInput(input_path=i[0], input_kind=k))
-            elif k == InputKind.geometric_segmentation:
-                # TODO:here check all inputs and append a single geometric segmentation input
-                analyzed_inputs.append(
-                    GeometricSegmentationInput(input_path=i[0], input_kind=k)
-                )
+                pre_analyzed_inputs_list.append(OMEZARRInput(input_path=i[0], input_kind=k))
+            # elif k == InputKind.geometric_segmentation:
+            #     # TODO:here check all inputs and append a single geometric segmentation input
+            #     analyzed_inputs.append(
+            #         GeometricSegmentationInput(input_path=i[0], input_kind=k)
+            #     )
             elif k == InputKind.custom_annotations:
-                analyzed_inputs.append(CustomAnnotationsInput(input_path=i[0], input_kind=k))
+                pre_analyzed_inputs_list.append(CustomAnnotationsInput(input_path=i[0], input_kind=k))
             elif k == InputKind.application_specific_segmentation:
                 sff_path = convert_app_specific_segm_to_sff(i[0])
-                analyzed_inputs.append(SFFInput(input_path=sff_path, input_kind=InputKind.sff))
+                pre_analyzed_inputs_list.append(SFFInput(input_path=sff_path, input_kind=InputKind.sff))
                 # TODO: remove app specific segm file?
-            elif k == InputKind.nii_volume:
-                analyzed_inputs.append(NIIVolumeInput(input_path=i[0], input_kind=k))
-            elif k == InputKind.nii_segmentation:
-                analyzed_inputs.append(NIISegmentationInput(input_path=i[0], input_kind=k))
+            # elif k == InputKind.nii_volume:
+            #     analyzed_inputs.append(NIIVolumeInput(input_path=i[0], input_kind=k))
+            # elif k == InputKind.nii_segmentation:
+            #     analyzed_inputs.append(NIISegmentationInput(input_path=i[0], input_kind=k))
             elif k == InputKind.ometiff_image:
-                analyzed_inputs.append(OMETIFFImageInput(input_path=i[0], input_kind=k))
+                pre_analyzed_inputs_list.append(OMETIFFImageInput(input_path=i[0], input_kind=k))
             elif k == InputKind.ometiff_segmentation:
-                analyzed_inputs.append(
+                pre_analyzed_inputs_list.append(
                     OMETIFFSegmentationInput(input_path=i[0], input_kind=k)
                 )
             else:
                 raise Exception('Input kind is not recognized')
 
-
-        return analyzed_inputs
+        print(f'pre_analyzed_inputs_list: {pre_analyzed_inputs_list}')
+        return pre_analyzed_inputs_list
 
     async def entry_exists(self):
         new_db_path = Path(self.preprocessor_input.db_path)
