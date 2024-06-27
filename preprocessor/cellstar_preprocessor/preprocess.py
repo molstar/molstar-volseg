@@ -223,7 +223,7 @@ class QuantizeInternalVolumeTask(TaskBase):
     def execute(self) -> None:
         quantize_internal_volume(internal_volume=self.internal_volume)
 
-SINGLE_FILE_VOLUME_INPUT_TYPES = [
+VOLUME_INPUT_TYPES = [
     MAPInput,
     OMETIFFImageInput,
     OMEZARRInput
@@ -231,10 +231,15 @@ SINGLE_FILE_VOLUME_INPUT_TYPES = [
 
 SEGMENTATION_INPUT_TYPES = [
     SFFInput,
-    MaskInput,
-    GeometricSegmentationInput,
+    # MaskInput,
+    # GeometricSegmentationInput,
     OMETIFFSegmentationInput,
     OMEZARRInput
+]
+
+MULTIPLE_FILE_SEGMENTATION_INPUT_TYPES = [
+    MaskInput,
+    GeometricSegmentationInput
 ]
 
 class SFFAnnotationCollectionTask(TaskBase):
@@ -591,13 +596,14 @@ class Preprocessor:
     def _process_inputs(self, inputs: list[InputT]) -> list[TaskBase]:
         tasks = []
         
+        # inputs = Pre/
         # if any(isinstance(i, MaskInput) for i in inputs):
         #     masks_inputs = list(filter(lambda m: isinstance(m, MaskInput), inputs))
         #     print(f'Mask inputs: {masks_inputs}')
             
         # if any(isinstance(i, GeometricSegmentationInput) for i in inputs):
         #     pass
-            
+        
         for i in inputs:
             if isinstance(i, ExtraDataInput):
                 tasks.append(
@@ -608,7 +614,7 @@ class Preprocessor:
                 )
             
             # rather use all without masks
-            if isinstance(i, SINGLE_FILE_VOLUME_INPUT_TYPES):
+            if isinstance(i, VOLUME_INPUT_TYPES):
                 self.store_internal_volume(
                     internal_volume=InternalVolume(
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
@@ -633,6 +639,11 @@ class Preprocessor:
                 
                 tasks.append(ProcessVolumeAnnotationsTask(volume))
 
+            
+            # pre-analyze inputs list in analyze inputs
+            # remove all masks instances
+            # insert a single one with input path as list
+            # then do this below
             if isinstance(i, SEGMENTATION_INPUT_TYPES):
                 if i.input_kind == InputKind.omezarr and not check_if_omezarr_has_labels(
                     internal_volume=self.get_internal_volume()
@@ -954,10 +965,13 @@ class Preprocessor:
             elif k == InputKind.sff:
                 analyzed_inputs.append(SFFInput(input_path=i[0], input_kind=k))
             elif k == InputKind.mask:
+                # TODO: here check all inputs and append a single mask input
+                
                 analyzed_inputs.append(MaskInput(input_path=i[0], input_kind=k))
             elif k == InputKind.omezarr:
                 analyzed_inputs.append(OMEZARRInput(input_path=i[0], input_kind=k))
             elif k == InputKind.geometric_segmentation:
+                # TODO:here check all inputs and append a single geometric segmentation input
                 analyzed_inputs.append(
                     GeometricSegmentationInput(input_path=i[0], input_kind=k)
                 )
