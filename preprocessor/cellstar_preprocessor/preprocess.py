@@ -972,27 +972,18 @@ class Preprocessor:
                 analyzed.append(MAPInput(input_path=i[0], input_kind=k))
             elif k == InputKind.sff:
                 analyzed.append(SFFInput(input_path=i[0], input_kind=k))
-            # elif k == InputKind.mask:
-            #     # TODO: here check all inputs and append a single mask input
-                
-            #     analyzed_inputs.append(MaskInput(input_path=i[0], input_kind=k))
             elif k == InputKind.omezarr:
                 analyzed.append(OMEZARRInput(input_path=i[0], input_kind=k))
-            # elif k == InputKind.geometric_segmentation:
-            #     # TODO:here check all inputs and append a single geometric segmentation input
-            #     analyzed_inputs.append(
-            #         GeometricSegmentationInput(input_path=i[0], input_kind=k)
-            #     )
+            elif k == InputKind.geometric_segmentation:
+                analyzed.append(
+                    GeometricSegmentationInput(input_path=i[0], input_kind=k)
+                )
             elif k == InputKind.custom_annotations:
                 analyzed.append(CustomAnnotationsInput(input_path=i[0], input_kind=k))
             elif k == InputKind.application_specific_segmentation:
                 sff_path = convert_app_specific_segm_to_sff(i[0])
                 analyzed.append(SFFInput(input_path=sff_path, input_kind=InputKind.sff))
                 # TODO: remove app specific segm file?
-            # elif k == InputKind.nii_volume:
-            #     analyzed_inputs.append(NIIVolumeInput(input_path=i[0], input_kind=k))
-            # elif k == InputKind.nii_segmentation:
-            #     analyzed_inputs.append(NIISegmentationInput(input_path=i[0], input_kind=k))
             elif k == InputKind.ometiff_image:
                 analyzed.append(OMETIFFImageInput(input_path=i[0], input_kind=k))
             elif k == InputKind.ometiff_segmentation:
