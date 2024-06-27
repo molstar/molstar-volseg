@@ -1,4 +1,5 @@
 from cellstar_preprocessor.flows.segmentation.geometric_segmentation_preprocessing import geometric_segmentation_preprocessing
+from cellstar_preprocessor.flows.segmentation.helper_methods import check_if_omezarr_has_labels
 from cellstar_preprocessor.flows.segmentation.mask_segmentation_preprocessing import mask_segmentation_preprocessing
 from cellstar_preprocessor.flows.segmentation.ome_zarr_labels_preprocessing import ome_zarr_labels_preprocessing
 from cellstar_preprocessor.flows.segmentation.segmentation_downsampling import lattice_segmentation_downsampling
@@ -22,5 +23,5 @@ def process_segmentation(s: InternalSegmentation):
     elif kind == InputKind.ometiff_segmentation:
         ometiff_segmentation_processing(s)
     elif kind == InputKind.omezarr:
-        # TODO: remove if no labels
-        ome_zarr_labels_preprocessing(s)
+        if check_if_omezarr_has_labels(s):
+            ome_zarr_labels_preprocessing(s)

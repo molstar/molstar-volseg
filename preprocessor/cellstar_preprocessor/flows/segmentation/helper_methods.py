@@ -30,8 +30,8 @@ from vedo import Mesh
 temp_zarr_structure_path = None
 
 
-def check_if_omezarr_has_labels(internal_volume: InternalVolume):
-    ome_zarr_root = zarr.open_group(internal_volume.volume_input_path)
+def check_if_omezarr_has_labels(i: InternalVolume | InternalSegmentation):
+    ome_zarr_root = zarr.open_group(i.volume_input_path)
     if "labels" in ome_zarr_root:
         return True
     else:

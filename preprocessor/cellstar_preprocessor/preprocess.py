@@ -640,12 +640,6 @@ class Preprocessor:
             # insert a single one with input path as list
             # then do this below
             if isinstance(i, SEGMENTATION_INPUT_TYPES):
-                if i.input_kind == InputKind.omezarr and not check_if_omezarr_has_labels(
-                    internal_volume=self.get_internal_volume()
-                ):
-                    # skip if no labels in omezarr
-                    continue
-                
                 self.store_internal_segmentation(
                     internal_segmentation=InternalSegmentation(
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
