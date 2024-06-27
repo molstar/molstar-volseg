@@ -223,7 +223,7 @@ class QuantizeInternalVolumeTask(TaskBase):
     def execute(self) -> None:
         quantize_internal_volume(internal_volume=self.internal_volume)
 
-VOLUME_INPUT_TYPES = [
+SINGLE_FILE_VOLUME_INPUT_TYPES = [
     MAPInput,
     OMETIFFImageInput,
     OMEZARRInput
@@ -581,12 +581,34 @@ class Preprocessor:
     def get_internal_segmentation(self):
         return self.internal_segmentation
 
+
+    # should be more complex than for loop
+    # 1. check if there is mask
+    # if yes - find all masks input
+    # 2. check if there are geometric segmentations
+    # if yes - find all geometric segmentation
+    # 0. find extra data if any, and if yes, processs that first
     def _process_inputs(self, inputs: list[InputT]) -> list[TaskBase]:
         tasks = []
-        nii_segmentation_inputs: list[NIISegmentationInput] = []
-        mask_segmentation_inputs: list[MaskInput] = []
+        
+        # if any(isinstance(i, MaskInput) for i in inputs):
+        #     masks_inputs = list(filter(lambda m: isinstance(m, MaskInput), inputs))
+        #     print(f'Mask inputs: {masks_inputs}')
+            
+        # if any(isinstance(i, GeometricSegmentationInput) for i in inputs):
+        #     pass
+            
         for i in inputs:
-            if isinstance(i, VOLUME_INPUT_TYPES):
+            if isinstance(i, ExtraDataInput):
+                tasks.append(
+                    ProcessExtraDataTask(
+                        path=i.input_path,
+                        intermediate_zarr_structure_path=self.intermediate_zarr_structure,
+                    )
+                )
+            
+            # rather use all without masks
+            if isinstance(i, SINGLE_FILE_VOLUME_INPUT_TYPES):
                 self.store_internal_volume(
                     internal_volume=InternalVolume(
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
@@ -621,7 +643,7 @@ class Preprocessor:
                 self.store_internal_segmentation(
                     internal_segmentation=InternalSegmentation(
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        segmentation_input_path=mask_segmentation_input_paths,
+                        segmentation_input_path=i.input_path,
                         params_for_storing=self.preprocessor_input.storing_params,
                         downsampling_parameters=self.preprocessor_input.downsampling,
                         entry_data=self.preprocessor_input.entry_data,
@@ -639,198 +661,193 @@ class Preprocessor:
                 tasks.append(ProcessSegmentationAnnotationsTask)(
                     segmentation
                 )
-            if isinstance(i, ExtraDataInput):
-                tasks.append(
-                    ProcessExtraDataTask(
-                        path=i.input_path,
-                        intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                    )
-                )
-            elif isinstance(i, MAPInput):
-                self.store_internal_volume(
-                    internal_volume=InternalVolume(
-                        intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        volume_input_path=i.input_path,
-                        params_for_storing=self.preprocessor_input.storing_params,
-                        volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
-                        quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
-                        downsampling_parameters=self.preprocessor_input.downsampling,
-                        entry_data=self.preprocessor_input.entry_data,
-                        quantize_downsampling_levels=self.preprocessor_input.volume.quantize_downsampling_levels,
-                    )
-                )
-                tasks.append(
-                    MAPProcessVolumeTask(internal_volume=self.get_internal_volume())
-                )
-                tasks.append(
-                    MAPMetadataCollectionTask(
-                        internal_volume=self.get_internal_volume()
-                    )
-                )
-            elif isinstance(i, SFFInput):
-                self.store_internal_segmentation(
-                    internal_segmentation=InternalSegmentation(
-                        intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        segmentation_input_path=i.input_path,
-                        params_for_storing=self.preprocessor_input.storing_params,
-                        downsampling_parameters=self.preprocessor_input.downsampling,
-                        entry_data=self.preprocessor_input.entry_data,
-                    )
-                )
-                tasks.append(
-                    SFFProcessSegmentationTask(
-                        internal_segmentation=self.get_internal_segmentation()
-                    )
-                )
-                tasks.append(
-                    SFFMetadataCollectionTask(
-                        internal_segmentation=self.get_internal_segmentation()
-                    )
-                )
-                tasks.append(
-                    SFFAnnotationCollectionTask(
-                        internal_segmentation=self.get_internal_segmentation()
-                    )
-                )
+                
+                
+            # elif isinstance(i, MAPInput):
+            #     self.store_internal_volume(
+            #         internal_volume=InternalVolume(
+            #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
+            #             volume_input_path=i.input_path,
+            #             params_for_storing=self.preprocessor_input.storing_params,
+            #             volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
+            #             quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
+            #             downsampling_parameters=self.preprocessor_input.downsampling,
+            #             entry_data=self.preprocessor_input.entry_data,
+            #             quantize_downsampling_levels=self.preprocessor_input.volume.quantize_downsampling_levels,
+            #         )
+            #     )
+            #     tasks.append(
+            #         MAPProcessVolumeTask(internal_volume=self.get_internal_volume())
+            #     )
+            #     tasks.append(
+            #         MAPMetadataCollectionTask(
+            #             internal_volume=self.get_internal_volume()
+            #         )
+            #     )
+            # elif isinstance(i, SFFInput):
+            #     self.store_internal_segmentation(
+            #         internal_segmentation=InternalSegmentation(
+            #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
+            #             segmentation_input_path=i.input_path,
+            #             params_for_storing=self.preprocessor_input.storing_params,
+            #             downsampling_parameters=self.preprocessor_input.downsampling,
+            #             entry_data=self.preprocessor_input.entry_data,
+            #         )
+            #     )
+            #     tasks.append(
+            #         SFFProcessSegmentationTask(
+            #             internal_segmentation=self.get_internal_segmentation()
+            #         )
+            #     )
+            #     tasks.append(
+            #         SFFMetadataCollectionTask(
+            #             internal_segmentation=self.get_internal_segmentation()
+            #         )
+            #     )
+            #     tasks.append(
+            #         SFFAnnotationCollectionTask(
+            #             internal_segmentation=self.get_internal_segmentation()
+            #         )
+            #     )
 
-            elif isinstance(i, MaskInput):
-                mask_segmentation_inputs.append(i)
+            # elif isinstance(i, MaskInput):
+            #     mask_segmentation_inputs.append(i)
 
-            elif isinstance(i, OMEZARRInput):
-                self.store_internal_volume(
-                    internal_volume=InternalVolume(
-                        intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        volume_input_path=i.input_path,
-                        params_for_storing=self.preprocessor_input.storing_params,
-                        volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
-                        quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
-                        downsampling_parameters=self.preprocessor_input.downsampling,
-                        entry_data=self.preprocessor_input.entry_data,
-                        quantize_downsampling_levels=self.preprocessor_input.volume.quantize_downsampling_levels,
-                    )
-                )
-                tasks.append(OMEZARRImageProcessTask(self.get_internal_volume()))
-                if check_if_omezarr_has_labels(
-                    internal_volume=self.get_internal_volume()
-                ):
-                    self.store_internal_segmentation(
-                        internal_segmentation=InternalSegmentation(
-                            intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                            segmentation_input_path=i.input_path,
-                            params_for_storing=self.preprocessor_input.storing_params,
-                            downsampling_parameters=self.preprocessor_input.downsampling,
-                            entry_data=self.preprocessor_input.entry_data,
-                        )
-                    )
-                    tasks.append(
-                        OMEZARRLabelsProcessTask(self.get_internal_segmentation())
-                    )
+            # elif isinstance(i, OMEZARRInput):
+            #     self.store_internal_volume(
+            #         internal_volume=InternalVolume(
+            #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
+            #             volume_input_path=i.input_path,
+            #             params_for_storing=self.preprocessor_input.storing_params,
+            #             volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
+            #             quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
+            #             downsampling_parameters=self.preprocessor_input.downsampling,
+            #             entry_data=self.preprocessor_input.entry_data,
+            #             quantize_downsampling_levels=self.preprocessor_input.volume.quantize_downsampling_levels,
+            #         )
+            #     )
+            #     tasks.append(OMEZARRImageProcessTask(self.get_internal_volume()))
+            #     if check_if_omezarr_has_labels(
+            #         internal_volume=self.get_internal_volume()
+            #     ):
+            #         self.store_internal_segmentation(
+            #             internal_segmentation=InternalSegmentation(
+            #                 intermediate_zarr_structure_path=self.intermediate_zarr_structure,
+            #                 segmentation_input_path=i.input_path,
+            #                 params_for_storing=self.preprocessor_input.storing_params,
+            #                 downsampling_parameters=self.preprocessor_input.downsampling,
+            #                 entry_data=self.preprocessor_input.entry_data,
+            #             )
+            #         )
+            #         tasks.append(
+            #             OMEZARRLabelsProcessTask(self.get_internal_segmentation())
+            #         )
 
-                tasks.append(
-                    OMEZARRMetadataCollectionTask(
-                        internal_volume=self.get_internal_volume()
-                    )
-                )
-                tasks.append(
-                    OMEZARRAnnotationsCollectionTask(self.get_internal_volume())
-                )
+            #     tasks.append(
+            #         OMEZARRMetadataCollectionTask(
+            #             internal_volume=self.get_internal_volume()
+            #         )
+            #     )
+            #     tasks.append(
+            #         OMEZARRAnnotationsCollectionTask(self.get_internal_volume())
+            #     )
 
-            elif isinstance(i, GeometricSegmentationInput):
-                self.store_internal_segmentation(
-                    internal_segmentation=InternalSegmentation(
-                        intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        segmentation_input_path=i.input_path,
-                        params_for_storing=self.preprocessor_input.storing_params,
-                        downsampling_parameters=self.preprocessor_input.downsampling,
-                        entry_data=self.preprocessor_input.entry_data,
-                    )
-                )
-                tasks.append(
-                    ProcessGeometricSegmentationTask(self.get_internal_segmentation())
-                )
-            elif isinstance(i, OMETIFFImageInput):
-                self.store_internal_volume(
-                    internal_volume=InternalVolume(
-                        intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        volume_input_path=i.input_path,
-                        params_for_storing=self.preprocessor_input.storing_params,
-                        volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
-                        quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
-                        downsampling_parameters=self.preprocessor_input.downsampling,
-                        entry_data=self.preprocessor_input.entry_data,
-                        quantize_downsampling_levels=self.preprocessor_input.volume.quantize_downsampling_levels,
-                    )
-                )
-                tasks.append(
-                    OMETIFFImageProcessingTask(
-                        internal_volume=self.get_internal_volume()
-                    )
-                )
-                tasks.append(
-                    OMETIFFImageMetadataExtractionTask(
-                        internal_volume=self.get_internal_volume()
-                    )
-                )
-                # TODO: remove - after processing segmentation
-                tasks.append(
-                    OMETIFFImageAnnotationsExtractionTask(
-                        internal_volume=self.get_internal_volume()
-                    )
-                )
-            elif isinstance(i, OMETIFFSegmentationInput):
-                self.store_internal_segmentation(
-                    internal_segmentation=InternalSegmentation(
-                        intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        segmentation_input_path=i.input_path,
-                        params_for_storing=self.preprocessor_input.storing_params,
-                        downsampling_parameters=self.preprocessor_input.downsampling,
-                        entry_data=self.preprocessor_input.entry_data,
-                    )
-                )
-                tasks.append(
-                    OMETIFFSegmentationProcessingTask(self.get_internal_segmentation())
-                )
-                tasks.append(
-                    OMETIFFSegmentationMetadataExtractionTask(
-                        internal_segmentation=self.get_internal_segmentation()
-                    )
-                )
-                tasks.append(
-                    OMETIFFSegmentationAnnotationsExtractionTask(
-                        internal_segmentation=self.get_internal_segmentation()
-                    )
-                )
-            elif isinstance(i, NIIVolumeInput):
-                self.store_internal_volume(
-                    internal_volume=InternalVolume(
-                        intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        volume_input_path=i.input_path,
-                        params_for_storing=self.preprocessor_input.storing_params,
-                        volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
-                        quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
-                        downsampling_parameters=self.preprocessor_input.downsampling,
-                        entry_data=self.preprocessor_input.entry_data,
-                        quantize_downsampling_levels=self.preprocessor_input.volume.quantize_downsampling_levels,
-                    )
-                )
-                tasks.append(
-                    NIIProcessVolumeTask(internal_volume=self.get_internal_volume())
-                )
-                tasks.append(
-                    NIIMetadataCollectionTask(
-                        internal_volume=self.get_internal_volume()
-                    )
-                )
+            # elif isinstance(i, GeometricSegmentationInput):
+            #     self.store_internal_segmentation(
+            #         internal_segmentation=InternalSegmentation(
+            #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
+            #             segmentation_input_path=i.input_path,
+            #             params_for_storing=self.preprocessor_input.storing_params,
+            #             downsampling_parameters=self.preprocessor_input.downsampling,
+            #             entry_data=self.preprocessor_input.entry_data,
+            #         )
+            #     )
+            #     tasks.append(
+            #         ProcessGeometricSegmentationTask(self.get_internal_segmentation())
+            #     )
+            # elif isinstance(i, OMETIFFImageInput):
+            #     self.store_internal_volume(
+            #         internal_volume=InternalVolume(
+            #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
+            #             volume_input_path=i.input_path,
+            #             params_for_storing=self.preprocessor_input.storing_params,
+            #             volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
+            #             quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
+            #             downsampling_parameters=self.preprocessor_input.downsampling,
+            #             entry_data=self.preprocessor_input.entry_data,
+            #             quantize_downsampling_levels=self.preprocessor_input.volume.quantize_downsampling_levels,
+            #         )
+            #     )
+            #     tasks.append(
+            #         OMETIFFImageProcessingTask(
+            #             internal_volume=self.get_internal_volume()
+            #         )
+            #     )
+            #     tasks.append(
+            #         OMETIFFImageMetadataExtractionTask(
+            #             internal_volume=self.get_internal_volume()
+            #         )
+            #     )
+            #     # TODO: remove - after processing segmentation
+            #     tasks.append(
+            #         OMETIFFImageAnnotationsExtractionTask(
+            #             internal_volume=self.get_internal_volume()
+            #         )
+            #     )
+            # elif isinstance(i, OMETIFFSegmentationInput):
+            #     self.store_internal_segmentation(
+            #         internal_segmentation=InternalSegmentation(
+            #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
+            #             segmentation_input_path=i.input_path,
+            #             params_for_storing=self.preprocessor_input.storing_params,
+            #             downsampling_parameters=self.preprocessor_input.downsampling,
+            #             entry_data=self.preprocessor_input.entry_data,
+            #         )
+            #     )
+            #     tasks.append(
+            #         OMETIFFSegmentationProcessingTask(self.get_internal_segmentation())
+            #     )
+            #     tasks.append(
+            #         OMETIFFSegmentationMetadataExtractionTask(
+            #             internal_segmentation=self.get_internal_segmentation()
+            #         )
+            #     )
+            #     tasks.append(
+            #         OMETIFFSegmentationAnnotationsExtractionTask(
+            #             internal_segmentation=self.get_internal_segmentation()
+            #         )
+            #     )
+            # elif isinstance(i, NIIVolumeInput):
+            #     self.store_internal_volume(
+            #         internal_volume=InternalVolume(
+            #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
+            #             volume_input_path=i.input_path,
+            #             params_for_storing=self.preprocessor_input.storing_params,
+            #             volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
+            #             quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
+            #             downsampling_parameters=self.preprocessor_input.downsampling,
+            #             entry_data=self.preprocessor_input.entry_data,
+            #             quantize_downsampling_levels=self.preprocessor_input.volume.quantize_downsampling_levels,
+            #         )
+            #     )
+            #     tasks.append(
+            #         NIIProcessVolumeTask(internal_volume=self.get_internal_volume())
+            #     )
+            #     tasks.append(
+            #         NIIMetadataCollectionTask(
+            #             internal_volume=self.get_internal_volume()
+            #         )
+            #     )
 
-            elif isinstance(i, NIISegmentationInput):
-                nii_segmentation_inputs.append(i)
-            elif isinstance(i, CustomAnnotationsInput):
-                tasks.append(
-                    CustomAnnotationsCollectionTask(
-                        input_path=i.input_path,
-                        intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                    )
-                )
+            # elif isinstance(i, NIISegmentationInput):
+            #     nii_segmentation_inputs.append(i)
+            # elif isinstance(i, CustomAnnotationsInput):
+            #     tasks.append(
+            #         CustomAnnotationsCollectionTask(
+            #             input_path=i.input_path,
+            #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
+            #         )
+            #     )
 
         if (
             self.get_internal_volume()
@@ -840,30 +857,31 @@ class Preprocessor:
                 QuantizeInternalVolumeTask(internal_volume=self.get_internal_volume())
             )
 
-        if nii_segmentation_inputs:
-            nii_segmentation_input_paths = [
-                i.input_path for i in nii_segmentation_inputs
-            ]
-            self.store_internal_segmentation(
-                internal_segmentation=InternalSegmentation(
-                    intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                    segmentation_input_path=nii_segmentation_input_paths,
-                    params_for_storing=self.preprocessor_input.storing_params,
-                    downsampling_parameters=self.preprocessor_input.downsampling,
-                    entry_data=self.preprocessor_input.entry_data,
-                )
-            )
-            tasks.append(
-                NIIProcessSegmentationTask(
-                    internal_segmentation=self.get_internal_segmentation()
-                )
-            )
-            tasks.append(
-                NIISegmentationMetadataCollectionTask(
-                    internal_segmentation=self.get_internal_segmentation()
-                )
-            )
+        # if nii_segmentation_inputs:
+        #     nii_segmentation_input_paths = [
+        #         i.input_path for i in nii_segmentation_inputs
+        #     ]
+        #     self.store_internal_segmentation(
+        #         internal_segmentation=InternalSegmentation(
+        #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
+        #             segmentation_input_path=nii_segmentation_input_paths,
+        #             params_for_storing=self.preprocessor_input.storing_params,
+        #             downsampling_parameters=self.preprocessor_input.downsampling,
+        #             entry_data=self.preprocessor_input.entry_data,
+        #         )
+        #     )
+        #     tasks.append(
+        #         NIIProcessSegmentationTask(
+        #             internal_segmentation=self.get_internal_segmentation()
+        #         )
+        #     )
+        #     tasks.append(
+        #         NIISegmentationMetadataCollectionTask(
+        #             internal_segmentation=self.get_internal_segmentation()
+        #         )
+        #     )
 
+        # masks
         if mask_segmentation_inputs:
             mask_segmentation_input_paths = [
                 i.input_path for i in mask_segmentation_inputs
