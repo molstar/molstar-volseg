@@ -1009,7 +1009,7 @@ class Preprocessor:
                     OMETIFFSegmentationInput(input_path=i[0], input_kind=k)
                 )
             else:
-                raise Exception('Input kind is not recognized')
+                raise Exception(f'Input kind is not recognized. Input item: {i}')
 
         print(f'pre_analyzed_inputs_list: {pre_analyzed_inputs_list}')
         return pre_analyzed_inputs_list
