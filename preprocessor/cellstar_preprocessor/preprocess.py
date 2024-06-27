@@ -978,7 +978,7 @@ class Preprocessor:
         # for now copy all other inputs
 
     
-        for i in pre_analyzed_inputs_list:
+        for i in raw_inputs_list:
             k = i[1]
             # if k == InputKind.extra_data:
             #     analyzed_inputs.append(ExtraDataInput(input_path=i[0], input_kind=k))
