@@ -223,24 +223,19 @@ class QuantizeInternalVolumeTask(TaskBase):
     def execute(self) -> None:
         quantize_internal_volume(internal_volume=self.internal_volume)
 
-VOLUME_INPUT_TYPES = [
+VOLUME_INPUT_TYPES = (
     MAPInput,
     OMETIFFImageInput,
     OMEZARRInput
-]
+)
 
-SEGMENTATION_INPUT_TYPES = [
+SEGMENTATION_INPUT_TYPES = (
     SFFInput,
-    # MaskInput,
-    # GeometricSegmentationInput,
+    MaskInput,
+    GeometricSegmentationInput,
     OMETIFFSegmentationInput,
     OMEZARRInput
-]
-
-MULTIPLE_FILE_SEGMENTATION_INPUT_TYPES = [
-    MaskInput,
-    GeometricSegmentationInput
-]
+)
 
 class SFFAnnotationCollectionTask(TaskBase):
     def __init__(self, internal_segmentation: InternalSegmentation):
