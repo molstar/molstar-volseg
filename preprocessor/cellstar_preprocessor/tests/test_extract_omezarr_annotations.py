@@ -11,8 +11,8 @@ from cellstar_preprocessor.flows.common import (
 from cellstar_preprocessor.flows.segmentation.ome_zarr_labels_preprocessing import (
     ome_zarr_labels_preprocessing,
 )
-from cellstar_preprocessor.flows.volume.extract_omezarr_annotations import (
-    extract_omezarr_annotations,
+from cellstar_preprocessor.flows.volume.extract_omezarr_volume_annotations import (
+    extract_omezarr_volume_annotations,
 )
 from cellstar_preprocessor.tests.helper_methods import (
     get_internal_volume_from_input,
@@ -42,7 +42,7 @@ def test_extract_omezarr_annotations(omezar_test_input: TestInput):
         )
 
         ome_zarr_labels_preprocessing(internal_segmentation=internal_segmentation)
-        d: AnnotationsMetadata = extract_omezarr_annotations(
+        d: AnnotationsMetadata = extract_omezarr_volume_annotations(
             internal_volume=internal_volume
         )
 

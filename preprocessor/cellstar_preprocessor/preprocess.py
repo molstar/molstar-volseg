@@ -100,8 +100,8 @@ from cellstar_preprocessor.flows.volume.extract_ome_tiff_image_annotations impor
 from cellstar_preprocessor.flows.volume.extract_ometiff_image_metadata import (
     extract_ometiff_image_metadata,
 )
-from cellstar_preprocessor.flows.volume.extract_omezarr_annotations import (
-    extract_omezarr_annotations,
+from cellstar_preprocessor.flows.volume.extract_omezarr_volume_annotations import (
+    extract_omezarr_volume_annotations,
 )
 from cellstar_preprocessor.flows.volume.extract_omezarr_metadata import (
     extract_ome_zarr_metadata,
@@ -281,7 +281,7 @@ class OMEZARRAnnotationsCollectionTask(TaskBase):
         self.internal_volume = internal_volume
 
     def execute(self) -> None:
-        annotations_dict = extract_omezarr_annotations(
+        annotations_dict = extract_omezarr_volume_annotations(
             internal_volume=self.internal_volume
         )
 
