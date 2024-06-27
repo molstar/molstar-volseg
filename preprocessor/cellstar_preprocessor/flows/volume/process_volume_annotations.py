@@ -1,5 +1,5 @@
 
-from cellstar_preprocessor.flows.volume.extract_ome_tiff_image_annotations import extract_ome_tiff_image_annotations
+from cellstar_preprocessor.flows.volume.ometiff_volume_annotations_preprocessing import extract_ome_tiff_image_annotations
 from cellstar_preprocessor.flows.volume.extract_omezarr_volume_annotations import extract_omezarr_volume_annotations
 from cellstar_preprocessor.model.input import InputKind
 from cellstar_preprocessor.model.volume import InternalVolume
