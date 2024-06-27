@@ -19,7 +19,7 @@ def pre_downsample_data(input_paths: list[str], input_kinds: list[InputKind], pr
             temp_downsized_folder_path.mkdir(parents=True)
         
         downsized_input_path = temp_downsized_folder_path / str(Path(i_path).stem + '_downsized' + Path(i_path).suffix)
-        if input_kinds[idx] == InputKind.tiff_image_stack_dir:
+        if input_kinds[idx] in [InputKind.tiff_image_stack_dir, InputKind.tiff_segmentation_stack_dir]:
             # downsized_pathes.append(downsized_stack_folder_path)
             input_paths[idx] = downsized_input_path
             
@@ -35,6 +35,8 @@ def pre_downsample_data(input_paths: list[str], input_kinds: list[InputKind], pr
                 p.starmap(downsize_tiff, args)
     
             p.join()
+            
+        
         elif input_kinds[idx] == InputKind.map:
             kernel = generate_kernel_3d_arr(list(DOWNSAMPLING_KERNEL))
             downsample_map(Path(i_path), downsized_input_path, pre_downsample_data_factor, kernel)
