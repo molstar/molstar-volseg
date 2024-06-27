@@ -154,18 +154,23 @@ def _unzip_multiseries_ometiff_zip(zip_path: Path, kind: InputKind):
 def _get_file(input_file_info: RawInputFileInfo, final_path: Path) -> Path:
     resource = input_file_info["resource"]
     uri = resource["uri"]
-    if resource["kind"] == "external":
-        print(f'Downloading {uri}')
-        complete_path = _download(
-            input_file_info["resource"]["uri"], final_path, input_file_info["kind"]
-        )
-        return complete_path
-    elif resource["kind"] == "local":
-        print(f'Copying {uri}')
-        complete_path = _copy_file(resource["uri"], final_path, input_file_info["kind"])
-        # shutil.copy2(resource['uri'], final_path)
-        return complete_path
-
+    kind = resource["kind"]
+    try:
+        if kind == "external":
+            print(f'Downloading {uri}')
+            complete_path = _download(
+                input_file_info["resource"]["uri"], final_path, input_file_info["kind"]
+            )
+            return complete_path
+        elif kind == "local":
+            print(f'Copying {uri}')
+            complete_path = _copy_file(resource["uri"], final_path, input_file_info["kind"])
+            # shutil.copy2(resource['uri'], final_path)
+            return complete_path
+        else:
+            raise Exception(f"Resource kind {kind} is not recognized")
+    except Exception as e:
+        print(f'Exception {e}')
 
 class InputItemParams(TypedDict):
     # entry_folder_path: Path
