@@ -90,8 +90,8 @@ from cellstar_preprocessor.flows.segmentation.segmentation_downsampling import (
     lattice_segmentation_downsampling,
 )
 from cellstar_preprocessor.flows.segmentation.sff_preprocessing import sff_preprocessing
-from cellstar_preprocessor.flows.volume.extract_metadata_from_map import (
-    extract_metadata_from_map,
+from cellstar_preprocessor.flows.volume.map_metadata_processing import (
+    map_metadata_processing,
 )
 from cellstar_preprocessor.flows.volume.extract_nii_metadata import extract_nii_metadata
 from cellstar_preprocessor.flows.volume.extract_ome_tiff_image_annotations import (
@@ -273,7 +273,7 @@ class MAPMetadataCollectionTask(TaskBase):
 
     def execute(self) -> None:
         volume = self.internal_volume
-        metadata_dict = extract_metadata_from_map(internal_volume=volume)
+        metadata_dict = map_metadata_processing(internal_volume=volume)
 
 
 class OMEZARRAnnotationsCollectionTask(TaskBase):

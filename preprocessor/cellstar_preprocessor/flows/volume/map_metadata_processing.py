@@ -146,7 +146,7 @@ def _get_volume_sampling_info(
                 }
 
 
-def extract_metadata_from_map(internal_volume: InternalVolume):
+def map_metadata_processing(internal_volume: InternalVolume):
     root = open_zarr_structure_from_path(
         internal_volume.intermediate_zarr_structure_path
     )
