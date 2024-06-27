@@ -17,7 +17,7 @@ from cellstar_preprocessor.model.volume import InternalVolume
 
 
 def ome_zarr_image_preprocessing(internal_volume: InternalVolume):
-    ome_zarr_root = zarr.open_group(internal_volume.volume_input_path)
+    ome_zarr_root = zarr.open_group(internal_volume.input_path)
 
     our_zarr_structure = open_zarr_structure_from_path(
         internal_volume.intermediate_zarr_structure_path

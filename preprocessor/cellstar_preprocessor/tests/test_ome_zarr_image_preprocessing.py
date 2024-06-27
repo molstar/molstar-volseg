@@ -24,7 +24,7 @@ def test_ome_zarr_image_preprocessing(omezar_test_input: TestInput):
 
         ome_zarr_image_preprocessing(internal_volume=internal_volume)
 
-        ome_zarr_root = zarr.open_group(internal_volume.volume_input_path)
+        ome_zarr_root = zarr.open_group(internal_volume.input_path)
         root_zattrs = ome_zarr_root.attrs
         multiscales = root_zattrs["multiscales"]
         axes = multiscales[0]["axes"]

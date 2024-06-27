@@ -28,7 +28,7 @@ def test_ome_zarr_labels_preprocessing(omezar_test_input: TestInput):
             internal_segmentation.intermediate_zarr_structure_path
         )
 
-        ome_zarr_root = zarr.open_group(internal_segmentation.segmentation_input_path)
+        ome_zarr_root = zarr.open_group(internal_segmentation.input_path)
 
         assert LATTICE_SEGMENTATION_DATA_GROUPNAME in zarr_structure
         segmentation_gr = zarr_structure[LATTICE_SEGMENTATION_DATA_GROUPNAME]

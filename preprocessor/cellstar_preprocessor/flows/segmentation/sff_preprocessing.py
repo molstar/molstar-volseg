@@ -28,7 +28,7 @@ def sff_preprocessing(internal_segmentation: InternalSegmentation):
     )
 
     internal_segmentation.raw_sff_annotations = extract_raw_annotations_from_sff(
-        segm_file_path=internal_segmentation.segmentation_input_path
+        segm_file_path=internal_segmentation.input_path
     )
 
     # PLAN:

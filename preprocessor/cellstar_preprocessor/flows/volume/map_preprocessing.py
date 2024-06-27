@@ -23,7 +23,7 @@ def map_preprocessing(internal_volume: InternalVolume):
     )
 
     with mrcfile.mmap(
-        str(internal_volume.volume_input_path.resolve()), "r+"
+        str(internal_volume.input_path.resolve()), "r+"
     ) as mrc_original:
         data: np.memmap = mrc_original.data
         if internal_volume.volume_force_dtype is not None:
@@ -41,7 +41,7 @@ def map_preprocessing(internal_volume: InternalVolume):
 
         header = mrc_original.header
 
-    print(f"Processing volume file {internal_volume.volume_input_path}")
+    print(f"Processing volume file {internal_volume.input_path}")
     dask_arr = da.from_array(data)
     dask_arr = normalize_axis_order_mrcfile(dask_arr=dask_arr, mrc_header=header)
 

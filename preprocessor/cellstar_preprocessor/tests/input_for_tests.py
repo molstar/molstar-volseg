@@ -82,7 +82,7 @@ MAP_INPUTS_FOR_AXES_TESTING = []
 
 INTERNAL_VOLUME_FOR_TESTING_XYZ_ORDER = InternalVolume(
     intermediate_zarr_structure_path=WORKING_FOLDER_FOR_TESTS,
-    volume_input_path=TEST_MAP_PATH_XYZ_ORDER,
+    input_path=TEST_MAP_PATH_XYZ_ORDER,
     params_for_storing=StoringParams(),
     volume_force_dtype="f2",
     downsampling_parameters=DownsamplingParams(),
@@ -98,7 +98,7 @@ INTERNAL_VOLUME_FOR_TESTING_XYZ_ORDER = InternalVolume(
 
 INTERNAL_VOLUME_FOR_TESTING_ZYX_ORDER = InternalVolume(
     intermediate_zarr_structure_path=WORKING_FOLDER_FOR_TESTS,
-    volume_input_path=TEST_MAP_PATH_ZYX_ORDER,
+    input_path=TEST_MAP_PATH_ZYX_ORDER,
     params_for_storing=StoringParams(),
     volume_force_dtype="f2",
     downsampling_parameters=DownsamplingParams(),
@@ -115,7 +115,7 @@ INTERNAL_VOLUME_FOR_TESTING_ZYX_ORDER = InternalVolume(
 
 INTERNAL_SEGMENTATION_FOR_TESTING = InternalSegmentation(
     intermediate_zarr_structure_path=WORKING_FOLDER_FOR_TESTS,
-    segmentation_input_path=TEST_SFF_PATH,
+    input_path=TEST_SFF_PATH,
     params_for_storing=StoringParams(),
     downsampling_parameters=DownsamplingParams(),
     entry_data=EntryData(
@@ -128,7 +128,7 @@ INTERNAL_SEGMENTATION_FOR_TESTING = InternalSegmentation(
 
 INTERNAL_MESH_SEGMENTATION_FOR_TESTING = InternalSegmentation(
     intermediate_zarr_structure_path=WORKING_FOLDER_FOR_TESTS,
-    segmentation_input_path=TEST_MESH_SFF_PATH,
+    input_path=TEST_MESH_SFF_PATH,
     params_for_storing=StoringParams(),
     downsampling_parameters=DownsamplingParams(),
     entry_data=EntryData(

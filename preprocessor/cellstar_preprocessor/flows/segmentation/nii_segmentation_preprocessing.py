@@ -20,7 +20,7 @@ def nii_segmentation_preprocessing(internal_segmentation: InternalSegmentation):
 
     # index = 'lattice_id'
     for index, segm_input_path in enumerate(
-        internal_segmentation.segmentation_input_path
+        internal_segmentation.input_path
     ):
         img = nib.load(str(segm_input_path.resolve()))
         data = img.get_fdata()

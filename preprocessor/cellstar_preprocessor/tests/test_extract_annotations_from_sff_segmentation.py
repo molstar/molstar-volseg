@@ -31,7 +31,7 @@ def test_extract_annotations_from_sff_segmentation(test_input: TestInput):
         )
 
         r = extract_raw_annotations_from_sff(
-            internal_segmentation.segmentation_input_path
+            internal_segmentation.input_path
         )
 
         assert d["details"] == r["details"]

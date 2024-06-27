@@ -24,7 +24,7 @@ def test_volume_downsampling():
     p = initialize_intermediate_zarr_structure_for_tests(unique_folder_name)
     internal_volume = InternalVolume(
         intermediate_zarr_structure_path=p,
-        volume_input_path=TEST_MAP_PATH,
+        input_path=TEST_MAP_PATH,
         params_for_storing=StoringParams(),
         volume_force_dtype="f2",
         downsampling_parameters=DownsamplingParams(),

@@ -121,7 +121,7 @@ def geometric_segmentation_preprocessing(internal_segmentation: InternalSegmenta
         internal_segmentation.intermediate_zarr_structure_path
     )
 
-    input_paths = internal_segmentation.segmentation_input_path
+    input_paths = internal_segmentation.input_path
 
     for input_path in input_paths:
         if input_path.suffix == ".json":

@@ -37,7 +37,7 @@ def remove_intermediate_zarr_structure_for_tests(p: Path):
 def get_internal_XYZ_volume(intermediate_zarr_structure_for_tests: Path):
     return InternalVolume(
         intermediate_zarr_structure_path=intermediate_zarr_structure_for_tests,
-        volume_input_path=TEST_MAP_PATH_XYZ_ORDER,
+        input_path=TEST_MAP_PATH_XYZ_ORDER,
         params_for_storing=StoringParams(),
         volume_force_dtype="f2",
         downsampling_parameters=DownsamplingParams(),
@@ -55,7 +55,7 @@ def get_internal_XYZ_volume(intermediate_zarr_structure_for_tests: Path):
 def get_internal_ZYX_volume(intermediate_zarr_structure_for_tests: Path):
     return InternalVolume(
         intermediate_zarr_structure_path=intermediate_zarr_structure_for_tests,
-        volume_input_path=TEST_MAP_PATH_ZYX_ORDER,
+        input_path=TEST_MAP_PATH_ZYX_ORDER,
         params_for_storing=StoringParams(),
         volume_force_dtype="f2",
         downsampling_parameters=DownsamplingParams(),
@@ -89,7 +89,7 @@ def get_sff_internal_segmentation(
     # p = _download_sff_for_tests(test_input['url'])
     internal_segmentation = InternalSegmentation(
         intermediate_zarr_structure_path=intermediate_zarr_structure,
-        segmentation_input_path=segmentation_path,
+        input_path=segmentation_path,
         params_for_storing=StoringParams(),
         downsampling_parameters=DownsamplingParams(),
         entry_data=EntryData(
@@ -108,7 +108,7 @@ def get_internal_volume_from_input(
     # p = download_omezarr_for_tests(omezar_test_input['url'])
     internal_volume = InternalVolume(
         intermediate_zarr_structure_path=intermediate_zarr_structure,
-        volume_input_path=volume_path,
+        input_path=volume_path,
         params_for_storing=StoringParams(),
         volume_force_dtype=None,
         downsampling_parameters=DownsamplingParams(),
@@ -132,7 +132,7 @@ def get_omezarr_internal_segmentation(
     # p = download_omezarr_for_tests(omezar_test_input['url'])
     internal_segmentation = InternalSegmentation(
         intermediate_zarr_structure_path=intermediate_zarr_structure,
-        segmentation_input_path=segmentation_path,
+        input_path=segmentation_path,
         params_for_storing=StoringParams(),
         downsampling_parameters=DownsamplingParams(),
         entry_data=EntryData(

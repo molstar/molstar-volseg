@@ -613,7 +613,7 @@ class Preprocessor:
                 self.store_internal_volume(
                     internal_volume=InternalVolume(
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        volume_input_path=i.input_path,
+                        input_path=i.input_path,
                         params_for_storing=self.preprocessor_input.storing_params,
                         volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
                         quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
@@ -643,7 +643,7 @@ class Preprocessor:
                 self.store_internal_segmentation(
                     internal_segmentation=InternalSegmentation(
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        segmentation_input_path=i.input_path,
+                        input_path=i.input_path,
                         params_for_storing=self.preprocessor_input.storing_params,
                         downsampling_parameters=self.preprocessor_input.downsampling,
                         entry_data=self.preprocessor_input.entry_data,

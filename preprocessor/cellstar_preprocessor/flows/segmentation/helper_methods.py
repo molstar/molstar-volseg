@@ -31,7 +31,7 @@ temp_zarr_structure_path = None
 
 
 def check_if_omezarr_has_labels(i: InternalVolume | InternalSegmentation):
-    ome_zarr_root = zarr.open_group(i.volume_input_path)
+    ome_zarr_root = zarr.open_group(i.input_path)
     if "labels" in ome_zarr_root:
         return True
     else:
@@ -61,7 +61,7 @@ def hdf5_to_zarr(internal_segmentation: InternalSegmentation):
     """
     global temp_zarr_structure_path
     temp_zarr_structure_path = internal_segmentation.intermediate_zarr_structure_path
-    file_path = internal_segmentation.segmentation_input_path
+    file_path = internal_segmentation.input_path
     try:
         # assert temp_zarr_structure_path.exists() == False, \
         #     f'temp_zarr_structure_path: {temp_zarr_structure_path} already exists'

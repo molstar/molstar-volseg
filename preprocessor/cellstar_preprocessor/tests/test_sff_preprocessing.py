@@ -35,7 +35,7 @@ def test_sff_preprocessing(test_input: TestInput):
             test_input, ctx.test_file_path, ctx.intermediate_zarr_structure_path
         )
         sff_segm_obj = open_hdf5_as_segmentation_object(
-            internal_segmentation.segmentation_input_path
+            internal_segmentation.input_path
         )
 
         sff_preprocessing(internal_segmentation=internal_segmentation)

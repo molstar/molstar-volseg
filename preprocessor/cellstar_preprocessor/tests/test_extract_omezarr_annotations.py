@@ -46,7 +46,7 @@ def test_extract_omezarr_annotations(omezar_test_input: TestInput):
             internal_volume=internal_volume
         )
 
-        ome_zarr_root = open_zarr_structure_from_path(internal_volume.volume_input_path)
+        ome_zarr_root = open_zarr_structure_from_path(internal_volume.input_path)
         ome_zarr_attrs = ome_zarr_root.attrs
 
         # root = open_zarr_structure_from_path(

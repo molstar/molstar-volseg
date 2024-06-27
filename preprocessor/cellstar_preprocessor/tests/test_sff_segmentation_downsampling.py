@@ -110,7 +110,7 @@ def test_sff_segmentation_downsampling(test_input: TestInput):
         # initialize_intermediate_zarr_structure_for_tests()
 
         sff_segm_obj = open_hdf5_as_segmentation_object(
-            internal_segmentation.segmentation_input_path
+            internal_segmentation.input_path
         )
 
         sff_preprocessing(internal_segmentation=internal_segmentation)

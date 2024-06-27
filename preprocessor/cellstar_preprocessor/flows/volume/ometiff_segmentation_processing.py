@@ -36,7 +36,7 @@ def ometiff_segmentation_processing(internal_segmentation: InternalSegmentation)
     set_ometiff_source_metadata(internal_segmentation, metadata)
 
     print(
-        f"Processing segmentation file {internal_segmentation.segmentation_input_path}"
+        f"Processing segmentation file {internal_segmentation.input_path}"
     )
 
     segmentation_data_gr: zarr.Group = zarr_structure.create_group(

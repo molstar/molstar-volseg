@@ -13,7 +13,7 @@ from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
 def ome_zarr_labels_preprocessing(internal_segmentation: InternalSegmentation):
-    ome_zarr_root = zarr.open_group(internal_segmentation.segmentation_input_path)
+    ome_zarr_root = zarr.open_group(internal_segmentation.input_path)
 
     our_zarr_structure = open_zarr_structure_from_path(
         internal_segmentation.intermediate_zarr_structure_path

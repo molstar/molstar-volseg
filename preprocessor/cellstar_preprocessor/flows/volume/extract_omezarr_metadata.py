@@ -313,7 +313,7 @@ def extract_ome_zarr_metadata(internal_volume: InternalVolume):
     root = open_zarr_structure_from_path(
         internal_volume.intermediate_zarr_structure_path
     )
-    ome_zarr_root = open_zarr_structure_from_path(internal_volume.volume_input_path)
+    ome_zarr_root = open_zarr_structure_from_path(internal_volume.input_path)
 
     new_volume_attrs_dict = _add_defaults_to_ome_zarr_attrs(ome_zarr_root=ome_zarr_root)
     ome_zarr_root.attrs.put(new_volume_attrs_dict)

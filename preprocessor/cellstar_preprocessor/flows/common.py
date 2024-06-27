@@ -432,9 +432,9 @@ def _get_ome_tiff_voxel_sizes_in_downsamplings(
 
 def read_ometiff_to_dask(int_vol_or_seg: InternalVolume | InternalSegmentation):
     if isinstance(int_vol_or_seg, InternalVolume):
-        fpath = int_vol_or_seg.volume_input_path
+        fpath = int_vol_or_seg.input_path
     else:
-        fpath = int_vol_or_seg.segmentation_input_path
+        fpath = int_vol_or_seg.input_path
     reader = OMETIFFReader(fpath=fpath)
     img_array_np, metadata, xml_metadata = reader.read()
     img_array = da.from_array(img_array_np)
