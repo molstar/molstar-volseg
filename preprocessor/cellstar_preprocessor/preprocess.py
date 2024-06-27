@@ -664,9 +664,9 @@ class Preprocessor:
                 tasks.append(ProcessSegmentationMetadataTask(
                     segmentation
                 ))
-                tasks.append(ProcessSegmentationAnnotationsTask)(
+                tasks.append(ProcessSegmentationAnnotationsTask(
                     segmentation
-                )
+                ))
                 
                 
             # elif isinstance(i, MAPInput):
