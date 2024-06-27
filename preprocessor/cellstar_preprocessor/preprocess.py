@@ -974,6 +974,8 @@ class Preprocessor:
                 analyzed.append(SFFInput(input_path=i[0], input_kind=k))
             elif k == InputKind.omezarr:
                 analyzed.append(OMEZARRInput(input_path=i[0], input_kind=k))
+            elif k == InputKind.mask:
+                analyzed.append(MaskInput(input_path=i[0], input_kind=k))
             elif k == InputKind.geometric_segmentation:
                 analyzed.append(
                     GeometricSegmentationInput(input_path=i[0], input_kind=k)
