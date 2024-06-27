@@ -52,13 +52,13 @@ export async function actionShowSegments(segmentKeys: string[], model: VolsegEnt
     const allExistingGeometricSegmentationIds = model.metadata.value!.raw.grid.geometric_segmentation!.segmentation_ids;
     if (segmentKeys.length === 0) {
         for (const id of allExistingLatticeSegmentationIds) {
-            await showSegments([], id, 'lattice', model);
+            await showSegments({ segmentIds: [], segmentationId: id, kind: 'lattice' }, model);
         }
         for (const id of allExistingMeshSegmentationIds) {
-            await showSegments([], id, 'mesh', model);
+            await showSegments({ segmentIds: [], segmentationId: id, kind: 'mesh' }, model);
         }
         for (const id of allExistingGeometricSegmentationIds) {
-            await showSegments([], id, 'primitive', model);
+            await showSegments({ segmentIds: [], segmentationId: id, kind: 'primitive' }, model);
         }
     }
     const parsedSegmentKeys = segmentKeys.map(
@@ -93,7 +93,7 @@ export async function _actionShowSegments(parsedSegmentKeys: ParsedSegmentKey[],
     }
     const promises: Promise<void>[] = [];
     SegmentationIdsToSegmentIds.forEach((value, key) => {
-        promises.push(showSegments(value, key, kind, model));
+        promises.push(showSegments({ segmentIds: value, segmentationId: key, kind: kind }, model));
     });
     await Promise.all(promises);
 }
