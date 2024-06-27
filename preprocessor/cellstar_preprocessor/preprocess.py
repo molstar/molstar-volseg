@@ -7,7 +7,10 @@ from enum import Enum
 from pathlib import Path
 
 from cellstar_preprocessor.flows.segmentation.process_segmentation import process_segmentation
+from cellstar_preprocessor.flows.segmentation.process_segmentation_annotations import process_segmentation_annotations
+from cellstar_preprocessor.flows.segmentation.process_segmentation_metadata import process_segmentation_metadata
 from cellstar_preprocessor.flows.volume.process_volume import process_volume
+from cellstar_preprocessor.flows.volume.process_volume_annotations import process_volume_annotations
 from cellstar_preprocessor.flows.volume.process_volume_metadata import process_volume_metadata
 import typer
 import zarr
@@ -234,8 +237,6 @@ SEGMENTATION_INPUT_TYPES = [
     OMEZARRInput
 ]
 
-OMEZARR_INPUT_TYPES = []
-
 class SFFAnnotationCollectionTask(TaskBase):
     def __init__(self, internal_segmentation: InternalSegmentation):
         self.internal_segmentation = internal_segmentation
@@ -351,34 +352,49 @@ class NIISegmentationMetadataCollectionTask(TaskBase):
             internal_segmentation=self.internal_segmentation
         )
 
-class ProcessInternalVolumeTask(TaskBase):
+class ProcessVolumeTask(TaskBase):
     def __init__(self, internal_volume: InternalVolume):
         self.internal_volume = internal_volume
 
     def execute(self) -> None:
         process_volume(self.internal_volume)
 
-class ProcessInternalVolumeMetadataTask(TaskBase):
+class ProcessVolumeMetadataTask(TaskBase):
     def __init__(self, internal_volume: InternalVolume):
         self.internal_volume = internal_volume
     
     def execute(self) -> None:
         process_volume_metadata(self.internal_volume)
 
-class ProcessInternalSegmentationTask(TaskBase):
+class ProcessVolumeAnnotationsTask(TaskBase):
+    def __init__(self, internal_volume: InternalVolume):
+        self.internal_volume = internal_volume
+    
+    def execute(self) -> None:
+        process_volume_annotations(self.internal_volume)
+
+
+
+class ProcessSegmentationTask(TaskBase):
     def __init__(self, internal_segmentation: InternalSegmentation):
         self.internal_segmentation = internal_segmentation
 
     def execute(self) -> None:
         process_segmentation(self.internal_segmentation)
 
-class ProcessInternalSegmentationMetadataTask(TaskBase):
+class ProcessSegmentationMetadataTask(TaskBase):
     def __init__(self, internal_segmentation: InternalSegmentation):
         self.internal_segmentation = internal_segmentation
 
     def execute(self) -> None:
-        processs_segmentation_metadata(self.internal_segmentation)
+        process_segmentation_metadata(self.internal_segmentation)
 
+class ProcessSegmentationAnnotationsTask(TaskBase):
+    def __init__(self, internal_segmentation: InternalSegmentation):
+        self.internal_segmentation = internal_segmentation
+
+    def execute(self) -> None:
+        process_segmentation_annotations(self.internal_segmentation)
 
 class MAPProcessVolumeTask(TaskBase):
     def __init__(self, internal_volume: InternalVolume):
@@ -585,13 +601,15 @@ class Preprocessor:
                     )
                 )
                 volume = self.get_internal_volume()
-                tasks.append(ProcessInternalVolumeTask(
+                tasks.append(ProcessVolumeTask(
                     volume
                 ))
                 
-                tasks.append(ProcessInternalVolumeMetadataTask(
+                tasks.append(ProcessVolumeMetadataTask(
                     volume
                 ))
+                
+                tasks.append(ProcessVolumeAnnotationsTask(volume))
 
             if isinstance(i, SEGMENTATION_INPUT_TYPES):
                 if i.input_kind == InputKind.omezarr and not check_if_omezarr_has_labels(
@@ -612,12 +630,15 @@ class Preprocessor:
                 )
                 
                 segmentation = self.get_internal_segmentation()
-                tasks.append(ProcessInternalSegmentationTask(
+                tasks.append(ProcessSegmentationTask(
                     segmentation
                 ))
-                tasks.append(ProcessInternalSegmentationMetadataTask(
+                tasks.append(ProcessSegmentationMetadataTask(
                     segmentation
                 ))
+                tasks.append(ProcessSegmentationAnnotationsTask)(
+                    segmentation
+                )
             if isinstance(i, ExtraDataInput):
                 tasks.append(
                     ProcessExtraDataTask(
