@@ -1,5 +1,6 @@
 from uuid import uuid4
 
+from cellstar_preprocessor.model.segmentation import InternalSegmentation
 import zarr
 import zarr.storage
 from cellstar_db.models import (
@@ -47,10 +48,10 @@ def _get_label_time(label_value: int, our_label_gr: zarr.Group):
 
 
 # NOTE: Lattice IDs = Label groups
-def extract_omezarr_segmentation_annotations(internal_volume: InternalVolume):
-    ome_zarr_root = open_zarr_structure_from_path(internal_volume.volume_input_path)
+def extract_omezarr_segmentation_annotations(internal_segmentation: InternalSegmentation):
+    ome_zarr_root = open_zarr_structure_from_path(internal_segmentation.segmentation_input_path)
     root = open_zarr_structure_from_path(
-        internal_volume.intermediate_zarr_structure_path
+        internal_segmentation.intermediate_zarr_structure_path
     )
     d: AnnotationsMetadata = root.attrs["annotations_dict"]
 
