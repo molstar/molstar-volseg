@@ -93,8 +93,8 @@ from cellstar_preprocessor.flows.segmentation.sff_preprocessing import sff_prepr
 from cellstar_preprocessor.flows.volume.map_metadata_processing import (
     map_metadata_processing,
 )
-from cellstar_preprocessor.flows.volume.extract_nii_metadata import extract_nii_metadata
-from cellstar_preprocessor.flows.volume.extract_ome_tiff_image_annotations import (
+from cellstar_preprocessor.flows.volume.nii_metadata_preprocessing import extract_nii_metadata
+from cellstar_preprocessor.flows.volume.ometiff_volume_annotations_preprocessing import (
     extract_ome_tiff_image_annotations,
 )
 from cellstar_preprocessor.flows.volume.extract_ometiff_image_metadata import (
@@ -945,68 +945,65 @@ class Preprocessor:
 
         self.__check_if_inputs_exists(raw_inputs_list)
         
-        pre_analyzed_inputs_list: list[InputT] = []
+        analyzed: list[InputT] = []
         
         extra_data = list(filter(lambda i: i[1] == InputKind.extra_data, raw_inputs_list))
         assert len(extra_data) <= 1, 'There must be no more than one extra data input'
         if (len(extra_data) == 1):
-            pre_analyzed_inputs_list.append(extra_data[0])
+            analyzed.append(extra_data[0])
             
         if any(i[1] == InputKind.mask for i in raw_inputs_list):
             all_mask_input_pathes = [i[0] for i in raw_inputs_list if i[1] == InputKind.mask]
             joint_mask_input = MaskInput(input_path=all_mask_input_pathes, input_kind=InputKind.mask)
-            pre_analyzed_inputs_list.append(joint_mask_input)
+            analyzed.append(joint_mask_input)
             
         if any(isinstance(i, GeometricSegmentationInput) for i in raw_inputs_list):
             all_gs_pathes = [i[0] for i in raw_inputs_list if i[1] == InputKind.geometric_segmentation]
             joint_geometric_segmentation_input = GeometricSegmentationInput(all_gs_pathes, InputKind.geometric_segmentation)
-            pre_analyzed_inputs_list.append(joint_geometric_segmentation_input)
+            analyzed.append(joint_geometric_segmentation_input)
         
         # TODO: three maps etc.?
         
-        # for now copy all other inputs
-
-    
         for i in raw_inputs_list:
             k = i[1]
-            # if k == InputKind.extra_data:
-            #     analyzed_inputs.append(ExtraDataInput(input_path=i[0], input_kind=k))
+            if k == InputKind.extra_data:
+                analyzed.append(ExtraDataInput(input_path=i[0], input_kind=k))
             if k == InputKind.map:
-                pre_analyzed_inputs_list.append(MAPInput(input_path=i[0], input_kind=k))
+                analyzed.append(MAPInput(input_path=i[0], input_kind=k))
             elif k == InputKind.sff:
-                pre_analyzed_inputs_list.append(SFFInput(input_path=i[0], input_kind=k))
+                analyzed.append(SFFInput(input_path=i[0], input_kind=k))
             # elif k == InputKind.mask:
             #     # TODO: here check all inputs and append a single mask input
                 
             #     analyzed_inputs.append(MaskInput(input_path=i[0], input_kind=k))
             elif k == InputKind.omezarr:
-                pre_analyzed_inputs_list.append(OMEZARRInput(input_path=i[0], input_kind=k))
+                analyzed.append(OMEZARRInput(input_path=i[0], input_kind=k))
             # elif k == InputKind.geometric_segmentation:
             #     # TODO:here check all inputs and append a single geometric segmentation input
             #     analyzed_inputs.append(
             #         GeometricSegmentationInput(input_path=i[0], input_kind=k)
             #     )
             elif k == InputKind.custom_annotations:
-                pre_analyzed_inputs_list.append(CustomAnnotationsInput(input_path=i[0], input_kind=k))
+                analyzed.append(CustomAnnotationsInput(input_path=i[0], input_kind=k))
             elif k == InputKind.application_specific_segmentation:
                 sff_path = convert_app_specific_segm_to_sff(i[0])
-                pre_analyzed_inputs_list.append(SFFInput(input_path=sff_path, input_kind=InputKind.sff))
+                analyzed.append(SFFInput(input_path=sff_path, input_kind=InputKind.sff))
                 # TODO: remove app specific segm file?
             # elif k == InputKind.nii_volume:
             #     analyzed_inputs.append(NIIVolumeInput(input_path=i[0], input_kind=k))
             # elif k == InputKind.nii_segmentation:
             #     analyzed_inputs.append(NIISegmentationInput(input_path=i[0], input_kind=k))
             elif k == InputKind.ometiff_image:
-                pre_analyzed_inputs_list.append(OMETIFFImageInput(input_path=i[0], input_kind=k))
+                analyzed.append(OMETIFFImageInput(input_path=i[0], input_kind=k))
             elif k == InputKind.ometiff_segmentation:
-                pre_analyzed_inputs_list.append(
+                analyzed.append(
                     OMETIFFSegmentationInput(input_path=i[0], input_kind=k)
                 )
             else:
                 raise Exception(f'Input kind is not recognized. Input item: {i}')
 
-        print(f'pre_analyzed_inputs_list: {pre_analyzed_inputs_list}')
-        return pre_analyzed_inputs_list
+        print(f'pre_analyzed_inputs_list: {analyzed}')
+        return analyzed
 
     async def entry_exists(self):
         new_db_path = Path(self.preprocessor_input.db_path)
