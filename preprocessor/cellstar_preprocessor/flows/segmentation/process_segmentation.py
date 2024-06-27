@@ -15,7 +15,6 @@ def process_segmentation(s: InternalSegmentation):
         sff_preprocessing(s)
         lattice_segmentation_downsampling(s)
     elif kind == InputKind.mask:
-        ss = s.mask_segmentation_inputs
         mask_segmentation_preprocessing(s)
         lattice_segmentation_downsampling(s)
     elif kind == InputKind.geometric_segmentation:
