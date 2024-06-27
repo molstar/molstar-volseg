@@ -5,6 +5,7 @@ from cellstar_db.models import VolumeExtraData
 from cellstar_preprocessor.model.input import (
     DownsamplingParams,
     EntryData,
+    InputKind,
     QuantizationDtype,
 )
 
@@ -20,8 +21,8 @@ class InternalVolume:
         entry_data: EntryData,
         quantize_dtype_str: QuantizationDtype,
         quantize_downsampling_levels: tuple,
-        pixel_size: Optional[float] = None,
-        custom_data: Optional[VolumeExtraData] = None,
+        input_kind: InputKind,
+        custom_data: Optional[VolumeExtraData] = None
     ):
         self.intermediate_zarr_structure_path = intermediate_zarr_structure_path
         self.volume_input_path = volume_input_path
@@ -32,5 +33,5 @@ class InternalVolume:
         self.entry_data = entry_data
         self.map_header = None
         self.quantize_downsampling_levels = quantize_downsampling_levels
-        # self.pixel_size = pixel_size
         self.custom_data = custom_data
+        self.input_kind = input_kind

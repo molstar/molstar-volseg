@@ -35,7 +35,7 @@ from cellstar_preprocessor.tools.magic_kernel_downsampling_3d.magic_kernel_downs
 )
 
 
-def sff_segmentation_downsampling(internal_segmentation: InternalSegmentation):
+def lattice_segmentation_downsampling(internal_segmentation: InternalSegmentation):
     zarr_structure = open_zarr_structure_from_path(
         internal_segmentation.intermediate_zarr_structure_path
     )

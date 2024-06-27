@@ -6,6 +6,9 @@ from argparse import ArgumentError
 from enum import Enum
 from pathlib import Path
 
+from cellstar_preprocessor.flows.segmentation.process_segmentation import process_segmentation
+from cellstar_preprocessor.flows.volume.process_volume import process_volume
+from cellstar_preprocessor.flows.volume.process_volume_metadata import process_volume_metadata
 import typer
 import zarr
 from cellstar_db.file_system.annotations_context import AnnnotationsEditContext
@@ -81,7 +84,7 @@ from cellstar_preprocessor.flows.segmentation.ome_zarr_labels_preprocessing impo
     ome_zarr_labels_preprocessing,
 )
 from cellstar_preprocessor.flows.segmentation.segmentation_downsampling import (
-    sff_segmentation_downsampling,
+    lattice_segmentation_downsampling,
 )
 from cellstar_preprocessor.flows.segmentation.sff_preprocessing import sff_preprocessing
 from cellstar_preprocessor.flows.volume.extract_metadata_from_map import (
@@ -144,6 +147,7 @@ class PreprocessorMode(str, Enum):
 
 class InputT(BaseModel):
     input_path: Path
+    input_kind: InputKind
 
 
 class OMETIFFImageInput(InputT):
@@ -216,44 +220,21 @@ class QuantizeInternalVolumeTask(TaskBase):
     def execute(self) -> None:
         quantize_internal_volume(internal_volume=self.internal_volume)
 
+VOLUME_INPUT_TYPES = [
+    MAPInput,
+    OMETIFFImageInput,
+    OMEZARRInput
+]
 
-# class SaveAnnotationsTask(TaskBase):
-#     def __init__(self, intermediate_zarr_structure_path: Path):
-#         self.intermediate_zarr_structure_path = intermediate_zarr_structure_path
+SEGMENTATION_INPUT_TYPES = [
+    SFFInput,
+    MaskInput,
+    GeometricSegmentationInput,
+    OMETIFFSegmentationInput,
+    OMEZARRInput
+]
 
-#     def execute(self) -> None:
-#         root = open_zarr_structure_from_path(self.intermediate_zarr_structure_path)
-#         save_dict_to_json_file(
-#             root.attrs["annotations_dict"],
-#             ANNOTATION_METADATA_FILENAME,
-#             self.intermediate_zarr_structure_path,
-#         )
-
-
-# class SaveMetadataTask(TaskBase):
-#     def __init__(self, intermediate_zarr_structure_path: Path):
-#         self.intermediate_zarr_structure_path = intermediate_zarr_structure_path
-
-#     def execute(self) -> None:
-#         root = open_zarr_structure_from_path(self.intermediate_zarr_structure_path)
-#         save_dict_to_json_file(
-#             root.attrs["metadata_dict"],
-#             GRID_METADATA_FILENAME,
-#             self.intermediate_zarr_structure_path,
-#         )
-
-# class SaveGeometricSegmentationSets(TaskBase):
-#     def __init__(self, intermediate_zarr_structure_path: Path):
-#         self.intermediate_zarr_structure_path = intermediate_zarr_structure_path
-
-#     def execute(self) -> None:
-#         root = open_zarr_structure_from_path(self.intermediate_zarr_structure_path)
-#         save_dict_to_json_file(
-#             root.attrs[GEOMETRIC_SEGMENTATIONS_ZATTRS],
-#             GEOMETRIC_SEGMENTATION_FILENAME,
-#             self.intermediate_zarr_structure_path,
-#         )
-
+OMEZARR_INPUT_TYPES = []
 
 class SFFAnnotationCollectionTask(TaskBase):
     def __init__(self, internal_segmentation: InternalSegmentation):
@@ -370,6 +351,34 @@ class NIISegmentationMetadataCollectionTask(TaskBase):
             internal_segmentation=self.internal_segmentation
         )
 
+class ProcessInternalVolumeTask(TaskBase):
+    def __init__(self, internal_volume: InternalVolume):
+        self.internal_volume = internal_volume
+
+    def execute(self) -> None:
+        process_volume(self.internal_volume)
+
+class ProcessInternalVolumeMetadataTask(TaskBase):
+    def __init__(self, internal_volume: InternalVolume):
+        self.internal_volume = internal_volume
+    
+    def execute(self) -> None:
+        process_volume_metadata(self.internal_volume)
+
+class ProcessInternalSegmentationTask(TaskBase):
+    def __init__(self, internal_segmentation: InternalSegmentation):
+        self.internal_segmentation = internal_segmentation
+
+    def execute(self) -> None:
+        process_segmentation(self.internal_segmentation)
+
+class ProcessInternalSegmentationMetadataTask(TaskBase):
+    def __init__(self, internal_segmentation: InternalSegmentation):
+        self.internal_segmentation = internal_segmentation
+
+    def execute(self) -> None:
+        processs_segmentation_metadata(self.internal_segmentation)
+
 
 class MAPProcessVolumeTask(TaskBase):
     def __init__(self, internal_volume: InternalVolume):
@@ -412,7 +421,7 @@ class OMETIFFSegmentationProcessingTask(TaskBase):
     def execute(self) -> None:
         segmentation = self.internal_segmentation
         ometiff_segmentation_processing(internal_segmentation=segmentation)
-        sff_segmentation_downsampling(segmentation)
+        lattice_segmentation_downsampling(segmentation)
 
 
 class OMETIFFImageMetadataExtractionTask(TaskBase):
@@ -499,7 +508,7 @@ class SFFProcessSegmentationTask(TaskBase):
 
         sff_preprocessing(segmentation)
 
-        sff_segmentation_downsampling(segmentation)
+        lattice_segmentation_downsampling(segmentation)
 
 
 class MaskProcessSegmentationTask(TaskBase):
@@ -510,7 +519,7 @@ class MaskProcessSegmentationTask(TaskBase):
         segmentation = self.internal_segmentation
 
         mask_segmentation_preprocessing(internal_segmentation=segmentation)
-        sff_segmentation_downsampling(segmentation)
+        lattice_segmentation_downsampling(segmentation)
 
 
 class ProcessGeometricSegmentationTask(TaskBase):
@@ -561,6 +570,54 @@ class Preprocessor:
         nii_segmentation_inputs: list[NIISegmentationInput] = []
         mask_segmentation_inputs: list[MaskInput] = []
         for i in inputs:
+            if isinstance(i, VOLUME_INPUT_TYPES):
+                self.store_internal_volume(
+                    internal_volume=InternalVolume(
+                        intermediate_zarr_structure_path=self.intermediate_zarr_structure,
+                        volume_input_path=i.input_path,
+                        params_for_storing=self.preprocessor_input.storing_params,
+                        volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
+                        quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
+                        downsampling_parameters=self.preprocessor_input.downsampling,
+                        entry_data=self.preprocessor_input.entry_data,
+                        quantize_downsampling_levels=self.preprocessor_input.volume.quantize_downsampling_levels,
+                        input_kind=i.input_kind
+                    )
+                )
+                volume = self.get_internal_volume()
+                tasks.append(ProcessInternalVolumeTask(
+                    volume
+                ))
+                
+                tasks.append(ProcessInternalVolumeMetadataTask(
+                    volume
+                ))
+
+            if isinstance(i, SEGMENTATION_INPUT_TYPES):
+                if i.input_kind == InputKind.omezarr and not check_if_omezarr_has_labels(
+                    internal_volume=self.get_internal_volume()
+                ):
+                    # skip if no labels in omezarr
+                    continue
+                
+                self.store_internal_segmentation(
+                    internal_segmentation=InternalSegmentation(
+                        intermediate_zarr_structure_path=self.intermediate_zarr_structure,
+                        segmentation_input_path=mask_segmentation_input_paths,
+                        params_for_storing=self.preprocessor_input.storing_params,
+                        downsampling_parameters=self.preprocessor_input.downsampling,
+                        entry_data=self.preprocessor_input.entry_data,
+                        input_kind=i.input_kind
+                    )
+                )
+                
+                segmentation = self.get_internal_segmentation()
+                tasks.append(ProcessInternalSegmentationTask(
+                    segmentation
+                ))
+                tasks.append(ProcessInternalSegmentationMetadataTask(
+                    segmentation
+                ))
             if isinstance(i, ExtraDataInput):
                 tasks.append(
                     ProcessExtraDataTask(
@@ -849,36 +906,37 @@ class Preprocessor:
 
         self.__check_if_inputs_exists(raw_inputs_list)
         
-        for input_item in raw_inputs_list:
-            if input_item[1] == InputKind.extra_data:
-                analyzed_inputs.append(ExtraDataInput(input_path=input_item[0]))
-            elif input_item[1] == InputKind.map:
-                analyzed_inputs.append(MAPInput(input_path=input_item[0]))
-            elif input_item[1] == InputKind.sff:
-                analyzed_inputs.append(SFFInput(input_path=input_item[0]))
-            elif input_item[1] == InputKind.mask:
-                analyzed_inputs.append(MaskInput(input_path=input_item[0]))
-            elif input_item[1] == InputKind.omezarr:
-                analyzed_inputs.append(OMEZARRInput(input_path=input_item[0]))
-            elif input_item[1] == InputKind.geometric_segmentation:
+        for i in raw_inputs_list:
+            k = i[1]
+            if k == InputKind.extra_data:
+                analyzed_inputs.append(ExtraDataInput(input_path=i[0], input_kind=k))
+            elif k == InputKind.map:
+                analyzed_inputs.append(MAPInput(input_path=i[0], input_kind=k))
+            elif k == InputKind.sff:
+                analyzed_inputs.append(SFFInput(input_path=i[0], input_kind=k))
+            elif k == InputKind.mask:
+                analyzed_inputs.append(MaskInput(input_path=i[0], input_kind=k))
+            elif k == InputKind.omezarr:
+                analyzed_inputs.append(OMEZARRInput(input_path=i[0], input_kind=k))
+            elif k == InputKind.geometric_segmentation:
                 analyzed_inputs.append(
-                    GeometricSegmentationInput(input_path=input_item[0])
+                    GeometricSegmentationInput(input_path=i[0], input_kind=k)
                 )
-            elif input_item[1] == InputKind.custom_annotations:
-                analyzed_inputs.append(CustomAnnotationsInput(input_path=input_item[0]))
-            elif input_item[1] == InputKind.application_specific_segmentation:
-                sff_path = convert_app_specific_segm_to_sff(input_item[0])
-                analyzed_inputs.append(SFFInput(input_path=sff_path))
+            elif k == InputKind.custom_annotations:
+                analyzed_inputs.append(CustomAnnotationsInput(input_path=i[0], input_kind=k))
+            elif k == InputKind.application_specific_segmentation:
+                sff_path = convert_app_specific_segm_to_sff(i[0])
+                analyzed_inputs.append(SFFInput(input_path=sff_path, input_kind=InputKind.sff))
                 # TODO: remove app specific segm file?
-            elif input_item[1] == InputKind.nii_volume:
-                analyzed_inputs.append(NIIVolumeInput(input_path=input_item[0]))
-            elif input_item[1] == InputKind.nii_segmentation:
-                analyzed_inputs.append(NIISegmentationInput(input_path=input_item[0]))
-            elif input_item[1] == InputKind.ometiff_image:
-                analyzed_inputs.append(OMETIFFImageInput(input_path=input_item[0]))
-            elif input_item[1] == InputKind.ometiff_segmentation:
+            elif k == InputKind.nii_volume:
+                analyzed_inputs.append(NIIVolumeInput(input_path=i[0], input_kind=k))
+            elif k == InputKind.nii_segmentation:
+                analyzed_inputs.append(NIISegmentationInput(input_path=i[0], input_kind=k))
+            elif k == InputKind.ometiff_image:
+                analyzed_inputs.append(OMETIFFImageInput(input_path=i[0], input_kind=k))
+            elif k == InputKind.ometiff_segmentation:
                 analyzed_inputs.append(
-                    OMETIFFSegmentationInput(input_path=input_item[0])
+                    OMETIFFSegmentationInput(input_path=i[0], input_kind=k)
                 )
             else:
                 raise Exception('Input kind is not recognized')

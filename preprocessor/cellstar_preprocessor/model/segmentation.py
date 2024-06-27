@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Optional, Union
 
 from cellstar_db.models import SegmentationExtraData
-from cellstar_preprocessor.model.input import DownsamplingParams, EntryData
+from cellstar_preprocessor.model.input import DownsamplingParams, EntryData, InputKind
 
 
 class InternalSegmentation:
@@ -13,6 +13,7 @@ class InternalSegmentation:
         params_for_storing: dict,
         downsampling_parameters: DownsamplingParams,
         entry_data: EntryData,
+        input_kind: InputKind,
         sphere_radius: Optional[float] = None,
         color: Optional[float] = None,
         pixel_size: Optional[float] = None,
@@ -33,4 +34,5 @@ class InternalSegmentation:
         self.pixel_size = pixel_size
         self.star_file_coordinate_divisor = star_file_coordinate_divisor
         self.custom_data = custom_data
-        self.map_headers: dict[str, object] = {}
+        self.map_headers: dict[str, object] = {},
+        self.input_kind = input_kind

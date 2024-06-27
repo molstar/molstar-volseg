@@ -11,7 +11,7 @@ from cellstar_preprocessor.flows.segmentation.helper_methods import (
     open_hdf5_as_segmentation_object,
 )
 from cellstar_preprocessor.flows.segmentation.segmentation_downsampling import (
-    sff_segmentation_downsampling,
+    lattice_segmentation_downsampling,
 )
 from cellstar_preprocessor.flows.segmentation.sff_preprocessing import sff_preprocessing
 from cellstar_preprocessor.model.input import SegmentationPrimaryDescriptor
@@ -74,7 +74,7 @@ def test_sff_segmentation_downsampling(test_input: TestInput):
 
         internal_segmentation.value_to_segment_id_dict = value_to_segment_id_dict
 
-        sff_segmentation_downsampling(internal_segmentation=internal_segmentation)
+        lattice_segmentation_downsampling(internal_segmentation=internal_segmentation)
 
         # compare grid arrays
         assert (
@@ -121,7 +121,7 @@ def test_sff_segmentation_downsampling(test_input: TestInput):
         )
 
         # TODO: do downsampling
-        sff_segmentation_downsampling(internal_segmentation=internal_segmentation)
+        lattice_segmentation_downsampling(internal_segmentation=internal_segmentation)
 
         # TODO: do something like:
 
