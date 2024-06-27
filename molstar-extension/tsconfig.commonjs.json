@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+      "allowJs": true,
+      "declaration": true,
+      "target": "ES2018",
+      "alwaysStrict": true,
+      "noImplicitAny": true,
+      "noImplicitThis": true,
+      "sourceMap": true,
+      "noUnusedLocals": true,
+      "strictNullChecks": true,
+      "strictFunctionTypes": true,
+      "module": "CommonJS",
+      "esModuleInterop": true,
+      "moduleResolution": "node",
+      "importHelpers": true,
+      "noEmitHelpers": true,
+      "allowSyntheticDefaultImports": true,
+      "jsx": "react-jsx",
+      "lib": [ "es2018", "dom", "ES2022.Object" ],
+      "rootDir": "src",
+      "outDir": "lib/commonjs"
+  },
+  "include": [ "src/**/*", "src/extensions/volumes-and-segmentations", "src/extensions/meshes", "src/extensions/cvsx-extension" ],
+  // "exclude": [ "src/servers/**/*", "src/perf-tests/*", "src/cli/**/*" ]
+}
+

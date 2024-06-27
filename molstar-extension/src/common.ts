@@ -12,7 +12,7 @@ import { Asset } from 'molstar/lib/mol-util/assets';
 import { Choice } from 'molstar/lib/mol-util/param-choice';
 import { VolsegEntryData } from './extensions/volumes-and-segmentations/entry-root';
 import { SEGMENT_VISUAL_TAG } from './extensions/volumes-and-segmentations/entry-segmentation';
-import { DescriptionData, ParsedSegmentKey } from './extensions/volumes-and-segmentations/volseg-api/data';
+import { DescriptionData, ParsedSegmentKey, SegmentPointers } from './extensions/volumes-and-segmentations/volseg-api/data';
 import { createSegmentKey, parseSegmentKey } from './extensions/volumes-and-segmentations/volseg-api/utils';
 
 export async function parseCVSXJSON(rawFile: [string, Uint8Array], plugin: PluginContext) {
@@ -52,13 +52,13 @@ export async function actionShowSegments(segmentKeys: string[], model: VolsegEnt
     const allExistingGeometricSegmentationIds = model.metadata.value!.raw.grid.geometric_segmentation!.segmentation_ids;
     if (segmentKeys.length === 0) {
         for (const id of allExistingLatticeSegmentationIds) {
-            await showSegments([], id, 'lattice', model);
+            await showSegments({ segmentIds: [], segmentationId: id, kind: 'lattice' }, model);
         }
         for (const id of allExistingMeshSegmentationIds) {
-            await showSegments([], id, 'mesh', model);
+            await showSegments({ segmentIds: [], segmentationId: id, kind: 'mesh' }, model);
         }
         for (const id of allExistingGeometricSegmentationIds) {
-            await showSegments([], id, 'primitive', model);
+            await showSegments({ segmentIds: [], segmentationId: id, kind: 'primitive' }, model);
         }
     }
     const parsedSegmentKeys = segmentKeys.map(
@@ -93,7 +93,7 @@ export async function _actionShowSegments(parsedSegmentKeys: ParsedSegmentKey[],
     }
     const promises: Promise<void>[] = [];
     SegmentationIdsToSegmentIds.forEach((value, key) => {
-        promises.push(showSegments(value, key, kind, model));
+        promises.push(showSegments({ segmentIds: value, segmentationId: key, kind: kind }, model));
     });
     await Promise.all(promises);
 }
@@ -127,7 +127,8 @@ function makeLoci(segments: number[], segmentationId: string, model: VolsegEntry
     return { loci: Volume.Segment.Loci(wholeLoci.volume, segments), repr: repr };
 }
 
-async function showSegments(segmentIds: number[], segmentationId: string, kind: 'lattice' | 'mesh' | 'primitive', model: VolsegEntryData) {
+async function showSegments(segmentPointers: SegmentPointers, model: VolsegEntryData) {
+    const { segmentIds, segmentationId, kind } = segmentPointers;
     if (kind === 'lattice') {
         const repr = findNodesByTags(model.plugin, SEGMENT_VISUAL_TAG, segmentationId)[0];
         if (!repr) return;
