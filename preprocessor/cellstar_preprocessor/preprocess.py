@@ -103,7 +103,7 @@ from cellstar_preprocessor.flows.volume.ometiff_volume_metadata_preprocessing im
 from cellstar_preprocessor.flows.volume.extract_omezarr_volume_annotations import (
     extract_omezarr_volume_annotations,
 )
-from cellstar_preprocessor.flows.volume.extract_omezarr_metadata import (
+from cellstar_preprocessor.flows.volume.omezarr_metadata_processing import (
     extract_ome_zarr_metadata,
 )
 from cellstar_preprocessor.flows.volume.map_preprocessing import map_preprocessing
