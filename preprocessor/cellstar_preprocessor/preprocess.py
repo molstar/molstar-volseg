@@ -97,7 +97,7 @@ from cellstar_preprocessor.flows.volume.nii_metadata_preprocessing import extrac
 from cellstar_preprocessor.flows.volume.ometiff_volume_annotations_preprocessing import (
     extract_ome_tiff_image_annotations,
 )
-from cellstar_preprocessor.flows.volume.extract_ometiff_image_metadata import (
+from cellstar_preprocessor.flows.volume.ometiff_volume_metadata_preprocessing import (
     extract_ometiff_image_metadata,
 )
 from cellstar_preprocessor.flows.volume.extract_omezarr_volume_annotations import (
@@ -968,7 +968,7 @@ class Preprocessor:
             k = i[1]
             if k == InputKind.extra_data:
                 analyzed.append(ExtraDataInput(input_path=i[0], input_kind=k))
-            if k == InputKind.map:
+            elif k == InputKind.map:
                 analyzed.append(MAPInput(input_path=i[0], input_kind=k))
             elif k == InputKind.sff:
                 analyzed.append(SFFInput(input_path=i[0], input_kind=k))

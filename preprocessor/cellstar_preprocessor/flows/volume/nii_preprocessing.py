@@ -4,7 +4,7 @@ import numpy as np
 import zarr
 from cellstar_preprocessor.flows.common import open_zarr_structure_from_path
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
-from cellstar_preprocessor.flows.volume.helper_methods import (
+from cellstar_preprocessor.flows.volume._helper_methods import (
     store_volume_data_in_zarr_stucture,
 )
 from cellstar_preprocessor.model.volume import InternalVolume

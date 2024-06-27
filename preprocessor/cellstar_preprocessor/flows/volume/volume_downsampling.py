@@ -13,7 +13,7 @@ from cellstar_preprocessor.flows.constants import (
     QUANTIZATION_DATA_DICT_ATTR_NAME,
     VOLUME_DATA_GROUPNAME,
 )
-from cellstar_preprocessor.flows.volume.helper_methods import (
+from cellstar_preprocessor.flows.volume._helper_methods import (
     generate_kernel_3d_arr,
     store_volume_data_in_zarr_stucture,
 )

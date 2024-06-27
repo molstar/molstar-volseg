@@ -7,7 +7,7 @@ from cellstar_preprocessor.flows.common import (
     set_volume_custom_data,
 )
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
-from cellstar_preprocessor.flows.volume.helper_methods import (
+from cellstar_preprocessor.flows.volume._helper_methods import (
     normalize_axis_order_mrcfile,
     store_volume_data_in_zarr_stucture,
 )
