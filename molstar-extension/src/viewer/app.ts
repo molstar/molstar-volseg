@@ -30,7 +30,7 @@ import { StateObjectRef } from 'molstar/lib/mol-state';
 import { Color } from 'molstar/lib/mol-util/color';
 import 'molstar/lib/mol-util/polyfill';
 import { ObjectKeys } from 'molstar/lib/mol-util/type-helpers';
-import { Volseg } from '../extensions/volumes-and-segmentations';
+import { Volseg, findOrCreateVolsegEntry } from '../extensions/volumes-and-segmentations';
 import { CVSXSpec } from '../extensions/cvsx-extension/behaviour';
 import { loadCVSXFromAnything } from '../extensions/cvsx-extension';
 
@@ -195,6 +195,9 @@ export class Viewer {
                 plugin.builders.structure.representation.registerPreset(ViewerAutoPreset);
             }
         });
+        // const nn = await findOrCreateVolsegEntry('emd-1832', 'emdb', plugin)
+        // console.log(nn);
+        // debugger;
         return new Viewer(plugin);
     }
 

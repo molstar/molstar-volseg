@@ -73,6 +73,10 @@ export async function findOrCreateVolsegEntry(entryId: string, source: string, p
     const nodes = plugin.state.data.selectQ(q => q.ofType(VolsegEntry)).map(cell => cell?.obj).filter(isDefined);
     const targetNode = nodes.find(n => n.data.entryId === entryId && n.data.source === source);
     debugger;
+    const globalStateNode = plugin.state.data.selectQ(q => q.ofType(VolsegGlobalState))[0];
+    if (!globalStateNode) {
+        await plugin.state.data.build().toRoot().apply(VolsegGlobalStateFromRoot, {}, { state: { isGhost: !DEBUGGING } }).commit();
+    }
     if (targetNode) {
         // TODO: return selector?
         // return targetNode;
@@ -93,8 +97,9 @@ export async function findOrCreateVolsegEntry(entryId: string, source: string, p
         //     source: SourceChoice.PDSelect(),
         //     entryId: ParamDefinition.Text('emd-1832', { description: 'Entry identifier, including the source prefix, e.g. "emd-1832"' }),
         // };
-        debugger;
         const entryNode = await plugin.state.data.build().toRoot().apply(VolsegEntryFromRoot, entryParams).commit();
+        await plugin.state.data.build().to(entryNode).apply(VolsegStateFromEntry, {}, { state: { isGhost: !DEBUGGING } }).commit();
+        debugger;
         return entryNode;
     }
 }
