@@ -12,16 +12,17 @@ import { PluginContext } from 'molstar/lib/mol-plugin/context';
 import { StateAction } from 'molstar/lib/mol-state';
 import { Task } from 'molstar/lib/mol-task';
 import { DEFAULT_VOLSEG_SERVER, VolumeApiV2 } from './volseg-api/api';
-import { GEOMETRIC_SEGMENTATION_NODE_TAG, MESH_SEGMENTATION_NODE_TAG, LATTICE_SEGMENTATION_NODE_TAG, VOLUME_NODE_TAG, VolsegEntryData, VolsegEntryParamValues, createLoadVolsegParams, VolsegEntry, LoadVolsegParamValues } from './entry-root';
+import { GEOMETRIC_SEGMENTATION_NODE_TAG, MESH_SEGMENTATION_NODE_TAG, LATTICE_SEGMENTATION_NODE_TAG, VOLUME_NODE_TAG, VolsegEntryData, VolsegEntryParamValues, createLoadVolsegParams, LoadVolsegParamValues, VolsegEntry } from './entry-root';
 import { VolsegGlobalState } from './global-state';
 import { createEntryId, isDefined } from './helpers';
 import { ProjectGeometricSegmentationData, ProjectGeometricSegmentationDataParamsValues, ProjectMeshData, ProjectMeshSegmentationDataParamsValues, ProjectSegmentationData, ProjectLatticeSegmentationDataParamsValues, ProjectVolumeData, VolsegEntryFromRoot, VolsegGlobalStateFromRoot, VolsegStateFromEntry } from './transformers';
 import { VolsegUI } from './ui';
 import { createSegmentKey, getSegmentLabelsFromDescriptions } from './volseg-api/utils';
-import { Source, actionShowSegments, findNodesByRef } from '../../common';
+import { actionShowSegments } from '../../common';
+import { findNodesByRef, Source } from '../../common';
 
 // const DEBUGGING = typeof window !== 'undefined' ? window?.location?.hostname === 'localhost' || '127.0.0.1' : false;
-const DEBUGGING = typeof window !== 'undefined' ? window?.location?.hostname === 'localhost' : false;
+export const DEBUGGING = typeof window !== 'undefined' ? window?.location?.hostname === 'localhost' : false;
 
 export const VolsegVolumeServerConfig = {
     // DefaultServer: new PluginConfigItem('volseg-volume-server', DEFAULT_VOLUME_SERVER_V2),
@@ -68,41 +69,6 @@ export const Volseg = PluginBehavior.create<{ autoAttach: boolean, showTooltip: 
     }
 });
 
-
-export async function findOrCreateVolsegEntry(entryId: string, source: string, plugin: PluginContext) {
-    const nodes = plugin.state.data.selectQ(q => q.ofType(VolsegEntry)).map(cell => cell?.obj).filter(isDefined);
-    const targetNode = nodes.find(n => n.data.entryId === entryId && n.data.source === source);
-    debugger;
-    const globalStateNode = plugin.state.data.selectQ(q => q.ofType(VolsegGlobalState))[0];
-    if (!globalStateNode) {
-        await plugin.state.data.build().toRoot().apply(VolsegGlobalStateFromRoot, {}, { state: { isGhost: !DEBUGGING } }).commit();
-    }
-    if (targetNode) {
-        // TODO: return selector?
-        // return targetNode;
-        const n = findNodesByRef(plugin, targetNode.data.ref);
-        const nn = findNodesByRef(plugin, n.transform.ref);
-        console.log(nn);
-        debugger;
-        return nn;
-    }
-    else {
-        const entryParams = {
-            serverUrl: plugin?.config.get(VolsegVolumeServerConfig.DefaultServer) ?? DEFAULT_VOLSEG_SERVER,
-            source: source as Source,
-            entryId: entryId
-        };
-        // const entryParams: LoadVolsegParamValues = {
-        //     serverUrl: defaultVolumeServer,
-        //     source: SourceChoice.PDSelect(),
-        //     entryId: ParamDefinition.Text('emd-1832', { description: 'Entry identifier, including the source prefix, e.g. "emd-1832"' }),
-        // };
-        const entryNode = await plugin.state.data.build().toRoot().apply(VolsegEntryFromRoot, entryParams).commit();
-        await plugin.state.data.build().to(entryNode).apply(VolsegStateFromEntry, {}, { state: { isGhost: !DEBUGGING } }).commit();
-        debugger;
-        return entryNode;
-    }
-}
 
 export const LoadVolseg = StateAction.build({
     display: { name: 'Load Volume & Segmentation' },
@@ -222,3 +188,38 @@ export const LoadVolseg = StateAction.build({
         }
     }).runInContext(taskCtx);
 }));
+
+export async function findOrCreateVolsegEntry(entryId: string, source: string, plugin: PluginContext) {
+    const nodes = plugin.state.data.selectQ(q => q.ofType(VolsegEntry)).map(cell => cell?.obj).filter(isDefined);
+    const targetNode = nodes.find(n => n.data.entryId === entryId && n.data.source === source);
+    debugger;
+    const globalStateNode = plugin.state.data.selectQ(q => q.ofType(VolsegGlobalState))[0];
+    if (!globalStateNode) {
+        await plugin.state.data.build().toRoot().apply(VolsegGlobalStateFromRoot, {}, { state: { isGhost: !DEBUGGING } }).commit();
+    }
+    if (targetNode) {
+        // TODO: return selector?
+        // return targetNode;
+        const n = findNodesByRef(plugin, targetNode.data.ref);
+        const nn = findNodesByRef(plugin, n.transform.ref);
+        console.log(nn);
+        debugger;
+        return nn;
+    }
+    else {
+        const entryParams = {
+            serverUrl: plugin?.config.get(VolsegVolumeServerConfig.DefaultServer) ?? DEFAULT_VOLSEG_SERVER,
+            source: source as Source,
+            entryId: entryId
+        };
+        // const entryParams: LoadVolsegParamValues = {
+        //     serverUrl: defaultVolumeServer,
+        //     source: SourceChoice.PDSelect(),
+        //     entryId: ParamDefinition.Text('emd-1832', { description: 'Entry identifier, including the source prefix, e.g. "emd-1832"' }),
+        // };
+        const entryNode = await plugin.state.data.build().toRoot().apply(VolsegEntryFromRoot, entryParams).commit();
+        await plugin.state.data.build().to(entryNode).apply(VolsegStateFromEntry, {}, { state: { isGhost: !DEBUGGING } }).commit();
+        debugger;
+        return entryNode;
+    }
+}

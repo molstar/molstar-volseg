@@ -30,7 +30,7 @@ import { StateObjectRef } from 'molstar/lib/mol-state';
 import { Color } from 'molstar/lib/mol-util/color';
 import 'molstar/lib/mol-util/polyfill';
 import { ObjectKeys } from 'molstar/lib/mol-util/type-helpers';
-import { Volseg, findOrCreateVolsegEntry } from '../extensions/volumes-and-segmentations';
+import { Volseg } from '../extensions/volumes-and-segmentations';
 import { CVSXSpec } from '../extensions/cvsx-extension/behaviour';
 import { loadCVSXFromAnything } from '../extensions/cvsx-extension';
 
