@@ -12,7 +12,7 @@ import { Asset } from 'molstar/lib/mol-util/assets';
 import { Choice } from 'molstar/lib/mol-util/param-choice';
 import { VolsegEntryData } from './extensions/volumes-and-segmentations/entry-root';
 import { SEGMENT_VISUAL_TAG } from './extensions/volumes-and-segmentations/entry-segmentation';
-import { DescriptionData, ParsedSegmentKey } from './extensions/volumes-and-segmentations/volseg-api/data';
+import { DescriptionData, ParsedSegmentKey, SegmentPointers } from './extensions/volumes-and-segmentations/volseg-api/data';
 import { createSegmentKey, parseSegmentKey } from './extensions/volumes-and-segmentations/volseg-api/utils';
 
 export async function parseCVSXJSON(rawFile: [string, Uint8Array], plugin: PluginContext) {
@@ -127,7 +127,8 @@ function makeLoci(segments: number[], segmentationId: string, model: VolsegEntry
     return { loci: Volume.Segment.Loci(wholeLoci.volume, segments), repr: repr };
 }
 
-async function showSegments(segmentIds: number[], segmentationId: string, kind: 'lattice' | 'mesh' | 'primitive', model: VolsegEntryData) {
+async function showSegments(segmentPointers: SegmentPointers, model: VolsegEntryData) {
+    const { segmentIds, segmentationId, kind } = segmentPointers;
     if (kind === 'lattice') {
         const repr = findNodesByTags(model.plugin, SEGMENT_VISUAL_TAG, segmentationId)[0];
         if (!repr) return;

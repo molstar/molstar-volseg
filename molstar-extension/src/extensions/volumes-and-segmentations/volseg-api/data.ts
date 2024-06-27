@@ -8,6 +8,12 @@
 import { Vec3 } from 'molstar/lib/mol-math/linear-algebra';
 import { Source } from '../../../common';
 
+export type SegmentPointers = {
+    segmentIds: number[]
+    segmentationId: string
+    kind: 'lattice' | 'mesh' | 'primitive'
+}
+
 export interface GeometricSegmentationData {
     segmentation_id: string
     primitives: { [timeframeIndex: number]: ShapePrimitiveData }
