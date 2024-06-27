@@ -195,9 +195,6 @@ export class Viewer {
                 plugin.builders.structure.representation.registerPreset(ViewerAutoPreset);
             }
         });
-        // const nn = await findOrCreateVolsegEntry('emd-1832', 'emdb', plugin)
-        // console.log(nn);
-        // debugger;
         return new Viewer(plugin);
     }
 
