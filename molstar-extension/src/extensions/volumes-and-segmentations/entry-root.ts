@@ -71,7 +71,7 @@ function entryParam(entries: string[] = []) {
         customEntryId: ParamDefinition.Text('', { hideIf: p => p.entryId !== '__custom__', description: 'Entry identifier, including the source prefix, e.g. "emd-1832"' }),
     }, { isFlat: true });
 }
-type LoadVolsegParamValues = ParamDefinition.Values<ReturnType<typeof createLoadVolsegParams>>;
+export type LoadVolsegParamValues = ParamDefinition.Values<ReturnType<typeof createLoadVolsegParams>>;
 type RawDataKind = 'volume' | 'segmentation' | 'mesh' | 'primitive';
 
 export function createVolsegEntryParams(plugin?: PluginContext) {
