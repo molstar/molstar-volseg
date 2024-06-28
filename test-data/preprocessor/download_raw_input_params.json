@@ -1,5 +1,27 @@
 [
     {
+        "entry_id": "empiar-10434",
+        "source_db": "empiar",
+        "source_db_id": "empiar-10434",
+        "source_db_name": "empiar",
+        "inputs": [
+            {
+                "kind": "map",
+                "resource": {
+                    "kind": "external",
+                    "uri": "https://ftp.ebi.ac.uk/empiar/world_availability/10434/data/EMPIAR/C02/subpositions/g40/g40s1hm1/g40s1hm1.rec"
+                }
+            },
+            {
+                "kind": "application_specific_segmentation",
+                "resource": {
+                    "kind": "external",
+                    "uri": "https://ftp.ebi.ac.uk/empiar/world_availability/10434/data/EMPIAR/C02/subpositions/g40/g40s1hm1/g40s1hm1.mod"
+                }
+            }
+        ]
+    },
+    {
         "entry_id": "empiar-10484",
         "source_db": "empiar",
         "source_db_id": "empiar-10484",
@@ -16,35 +38,35 @@
                 "kind": "mask",
                 "resource": {
                     "kind": "external",
-                    "uri": "test-data/preprocessor/sample_segmentations/empiar/empiar-10484/Level1_v2_label0.rec"
+                    "uri": "https://ftp.ebi.ac.uk/empiar/world_availability/10484/data/Level1_v2_label0.rec"
                 }
             },
             {
                 "kind": "mask",
                 "resource": {
                     "kind": "external",
-                    "uri": "test-data/preprocessor/sample_segmentations/empiar/empiar-10484/Level1_v2_label1.rec"
+                    "uri": "https://ftp.ebi.ac.uk/empiar/world_availability/10484/data/Level1_v2_label1.rec"
                 }
             },
             {
                 "kind": "mask",
                 "resource": {
                     "kind": "external",
-                    "uri": "test-data/preprocessor/sample_segmentations/empiar/empiar-10484/Level2_label0.rec"
+                    "uri": "https://ftp.ebi.ac.uk/empiar/world_availability/10484/data/Level2_label0.rec"
                 }
             },
             {
                 "kind": "mask",
                 "resource": {
                     "kind": "external",
-                    "uri": "test-data/preprocessor/sample_segmentations/empiar/empiar-10484/Level2_label1.rec"
+                    "uri": "https://ftp.ebi.ac.uk/empiar/world_availability/10484/data/Level2_label1.rec"
                 }
             },
             {
                 "kind": "mask",
                 "resource": {
                     "kind": "external",
-                    "uri": "test-data/preprocessor/sample_segmentations/empiar/empiar-10484/Level2_label2.rec"
+                    "uri": "https://ftp.ebi.ac.uk/empiar/world_availability/10484/data/Level2_label2.rec"
                 }
             },
             {
