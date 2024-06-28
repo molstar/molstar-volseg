@@ -1,6 +1,6 @@
 from cellstar_preprocessor.flows.volume.map_metadata_processing import map_metadata_processing
 from cellstar_preprocessor.flows.volume.ometiff_volume_metadata_preprocessing import extract_ometiff_image_metadata
-from cellstar_preprocessor.flows.volume.omezarr_metadata_processing import extract_ome_zarr_metadata
+from cellstar_preprocessor.flows.volume.omezarr_volume_metadata_preprocessing import omezarr_volume_metadata_preprocessing
 from cellstar_preprocessor.flows.volume.map_preprocessing import map_preprocessing
 from cellstar_preprocessor.flows.volume.ome_zarr_image_preprocessing import ome_zarr_image_preprocessing
 from cellstar_preprocessor.flows.volume.ometiff_image_processing import ometiff_image_processing
@@ -15,4 +15,4 @@ def process_volume_metadata(internal_volume: InternalVolume):
     elif kind == InputKind.ometiff_image:
         extract_ometiff_image_metadata(internal_volume)
     elif kind == InputKind.omezarr:
-        extract_ome_zarr_metadata(internal_volume)
+        omezarr_volume_metadata_preprocessing(internal_volume)

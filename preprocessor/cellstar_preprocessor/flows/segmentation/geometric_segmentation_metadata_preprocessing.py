@@ -13,7 +13,7 @@ from cellstar_preprocessor.flows.constants import (
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
-def extract_metadata_geometric_segmentation(
+def geometric_segmentation_metadata_preprocessing(
     internal_segmentation: InternalSegmentation,
 ):
     root = open_zarr_structure_from_path(

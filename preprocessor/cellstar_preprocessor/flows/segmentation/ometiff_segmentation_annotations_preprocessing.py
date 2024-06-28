@@ -20,7 +20,7 @@ def _get_allencell_cell_stage(root: zarr.Group):
     return root.attrs["extra_data"]["cell_stage"]
 
 
-def extract_ome_tiff_segmentation_annotations(
+def ometiff_segmentation_annotations_preprocessing(
     internal_segmentation: InternalSegmentation,
 ):
     root = open_zarr_structure_from_path(

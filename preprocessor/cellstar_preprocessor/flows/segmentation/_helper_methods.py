@@ -13,13 +13,13 @@ from cellstar_preprocessor.flows.common import (
     create_dataset_wrapper,
     decide_np_dtype,
 )
-from cellstar_preprocessor.flows.segmentation.category_set_downsampling_methods import (
+from cellstar_preprocessor.flows.segmentation._category_set_downsampling_methods import (
     store_downsampling_levels_in_zarr,
 )
-from cellstar_preprocessor.flows.segmentation.downsampling_level_dict import (
+from cellstar_preprocessor.flows.segmentation._downsampling_level_dict import (
     DownsamplingLevelDict,
 )
-from cellstar_preprocessor.flows.segmentation.segmentation_set_table import (
+from cellstar_preprocessor.flows.segmentation._segmentation_set_table import (
     SegmentationSetTable,
 )
 from cellstar_preprocessor.model.segmentation import InternalSegmentation

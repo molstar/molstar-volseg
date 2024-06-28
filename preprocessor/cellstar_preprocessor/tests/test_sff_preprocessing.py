@@ -5,10 +5,10 @@ from cellstar_preprocessor.flows.constants import (
     LATTICE_SEGMENTATION_DATA_GROUPNAME,
     MESH_SEGMENTATION_DATA_GROUPNAME,
 )
-from cellstar_preprocessor.flows.segmentation.helper_methods import (
+from cellstar_preprocessor.flows.segmentation._helper_methods import (
     open_hdf5_as_segmentation_object,
 )
-from cellstar_preprocessor.flows.segmentation.sff_preprocessing import sff_preprocessing
+from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing import sff_segmentation_preprocessing
 from cellstar_preprocessor.model.input import SegmentationPrimaryDescriptor
 from cellstar_preprocessor.tests.helper_methods import get_sff_internal_segmentation
 from cellstar_preprocessor.tests.input_for_tests import (
@@ -38,7 +38,7 @@ def test_sff_preprocessing(test_input: TestInput):
             internal_segmentation.input_path
         )
 
-        sff_preprocessing(internal_segmentation=internal_segmentation)
+        sff_segmentation_preprocessing(internal_segmentation=internal_segmentation)
 
         # check if zarr structure has right format
         zarr_structure = open_zarr_structure_from_path(

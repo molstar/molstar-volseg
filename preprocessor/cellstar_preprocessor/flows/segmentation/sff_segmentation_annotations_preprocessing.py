@@ -33,7 +33,7 @@ def _preprocess_external_references(raw_external_references: list[ExternalRefere
     return external_referneces
 
 
-def extract_annotations_from_sff_segmentation(
+def sff_segmentation_annotations_preprocessing(
     internal_segmentation: InternalSegmentation,
 ):
     root = open_zarr_structure_from_path(

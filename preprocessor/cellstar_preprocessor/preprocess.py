@@ -38,41 +38,41 @@ from cellstar_preprocessor.flows.constants import (
     RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS,
     VOLUME_DATA_GROUPNAME,
 )
-from cellstar_preprocessor.flows.segmentation.collect_custom_annotations import (
-    collect_custom_annotations,
+from cellstar_preprocessor.flows.segmentation.custom_annotations_preprocessing import (
+    custom_annotations_preprocessing,
 )
-from cellstar_preprocessor.flows.segmentation.extract_annotations_from_geometric_segmentation import (
-    extract_annotations_from_geometric_segmentation,
+from cellstar_preprocessor.flows.segmentation.geometric_segmentation_annotations_preprocessing import (
+    geometric_segmentation_annotations_preprocessing,
 )
-from cellstar_preprocessor.flows.segmentation.extract_annotations_from_sff_segmentation import (
-    extract_annotations_from_sff_segmentation,
+from cellstar_preprocessor.flows.segmentation.sff_segmentation_annotations_preprocessing import (
+    sff_segmentation_annotations_preprocessing,
 )
-from cellstar_preprocessor.flows.segmentation.extract_metadata_from_mask import (
+from cellstar_preprocessor.flows.segmentation.mask_segmentation_metadata_preprocessing import (
     extract_metadata_from_mask,
 )
-from cellstar_preprocessor.flows.segmentation.extract_metadata_from_nii_segmentation import (
+from cellstar_preprocessor.flows.segmentation.nii_segmentation_metadata_preprocessing import (
     extract_metadata_from_nii_segmentation,
 )
-from cellstar_preprocessor.flows.segmentation.extract_metadata_from_sff_segmentation import (
-    extract_metadata_from_sff_segmentation,
+from cellstar_preprocessor.flows.segmentation.sff_segmentation_metadata_preprocessing import (
+    sff_segmentation_metadata_preprocessing,
 )
-from cellstar_preprocessor.flows.segmentation.extract_metadata_geometric_segmentation import (
-    extract_metadata_geometric_segmentation,
+from cellstar_preprocessor.flows.segmentation.geometric_segmentation_metadata_preprocessing import (
+    geometric_segmentation_metadata_preprocessing,
 )
-from cellstar_preprocessor.flows.segmentation.extract_ome_tiff_segmentation_annotations import (
-    extract_ome_tiff_segmentation_annotations,
+from cellstar_preprocessor.flows.segmentation.ometiff_segmentation_annotations_preprocessing import (
+    ometiff_segmentation_annotations_preprocessing,
 )
-from cellstar_preprocessor.flows.segmentation.extract_ometiff_segmentation_metadata import (
-    extract_ometiff_segmentation_metadata,
+from cellstar_preprocessor.flows.segmentation.ometiff_segmentation_metadata_preprocessing import (
+    ometiff_segmentation_metadata_preprocessing,
 )
 from cellstar_preprocessor.flows.segmentation.geometric_segmentation_preprocessing import (
     geometric_segmentation_preprocessing,
 )
-from cellstar_preprocessor.flows.segmentation.helper_methods import (
+from cellstar_preprocessor.flows.segmentation._helper_methods import (
     check_if_omezarr_has_labels,
 )
-from cellstar_preprocessor.flows.segmentation.mask_annotation_creation import (
-    mask_annotation_creation,
+from cellstar_preprocessor.flows.segmentation.mask_segmentation_annotations_preprocessing import (
+    mask_segmentation_annotations_preprocessing,
 )
 from cellstar_preprocessor.flows.segmentation.mask_segmentation_preprocessing import (
     mask_segmentation_preprocessing,
@@ -83,13 +83,13 @@ from cellstar_preprocessor.flows.segmentation.nii_segmentation_downsampling impo
 from cellstar_preprocessor.flows.segmentation.nii_segmentation_preprocessing import (
     nii_segmentation_preprocessing,
 )
-from cellstar_preprocessor.flows.segmentation.ome_zarr_labels_preprocessing import (
-    ome_zarr_labels_preprocessing,
+from cellstar_preprocessor.flows.segmentation.omezarr_segmentations_preprocessing import (
+    omezarr_segmentations_preprocessing,
 )
 from cellstar_preprocessor.flows.segmentation.segmentation_downsampling import (
-    lattice_segmentation_downsampling,
+    segmentation_downsampling,
 )
-from cellstar_preprocessor.flows.segmentation.sff_preprocessing import sff_preprocessing
+from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing import sff_segmentation_preprocessing
 from cellstar_preprocessor.flows.volume.map_metadata_processing import (
     map_metadata_processing,
 )
@@ -103,8 +103,8 @@ from cellstar_preprocessor.flows.volume.ometiff_volume_metadata_preprocessing im
 from cellstar_preprocessor.flows.volume.extract_omezarr_volume_annotations import (
     extract_omezarr_volume_annotations,
 )
-from cellstar_preprocessor.flows.volume.omezarr_metadata_processing import (
-    extract_ome_zarr_metadata,
+from cellstar_preprocessor.flows.volume.omezarr_volume_metadata_preprocessing import (
+    omezarr_volume_metadata_preprocessing,
 )
 from cellstar_preprocessor.flows.volume.map_preprocessing import map_preprocessing
 from cellstar_preprocessor.flows.volume.nii_preprocessing import nii_preprocessing
@@ -211,7 +211,7 @@ class CustomAnnotationsCollectionTask(TaskBase):
         self.intermediate_zarr_structure_path = intermediate_zarr_structure_path
 
     def execute(self) -> None:
-        collect_custom_annotations(
+        custom_annotations_preprocessing(
             self.input_path, self.intermediate_zarr_structure_path
         )
 
@@ -242,7 +242,7 @@ class SFFAnnotationCollectionTask(TaskBase):
         self.internal_segmentation = internal_segmentation
 
     def execute(self) -> None:
-        annotations_dict = extract_annotations_from_sff_segmentation(
+        annotations_dict = sff_segmentation_annotations_preprocessing(
             internal_segmentation=self.internal_segmentation
         )
 
@@ -255,7 +255,7 @@ class MaskAnnotationCreationTask(TaskBase):
         # annotations_dict = extract_annotations_from_sff_segmentation(
         #     internal_segmentation=self.internal_segmentation
         # )
-        mask_annotation_creation(internal_segmentation=self.internal_segmentation)
+        mask_segmentation_annotations_preprocessing(internal_segmentation=self.internal_segmentation)
 
 
 class NIIMetadataCollectionTask(TaskBase):
@@ -291,7 +291,7 @@ class OMEZARRMetadataCollectionTask(TaskBase):
         self.internal_volume = internal_volume
 
     def execute(self) -> None:
-        metadata_dict = extract_ome_zarr_metadata(internal_volume=self.internal_volume)
+        metadata_dict = omezarr_volume_metadata_preprocessing(internal_volume=self.internal_volume)
 
 
 class OMEZARRImageProcessTask(TaskBase):
@@ -307,7 +307,7 @@ class OMEZARRLabelsProcessTask(TaskBase):
         self.internal_segmentation = internal_segmentation
 
     def execute(self) -> None:
-        ome_zarr_labels_preprocessing(internal_segmentation=self.internal_segmentation)
+        omezarr_segmentations_preprocessing(internal_segmentation=self.internal_segmentation)
 
 
 class SFFMetadataCollectionTask(TaskBase):
@@ -315,7 +315,7 @@ class SFFMetadataCollectionTask(TaskBase):
         self.internal_segmentation = internal_segmentation
 
     def execute(self) -> None:
-        metadata_dict = extract_metadata_from_sff_segmentation(
+        metadata_dict = sff_segmentation_metadata_preprocessing(
             internal_segmentation=self.internal_segmentation
         )
 
@@ -338,7 +338,7 @@ class GeometricSegmentationMetadataCollectionTask(TaskBase):
         self.internal_segmentation = internal_segmentation
 
     def execute(self) -> None:
-        metadata_dict = extract_metadata_geometric_segmentation(
+        metadata_dict = geometric_segmentation_metadata_preprocessing(
             internal_segmentation=self.internal_segmentation
         )
 
@@ -437,7 +437,7 @@ class OMETIFFSegmentationProcessingTask(TaskBase):
     def execute(self) -> None:
         segmentation = self.internal_segmentation
         ometiff_segmentation_processing(internal_segmentation=segmentation)
-        lattice_segmentation_downsampling(segmentation)
+        segmentation_downsampling(segmentation)
 
 
 class OMETIFFImageMetadataExtractionTask(TaskBase):
@@ -455,7 +455,7 @@ class OMETIFFSegmentationMetadataExtractionTask(TaskBase):
 
     def execute(self) -> None:
         internal_segmentation = self.internal_segmentation
-        extract_ometiff_segmentation_metadata(
+        ometiff_segmentation_metadata_preprocessing(
             internal_segmentation=internal_segmentation
         )
 
@@ -475,7 +475,7 @@ class OMETIFFSegmentationAnnotationsExtractionTask(TaskBase):
 
     def execute(self) -> None:
         internal_segmentation = self.internal_segmentation
-        extract_ome_tiff_segmentation_annotations(
+        ometiff_segmentation_annotations_preprocessing(
             internal_segmentation=internal_segmentation
         )
 
@@ -522,9 +522,9 @@ class SFFProcessSegmentationTask(TaskBase):
     def execute(self) -> None:
         segmentation = self.internal_segmentation
 
-        sff_preprocessing(segmentation)
+        sff_segmentation_preprocessing(segmentation)
 
-        lattice_segmentation_downsampling(segmentation)
+        segmentation_downsampling(segmentation)
 
 
 class MaskProcessSegmentationTask(TaskBase):
@@ -535,7 +535,7 @@ class MaskProcessSegmentationTask(TaskBase):
         segmentation = self.internal_segmentation
 
         mask_segmentation_preprocessing(internal_segmentation=segmentation)
-        lattice_segmentation_downsampling(segmentation)
+        segmentation_downsampling(segmentation)
 
 
 class ProcessGeometricSegmentationTask(TaskBase):
@@ -555,7 +555,7 @@ class GeometricSegmentationAnnotationsCollectionTask(TaskBase):
     def execute(self) -> None:
         segmentation = self.internal_segmentation
 
-        extract_annotations_from_geometric_segmentation(
+        geometric_segmentation_annotations_preprocessing(
             internal_segmentation=segmentation
         )
 

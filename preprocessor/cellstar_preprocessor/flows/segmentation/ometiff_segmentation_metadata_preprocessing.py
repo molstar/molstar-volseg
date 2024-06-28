@@ -171,7 +171,7 @@ def _get_volume_sampling_info(root_data_group: zarr.Group, sampling_info_dict):
                 }
 
 
-def extract_ometiff_segmentation_metadata(internal_segmentation: InternalSegmentation):
+def ometiff_segmentation_metadata_preprocessing(internal_segmentation: InternalSegmentation):
     root = open_zarr_structure_from_path(
         internal_segmentation.intermediate_zarr_structure_path
     )

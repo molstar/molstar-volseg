@@ -48,7 +48,7 @@ def _get_label_time(label_value: int, our_label_gr: zarr.Group):
 
 
 # NOTE: Lattice IDs = Label groups
-def extract_omezarr_segmentation_annotations(internal_segmentation: InternalSegmentation):
+def omezarr_segmentation_annotations_preprocessing(internal_segmentation: InternalSegmentation):
     ome_zarr_root = open_zarr_structure_from_path(internal_segmentation.input_path)
     root = open_zarr_structure_from_path(
         internal_segmentation.intermediate_zarr_structure_path

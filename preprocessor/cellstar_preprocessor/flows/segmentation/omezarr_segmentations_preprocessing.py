@@ -1,7 +1,3 @@
-# TODO: figure out how to use
-# params_for_storing=self.preprocessor_input.storing_params,
-# downsampling_parameters=self.preprocessor_input.downsampling,
-
 import gc
 
 import numcodecs
@@ -12,7 +8,7 @@ from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROU
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
-def ome_zarr_labels_preprocessing(internal_segmentation: InternalSegmentation):
+def omezarr_segmentations_preprocessing(internal_segmentation: InternalSegmentation):
     ome_zarr_root = zarr.open_group(internal_segmentation.input_path)
 
     our_zarr_structure = open_zarr_structure_from_path(

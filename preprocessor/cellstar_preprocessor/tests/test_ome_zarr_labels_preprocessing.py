@@ -2,8 +2,8 @@ import pytest
 import zarr
 from cellstar_preprocessor.flows.common import open_zarr_structure_from_path
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
-from cellstar_preprocessor.flows.segmentation.ome_zarr_labels_preprocessing import (
-    ome_zarr_labels_preprocessing,
+from cellstar_preprocessor.flows.segmentation.omezarr_segmentations_preprocessing import (
+    omezarr_segmentations_preprocessing,
 )
 from cellstar_preprocessor.tests.helper_methods import get_omezarr_internal_segmentation
 from cellstar_preprocessor.tests.input_for_tests import (
@@ -22,7 +22,7 @@ def test_ome_zarr_labels_preprocessing(omezar_test_input: TestInput):
             omezar_test_input, ctx.test_file_path, ctx.intermediate_zarr_structure_path
         )
 
-        ome_zarr_labels_preprocessing(internal_segmentation=internal_segmentation)
+        omezarr_segmentations_preprocessing(internal_segmentation=internal_segmentation)
 
         zarr_structure = open_zarr_structure_from_path(
             internal_segmentation.intermediate_zarr_structure_path

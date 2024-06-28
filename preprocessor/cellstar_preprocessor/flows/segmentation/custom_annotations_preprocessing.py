@@ -8,7 +8,7 @@ from cellstar_preprocessor.flows.common import (
 )
 
 
-def collect_custom_annotations(
+def custom_annotations_preprocessing(
     input_path: Path, intermediate_zarr_structure_path: Path
 ):
     root = open_zarr_structure_from_path(intermediate_zarr_structure_path)

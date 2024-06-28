@@ -40,7 +40,7 @@ def _get_segmentation_sampling_info(
             ] = time_gr.grid.shape
 
 
-def extract_metadata_from_sff_segmentation(internal_segmentation: InternalSegmentation):
+def sff_segmentation_metadata_preprocessing(internal_segmentation: InternalSegmentation):
     # PLAN:
     # takes prefilled metadata dict from map metadata
     # takes internal segmentation

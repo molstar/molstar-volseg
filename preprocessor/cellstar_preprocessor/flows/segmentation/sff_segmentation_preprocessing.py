@@ -6,7 +6,7 @@ from cellstar_preprocessor.flows.constants import (
     MESH_SIMPLIFICATION_LEVELS_PER_ORDER,
     MESH_SIMPLIFICATION_N_LEVELS,
 )
-from cellstar_preprocessor.flows.segmentation.helper_methods import (
+from cellstar_preprocessor.flows.segmentation._helper_methods import (
     extract_raw_annotations_from_sff,
     hdf5_to_zarr,
     lattice_data_to_np_arr,
@@ -20,7 +20,7 @@ from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from vedo import Mesh
 
 
-def sff_preprocessing(internal_segmentation: InternalSegmentation):
+def sff_segmentation_preprocessing(internal_segmentation: InternalSegmentation):
     hdf5_to_zarr(internal_segmentation=internal_segmentation)
 
     zarr_structure: zarr.Group = open_zarr_structure_from_path(
