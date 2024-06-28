@@ -29,10 +29,6 @@ class InternalSegmentation:
         self.simplification_curve: dict[int, float] = {}
         self.entry_data = entry_data
         self.raw_sff_annotations = {}
-        self.sphere_radius = sphere_radius
-        self.color = color
-        self.pixel_size = pixel_size
-        self.star_file_coordinate_divisor = star_file_coordinate_divisor
         self.custom_data = custom_data
         self.map_headers: dict[str, object] = dict()
         self.input_kind = input_kind
