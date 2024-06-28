@@ -1,15 +1,13 @@
 from uuid import uuid4
 
+from cellstar_db.models import DownsamplingParams, QuantizationDtype, StoringParams
 import numpy as np
 import zarr
 from cellstar_preprocessor.flows.common import open_zarr_structure_from_path
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
 from cellstar_preprocessor.flows.volume.volume_downsampling import volume_downsampling
-from cellstar_preprocessor.model.input import (
-    DownsamplingParams,
+from cellstar_db.models import (
     EntryData,
-    QuantizationDtype,
-    StoringParams,
 )
 from cellstar_preprocessor.model.volume import InternalVolume
 from cellstar_preprocessor.tests.helper_methods import (

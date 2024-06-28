@@ -3,6 +3,7 @@ import urllib.request
 from pathlib import Path
 from uuid import uuid4
 
+from cellstar_db.models import DownsamplingParams, QuantizationDtype, StoringParams
 import ome_zarr
 import ome_zarr.utils
 import zarr
@@ -10,11 +11,8 @@ from cellstar_preprocessor.flows.constants import (
     INIT_ANNOTATIONS_DICT,
     INIT_METADATA_DICT,
 )
-from cellstar_preprocessor.model.input import (
-    DownsamplingParams,
+from cellstar_db.models import (
     EntryData,
-    QuantizationDtype,
-    StoringParams,
 )
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from cellstar_preprocessor.model.volume import InternalVolume

@@ -1,11 +1,9 @@
 from pathlib import Path
 from typing import Literal, TypedDict
 
-from cellstar_preprocessor.model.input import (
-    DownsamplingParams,
+from cellstar_db.models import DownsamplingParams, QuantizationDtype, StoringParams
+from cellstar_db.models import (
     EntryData,
-    QuantizationDtype,
-    StoringParams,
 )
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from cellstar_preprocessor.model.volume import InternalVolume

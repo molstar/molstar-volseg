@@ -15,7 +15,7 @@ from cellstar_preprocessor.flows.segmentation._helper_methods import (
     store_segmentation_data_in_zarr_structure,
     write_mesh_component_data_to_zarr_arr,
 )
-from cellstar_preprocessor.model.input import SegmentationPrimaryDescriptor
+from cellstar_db.models import SegmentationPrimaryDescriptor
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from vedo import Mesh
 

@@ -1,0 +1,27 @@
+{
+    "db_path": "preprocessor/temp/test_db",
+    "entry_id": "emd-1832",
+    "source_db": "emdb",
+    "force_volume_dtype": "f4",
+    "inputs": [
+        {
+            "kind": "map",
+            "path": "test-data/preprocessor/sample_volumes/emdb/EMD-1832.map"
+        },
+        {
+            "kind": "sff",
+            "path": "test-data/preprocessor/sample_segmentations/emdb_sff/emd_1832.hff"
+        }
+    ],
+    "max_downsampling_level": 8,
+    "max_size_per_downsampling_lvl_mb": 40.0,
+    "min_downsampling_level": 4,
+    "min_size_per_downsampling_lvl_mb": 12.0,
+    "mode": "add",
+    "quantize_downsampling_levels": [1, 4],
+    "quantize_dtype_str": "u2",
+    "remove_original_resolution": true,
+    "source_db_id": "emd-1832",
+    "source_db_name": "emdb",
+    "working_folder": "preprocessor/temp/working_folder"
+}

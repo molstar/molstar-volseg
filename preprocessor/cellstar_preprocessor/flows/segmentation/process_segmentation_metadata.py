@@ -13,7 +13,7 @@ from cellstar_preprocessor.flows.segmentation.sff_segmentation_metadata_preproce
 from cellstar_preprocessor.flows.volume.ometiff_volume_metadata_preprocessing import (
     ometiff_volume_metadata_preprocessing,
 )
-from cellstar_preprocessor.model.input import InputKind
+from cellstar_db.models import InputKind
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 

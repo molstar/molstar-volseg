@@ -13,7 +13,7 @@ from cellstar_preprocessor.flows.segmentation.omezarr_segmentation_annotations_p
 from cellstar_preprocessor.flows.segmentation.sff_segmentation_annotations_preprocessing import (
     sff_segmentation_annotations_preprocessing,
 )
-from cellstar_preprocessor.model.input import InputKind
+from cellstar_db.models import InputKind
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 

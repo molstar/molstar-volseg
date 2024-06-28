@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import Optional, Union
 
-from cellstar_db.models import SegmentationExtraData
-from cellstar_preprocessor.model.input import DownsamplingParams, EntryData, InputKind
+from cellstar_db.models import DownsamplingParams, InputKind, SegmentationExtraData
+from cellstar_db.models import EntryData
 
 
 class InternalSegmentation:
@@ -34,5 +34,5 @@ class InternalSegmentation:
         self.pixel_size = pixel_size
         self.star_file_coordinate_divisor = star_file_coordinate_divisor
         self.custom_data = custom_data
-        self.map_headers: dict[str, object] = ({},)
+        self.map_headers: dict[str, object] = dict()
         self.input_kind = input_kind

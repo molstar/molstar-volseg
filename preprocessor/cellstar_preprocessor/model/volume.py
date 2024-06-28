@@ -1,12 +1,9 @@
 from pathlib import Path
 from typing import Optional
 
-from cellstar_db.models import VolumeExtraData
-from cellstar_preprocessor.model.input import (
-    DownsamplingParams,
+from cellstar_db.models import DownsamplingParams, InputKind, QuantizationDtype, VolumeExtraData
+from cellstar_db.models import (
     EntryData,
-    InputKind,
-    QuantizationDtype,
 )
 
 

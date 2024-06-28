@@ -10,7 +10,7 @@ from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROU
 from cellstar_preprocessor.flows.segmentation._helper_methods import (
     store_segmentation_data_in_zarr_structure,
 )
-from cellstar_preprocessor.model.input import SegmentationPrimaryDescriptor
+from cellstar_db.models import SegmentationPrimaryDescriptor
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 

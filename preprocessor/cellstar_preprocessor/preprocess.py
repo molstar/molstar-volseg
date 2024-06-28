@@ -5,6 +5,7 @@ import typing
 from argparse import ArgumentError
 from enum import Enum
 from pathlib import Path
+from munch import DefaultMunch
 
 import typer
 import zarr
@@ -15,11 +16,22 @@ from cellstar_db.file_system.volume_and_segmentation_context import (
 )
 from cellstar_db.models import (
     DescriptionData,
+    DownsamplingParams,
+    EntryData,
     GeometricSegmentationData,
+    InputKind,
+    Inputs,
+    PreprocessorArguments,
+    PreprocessorMode,
+    QuantizationDtype,
+    RawInput,
     SegmentAnnotationData,
+    StoringParams,
+    VolumeParams,
 )
 from cellstar_preprocessor.flows.common import (
-    open_json_file,
+    dictget,
+    read_json,
     open_zarr_structure_from_path,
     process_extra_data,
 )
@@ -139,15 +151,8 @@ from cellstar_preprocessor.flows.volume.process_volume_metadata import (
     process_volume_metadata,
 )
 from cellstar_preprocessor.flows.volume.volume_downsampling import volume_downsampling
-from cellstar_preprocessor.model.input import (
-    DownsamplingParams,
-    EntryData,
-    InputKind,
-    Inputs,
+from cellstar_db.models import (
     PreprocessorInput,
-    QuantizationDtype,
-    StoringParams,
-    VolumeParams,
 )
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from cellstar_preprocessor.model.volume import InternalVolume
@@ -158,14 +163,9 @@ from pydantic import BaseModel
 from typing_extensions import Annotated
 
 
-class PreprocessorMode(str, Enum):
-    add = "add"
-    extend = "extend"
-
-
 class InputT(BaseModel):
-    input_path: Path | list[Path]
-    input_kind: InputKind
+    path: Path | list[Path]
+    kind: InputKind
 
 
 class OMETIFFImageInput(InputT):
@@ -626,7 +626,7 @@ class Preprocessor:
             if isinstance(i, ExtraDataInput):
                 tasks.append(
                     ProcessExtraDataTask(
-                        path=i.input_path,
+                        path=i.path,
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
                     )
                 )
@@ -636,14 +636,14 @@ class Preprocessor:
                 self.store_internal_volume(
                     internal_volume=InternalVolume(
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        input_path=i.input_path,
+                        input_path=i.path,
                         params_for_storing=self.preprocessor_input.storing_params,
                         volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
                         quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
                         downsampling_parameters=self.preprocessor_input.downsampling,
                         entry_data=self.preprocessor_input.entry_data,
                         quantize_downsampling_levels=self.preprocessor_input.volume.quantize_downsampling_levels,
-                        input_kind=i.input_kind,
+                        input_kind=i.kind,
                     )
                 )
                 volume = self.get_internal_volume()
@@ -661,11 +661,11 @@ class Preprocessor:
                 self.store_internal_segmentation(
                     internal_segmentation=InternalSegmentation(
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-                        input_path=i.input_path,
+                        input_path=i.path,
                         params_for_storing=self.preprocessor_input.storing_params,
                         downsampling_parameters=self.preprocessor_input.downsampling,
                         entry_data=self.preprocessor_input.entry_data,
-                        input_kind=i.input_kind,
+                        input_kind=i.kind,
                     )
                 )
 
@@ -945,9 +945,9 @@ class Preprocessor:
         for task in tasks:
             task.execute()
 
-    def __check_if_inputs_exists(self, raw_inputs_list: list[tuple[Path, InputKind]]):
+    def __check_if_inputs_exists(self, raw_inputs_list: list[RawInput]):
         for input_item in raw_inputs_list:
-            p = input_item[0]
+            p = input_item["path"]
             assert p.exists(), f"Input file {p} does not exist"
 
     def _analyse_preprocessor_input(self) -> list[InputT]:
@@ -959,26 +959,26 @@ class Preprocessor:
         analyzed: list[InputT] = []
 
         extra_data = list(
-            filter(lambda i: i[1] == InputKind.extra_data, raw_inputs_list)
+            filter(lambda i: i["kind"] == InputKind.extra_data, raw_inputs_list)
         )
         assert len(extra_data) <= 1, "There must be no more than one extra data input"
         if len(extra_data) == 1:
             analyzed.append(extra_data[0])
 
-        if any(i[1] == InputKind.mask for i in raw_inputs_list):
+        if any(i["kind"] == InputKind.mask for i in raw_inputs_list):
             all_mask_input_pathes = [
-                i[0] for i in raw_inputs_list if i[1] == InputKind.mask
+                i["path"] for i in raw_inputs_list if i["kind"] == InputKind.mask
             ]
             joint_mask_input = MaskInput(
-                input_path=all_mask_input_pathes, input_kind=InputKind.mask
+                path=all_mask_input_pathes, kind=InputKind.mask
             )
             analyzed.append(joint_mask_input)
 
-        if any(isinstance(i, GeometricSegmentationInput) for i in raw_inputs_list):
+        if any(i["kind"] == InputKind.geometric_segmentation for i in raw_inputs_list):
             all_gs_pathes = [
-                i[0]
+                i["path"]
                 for i in raw_inputs_list
-                if i[1] == InputKind.geometric_segmentation
+                if i["kind"] == InputKind.geometric_segmentation
             ]
             joint_geometric_segmentation_input = GeometricSegmentationInput(
                 all_gs_pathes, InputKind.geometric_segmentation
@@ -988,31 +988,32 @@ class Preprocessor:
         # TODO: three maps etc.?
 
         for i in raw_inputs_list:
-            k = i[1]
+            k = i["kind"]
+            p = i["path"]
             if k == InputKind.extra_data:
-                analyzed.append(ExtraDataInput(input_path=i[0], input_kind=k))
+                analyzed.append(ExtraDataInput(path=p, kind=k))
             elif k == InputKind.map:
-                analyzed.append(MAPInput(input_path=i[0], input_kind=k))
+                analyzed.append(MAPInput(path=p, kind=k))
             elif k == InputKind.sff:
-                analyzed.append(SFFInput(input_path=i[0], input_kind=k))
+                analyzed.append(SFFInput(path=p, kind=k))
             elif k == InputKind.omezarr:
-                analyzed.append(OMEZARRInput(input_path=i[0], input_kind=k))
+                analyzed.append(OMEZARRInput(path=p, kind=k))
             elif k == InputKind.mask:
-                analyzed.append(MaskInput(input_path=i[0], input_kind=k))
+                analyzed.append(MaskInput(path=p, kind=k))
             elif k == InputKind.geometric_segmentation:
                 analyzed.append(
-                    GeometricSegmentationInput(input_path=i[0], input_kind=k)
+                    GeometricSegmentationInput(path=p, kind=k)
                 )
             elif k == InputKind.custom_annotations:
-                analyzed.append(CustomAnnotationsInput(input_path=i[0], input_kind=k))
+                analyzed.append(CustomAnnotationsInput(path=p, kind=k))
             elif k == InputKind.application_specific_segmentation:
                 sff_path = convert_app_specific_segm_to_sff(i[0])
-                analyzed.append(SFFInput(input_path=sff_path, input_kind=InputKind.sff))
+                analyzed.append(SFFInput(path=sff_path, kind=InputKind.sff))
                 # TODO: remove app specific segm file?
             elif k == InputKind.ometiff_image:
-                analyzed.append(OMETIFFImageInput(input_path=i[0], input_kind=k))
+                analyzed.append(OMETIFFImageInput(path=p, kind=k))
             elif k == InputKind.ometiff_segmentation:
-                analyzed.append(OMETIFFSegmentationInput(input_path=i[0], input_kind=k))
+                analyzed.append(OMETIFFSegmentationInput(path=p, kind=k))
             else:
                 raise Exception(f"Input kind is not recognized. Input item: {i}")
 
@@ -1145,60 +1146,63 @@ class Preprocessor:
 
 
 async def main_preprocessor(
-    mode: PreprocessorMode,
-    quantize_dtype_str: typing.Optional[QuantizationDtype],
-    quantize_downsampling_levels: typing.Optional[str],
-    force_volume_dtype: typing.Optional[str],
-    max_size_per_downsampling_lvl_mb: typing.Optional[float],
-    min_downsampling_level: typing.Optional[int],
-    max_downsampling_level: typing.Optional[int],
-    remove_original_resolution: bool,
-    entry_id: str,
-    source_db: str,
-    source_db_id: str,
-    source_db_name: str,
-    working_folder: str,
-    db_path: str,
-    input_paths: list[str],
-    input_kinds: list[InputKind],
-    min_size_per_downsampling_lvl_mb: typing.Optional[float] = 5.0,
+    arguments: PreprocessorArguments
+    # mode: PreprocessorMode,
+    # quantize_dtype_str: typing.Optional[QuantizationDtype],
+    # quantize_downsampling_levels: typing.Optional[str],
+    # force_volume_dtype: typing.Optional[str],
+    # max_size_per_downsampling_lvl_mb: typing.Optional[float],
+    # min_downsampling_level: typing.Optional[int],
+    # max_downsampling_level: typing.Optional[int],
+    # remove_original_resolution: bool,
+    # entry_id: str,
+    # source_db: str,
+    # source_db_id: str,
+    # source_db_name: str,
+    # working_folder: str,
+    # db_path: str,
+    # input_paths: list[str],
+    # input_kinds: list[InputKind],
+    # min_size_per_downsampling_lvl_mb: typing.Optional[float] = 5.0,
 ):
-    if quantize_downsampling_levels:
-        quantize_downsampling_levels = quantize_downsampling_levels.split(" ")
-        quantize_downsampling_levels = tuple(
-            [int(level) for level in quantize_downsampling_levels]
-        )
+    args = DefaultMunch.fromDict(arguments)
+    # for k, v in arguments.items():
+    #     setattr(args, k, v)
 
     preprocessor_input = PreprocessorInput(
         inputs=Inputs(files=[]),
         volume=VolumeParams(
-            quantize_dtype_str=quantize_dtype_str,
-            quantize_downsampling_levels=quantize_downsampling_levels,
-            force_volume_dtype=force_volume_dtype,
+            quantize_dtype_str=args.quantize_dtype_str,
+            quantize_downsampling_levels=args.quantize_downsampling_levels,
+            force_volume_dtype=args.force_volume_dtype,
         ),
         downsampling=DownsamplingParams(
-            min_size_per_downsampling_lvl_mb=min_size_per_downsampling_lvl_mb,
-            max_size_per_downsampling_lvl_mb=max_size_per_downsampling_lvl_mb,
-            min_downsampling_level=min_downsampling_level,
-            max_downsampling_level=max_downsampling_level,
-            remove_original_resolution=remove_original_resolution,
+            min_size_per_downsampling_lvl_mb=args.min_size_per_downsampling_lvl_mb,
+            max_size_per_downsampling_lvl_mb=args.max_size_per_downsampling_lvl_mb,
+            min_downsampling_level=args.min_downsampling_level,
+            max_downsampling_level=args.max_downsampling_level,
+            remove_original_resolution=args.remove_original_resolution,
         ),
         entry_data=EntryData(
-            entry_id=entry_id,
-            source_db=source_db,
-            source_db_id=source_db_id,
-            source_db_name=source_db_name,
+            entry_id=args.entry_id,
+            source_db=args.source_db,
+            source_db_id=args.source_db_id,
+            source_db_name=args.source_db_name,
         ),
-        working_folder=Path(working_folder),
+        working_folder=Path(args.working_folder),
         storing_params=StoringParams(),
-        db_path=Path(db_path),
+        db_path=Path(args.db_path),
     )
 
-    for input_path, input_kind in zip(input_paths, input_kinds):
-        preprocessor_input.inputs.files.append((Path(input_path), input_kind))
+    inputs: list[RawInput] = args.inputs
+    for idx, i in enumerate(inputs):
+        inputs[idx] = RawInput(path=Path(i["path"]), kind=i["kind"])
+        
+    # for input_path, input_kind in zip(args.input_paths, args.input_kinds):
+    preprocessor_input.inputs.files = inputs
 
     preprocessor = Preprocessor(preprocessor_input)
-    if mode == PreprocessorMode.add:
+    if args.mode == PreprocessorMode.add:
         if await preprocessor.entry_exists():
             raise Exception(
                 f"Entry {preprocessor_input.entry_data.entry_id} from {preprocessor_input.entry_data.source_db} source already exists in database {preprocessor_input.db_path}"
@@ -1208,11 +1212,11 @@ async def main_preprocessor(
             raise Exception(
                 f"Entry {preprocessor_input.entry_data.entry_id} from {preprocessor_input.entry_data.source_db} source does not exist in database {preprocessor_input.db_path}"
             )
-        assert mode == PreprocessorMode.extend, "Preprocessor mode is not supported"
+        assert args.mode == PreprocessorMode.extend, "Preprocessor mode is not supported"
 
-    await preprocessor.initialization(mode=mode)
+    await preprocessor.initialization(mode=args.mode)
     preprocessor.preprocessing()
-    preprocessor.store_to_db(mode)
+    preprocessor.store_to_db(mode=args.mode)
 
 
 app = typer.Typer()
@@ -1222,57 +1226,62 @@ app = typer.Typer()
 # it will not add anything, throwing error instead (group exists in destination)
 @app.command("preprocess")
 def main(
-    mode: PreprocessorMode = PreprocessorMode.add.value,
-    quantize_dtype_str: Annotated[
-        typing.Optional[QuantizationDtype], typer.Option(None)
-    ] = None,
-    quantize_downsampling_levels: Annotated[
-        typing.Optional[str], typer.Option(None, help="Space-separated list of numbers")
-    ] = None,
-    force_volume_dtype: Annotated[typing.Optional[str], typer.Option(None)] = None,
-    max_size_per_downsampling_lvl_mb: Annotated[
-        typing.Optional[float], typer.Option(None)
-    ] = None,
-    min_size_per_downsampling_lvl_mb: Annotated[
-        typing.Optional[float], typer.Option(None)
-    ] = 5.0,
-    min_downsampling_level: Annotated[typing.Optional[int], typer.Option(None)] = None,
-    max_downsampling_level: Annotated[typing.Optional[int], typer.Option(None)] = None,
-    remove_original_resolution: Annotated[
-        typing.Optional[bool], typer.Option(None)
-    ] = False,
-    entry_id: str = typer.Option(default=...),
-    source_db: str = typer.Option(default=...),
-    source_db_id: str = typer.Option(default=...),
-    source_db_name: str = typer.Option(default=...),
-    working_folder: str = typer.Option(default=...),
-    db_path: str = typer.Option(default=...),
-    input_path: list[str] = typer.Option(default=...),
-    input_kind: list[InputKind] = typer.Option(default=...),
-    # add_segmentation_to_entry: bool = typer.Option(default=False),
-    # add_custom_annotations: bool = typer.Option(default=False),
+    arguments_json: str = typer.Option(default=...)
+    # mode: PreprocessorMode = PreprocessorMode.add.value,
+    # quantize_dtype_str: Annotated[
+    #     typing.Optional[QuantizationDtype], typer.Option(None)
+    # ] = None,
+    # quantize_downsampling_levels: Annotated[
+    #     typing.Optional[str], typer.Option(None, help="Space-separated list of numbers")
+    # ] = None,
+    # force_volume_dtype: Annotated[typing.Optional[str], typer.Option(None)] = None,
+    # max_size_per_downsampling_lvl_mb: Annotated[
+    #     typing.Optional[float], typer.Option(None)
+    # ] = None,
+    # min_size_per_downsampling_lvl_mb: Annotated[
+    #     typing.Optional[float], typer.Option(None)
+    # ] = 5.0,
+    # min_downsampling_level: Annotated[typing.Optional[int], typer.Option(None)] = None,
+    # max_downsampling_level: Annotated[typing.Optional[int], typer.Option(None)] = None,
+    # remove_original_resolution: Annotated[
+    #     typing.Optional[bool], typer.Option(None)
+    # ] = False,
+    # entry_id: str = typer.Option(default=...),
+    # source_db: str = typer.Option(default=...),
+    # source_db_id: str = typer.Option(default=...),
+    # source_db_name: str = typer.Option(default=...),
+    # working_folder: str = typer.Option(default=...),
+    # db_path: str = typer.Option(default=...),
+    # input_path: list[str] = typer.Option(default=...),
+    # input_kind: list[InputKind] = typer.Option(default=...),
+    # # add_segmentation_to_entry: bool = typer.Option(default=False),
+    # # add_custom_annotations: bool = typer.Option(default=False),
 ):
+    json_path = Path(arguments_json)
+    arguments: PreprocessorArguments = read_json(json_path)
+    # TODO: unpack to variables
     asyncio.run(
         main_preprocessor(
-            mode=mode,
-            entry_id=entry_id,
-            source_db=source_db,
-            source_db_id=source_db_id,
-            source_db_name=source_db_name,
-            working_folder=working_folder,
-            db_path=db_path,
-            input_paths=input_path,
-            input_kinds=input_kind,
-            quantize_dtype_str=quantize_dtype_str,
-            quantize_downsampling_levels=quantize_downsampling_levels,
-            force_volume_dtype=force_volume_dtype,
-            max_size_per_downsampling_lvl_mb=max_size_per_downsampling_lvl_mb,
-            min_size_per_downsampling_lvl_mb=min_size_per_downsampling_lvl_mb,
-            min_downsampling_level=min_downsampling_level,
-            max_downsampling_level=max_downsampling_level,
-            remove_original_resolution=remove_original_resolution,
-            # add_segmentation_to_entry=add_segmentation_to_entry,
-            # add_custom_annotations=add_custom_annotations
+            arguments=arguments
+            # mode=mode,
+            # entry_id=entry_id,
+            # source_db=source_db,
+            # source_db_id=source_db_id,
+            # source_db_name=source_db_name,
+            # working_folder=working_folder,
+            # db_path=db_path,
+            # input_paths=input_path,
+            # input_kinds=input_kind,
+            # quantize_dtype_str=quantize_dtype_str,
+            # quantize_downsampling_levels=quantize_downsampling_levels,
+            # force_volume_dtype=force_volume_dtype,
+            # max_size_per_downsampling_lvl_mb=max_size_per_downsampling_lvl_mb,
+            # min_size_per_downsampling_lvl_mb=min_size_per_downsampling_lvl_mb,
+            # min_downsampling_level=min_downsampling_level,
+            # max_downsampling_level=max_downsampling_level,
+            # remove_original_resolution=remove_original_resolution,
+            # # add_segmentation_to_entry=add_segmentation_to_entry,
+            # # add_custom_annotations=add_custom_annotations
         )
     )
 
@@ -1393,7 +1402,7 @@ def edit_segment_annotations(
 
     db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
 
-    parsedSegmentAnnotations: list[SegmentAnnotationData] = open_json_file(
+    parsedSegmentAnnotations: list[SegmentAnnotationData] = read_json(
         Path(data_json_path)
     )
 
@@ -1423,7 +1432,7 @@ def edit_descriptions(
 
     db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
 
-    parsedDescriptionData: list[DescriptionData] = open_json_file(Path(data_json_path))
+    parsedDescriptionData: list[DescriptionData] = read_json(Path(data_json_path))
 
     with db.edit_annotations(
         namespace=source_db, key=entry_id

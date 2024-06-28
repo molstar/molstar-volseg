@@ -28,7 +28,7 @@ from cellstar_preprocessor.flows.segmentation._helper_methods import (
 from cellstar_preprocessor.flows.segmentation._segmentation_set_table import (
     SegmentationSetTable,
 )
-from cellstar_preprocessor.model.input import SegmentationPrimaryDescriptor
+from cellstar_db.models import SegmentationPrimaryDescriptor
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from cellstar_preprocessor.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import (
     MagicKernel3dDownsampler,

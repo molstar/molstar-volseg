@@ -16,7 +16,7 @@ from cellstar_preprocessor.flows.segmentation.segmentation_downsampling import (
 from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing import (
     sff_segmentation_preprocessing,
 )
-from cellstar_preprocessor.model.input import SegmentationPrimaryDescriptor
+from cellstar_db.models import SegmentationPrimaryDescriptor
 from cellstar_preprocessor.tests.helper_methods import get_sff_internal_segmentation
 from cellstar_preprocessor.tests.input_for_tests import (
     INTERNAL_MESH_SEGMENTATION_FOR_TESTING,

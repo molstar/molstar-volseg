@@ -12,7 +12,7 @@ from cellstar_preprocessor.flows.common import (
     set_segmentation_custom_data,
 )
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
-from cellstar_preprocessor.model.input import SegmentationPrimaryDescriptor
+from cellstar_db.models import SegmentationPrimaryDescriptor
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 

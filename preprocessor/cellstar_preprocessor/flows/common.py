@@ -94,7 +94,7 @@ def set_segmentation_custom_data(
 
 
 def process_extra_data(path: Path, intermediate_zarr_structure: Path):
-    data: ExtraData = open_json_file(path)
+    data: ExtraData = read_json(path)
     zarr_structure: zarr.Group = open_zarr_structure_from_path(
         intermediate_zarr_structure
     )
@@ -133,6 +133,10 @@ def get_downsamplings(data_group: zarr.Group) -> list[DownsamplingLevelInfo]:
 
     return downsampling_info_list
 
+# source: https://stackoverflow.com/a/11157531/13136429
+def dictget(d, *k):
+    """Get the values corresponding to the given keys in the provided dict."""
+    return (d[i] for i in k)
 
 def save_dict_to_json_file(d: dict | list, filename: str, path: Path) -> None:
     output_file = path / filename
@@ -143,7 +147,7 @@ def save_dict_to_json_file(d: dict | list, filename: str, path: Path) -> None:
         json.dump(d, fp, indent=4)
 
 
-def open_json_file(path: Path):
+def read_json(path: Path):
     with open(path.resolve(), "r", encoding="utf-8") as f:
         # reads into dict
         read_file: dict | list = json.load(f)

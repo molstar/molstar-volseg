@@ -22,7 +22,7 @@ from cellstar_db.file_system.constants import (
 from cellstar_db.models import GeometricSegmentationData
 from cellstar_db.protocol import VolumeServerDB
 from cellstar_preprocessor.flows.common import (
-    open_json_file,
+    read_json,
     open_zarr_structure_from_path,
     save_dict_to_json_file,
 )
@@ -141,7 +141,7 @@ class VolumeAndSegmentationContext:
                 self.path_to_entry / GEOMETRIC_SEGMENTATION_FILENAME
             )
             if (shape_primitives_path).exists():
-                d = open_json_file(path=shape_primitives_path)
+                d = read_json(path=shape_primitives_path)
                 # add to list new segmentation
             d.append(target_geometric_segmentation)
             # save back to file
@@ -176,7 +176,7 @@ class VolumeAndSegmentationContext:
                 self.path_to_entry / GEOMETRIC_SEGMENTATION_FILENAME
             )
             # if (shape_primitives_path).exists():
-            d: list[GeometricSegmentationData] = open_json_file(
+            d: list[GeometricSegmentationData] = read_json(
                 path=shape_primitives_path
             )
             # TODO: find that geometric segmentation by id

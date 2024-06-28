@@ -1,0 +1,117 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+        "quantize_downsampling_levels": {
+            "type": [
+                "array",
+                "null"
+            ],
+            "items": {
+                "type": "number"
+            },
+            "minItems": 1
+        },
+        "mode": {
+            "type": "string",
+            "enum": [
+                "add",
+                "extend"
+            ]
+        },
+        "quantize_dtype_str": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "enum": [
+                "u1",
+                "u2"
+            ]
+        },
+        "force_volume_dtype": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "max_size_per_downsampling_lvl_mb": {
+            "type": [
+                "number",
+                "null"
+            ]
+        },
+        "min_size_per_downsampling_lvl_mb": {
+            "type": [
+                "number",
+                "null"
+            ]
+        },
+        "min_downsampling_level": {
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "max_downsampling_level": {
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "remove_original_resolution": {
+            "type": [
+                "boolean",
+                "null"
+            ]
+        },
+        "entry_id": {
+            "type": "string"
+        },
+        "source_db": {
+            "type": "string"
+        },
+        "source_db_id": {
+            "type": "string"
+        },
+        "source_db_name": {
+            "type": "string"
+        },
+        "working_folder": {
+            "type": "string"
+        },
+        "db_path": {
+            "type": "string"
+        },
+        "inputs": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "type": "string",
+                        "enum": [
+                            "map",
+                            "sff",
+                            "omezarr",
+                            "mask",
+                            "application_specific_segmentation",
+                            "custom_annotations",
+                            "nii_volume",
+                            "nii_segmentation",
+                            "geometric_segmentation",
+                            "ometiff_image",
+                            "ometiff_segmentation",
+                            "extra_data"
+                        ]
+                    }
+                }
+            },
+            "minItems": 1
+        }
+    },
+    "additionalProperties": false
+}
