@@ -6,7 +6,7 @@ from cellstar_preprocessor.flows.constants import (
     DEFAULT_DB_PATH,
     RAW_INPUT_DOWNLOAD_PARAMS_JSON,
     RAW_INPUT_FILES_DIR,
-    TEMP_ZARR_HIERARCHY_STORAGE_PATH,
+    WORKING_FOLDER_PATH,
 )
 from cellstar_preprocessor.tools.deploy_db.build import build
 from cellstar_preprocessor.tools.deploy_db.download import (
@@ -54,9 +54,9 @@ def parse_script_args():
         "--db_path", type=str, default=DEFAULT_DB_PATH, help="path to db folder"
     )
     parser.add_argument(
-        "--temp_zarr_hierarchy_storage_path",
+        "--working_folder",
         type=str,
-        default=TEMP_ZARR_HIERARCHY_STORAGE_PATH,
+        default=WORKING_FOLDER_PATH,
         help="path to db working directory",
     )
     parser.add_argument(

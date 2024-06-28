@@ -19,11 +19,11 @@ def json_to_list_of_inputs_for_building(json_path: Path):
 def prepare_input_for_preprocessor(
     config: list[InputForBuildingDatabase],
     db_path: str,
-    temp_zarr_hierarchy_storage_path: str,
+    working_folder: str,
 ) -> list[dict]:
     arguments_list = []
     for input in config:
         arguments_list.append(
-            (input, Path(db_path), Path(temp_zarr_hierarchy_storage_path))
+            (input, Path(db_path), Path(working_folder))
         )
     return arguments_list

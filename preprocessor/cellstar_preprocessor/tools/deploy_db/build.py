@@ -9,7 +9,7 @@ from cellstar_db.models import InputForBuildingDatabase
 from cellstar_preprocessor.flows.constants import (
     DB_BUILDING_PARAMETERS_JSON,
     DEFAULT_DB_PATH,
-    TEMP_ZARR_HIERARCHY_STORAGE_PATH,
+    WORKING_FOLDER_PATH,
 )
 from cellstar_preprocessor.preprocess import PreprocessorMode, main_preprocessor
 from cellstar_preprocessor.tools.deploy_db.deploy_process_helper import (
@@ -36,9 +36,9 @@ def parse_script_args():
         "--db_path", type=str, default=DEFAULT_DB_PATH, help="path to db folder"
     )
     parser.add_argument(
-        "--temp_zarr_hierarchy_storage_path",
+        "--working_folder",
         type=str,
-        default=TEMP_ZARR_HIERARCHY_STORAGE_PATH,
+        default=WORKING_FOLDER_PATH,
         help="path to db working directory",
     )
     parser.add_argument(
@@ -115,19 +115,19 @@ def build(args):
     if args.delete_existing_db and Path(args.db_path).exists():
         shutil.rmtree(args.db_path)
 
-    if not args.temp_zarr_hierarchy_storage_path:
-        temp_zarr_hierarchy_storage_path = (
-            Path(TEMP_ZARR_HIERARCHY_STORAGE_PATH) / args.db_path
+    if not args.working_folder:
+        working_folder = (
+            Path(WORKING_FOLDER_PATH) / args.db_path
         )
     else:
-        temp_zarr_hierarchy_storage_path = Path(args.temp_zarr_hierarchy_storage_path)
+        working_folder = Path(args.working_folder)
 
-    # atexit.register(clean_up_temp_zarr_hierarchy_storage, temp_zarr_hierarchy_storage_path)
+    # atexit.register(clean_up_temp_zarr_hierarchy_storage, working_folder)
 
     # here it is removed
-    if temp_zarr_hierarchy_storage_path.exists():
-        # remove_temp_zarr_hierarchy_storage_folder(temp_zarr_hierarchy_storage_path)
-        shutil.rmtree(temp_zarr_hierarchy_storage_path, ignore_errors=True)
+    if working_folder.exists():
+        # remove_temp_zarr_hierarchy_storage_folder(working_folder)
+        shutil.rmtree(working_folder, ignore_errors=True)
 
     # clean_up_raw_input_files_dir(args.raw_input_files_dir)
 
@@ -137,7 +137,7 @@ def build(args):
     arguments_list = prepare_input_for_preprocessor(
         config=config,
         db_path=args.db_path,
-        temp_zarr_hierarchy_storage_path=temp_zarr_hierarchy_storage_path,
+        working_folder=working_folder,
     )
     print("Arguments list for preprocessor external wrapper was prepared")
 
@@ -145,7 +145,7 @@ def build(args):
 
     print("Preprocessor external wrapper preprocessed all entries")
     # TODO: this should be done only after everything is build
-    shutil.rmtree(temp_zarr_hierarchy_storage_path, ignore_errors=True)
+    shutil.rmtree(working_folder, ignore_errors=True)
 
 
 if __name__ == "__main__":
