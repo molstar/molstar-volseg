@@ -26,7 +26,9 @@ def _get_segment_name_from_mapping(
         return f"Segment {segment_id}"
 
 
-def mask_segmentation_annotations_preprocessing(internal_segmentation: InternalSegmentation):
+def mask_segmentation_annotations_preprocessing(
+    internal_segmentation: InternalSegmentation,
+):
     # segm_arr = root[SEGMENTATION_DATA_GROUPNAME][0][0][0][0]
 
     root = open_zarr_structure_from_path(

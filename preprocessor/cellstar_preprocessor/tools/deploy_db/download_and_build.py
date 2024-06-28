@@ -1,23 +1,30 @@
-
-
-from argparse import Namespace
 import argparse
-from cellstar_preprocessor.flows.constants import DB_BUILDING_PARAMETERS_JSON, DEFAULT_DB_PATH, RAW_INPUT_DOWNLOAD_PARAMS_JSON, RAW_INPUT_FILES_DIR, TEMP_ZARR_HIERARCHY_STORAGE_PATH
+from argparse import Namespace
+
+from cellstar_preprocessor.flows.constants import (
+    DB_BUILDING_PARAMETERS_JSON,
+    DEFAULT_DB_PATH,
+    RAW_INPUT_DOWNLOAD_PARAMS_JSON,
+    RAW_INPUT_FILES_DIR,
+    TEMP_ZARR_HIERARCHY_STORAGE_PATH,
+)
 from cellstar_preprocessor.tools.deploy_db.build import build
-from cellstar_preprocessor.tools.deploy_db.download import download, store_db_building_params_to_json
+from cellstar_preprocessor.tools.deploy_db.download import (
+    download,
+    store_db_building_params_to_json,
+)
 
 
-def download_and_build(
-    args: Namespace
-):
+def download_and_build(args: Namespace):
     params = download(args)
-    print('Raw input files was downloaded')
+    print("Raw input files was downloaded")
     store_db_building_params_to_json(params, args)
-    print('Building parameters stored to JSON')
+    print("Building parameters stored to JSON")
     build(args)
     # NOTE: database is not build, breaks here
-    print('Database was build') 
-    
+    print("Database was build")
+
+
 def parse_script_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -41,7 +48,7 @@ def parse_script_args():
     parser.add_argument(
         "--clean_existing_raw_inputs_folder", action="store_true", default=False
     )
-    
+
     # parser.add_argument('--raw_input_files_dir', type=Path, default=RAW_INPUT_FILES_DIR, help='dir with raw input files')
     parser.add_argument(
         "--db_path", type=str, default=DEFAULT_DB_PATH, help="path to db folder"
@@ -60,6 +67,7 @@ def parse_script_args():
     )
     args = parser.parse_args()
     return args
+
 
 if __name__ == "__main__":
     args = parse_script_args()

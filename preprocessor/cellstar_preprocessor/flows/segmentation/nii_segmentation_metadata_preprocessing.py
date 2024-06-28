@@ -33,7 +33,9 @@ def _get_segmentation_sampling_info(
                 )
 
 
-def nii_segmentation_metadata_preprocessing(internal_segmentation: InternalSegmentation):
+def nii_segmentation_metadata_preprocessing(
+    internal_segmentation: InternalSegmentation,
+):
     # PLAN:
     # takes prefilled metadata dict from nii metadata
     # takes internal segmentation

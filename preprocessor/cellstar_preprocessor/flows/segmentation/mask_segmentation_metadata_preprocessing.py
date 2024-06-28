@@ -1,7 +1,6 @@
 from decimal import ROUND_CEILING, Decimal, getcontext
+
 import zarr
-import dask.array as da
-import numpy as np
 from cellstar_db.models import (
     DownsamplingLevelInfo,
     Metadata,
@@ -14,14 +13,8 @@ from cellstar_preprocessor.flows.common import (
     get_downsamplings,
     open_zarr_structure_from_path,
 )
-from cellstar_preprocessor.flows.constants import (
-    LATTICE_SEGMENTATION_DATA_GROUPNAME,
-    QUANTIZATION_DATA_DICT_ATTR_NAME,
-)
+from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
-from cellstar_preprocessor.tools.quantize_data.quantize_data import (
-    decode_quantized_data,
-)
 
 # TODO: refactor, move _* methods from here and extract_metadata_from_map
 # to common
@@ -149,7 +142,9 @@ def _get_mask_segmentation_sampling_info(
             #     }
 
 
-def mask_segmentation_metadata_preprocessing(internal_segmentation: InternalSegmentation):
+def mask_segmentation_metadata_preprocessing(
+    internal_segmentation: InternalSegmentation,
+):
     root = open_zarr_structure_from_path(
         internal_segmentation.intermediate_zarr_structure_path
     )
@@ -188,8 +183,13 @@ def mask_segmentation_metadata_preprocessing(internal_segmentation: InternalSegm
                 internal_segmentation.map_headers[lattice_id]
             ),
         )
-        
-        _get_mask_segmentation_sampling_info(lattice_gr, segmentation_sampling_info, internal_segmentation.map_headers[lattice_id], downsamplings)
+
+        _get_mask_segmentation_sampling_info(
+            lattice_gr,
+            segmentation_sampling_info,
+            internal_segmentation.map_headers[lattice_id],
+            downsamplings,
+        )
 
         segmentation_lattices_metadata["segmentation_sampling_info"][
             str(lattice_id)

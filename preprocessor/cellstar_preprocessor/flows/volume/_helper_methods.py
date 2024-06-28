@@ -1,5 +1,4 @@
 import logging
-import math
 
 import dask.array as da
 import numpy as np
@@ -25,6 +24,7 @@ def generate_kernel_3d_arr(pattern: list[int]) -> np.ndarray:
         logging.error(e, stack_info=True, exc_info=True)
         raise e
     return k
+
 
 def normalize_axis_order_mrcfile(dask_arr: da.Array, mrc_header: object) -> da.Array:
     """

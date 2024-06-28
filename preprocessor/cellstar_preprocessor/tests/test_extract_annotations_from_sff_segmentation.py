@@ -1,13 +1,15 @@
 import pytest
 from cellstar_db.models import DescriptionData, ExternalReference, SegmentAnnotationData
+from cellstar_preprocessor.flows.segmentation._helper_methods import (
+    extract_raw_annotations_from_sff,
+)
 from cellstar_preprocessor.flows.segmentation.sff_segmentation_annotations_preprocessing import (
     _preprocess_external_references,
     sff_segmentation_annotations_preprocessing,
 )
-from cellstar_preprocessor.flows.segmentation._helper_methods import (
-    extract_raw_annotations_from_sff,
+from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing import (
+    sff_segmentation_preprocessing,
 )
-from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing import sff_segmentation_preprocessing
 from cellstar_preprocessor.model.input import SegmentationPrimaryDescriptor
 from cellstar_preprocessor.tests.helper_methods import get_sff_internal_segmentation
 from cellstar_preprocessor.tests.input_for_tests import (
@@ -30,9 +32,7 @@ def test_extract_annotations_from_sff_segmentation(test_input: TestInput):
             internal_segmentation=internal_segmentation
         )
 
-        r = extract_raw_annotations_from_sff(
-            internal_segmentation.input_path
-        )
+        r = extract_raw_annotations_from_sff(internal_segmentation.input_path)
 
         assert d["details"] == r["details"]
         assert d["name"] == r["name"]

@@ -1,18 +1,17 @@
 import argparse
-import atexit
 import copy
 import json
 import multiprocessing
 import os
 import shutil
-from turtle import down
-from typing import TypedDict
+import ssl
 import urllib.request
 import zipfile
 from pathlib import Path
-import ssl
+from typing import TypedDict
 
 from cellstar_db.models import PreprocessorParameters
+
 ssl._create_default_https_context = ssl._create_unverified_context
 
 import ome_zarr
@@ -31,10 +30,8 @@ from cellstar_preprocessor.flows.constants import (
     RAW_INPUT_FILES_DIR,
 )
 from cellstar_preprocessor.model.input import InputKind
-from cellstar_preprocessor.tools.deploy_db.deploy_process_helper import (
-    clean_up_processes,
-)
 from cellstar_preprocessor.tools.gunzip.gunzip import gunzip
+
 
 def parse_script_args():
     parser = argparse.ArgumentParser()
@@ -96,8 +93,8 @@ def _download(uri: str, final_path: Path, kind: InputKind):
     else:
         # TODO: download with pool
         try:
-        # regular download
-        # filename construct based on last component of uri
+            # regular download
+            # filename construct based on last component of uri
             complete_path = final_path / filename
             if complete_path.exists():
                 if complete_path.is_dir():
@@ -108,9 +105,8 @@ def _download(uri: str, final_path: Path, kind: InputKind):
                 final_path.mkdir(parents=True)
             urllib.request.urlretrieve(uri, str(complete_path.resolve()))
             return complete_path
-        except Exception as e:
-            print(f'uri: {uri}, final_path: {final_path}, kind: {kind}')
-            
+        except Exception:
+            print(f"uri: {uri}, final_path: {final_path}, kind: {kind}")
 
 
 def _copy_file(uri: str, final_path: Path, kind: InputKind):
@@ -155,13 +151,13 @@ def _get_file(input_file_info: RawInputFileInfo, final_path: Path) -> Path:
     resource = input_file_info["resource"]
     uri = resource["uri"]
     if resource["kind"] == "external":
-        print(f'Downloading {uri}')
+        print(f"Downloading {uri}")
         complete_path = _download(
             input_file_info["resource"]["uri"], final_path, input_file_info["kind"]
         )
         return complete_path
     elif resource["kind"] == "local":
-        print(f'Copying {uri}')
+        print(f"Copying {uri}")
         complete_path = _copy_file(resource["uri"], final_path, input_file_info["kind"])
         # shutil.copy2(resource['uri'], final_path)
         return complete_path
@@ -175,23 +171,23 @@ class InputItemParams(TypedDict):
     raw_input_files_download_params: RawInputFilesDownloadParams
     preprocessor_parameters: PreprocessorParameters | None
 
+
 def _get_file_pool_wrapper(params: InputItemParams):
     raw_input = params["raw_input_file_info"]
     final_path = params["final_path"]
     complete_path = _get_file(raw_input, final_path)
     updated_params: InputItemParams = copy.deepcopy(params)
-    
+
     if complete_path.suffix == ".gz":
         complete_path = gunzip(complete_path)
 
     if complete_path.suffix == ".zip":
         # complete_path is path to zip file
-        complete_path = _unzip_multiseries_ometiff_zip(
-            complete_path, raw_input["kind"]
-        )
-    
+        complete_path = _unzip_multiseries_ometiff_zip(complete_path, raw_input["kind"])
+
     updated_params["complete_path"] = complete_path
     return updated_params
+
 
 def _create_db_building_params(updated_download_items: list[InputItemParams]):
     # check if there is no such thing i
@@ -206,27 +202,33 @@ def _create_db_building_params(updated_download_items: list[InputItemParams]):
             if p["entry_id"] == item["entry_id"] and p["source_db"] == p["source_db"]:
                 target_item_idx = idx
                 break
-        
+
         single_input = (str(complete_path.resolve()), kind)
         if target_item_idx == None:
             input_for_building_db: InputForBuildingDatabase = {
-                    "entry_id": item["entry_id"],
-                    "source_db": item["source_db"],
-                    "source_db_id": item["source_db_id"],
-                    "source_db_name": item["source_db_name"],
-                    "inputs": [single_input],
-                }
+                "entry_id": item["entry_id"],
+                "source_db": item["source_db"],
+                "source_db_id": item["source_db_id"],
+                "source_db_name": item["source_db_name"],
+                "inputs": [single_input],
+            }
             if "preprocessor_parameters" in i:
                 for param in i["preprocessor_parameters"]:
-                    input_for_building_db[param] = i["preprocessor_parameters"][
-                        param
-                    ]
-            
+                    input_for_building_db[param] = i["preprocessor_parameters"][param]
+
             db_building_params.append(input_for_building_db)
-            
+
         else:
-            f = list(filter(lambda p: p["entry_id"] == item["entry_id"] and p["source_db"] == p["source_db"], db_building_params))
-            assert len(f) == 1, 'There must be a single item in the list of inputs for building db'
+            f = list(
+                filter(
+                    lambda p: p["entry_id"] == item["entry_id"]
+                    and p["source_db"] == p["source_db"],
+                    db_building_params,
+                )
+            )
+            assert (
+                len(f) == 1
+            ), "There must be a single item in the list of inputs for building db"
             # modify list item in place
             old_item = db_building_params[target_item_idx]
             old_inputs = old_item["inputs"]
@@ -235,9 +237,10 @@ def _create_db_building_params(updated_download_items: list[InputItemParams]):
             db_building_params[target_item_idx] = old_item
             new_inputs_content = db_building_params[target_item_idx]["inputs"]
             print(f"New inputs content: {new_inputs_content} for ")
-            
+
     return db_building_params
-    
+
+
 def download(args: argparse.Namespace):
     db_building_params: list[InputForBuildingDatabase] = []
 
@@ -251,33 +254,33 @@ def download(args: argparse.Namespace):
 
     download_params_file_path = Path(args.raw_input_download_params)
     download_params = _parse_raw_input_download_params_file(download_params_file_path)
-    
+
     download_items: list[InputItemParams] = []
-    
+
     for item in download_params:
         entry_folder_path = raw_unput_files_dir / item["source_db"] / item["entry_id"]
         for raw_input in item["inputs"]:
             d: InputItemParams = {
                 "raw_input_file_info": raw_input,
                 "final_path": entry_folder_path / raw_input["kind"],
-                "raw_input_files_download_params": item
+                "raw_input_files_download_params": item,
             }
 
             if "preprocessor_parameters" in raw_input:
                 d["preprocessor_parameters"] = raw_input["preprocessor_parameters"]
-            
+
             download_items.append(d)
-            
+
     with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
         updated_download_items = p.map(_get_file_pool_wrapper, download_items)
 
     del download_items
-    
+
     p.join()
 
     # 2. separate function for creating db_building_params
     db_building_params = _create_db_building_params(updated_download_items)
-    
+
     return db_building_params
 
 

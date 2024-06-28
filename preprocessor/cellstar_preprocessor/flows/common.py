@@ -38,6 +38,7 @@ def _is_channels_correct(source_ometiff_metadata):
 def _get_ome_tiff_channel_ids_dict(root: zarr.Group, internal_volume: InternalVolume):
     return internal_volume.custom_data["channel_ids_mapping"]
 
+
 def _parse_ome_tiff_channel_id(ometiff_channel_id: str):
     channel_id = re.sub(r"\W+", "", ometiff_channel_id)
     return channel_id
@@ -140,6 +141,7 @@ def save_dict_to_json_file(d: dict | list, filename: str, path: Path) -> None:
 
     with open(str((path / filename).resolve()), "w", encoding="utf-8") as fp:
         json.dump(d, fp, indent=4)
+
 
 def open_json_file(path: Path):
     with open(path.resolve(), "r", encoding="utf-8") as f:

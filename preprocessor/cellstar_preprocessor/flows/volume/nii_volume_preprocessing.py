@@ -50,7 +50,7 @@ def nii_volume_preprocessing(internal_volume: InternalVolume):
         resolution="1",
         time_frame="0",
         channel="0",
-        )
+    )
 
     internal_volume.map_header = img.header
 

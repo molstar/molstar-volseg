@@ -43,7 +43,7 @@ TEST_ENTRY_PREPROCESSOR_INPUT = dict(
 @pytest.fixture(scope="module")
 def testing_db():
     # create db
-    test_db_path = Path(TEST_ENTRY_PREPROCESSOR_INPUT['db_path']) 
+    test_db_path = Path(TEST_ENTRY_PREPROCESSOR_INPUT["db_path"])
     if (test_db_path).is_dir() == False:
         test_db_path.mkdir(parents=True)
 

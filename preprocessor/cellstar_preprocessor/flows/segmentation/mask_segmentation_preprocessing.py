@@ -54,9 +54,7 @@ def mask_segmentation_preprocessing(internal_segmentation: InternalSegmentation)
 
     # should be dict str to str with all channel ids
     if "segmentation_ids_mapping" not in internal_segmentation.custom_data:
-        list_of_sesgmentation_pathes: list[Path] = (
-            internal_segmentation.input_path
-        )
+        list_of_sesgmentation_pathes: list[Path] = internal_segmentation.input_path
         internal_segmentation.custom_data["segmentation_ids_mapping"] = {
             s.stem: s.stem for s in list_of_sesgmentation_pathes
         }

@@ -1,14 +1,6 @@
 import numpy as np
 import zarr
-from cellstar_db.file_system.constants import VOLUME_DATA_GROUPNAME
-from cellstar_db.models import (
-    DownsamplingLevelInfo,
-    EntryId,
-    Metadata,
-    TimeInfo,
-    VolumeSamplingInfo,
-    VolumesMetadata,
-)
+from cellstar_db.models import DownsamplingLevelInfo, Metadata
 from cellstar_preprocessor.flows.common import (
     _convert_to_angstroms,
     get_downsamplings,
@@ -333,15 +325,13 @@ def omezarr_segmentation_metadata_preprocessing(internal_volume: InternalVolume)
 
     metadata_dict: Metadata = root.attrs["metadata_dict"]
     lattice_ids = []
-    assert LATTICE_SEGMENTATION_DATA_GROUPNAME, 'No segmentation data available' 
+    assert LATTICE_SEGMENTATION_DATA_GROUPNAME, "No segmentation data available"
     metadata_dict["segmentation_lattices"] = {
         "segmentation_ids": [],
         "segmentation_sampling_info": {},
         "time_info": {},
     }
-    for label_gr_name, label_gr in root[
-        LATTICE_SEGMENTATION_DATA_GROUPNAME
-    ].groups():
+    for label_gr_name, label_gr in root[LATTICE_SEGMENTATION_DATA_GROUPNAME].groups():
         new_segm_attrs_dict = _add_defaults_to_ome_zarr_attrs(
             ome_zarr_root=ome_zarr_root.labels[label_gr_name]
         )

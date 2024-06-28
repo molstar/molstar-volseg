@@ -19,9 +19,7 @@ def nii_segmentation_preprocessing(internal_segmentation: InternalSegmentation):
     internal_segmentation.value_to_segment_id_dict = {}
 
     # index = 'lattice_id'
-    for index, segm_input_path in enumerate(
-        internal_segmentation.input_path
-    ):
+    for index, segm_input_path in enumerate(internal_segmentation.input_path):
         img = nib.load(str(segm_input_path.resolve()))
         data = img.get_fdata()
         # temp fix: convert float64 to int

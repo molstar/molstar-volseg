@@ -1,21 +1,16 @@
 from uuid import uuid4
 
-from cellstar_preprocessor.model.segmentation import InternalSegmentation
 import zarr
 import zarr.storage
 from cellstar_db.models import (
     AnnotationsMetadata,
     DescriptionData,
-    EntryId,
     SegmentAnnotationData,
     TargetId,
 )
-from cellstar_preprocessor.flows.common import (
-    get_channel_annotations,
-    open_zarr_structure_from_path,
-)
+from cellstar_preprocessor.flows.common import open_zarr_structure_from_path
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
-from cellstar_preprocessor.model.volume import InternalVolume
+from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
 def _get_label_time(label_value: int, our_label_gr: zarr.Group):
@@ -48,7 +43,9 @@ def _get_label_time(label_value: int, our_label_gr: zarr.Group):
 
 
 # NOTE: Lattice IDs = Label groups
-def omezarr_segmentation_annotations_preprocessing(internal_segmentation: InternalSegmentation):
+def omezarr_segmentation_annotations_preprocessing(
+    internal_segmentation: InternalSegmentation,
+):
     ome_zarr_root = open_zarr_structure_from_path(internal_segmentation.input_path)
     root = open_zarr_structure_from_path(
         internal_segmentation.intermediate_zarr_structure_path
@@ -76,9 +73,7 @@ def omezarr_segmentation_annotations_preprocessing(internal_segmentation: Intern
             }
 
             our_label_gr = root[LATTICE_SEGMENTATION_DATA_GROUPNAME][label_gr_name]
-            time = _get_label_time(
-                label_value=label_value, our_label_gr=our_label_gr
-            )
+            time = _get_label_time(label_value=label_value, our_label_gr=our_label_gr)
             description: DescriptionData = {
                 "id": description_id,
                 "target_kind": "lattice",

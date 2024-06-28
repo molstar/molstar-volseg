@@ -5,7 +5,9 @@ import pytest
 import zarr
 from cellstar_preprocessor.flows.common import open_zarr_structure_from_path
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
-from cellstar_preprocessor.flows.volume.map_volume_preprocessing import map_volume_preprocessing
+from cellstar_preprocessor.flows.volume.map_volume_preprocessing import (
+    map_volume_preprocessing,
+)
 from cellstar_preprocessor.tests.helper_methods import (
     get_internal_XYZ_volume,
     get_internal_ZYX_volume,

@@ -22,7 +22,7 @@ class InternalVolume:
         quantize_dtype_str: QuantizationDtype,
         quantize_downsampling_levels: tuple,
         input_kind: InputKind,
-        custom_data: Optional[VolumeExtraData] = None
+        custom_data: Optional[VolumeExtraData] = None,
     ):
         self.intermediate_zarr_structure_path = intermediate_zarr_structure_path
         self.input_path = input_path

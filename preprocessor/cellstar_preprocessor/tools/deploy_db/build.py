@@ -56,7 +56,7 @@ def _preprocessor_internal_wrapper(
     input_for_building: InputForBuildingDatabase, db_path: str, working_folder: str
 ):
     entry_id = input_for_building["entry_id"]
-    print(f'Internal wrapper is adding {entry_id} to the database')
+    print(f"Internal wrapper is adding {entry_id} to the database")
     quantize_downsampling_levels = None
     if "quantize_downsampling_levels" in input_for_building:
         quantize_downsampling_levels = []
@@ -98,13 +98,13 @@ def _preprocessor_internal_wrapper(
             input_kinds=input_kinds_list,
         )
     )
-    print(f'Internal wrapper have added {entry_id} to the database')
-    
+    print(f"Internal wrapper have added {entry_id} to the database")
+
 
 def _preprocessor_external_wrapper(
     arguments_list: list[tuple[InputForBuildingDatabase, str, str]]
 ):
-    print('External preprocessor wrapper launched')
+    print("External preprocessor wrapper launched")
     with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
         p.starmap(_preprocessor_internal_wrapper, arguments_list)
 
@@ -132,18 +132,18 @@ def build(args):
     # clean_up_raw_input_files_dir(args.raw_input_files_dir)
 
     config = json_to_list_of_inputs_for_building(Path(args.db_building_parameters_json))
-    print('JSON with building parameters was parsed')
-    
+    print("JSON with building parameters was parsed")
+
     arguments_list = prepare_input_for_preprocessor(
         config=config,
         db_path=args.db_path,
         temp_zarr_hierarchy_storage_path=temp_zarr_hierarchy_storage_path,
     )
-    print('Arguments list for preprocessor external wrapper was prepared')
-    
+    print("Arguments list for preprocessor external wrapper was prepared")
+
     _preprocessor_external_wrapper(arguments_list)
 
-    print('Preprocessor external wrapper preprocessed all entries')
+    print("Preprocessor external wrapper preprocessed all entries")
     # TODO: this should be done only after everything is build
     shutil.rmtree(temp_zarr_hierarchy_storage_path, ignore_errors=True)
 

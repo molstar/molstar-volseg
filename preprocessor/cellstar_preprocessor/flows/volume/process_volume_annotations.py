@@ -1,6 +1,9 @@
-
-from cellstar_preprocessor.flows.volume.ometiff_volume_annotations_preprocessing import ometiff_volume_annotations_preprocessing
-from cellstar_preprocessor.flows.volume.omezarr_volume_annotations_preprocessing import omezarr_volume_annotations_preprocessing
+from cellstar_preprocessor.flows.volume.ometiff_volume_annotations_preprocessing import (
+    ometiff_volume_annotations_preprocessing,
+)
+from cellstar_preprocessor.flows.volume.omezarr_volume_annotations_preprocessing import (
+    omezarr_volume_annotations_preprocessing,
+)
 from cellstar_preprocessor.model.input import InputKind
 from cellstar_preprocessor.model.volume import InternalVolume
 

@@ -6,12 +6,6 @@ from argparse import ArgumentError
 from enum import Enum
 from pathlib import Path
 
-from cellstar_preprocessor.flows.segmentation.process_segmentation import process_segmentation
-from cellstar_preprocessor.flows.segmentation.process_segmentation_annotations import process_segmentation_annotations
-from cellstar_preprocessor.flows.segmentation.process_segmentation_metadata import process_segmentation_metadata
-from cellstar_preprocessor.flows.volume.process_volume import process_volume
-from cellstar_preprocessor.flows.volume.process_volume_annotations import process_volume_annotations
-from cellstar_preprocessor.flows.volume.process_volume_metadata import process_volume_metadata
 import typer
 import zarr
 from cellstar_db.file_system.annotations_context import AnnnotationsEditContext
@@ -44,35 +38,17 @@ from cellstar_preprocessor.flows.segmentation.custom_annotations_preprocessing i
 from cellstar_preprocessor.flows.segmentation.geometric_segmentation_annotations_preprocessing import (
     geometric_segmentation_annotations_preprocessing,
 )
-from cellstar_preprocessor.flows.segmentation.sff_segmentation_annotations_preprocessing import (
-    sff_segmentation_annotations_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.mask_segmentation_metadata_preprocessing import (
-    mask_segmentation_metadata_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.nii_segmentation_metadata_preprocessing import (
-    nii_segmentation_metadata_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.sff_segmentation_metadata_preprocessing import (
-    sff_segmentation_metadata_preprocessing,
-)
 from cellstar_preprocessor.flows.segmentation.geometric_segmentation_metadata_preprocessing import (
     geometric_segmentation_metadata_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.ometiff_segmentation_annotations_preprocessing import (
-    ometiff_segmentation_annotations_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.ometiff_segmentation_metadata_preprocessing import (
-    ometiff_segmentation_metadata_preprocessing,
 )
 from cellstar_preprocessor.flows.segmentation.geometric_segmentation_preprocessing import (
     geometric_segmentation_preprocessing,
 )
-from cellstar_preprocessor.flows.segmentation._helper_methods import (
-    check_if_omezarr_has_labels,
-)
 from cellstar_preprocessor.flows.segmentation.mask_segmentation_annotations_preprocessing import (
     mask_segmentation_annotations_preprocessing,
+)
+from cellstar_preprocessor.flows.segmentation.mask_segmentation_metadata_preprocessing import (
+    mask_segmentation_metadata_preprocessing,
 )
 from cellstar_preprocessor.flows.segmentation.mask_segmentation_preprocessing import (
     mask_segmentation_preprocessing,
@@ -80,25 +56,71 @@ from cellstar_preprocessor.flows.segmentation.mask_segmentation_preprocessing im
 from cellstar_preprocessor.flows.segmentation.nii_segmentation_downsampling import (
     nii_segmentation_downsampling,
 )
+from cellstar_preprocessor.flows.segmentation.nii_segmentation_metadata_preprocessing import (
+    nii_segmentation_metadata_preprocessing,
+)
 from cellstar_preprocessor.flows.segmentation.nii_segmentation_preprocessing import (
     nii_segmentation_preprocessing,
+)
+from cellstar_preprocessor.flows.segmentation.ometiff_segmentation_annotations_preprocessing import (
+    ometiff_segmentation_annotations_preprocessing,
+)
+from cellstar_preprocessor.flows.segmentation.ometiff_segmentation_metadata_preprocessing import (
+    ometiff_segmentation_metadata_preprocessing,
+)
+from cellstar_preprocessor.flows.segmentation.ometiff_segmentation_processing import (
+    ometiff_segmentation_processing,
 )
 from cellstar_preprocessor.flows.segmentation.omezarr_segmentations_preprocessing import (
     omezarr_segmentations_preprocessing,
 )
+from cellstar_preprocessor.flows.segmentation.process_segmentation import (
+    process_segmentation,
+)
+from cellstar_preprocessor.flows.segmentation.process_segmentation_annotations import (
+    process_segmentation_annotations,
+)
+from cellstar_preprocessor.flows.segmentation.process_segmentation_metadata import (
+    process_segmentation_metadata,
+)
 from cellstar_preprocessor.flows.segmentation.segmentation_downsampling import (
     segmentation_downsampling,
 )
-from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing import sff_segmentation_preprocessing
+from cellstar_preprocessor.flows.segmentation.sff_segmentation_annotations_preprocessing import (
+    sff_segmentation_annotations_preprocessing,
+)
+from cellstar_preprocessor.flows.segmentation.sff_segmentation_metadata_preprocessing import (
+    sff_segmentation_metadata_preprocessing,
+)
+from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing import (
+    sff_segmentation_preprocessing,
+)
+from cellstar_preprocessor.flows.volume._process_allencel_metadata_csv import (
+    process_allencell_metadata_csv,
+)
+from cellstar_preprocessor.flows.volume._quantize_internal_volume import (
+    quantize_internal_volume,
+)
 from cellstar_preprocessor.flows.volume.map_volume_metadata_preprocessing import (
     map_volume_metadata_preprocessing,
 )
-from cellstar_preprocessor.flows.volume.nii_volume_metadata_preprocessing import nii_volume_metadata_preprocessing
+from cellstar_preprocessor.flows.volume.map_volume_preprocessing import (
+    map_volume_preprocessing,
+)
+from cellstar_preprocessor.flows.volume.nii_volume_metadata_preprocessing import (
+    nii_volume_metadata_preprocessing,
+)
+from cellstar_preprocessor.flows.volume.nii_volume_preprocessing import (
+    nii_volume_preprocessing,
+)
 from cellstar_preprocessor.flows.volume.ometiff_volume_annotations_preprocessing import (
     ometiff_volume_annotations_preprocessing,
 )
 from cellstar_preprocessor.flows.volume.ometiff_volume_metadata_preprocessing import (
     ometiff_volume_metadata_preprocessing,
+)
+from cellstar_preprocessor.flows.volume.ometiff_volume_preprocessing import (
+    ometiff_volume_preprocessing,
 )
 from cellstar_preprocessor.flows.volume.omezarr_volume_annotations_preprocessing import (
     omezarr_volume_annotations_preprocessing,
@@ -106,22 +128,15 @@ from cellstar_preprocessor.flows.volume.omezarr_volume_annotations_preprocessing
 from cellstar_preprocessor.flows.volume.omezarr_volume_metadata_preprocessing import (
     omezarr_volume_metadata_preprocessing,
 )
-from cellstar_preprocessor.flows.volume.map_volume_preprocessing import map_volume_preprocessing
-from cellstar_preprocessor.flows.volume.nii_volume_preprocessing import nii_volume_preprocessing
 from cellstar_preprocessor.flows.volume.omezarr_volume_preprocessing import (
     omezarr_volume_preprocessing,
 )
-from cellstar_preprocessor.flows.volume.ometiff_volume_preprocessing import (
-    ometiff_volume_preprocessing,
+from cellstar_preprocessor.flows.volume.process_volume import process_volume
+from cellstar_preprocessor.flows.volume.process_volume_annotations import (
+    process_volume_annotations,
 )
-from cellstar_preprocessor.flows.segmentation.ometiff_segmentation_processing import (
-    ometiff_segmentation_processing,
-)
-from cellstar_preprocessor.flows.volume._process_allencel_metadata_csv import (
-    process_allencell_metadata_csv,
-)
-from cellstar_preprocessor.flows.volume._quantize_internal_volume import (
-    quantize_internal_volume,
+from cellstar_preprocessor.flows.volume.process_volume_metadata import (
+    process_volume_metadata,
 )
 from cellstar_preprocessor.flows.volume.volume_downsampling import volume_downsampling
 from cellstar_preprocessor.model.input import (
@@ -223,19 +238,17 @@ class QuantizeInternalVolumeTask(TaskBase):
     def execute(self) -> None:
         quantize_internal_volume(internal_volume=self.internal_volume)
 
-VOLUME_INPUT_TYPES = (
-    MAPInput,
-    OMETIFFImageInput,
-    OMEZARRInput
-)
+
+VOLUME_INPUT_TYPES = (MAPInput, OMETIFFImageInput, OMEZARRInput)
 
 SEGMENTATION_INPUT_TYPES = (
     SFFInput,
     MaskInput,
     GeometricSegmentationInput,
     OMETIFFSegmentationInput,
-    OMEZARRInput
+    OMEZARRInput,
 )
+
 
 class SFFAnnotationCollectionTask(TaskBase):
     def __init__(self, internal_segmentation: InternalSegmentation):
@@ -255,7 +268,9 @@ class MaskAnnotationCreationTask(TaskBase):
         # annotations_dict = extract_annotations_from_sff_segmentation(
         #     internal_segmentation=self.internal_segmentation
         # )
-        mask_segmentation_annotations_preprocessing(internal_segmentation=self.internal_segmentation)
+        mask_segmentation_annotations_preprocessing(
+            internal_segmentation=self.internal_segmentation
+        )
 
 
 class NIIMetadataCollectionTask(TaskBase):
@@ -291,7 +306,9 @@ class OMEZARRMetadataCollectionTask(TaskBase):
         self.internal_volume = internal_volume
 
     def execute(self) -> None:
-        metadata_dict = omezarr_volume_metadata_preprocessing(internal_volume=self.internal_volume)
+        metadata_dict = omezarr_volume_metadata_preprocessing(
+            internal_volume=self.internal_volume
+        )
 
 
 class OMEZARRImageProcessTask(TaskBase):
@@ -307,7 +324,9 @@ class OMEZARRLabelsProcessTask(TaskBase):
         self.internal_segmentation = internal_segmentation
 
     def execute(self) -> None:
-        omezarr_segmentations_preprocessing(internal_segmentation=self.internal_segmentation)
+        omezarr_segmentations_preprocessing(
+            internal_segmentation=self.internal_segmentation
+        )
 
 
 class SFFMetadataCollectionTask(TaskBase):
@@ -352,6 +371,7 @@ class NIISegmentationMetadataCollectionTask(TaskBase):
             internal_segmentation=self.internal_segmentation
         )
 
+
 class ProcessVolumeTask(TaskBase):
     def __init__(self, internal_volume: InternalVolume):
         self.internal_volume = internal_volume
@@ -359,20 +379,21 @@ class ProcessVolumeTask(TaskBase):
     def execute(self) -> None:
         process_volume(self.internal_volume)
 
+
 class ProcessVolumeMetadataTask(TaskBase):
     def __init__(self, internal_volume: InternalVolume):
         self.internal_volume = internal_volume
-    
+
     def execute(self) -> None:
         process_volume_metadata(self.internal_volume)
+
 
 class ProcessVolumeAnnotationsTask(TaskBase):
     def __init__(self, internal_volume: InternalVolume):
         self.internal_volume = internal_volume
-    
+
     def execute(self) -> None:
         process_volume_annotations(self.internal_volume)
-
 
 
 class ProcessSegmentationTask(TaskBase):
@@ -382,6 +403,7 @@ class ProcessSegmentationTask(TaskBase):
     def execute(self) -> None:
         process_segmentation(self.internal_segmentation)
 
+
 class ProcessSegmentationMetadataTask(TaskBase):
     def __init__(self, internal_segmentation: InternalSegmentation):
         self.internal_segmentation = internal_segmentation
@@ -389,12 +411,14 @@ class ProcessSegmentationMetadataTask(TaskBase):
     def execute(self) -> None:
         process_segmentation_metadata(self.internal_segmentation)
 
+
 class ProcessSegmentationAnnotationsTask(TaskBase):
     def __init__(self, internal_segmentation: InternalSegmentation):
         self.internal_segmentation = internal_segmentation
 
     def execute(self) -> None:
         process_segmentation_annotations(self.internal_segmentation)
+
 
 class MAPProcessVolumeTask(TaskBase):
     def __init__(self, internal_volume: InternalVolume):
@@ -581,7 +605,6 @@ class Preprocessor:
     def get_internal_segmentation(self):
         return self.internal_segmentation
 
-
     # should be more complex than for loop
     # 1. check if there is mask
     # if yes - find all masks input
@@ -590,15 +613,15 @@ class Preprocessor:
     # 0. find extra data if any, and if yes, processs that first
     def _process_inputs(self, inputs: list[InputT]) -> list[TaskBase]:
         tasks = []
-        
+
         # inputs = Pre/
         # if any(isinstance(i, MaskInput) for i in inputs):
         #     masks_inputs = list(filter(lambda m: isinstance(m, MaskInput), inputs))
         #     print(f'Mask inputs: {masks_inputs}')
-            
+
         # if any(isinstance(i, GeometricSegmentationInput) for i in inputs):
         #     pass
-        
+
         for i in inputs:
             if isinstance(i, ExtraDataInput):
                 tasks.append(
@@ -607,7 +630,7 @@ class Preprocessor:
                         intermediate_zarr_structure_path=self.intermediate_zarr_structure,
                     )
                 )
-            
+
             # rather use all without masks
             if isinstance(i, VOLUME_INPUT_TYPES):
                 self.store_internal_volume(
@@ -620,21 +643,16 @@ class Preprocessor:
                         downsampling_parameters=self.preprocessor_input.downsampling,
                         entry_data=self.preprocessor_input.entry_data,
                         quantize_downsampling_levels=self.preprocessor_input.volume.quantize_downsampling_levels,
-                        input_kind=i.input_kind
+                        input_kind=i.input_kind,
                     )
                 )
                 volume = self.get_internal_volume()
-                tasks.append(ProcessVolumeTask(
-                    volume
-                ))
-                
-                tasks.append(ProcessVolumeMetadataTask(
-                    volume
-                ))
-                
+                tasks.append(ProcessVolumeTask(volume))
+
+                tasks.append(ProcessVolumeMetadataTask(volume))
+
                 tasks.append(ProcessVolumeAnnotationsTask(volume))
 
-            
             # pre-analyze inputs list in analyze inputs
             # remove all masks instances
             # insert a single one with input path as list
@@ -647,22 +665,15 @@ class Preprocessor:
                         params_for_storing=self.preprocessor_input.storing_params,
                         downsampling_parameters=self.preprocessor_input.downsampling,
                         entry_data=self.preprocessor_input.entry_data,
-                        input_kind=i.input_kind
+                        input_kind=i.input_kind,
                     )
                 )
-                
+
                 segmentation = self.get_internal_segmentation()
-                tasks.append(ProcessSegmentationTask(
-                    segmentation
-                ))
-                tasks.append(ProcessSegmentationMetadataTask(
-                    segmentation
-                ))
-                tasks.append(ProcessSegmentationAnnotationsTask(
-                    segmentation
-                ))
-                
-                
+                tasks.append(ProcessSegmentationTask(segmentation))
+                tasks.append(ProcessSegmentationMetadataTask(segmentation))
+                tasks.append(ProcessSegmentationAnnotationsTask(segmentation))
+
             # elif isinstance(i, MAPInput):
             #     self.store_internal_volume(
             #         internal_volume=InternalVolume(
@@ -937,33 +948,45 @@ class Preprocessor:
     def __check_if_inputs_exists(self, raw_inputs_list: list[tuple[Path, InputKind]]):
         for input_item in raw_inputs_list:
             p = input_item[0]
-            assert p.exists(), f'Input file {p} does not exist'
+            assert p.exists(), f"Input file {p} does not exist"
 
     def _analyse_preprocessor_input(self) -> list[InputT]:
         raw_inputs_list = self.preprocessor_input.inputs.files
         # analyzed_inputs: list[InputT] = []
 
         self.__check_if_inputs_exists(raw_inputs_list)
-        
+
         analyzed: list[InputT] = []
-        
-        extra_data = list(filter(lambda i: i[1] == InputKind.extra_data, raw_inputs_list))
-        assert len(extra_data) <= 1, 'There must be no more than one extra data input'
-        if (len(extra_data) == 1):
+
+        extra_data = list(
+            filter(lambda i: i[1] == InputKind.extra_data, raw_inputs_list)
+        )
+        assert len(extra_data) <= 1, "There must be no more than one extra data input"
+        if len(extra_data) == 1:
             analyzed.append(extra_data[0])
-            
+
         if any(i[1] == InputKind.mask for i in raw_inputs_list):
-            all_mask_input_pathes = [i[0] for i in raw_inputs_list if i[1] == InputKind.mask]
-            joint_mask_input = MaskInput(input_path=all_mask_input_pathes, input_kind=InputKind.mask)
+            all_mask_input_pathes = [
+                i[0] for i in raw_inputs_list if i[1] == InputKind.mask
+            ]
+            joint_mask_input = MaskInput(
+                input_path=all_mask_input_pathes, input_kind=InputKind.mask
+            )
             analyzed.append(joint_mask_input)
-            
+
         if any(isinstance(i, GeometricSegmentationInput) for i in raw_inputs_list):
-            all_gs_pathes = [i[0] for i in raw_inputs_list if i[1] == InputKind.geometric_segmentation]
-            joint_geometric_segmentation_input = GeometricSegmentationInput(all_gs_pathes, InputKind.geometric_segmentation)
+            all_gs_pathes = [
+                i[0]
+                for i in raw_inputs_list
+                if i[1] == InputKind.geometric_segmentation
+            ]
+            joint_geometric_segmentation_input = GeometricSegmentationInput(
+                all_gs_pathes, InputKind.geometric_segmentation
+            )
             analyzed.append(joint_geometric_segmentation_input)
-        
+
         # TODO: three maps etc.?
-        
+
         for i in raw_inputs_list:
             k = i[1]
             if k == InputKind.extra_data:
@@ -989,13 +1012,11 @@ class Preprocessor:
             elif k == InputKind.ometiff_image:
                 analyzed.append(OMETIFFImageInput(input_path=i[0], input_kind=k))
             elif k == InputKind.ometiff_segmentation:
-                analyzed.append(
-                    OMETIFFSegmentationInput(input_path=i[0], input_kind=k)
-                )
+                analyzed.append(OMETIFFSegmentationInput(input_path=i[0], input_kind=k))
             else:
-                raise Exception(f'Input kind is not recognized. Input item: {i}')
+                raise Exception(f"Input kind is not recognized. Input item: {i}")
 
-        print(f'pre_analyzed_inputs_list: {analyzed}')
+        print(f"pre_analyzed_inputs_list: {analyzed}")
         return analyzed
 
     async def entry_exists(self):
@@ -1114,9 +1135,13 @@ class Preprocessor:
             for id in geometric_segmentation_ids:
                 db_edit_context.add_segmentation(id=id, kind="geometric_segmentation")
         if mode == PreprocessorMode.add:
-            print(f"Entry {self.preprocessor_input.entry_data.entry_id} stored to the database")
+            print(
+                f"Entry {self.preprocessor_input.entry_data.entry_id} stored to the database"
+            )
         else:
-            print(f"Entry {self.preprocessor_input.entry_data.entry_id} in the database was expanded")
+            print(
+                f"Entry {self.preprocessor_input.entry_data.entry_id} in the database was expanded"
+            )
 
 
 async def main_preprocessor(

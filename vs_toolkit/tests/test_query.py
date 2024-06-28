@@ -66,11 +66,7 @@ query_params = [
         "channel_id": "Hyb probe",
         "time": 4,
     },
-        {
-        "entry_id": "emd-1273",
-        "source_db": "emdb",
-        "max_points": 100000000
-    },
+    {"entry_id": "emd-1273", "source_db": "emdb", "max_points": 100000000},
     {
         "entry_id": "empiar-11756",
         "source_db": "empiar",

@@ -11,6 +11,7 @@ from cellstar_db.models import (
 )
 from cellstar_preprocessor.flows.common import hex_to_rgba_normalized
 
+
 # divisor = 4
 def parse_single_star_file(
     path: Path,

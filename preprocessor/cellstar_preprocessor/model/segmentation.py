@@ -34,5 +34,5 @@ class InternalSegmentation:
         self.pixel_size = pixel_size
         self.star_file_coordinate_divisor = star_file_coordinate_divisor
         self.custom_data = custom_data
-        self.map_headers: dict[str, object] = {},
+        self.map_headers: dict[str, object] = ({},)
         self.input_kind = input_kind
