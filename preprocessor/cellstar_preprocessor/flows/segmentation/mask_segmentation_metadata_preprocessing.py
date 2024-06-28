@@ -149,7 +149,7 @@ def _get_mask_segmentation_sampling_info(
             #     }
 
 
-def extract_metadata_from_mask(internal_segmentation: InternalSegmentation):
+def mask_segmentation_metadata_preprocessing(internal_segmentation: InternalSegmentation):
     root = open_zarr_structure_from_path(
         internal_segmentation.intermediate_zarr_structure_path
     )

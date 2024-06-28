@@ -13,7 +13,7 @@ from cellstar_preprocessor.flows.volume._helper_methods import (
 from cellstar_preprocessor.model.volume import InternalVolume
 
 
-def ometiff_image_processing(internal_volume: InternalVolume):
+def ometiff_volume_preprocessing(internal_volume: InternalVolume):
     # NOTE: supports only 3D images
 
     zarr_structure: zarr.Group = open_zarr_structure_from_path(

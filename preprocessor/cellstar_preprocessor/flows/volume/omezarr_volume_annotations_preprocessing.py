@@ -16,7 +16,7 @@ from cellstar_preprocessor.flows.common import (
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
 from cellstar_preprocessor.model.volume import InternalVolume
 
-def extract_omezarr_volume_annotations(internal_volume: InternalVolume):
+def omezarr_volume_annotations_preprocessing(internal_volume: InternalVolume):
     ome_zarr_root = open_zarr_structure_from_path(internal_volume.input_path)
     root = open_zarr_structure_from_path(
         internal_volume.intermediate_zarr_structure_path

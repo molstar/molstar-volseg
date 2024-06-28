@@ -2,8 +2,8 @@ import pytest
 import zarr
 from cellstar_preprocessor.flows.common import open_zarr_structure_from_path
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
-from cellstar_preprocessor.flows.volume.ome_zarr_image_preprocessing import (
-    ome_zarr_image_preprocessing,
+from cellstar_preprocessor.flows.volume.omezarr_volume_preprocessing import (
+    omezarr_volume_preprocessing,
 )
 from cellstar_preprocessor.tests.helper_methods import get_internal_volume_from_input
 from cellstar_preprocessor.tests.input_for_tests import (
@@ -22,7 +22,7 @@ def test_ome_zarr_image_preprocessing(omezar_test_input: TestInput):
             omezar_test_input, ctx.test_file_path, ctx.intermediate_zarr_structure_path
         )
 
-        ome_zarr_image_preprocessing(internal_volume=internal_volume)
+        omezarr_volume_preprocessing(internal_volume=internal_volume)
 
         ome_zarr_root = zarr.open_group(internal_volume.input_path)
         root_zattrs = ome_zarr_root.attrs

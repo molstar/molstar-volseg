@@ -109,7 +109,7 @@ def _get_nii_volume_sampling_info(
                 }
 
 
-def extract_nii_metadata(internal_volume: InternalVolume):
+def nii_volume_metadata_preprocessing(internal_volume: InternalVolume):
     root = open_zarr_structure_from_path(
         internal_volume.intermediate_zarr_structure_path
     )

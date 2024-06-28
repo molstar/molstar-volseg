@@ -5,7 +5,7 @@ import pytest
 import zarr
 from cellstar_preprocessor.flows.common import open_zarr_structure_from_path
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
-from cellstar_preprocessor.flows.volume.map_preprocessing import map_preprocessing
+from cellstar_preprocessor.flows.volume.map_volume_preprocessing import map_volume_preprocessing
 from cellstar_preprocessor.tests.helper_methods import (
     get_internal_XYZ_volume,
     get_internal_ZYX_volume,
@@ -43,7 +43,7 @@ def test_map_preprocessing(order: Literal["XYZ", "ZYX"]):
         internal_volume = get_internal_ZYX_volume(p)
 
     # internal_volume = INTERNAL_VOLUME_FOR_TESTING
-    map_preprocessing(internal_volume=internal_volume)
+    map_volume_preprocessing(internal_volume=internal_volume)
 
     # check if zarr structure has right format
     # 1. open zarr structure

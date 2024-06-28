@@ -48,10 +48,10 @@ from cellstar_preprocessor.flows.segmentation.sff_segmentation_annotations_prepr
     sff_segmentation_annotations_preprocessing,
 )
 from cellstar_preprocessor.flows.segmentation.mask_segmentation_metadata_preprocessing import (
-    extract_metadata_from_mask,
+    mask_segmentation_metadata_preprocessing,
 )
 from cellstar_preprocessor.flows.segmentation.nii_segmentation_metadata_preprocessing import (
-    extract_metadata_from_nii_segmentation,
+    nii_segmentation_metadata_preprocessing,
 )
 from cellstar_preprocessor.flows.segmentation.sff_segmentation_metadata_preprocessing import (
     sff_segmentation_metadata_preprocessing,
@@ -90,37 +90,37 @@ from cellstar_preprocessor.flows.segmentation.segmentation_downsampling import (
     segmentation_downsampling,
 )
 from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing import sff_segmentation_preprocessing
-from cellstar_preprocessor.flows.volume.map_metadata_processing import (
-    map_metadata_processing,
+from cellstar_preprocessor.flows.volume.map_volume_metadata_preprocessing import (
+    map_volume_metadata_preprocessing,
 )
-from cellstar_preprocessor.flows.volume.nii_metadata_preprocessing import extract_nii_metadata
+from cellstar_preprocessor.flows.volume.nii_volume_metadata_preprocessing import nii_volume_metadata_preprocessing
 from cellstar_preprocessor.flows.volume.ometiff_volume_annotations_preprocessing import (
-    extract_ome_tiff_image_annotations,
+    ometiff_volume_annotations_preprocessing,
 )
 from cellstar_preprocessor.flows.volume.ometiff_volume_metadata_preprocessing import (
-    extract_ometiff_image_metadata,
+    ometiff_volume_metadata_preprocessing,
 )
-from cellstar_preprocessor.flows.volume.extract_omezarr_volume_annotations import (
-    extract_omezarr_volume_annotations,
+from cellstar_preprocessor.flows.volume.omezarr_volume_annotations_preprocessing import (
+    omezarr_volume_annotations_preprocessing,
 )
 from cellstar_preprocessor.flows.volume.omezarr_volume_metadata_preprocessing import (
     omezarr_volume_metadata_preprocessing,
 )
-from cellstar_preprocessor.flows.volume.map_preprocessing import map_preprocessing
-from cellstar_preprocessor.flows.volume.nii_preprocessing import nii_preprocessing
-from cellstar_preprocessor.flows.volume.ome_zarr_image_preprocessing import (
-    ome_zarr_image_preprocessing,
+from cellstar_preprocessor.flows.volume.map_volume_preprocessing import map_volume_preprocessing
+from cellstar_preprocessor.flows.volume.nii_volume_preprocessing import nii_volume_preprocessing
+from cellstar_preprocessor.flows.volume.omezarr_volume_preprocessing import (
+    omezarr_volume_preprocessing,
 )
-from cellstar_preprocessor.flows.volume.ometiff_image_processing import (
-    ometiff_image_processing,
+from cellstar_preprocessor.flows.volume.ometiff_volume_preprocessing import (
+    ometiff_volume_preprocessing,
 )
-from cellstar_preprocessor.flows.volume.ometiff_segmentation_processing import (
+from cellstar_preprocessor.flows.segmentation.ometiff_segmentation_processing import (
     ometiff_segmentation_processing,
 )
-from cellstar_preprocessor.flows.volume.process_allencel_metadata_csv import (
+from cellstar_preprocessor.flows.volume._process_allencel_metadata_csv import (
     process_allencell_metadata_csv,
 )
-from cellstar_preprocessor.flows.volume.quantize_internal_volume import (
+from cellstar_preprocessor.flows.volume._quantize_internal_volume import (
     quantize_internal_volume,
 )
 from cellstar_preprocessor.flows.volume.volume_downsampling import volume_downsampling
@@ -264,7 +264,7 @@ class NIIMetadataCollectionTask(TaskBase):
 
     def execute(self) -> None:
         volume = self.internal_volume
-        metadata_dict = extract_nii_metadata(internal_volume=volume)
+        metadata_dict = nii_volume_metadata_preprocessing(internal_volume=volume)
 
 
 class MAPMetadataCollectionTask(TaskBase):
@@ -273,7 +273,7 @@ class MAPMetadataCollectionTask(TaskBase):
 
     def execute(self) -> None:
         volume = self.internal_volume
-        metadata_dict = map_metadata_processing(internal_volume=volume)
+        metadata_dict = map_volume_metadata_preprocessing(internal_volume=volume)
 
 
 class OMEZARRAnnotationsCollectionTask(TaskBase):
@@ -281,7 +281,7 @@ class OMEZARRAnnotationsCollectionTask(TaskBase):
         self.internal_volume = internal_volume
 
     def execute(self) -> None:
-        annotations_dict = extract_omezarr_volume_annotations(
+        annotations_dict = omezarr_volume_annotations_preprocessing(
             internal_volume=self.internal_volume
         )
 
@@ -299,7 +299,7 @@ class OMEZARRImageProcessTask(TaskBase):
         self.internal_volume = internal_volume
 
     def execute(self) -> None:
-        ome_zarr_image_preprocessing(self.internal_volume)
+        omezarr_volume_preprocessing(self.internal_volume)
 
 
 class OMEZARRLabelsProcessTask(TaskBase):
@@ -328,7 +328,7 @@ class MaskMetadataCollectionTask(TaskBase):
         # metadata_dict = extract_metadata_from_sff_segmentation(
         #     internal_segmentation=self.internal_segmentation
         # )
-        metadata_dict = extract_metadata_from_mask(
+        metadata_dict = mask_segmentation_metadata_preprocessing(
             internal_segmentation=self.internal_segmentation
         )
 
@@ -348,7 +348,7 @@ class NIISegmentationMetadataCollectionTask(TaskBase):
         self.internal_segmentation = internal_segmentation
 
     def execute(self) -> None:
-        metadata_dict = extract_metadata_from_nii_segmentation(
+        metadata_dict = nii_segmentation_metadata_preprocessing(
             internal_segmentation=self.internal_segmentation
         )
 
@@ -403,7 +403,7 @@ class MAPProcessVolumeTask(TaskBase):
     def execute(self) -> None:
         volume = self.internal_volume
 
-        map_preprocessing(volume)
+        map_volume_preprocessing(volume)
         # in processing part do
         volume_downsampling(volume)
 
@@ -415,7 +415,7 @@ class NIIProcessVolumeTask(TaskBase):
     def execute(self) -> None:
         volume = self.internal_volume
 
-        nii_preprocessing(volume)
+        nii_volume_preprocessing(volume)
         # in processing part do
         volume_downsampling(volume)
 
@@ -426,7 +426,7 @@ class OMETIFFImageProcessingTask(TaskBase):
 
     def execute(self) -> None:
         volume = self.internal_volume
-        ometiff_image_processing(internal_volume=volume)
+        ometiff_volume_preprocessing(internal_volume=volume)
         volume_downsampling(internal_volume=volume)
 
 
@@ -446,7 +446,7 @@ class OMETIFFImageMetadataExtractionTask(TaskBase):
 
     def execute(self) -> None:
         volume = self.internal_volume
-        extract_ometiff_image_metadata(internal_volume=volume)
+        ometiff_volume_metadata_preprocessing(internal_volume=volume)
 
 
 class OMETIFFSegmentationMetadataExtractionTask(TaskBase):
@@ -466,7 +466,7 @@ class OMETIFFImageAnnotationsExtractionTask(TaskBase):
 
     def execute(self) -> None:
         volume = self.internal_volume
-        extract_ome_tiff_image_annotations(internal_volume=volume)
+        ometiff_volume_annotations_preprocessing(internal_volume=volume)
 
 
 class OMETIFFSegmentationAnnotationsExtractionTask(TaskBase):

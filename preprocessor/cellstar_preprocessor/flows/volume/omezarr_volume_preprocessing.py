@@ -16,7 +16,7 @@ from cellstar_preprocessor.model.volume import InternalVolume
 # TODO: support 3 axes case?
 
 
-def ome_zarr_image_preprocessing(internal_volume: InternalVolume):
+def omezarr_volume_preprocessing(internal_volume: InternalVolume):
     ome_zarr_root = zarr.open_group(internal_volume.input_path)
 
     our_zarr_structure = open_zarr_structure_from_path(
