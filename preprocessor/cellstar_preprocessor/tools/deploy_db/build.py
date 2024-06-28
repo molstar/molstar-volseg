@@ -5,7 +5,7 @@ import multiprocessing
 import shutil
 from pathlib import Path
 
-from cellstar_db.models import InputForBuildingDatabase
+from cellstar_db.models import InputForBuildingDatabase, PreprocessorArguments
 from cellstar_preprocessor.flows.constants import (
     DB_BUILDING_PARAMETERS_JSON,
     DEFAULT_DB_PATH,
@@ -63,17 +63,8 @@ def _preprocessor_internal_wrapper(
         quantize_downsampling_levels = " ".join(
             str(item) for item in input_for_building["quantize_downsampling_levels"]
         )
-
-    inputs = input_for_building["inputs"]
-    # for i in inputs:
-    #     if isinstance(i[0], list):
-    #         print(input_for_building)
-    input_pathes_list = [Path(i[0]) for i in inputs]
-    input_kinds_list = [i[1] for i in inputs]
-
-    asyncio.run(
-        main_preprocessor(
-            mode=PreprocessorMode.add,
+    preprocessor_args: PreprocessorArguments = PreprocessorArguments(
+        mode=PreprocessorMode.add,
             quantize_dtype_str=input_for_building.get("quantize_dtype_str"),
             quantize_downsampling_levels=quantize_downsampling_levels,
             force_volume_dtype=input_for_building.get("force_volume_dtype"),
@@ -94,8 +85,11 @@ def _preprocessor_internal_wrapper(
             source_db_name=input_for_building.get("source_db_name"),
             working_folder=Path(working_folder),
             db_path=Path(db_path),
-            input_paths=input_pathes_list,
-            input_kinds=input_kinds_list,
+            inputs=input_for_building.get("inputs")
+    )
+    asyncio.run(
+        main_preprocessor(
+            preprocessor_args
         )
     )
     print(f"Internal wrapper have added {entry_id} to the database")

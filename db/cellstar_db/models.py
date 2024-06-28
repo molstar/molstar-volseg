@@ -110,7 +110,7 @@ class InputForBuildingDatabase(TypedDict):
     source_db_name: str
     # working_folder: str
     # db_path: str
-    inputs: list[tuple[str, InputKind]]
+    inputs: list[RawInput]
 
 
 class OMETIFFSpecificExtraData(TypedDict):

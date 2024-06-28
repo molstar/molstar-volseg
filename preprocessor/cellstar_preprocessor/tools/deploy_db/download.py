@@ -10,7 +10,7 @@ import zipfile
 from pathlib import Path
 from typing import TypedDict
 
-from cellstar_db.models import PreprocessorParameters
+from cellstar_db.models import PreprocessorParameters, RawInput
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -203,7 +203,7 @@ def _create_db_building_params(updated_download_items: list[InputItemParams]):
                 target_item_idx = idx
                 break
 
-        single_input = (str(complete_path.resolve()), kind)
+        single_input = RawInput(path=str(complete_path.resolve()), kind=kind)
         if target_item_idx == None:
             input_for_building_db: InputForBuildingDatabase = {
                 "entry_id": item["entry_id"],
