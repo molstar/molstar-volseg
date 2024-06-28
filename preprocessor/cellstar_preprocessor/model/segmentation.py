@@ -14,10 +14,6 @@ class InternalSegmentation:
         downsampling_parameters: DownsamplingParams,
         entry_data: EntryData,
         input_kind: InputKind,
-        sphere_radius: Optional[float] = None,
-        color: Optional[float] = None,
-        pixel_size: Optional[float] = None,
-        star_file_coordinate_divisor: Optional[float] = None,
         custom_data: Optional[SegmentationExtraData] = None,
     ):
         self.intermediate_zarr_structure_path = intermediate_zarr_structure_path
