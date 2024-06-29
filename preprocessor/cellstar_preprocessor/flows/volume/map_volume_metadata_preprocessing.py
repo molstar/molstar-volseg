@@ -138,10 +138,12 @@ def map_volume_metadata_preprocessing(v: InternalVolume):
 
     # map_header = v.map_header
 
-    volume_downsamplings = get_downsamplings(data_group=v.get_zarr_root())
+    volume_downsamplings = get_downsamplings(data_group=v.get_volume_data_group())
     # TODO: check - some units are defined (spatial?)
     source_axes_units = {}
     m = v.get_metadata()
+    
+    # This part is also common for many pipelines
     m.entry_id.source_db_name = v.entry_data.source_db_name
     m.entry_id.source_db_id = v.entry_data.source_db_id
     m.volumes = VolumesMetadata(
@@ -158,6 +160,7 @@ def map_volume_metadata_preprocessing(v: InternalVolume):
             original_axis_order=_get_axis_order_mrcfile(v.map_header),
         ),
     )
+    v.set_metadata(m)
     v.set_volume_sampling_info()
 
     # NOTE: remove original level resolution data

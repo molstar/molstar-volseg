@@ -41,7 +41,7 @@ class InternalVolume(InternalData):
     
     def get_grid_dimensions(self):
         volume_data_group = self.get_volume_data_group()
-        first_resolution = sorted(volume_data_group.array_keys())[0]
+        first_resolution = sorted(volume_data_group.group_keys())[0]
         first_time: str = sorted(volume_data_group[first_resolution].array_keys())[0]
         return volume_data_group[first_resolution][first_time].shape
     
