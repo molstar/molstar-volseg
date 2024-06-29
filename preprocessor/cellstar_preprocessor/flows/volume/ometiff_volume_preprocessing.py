@@ -1,13 +1,13 @@
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import zarr
 from cellstar_preprocessor.flows.common import (
-    open_zarr_structure_from_path,
     prepare_ometiff_for_writing,
     read_ometiff_to_dask,
     set_ometiff_source_metadata,
     set_volume_custom_data,
 )
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
-from cellstar_preprocessor.flows.volume._helper_methods import (
+from cellstar_preprocessor.flows.volume.helper_methods import (
     store_volume_data_in_zarr_stucture,
 )
 from cellstar_preprocessor.model.volume import InternalVolume
@@ -16,8 +16,8 @@ from cellstar_preprocessor.model.volume import InternalVolume
 def ometiff_volume_preprocessing(internal_volume: InternalVolume):
     # NOTE: supports only 3D images
 
-    zarr_structure: zarr.Group = open_zarr_structure_from_path(
-        internal_volume.intermediate_zarr_structure_path
+    zarr_structure: zarr.Group = open_zarr(
+        internal_volume.path
     )
     set_volume_custom_data(internal_volume, zarr_structure)
 

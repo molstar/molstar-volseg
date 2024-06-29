@@ -1,16 +1,18 @@
-from decimal import ROUND_CEILING, Decimal, getcontext
+from decimal import Decimal
 
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
+from cellstar_preprocessor.flows.volume.helper_methods import _ccp4_words_to_dict_mrcfile
 import dask.array as da
 import numpy as np
 from cellstar_db.models import (
     DownsamplingLevelInfo,
+    Metadata,
     TimeInfo,
     VolumeSamplingInfo,
     VolumesMetadata,
 )
-from cellstar_preprocessor.flows.common import (
+from cellstar_preprocessor.flows.zarr_methods import (
     get_downsamplings,
-    open_zarr_structure_from_path,
 )
 from cellstar_preprocessor.flows.constants import (
     QUANTIZATION_DATA_DICT_ATTR_NAME,
@@ -26,28 +28,6 @@ def _get_axis_order_mrcfile(mrc_header: object):
     h = mrc_header
     current_order = int(h.mapc) - 1, int(h.mapr) - 1, int(h.maps) - 1
     return current_order
-
-
-def _ccp4_words_to_dict_mrcfile(mrc_header: object) -> dict:
-    """input - mrcfile object header (mrc.header)"""
-    ctx = getcontext()
-    ctx.rounding = ROUND_CEILING
-    d = {}
-
-    m = mrc_header
-    # mrcfile implementation
-    d["NC"], d["NR"], d["NS"] = int(m.nx), int(m.ny), int(m.nz)
-    d["NCSTART"], d["NRSTART"], d["NSSTART"] = (
-        int(m.nxstart),
-        int(m.nystart),
-        int(m.nzstart),
-    )
-    d["xLength"] = round(Decimal(float(m.cella.x)), 5)
-    d["yLength"] = round(Decimal(float(m.cella.y)), 5)
-    d["zLength"] = round(Decimal(float(m.cella.z)), 5)
-    d["MAPC"], d["MAPR"], d["MAPS"] = int(m.mapc), int(m.mapr), int(m.maps)
-
-    return d
 
 
 def _get_origin_and_voxel_sizes_from_map_header(
@@ -69,8 +49,8 @@ def _get_origin_and_voxel_sizes_from_map_header(
     )
 
     voxel_sizes_in_downsamplings: dict = {}
-    for level in volume_downsamplings:
-        rate = level["level"]
+    for lvl in volume_downsamplings:
+        rate = lvl.level
         voxel_sizes_in_downsamplings[rate] = tuple(
             [float(Decimal(i) * Decimal(rate)) for i in original_voxel_size]
         )
@@ -90,7 +70,7 @@ def _get_volume_sampling_info(
     root_data_group,
     sampling_info_dict,
     mrc_header: object,
-    volume_downsamplings: list[VolumeSamplingInfo],
+    volume_downsamplings: list[DownsamplingLevelInfo],
 ):
     # TODO: modify it such that voxel sizes are calculated on each iteration
     origin, voxel_sizes_in_downsamplings = _get_origin_and_voxel_sizes_from_map_header(
@@ -146,27 +126,25 @@ def _get_volume_sampling_info(
                 }
 
 
-def map_volume_metadata_preprocessing(internal_volume: InternalVolume):
-    root = open_zarr_structure_from_path(
-        internal_volume.intermediate_zarr_structure_path
+def map_volume_metadata_preprocessing(v: InternalVolume):
+    root = open_zarr(
+        v.path
     )
-    source_db_name = internal_volume.entry_data.source_db_name
-    source_db_id = internal_volume.entry_data.source_db_id
     # map has one channel
     channel_ids = [0]
     start_time = 0
     end_time = 0
     time_units = "millisecond"
 
-    map_header = internal_volume.map_header
+    # map_header = v.map_header
 
-    volume_downsamplings = get_downsamplings(data_group=root[VOLUME_DATA_GROUPNAME])
+    volume_downsamplings = get_downsamplings(data_group=v.get_zarr_root())
     # TODO: check - some units are defined (spatial?)
     source_axes_units = {}
-    metadata_dict = root.attrs["metadata_dict"]
-    metadata_dict["entry_id"]["source_db_name"] = source_db_name
-    metadata_dict["entry_id"]["source_db_id"] = source_db_id
-    metadata_dict["volumes"] = VolumesMetadata(
+    m = v.get_metadata()
+    m.entry_id.source_db_name = v.entry_data.source_db_name
+    m.entry_id.source_db_id = v.entry_data.source_db_id
+    m.volumes = VolumesMetadata(
         channel_ids=channel_ids,
         time_info=TimeInfo(
             kind="range", start=start_time, end=end_time, units=time_units
@@ -177,33 +155,23 @@ def map_volume_metadata_preprocessing(internal_volume: InternalVolume):
             descriptive_statistics={},
             time_transformations=[],
             source_axes_units=source_axes_units,
-            original_axis_order=_get_axis_order_mrcfile(map_header),
+            original_axis_order=_get_axis_order_mrcfile(v.map_header),
         ),
     )
-
-    _get_volume_sampling_info(
-        root_data_group=root[VOLUME_DATA_GROUPNAME],
-        sampling_info_dict=metadata_dict["volumes"]["volume_sampling_info"],
-        mrc_header=map_header,
-        volume_downsamplings=volume_downsamplings,
-    )
+    v.set_volume_sampling_info()
 
     # NOTE: remove original level resolution data
-    if internal_volume.downsampling_parameters.remove_original_resolution:
+    if v.downsampling_parameters.remove_original_resolution:
         del root[VOLUME_DATA_GROUPNAME]["1"]
         print("Original resolution volume data removed")
 
-        current_levels: list[DownsamplingLevelInfo] = metadata_dict["volumes"][
-            "volume_sampling_info"
-        ]["spatial_downsampling_levels"]
+        current_levels: list[DownsamplingLevelInfo] = m.volumes.volume_sampling_info.spatial_downsampling_levels
         for i, item in enumerate(current_levels):
-            if item["level"] == 1:
-                current_levels[i]["available"] = False
+            if item.level == 1:
+                current_levels[i].available = False
 
-        metadata_dict["volumes"]["volume_sampling_info"][
-            "spatial_downsampling_levels"
-        ] = current_levels
+        m.volumes.volume_sampling_info.spatial_downsampling_levels = current_levels
 
-    root.attrs["metadata_dict"] = metadata_dict
+    v.set_metadata(m)
 
-    return metadata_dict
+    return m

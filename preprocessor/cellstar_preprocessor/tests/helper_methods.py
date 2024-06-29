@@ -3,13 +3,13 @@ import urllib.request
 from pathlib import Path
 from uuid import uuid4
 
-from cellstar_db.models import DownsamplingParams, QuantizationDtype, StoringParams
+from cellstar_db.models import DownsamplingParams, InputKind, QuantizationDtype, StoringParams
 import ome_zarr
 import ome_zarr.utils
 import zarr
 from cellstar_preprocessor.flows.constants import (
-    INIT_ANNOTATIONS_DICT,
-    INIT_METADATA_DICT,
+    INIT_ANNOTATIONS_MODEL,
+    INIT_METADATA_MODEL,
 )
 from cellstar_db.models import (
     EntryData,
@@ -34,7 +34,7 @@ def remove_intermediate_zarr_structure_for_tests(p: Path):
 
 def get_internal_XYZ_volume(intermediate_zarr_structure_for_tests: Path):
     return InternalVolume(
-        intermediate_zarr_structure_path=intermediate_zarr_structure_for_tests,
+        path=intermediate_zarr_structure_for_tests,
         input_path=TEST_MAP_PATH_XYZ_ORDER,
         params_for_storing=StoringParams(),
         volume_force_dtype="f2",
@@ -47,12 +47,13 @@ def get_internal_XYZ_volume(intermediate_zarr_structure_for_tests: Path):
         ),
         quantize_dtype_str=QuantizationDtype.u1,
         quantize_downsampling_levels=(1,),
+        input_kind=InputKind.map
     )
 
 
 def get_internal_ZYX_volume(intermediate_zarr_structure_for_tests: Path):
     return InternalVolume(
-        intermediate_zarr_structure_path=intermediate_zarr_structure_for_tests,
+        path=intermediate_zarr_structure_for_tests,
         input_path=TEST_MAP_PATH_ZYX_ORDER,
         params_for_storing=StoringParams(),
         volume_force_dtype="f2",
@@ -65,6 +66,7 @@ def get_internal_ZYX_volume(intermediate_zarr_structure_for_tests: Path):
         ),
         quantize_dtype_str=QuantizationDtype.u1,
         quantize_downsampling_levels=(1,),
+        input_kind=InputKind.map
     )
 
 
@@ -76,26 +78,27 @@ def initialize_intermediate_zarr_structure_for_tests(unique_folder_name: str):
     store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(p))
     root = zarr.group(store=store)
 
-    root.attrs["metadata_dict"] = INIT_METADATA_DICT
-    root.attrs["annotations_dict"] = INIT_ANNOTATIONS_DICT
+    root.attrs["metadata_dict"] = INIT_METADATA_MODEL.dict()
+    root.attrs["annotations_dict"] = INIT_ANNOTATIONS_MODEL.dict()
     return p
 
 
 def get_sff_internal_segmentation(
-    test_input: TestInput, segmentation_path: Path, intermediate_zarr_structure: Path
+    t: TestInput, segmentation_path: Path, intermediate_zarr_structure: Path
 ):
     # p = _download_sff_for_tests(test_input['url'])
     internal_segmentation = InternalSegmentation(
-        intermediate_zarr_structure_path=intermediate_zarr_structure,
+        path=intermediate_zarr_structure,
         input_path=segmentation_path,
         params_for_storing=StoringParams(),
         downsampling_parameters=DownsamplingParams(),
         entry_data=EntryData(
-            entry_id=test_input["entry_id"],
-            source_db=test_input["source_db"],
-            source_db_id=test_input["entry_id"],
-            source_db_name=test_input["source_db"],
+            entry_id=t.entry_id,
+            source_db=t.source_db,
+            source_db_id=t.entry_id,
+            source_db_name=t.source_db,
         ),
+        input_kind=InputKind.sff
     )
     return internal_segmentation
 
@@ -105,19 +108,20 @@ def get_internal_volume_from_input(
 ):
     # p = download_omezarr_for_tests(omezar_test_input['url'])
     internal_volume = InternalVolume(
-        intermediate_zarr_structure_path=intermediate_zarr_structure,
+        path=intermediate_zarr_structure,
         input_path=volume_path,
         params_for_storing=StoringParams(),
         volume_force_dtype=None,
         downsampling_parameters=DownsamplingParams(),
         entry_data=EntryData(
-            entry_id=test_input["entry_id"],
-            source_db=test_input["source_db"],
-            source_db_id=test_input["entry_id"],
-            source_db_name=test_input["source_db"],
+            entry_id=test_input.entry_id,
+            source_db=test_input.source_db,
+            source_db_id=test_input.entry_id,
+            source_db_name=test_input.source_db,
         ),
         quantize_dtype_str=None,
         quantize_downsampling_levels=None,
+        input_kind=test_input.kind
     )
     return internal_volume
 
@@ -129,16 +133,17 @@ def get_omezarr_internal_segmentation(
 ):
     # p = download_omezarr_for_tests(omezar_test_input['url'])
     internal_segmentation = InternalSegmentation(
-        intermediate_zarr_structure_path=intermediate_zarr_structure,
+        path=intermediate_zarr_structure,
         input_path=segmentation_path,
         params_for_storing=StoringParams(),
         downsampling_parameters=DownsamplingParams(),
         entry_data=EntryData(
-            entry_id=omezar_test_input["entry_id"],
-            source_db=omezar_test_input["source_db"],
-            source_db_id=omezar_test_input["entry_id"],
-            source_db_name=omezar_test_input["source_db"],
+            entry_id=omezar_test_input.entry_id,
+            source_db=omezar_test_input.source_db,
+            source_db_id=omezar_test_input.entry_id,
+            source_db_name=omezar_test_input.source_db,
         ),
+        input_kind=InputKind.omezarr
     )
     return internal_segmentation
 

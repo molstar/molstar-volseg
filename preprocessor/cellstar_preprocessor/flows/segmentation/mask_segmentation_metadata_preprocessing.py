@@ -1,17 +1,18 @@
 from decimal import ROUND_CEILING, Decimal, getcontext
 
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import zarr
 from cellstar_db.models import (
     DownsamplingLevelInfo,
     Metadata,
+    SamplingBox,
     SamplingInfo,
     SegmentationLatticesMetadata,
     TimeInfo,
     VolumeSamplingInfo,
 )
-from cellstar_preprocessor.flows.common import (
+from cellstar_preprocessor.flows.zarr_methods import (
     get_downsamplings,
-    open_zarr_structure_from_path,
 )
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
@@ -67,8 +68,8 @@ def _get_origin_and_voxel_sizes_from_map_header(
     )
 
     voxel_sizes_in_downsamplings: dict = {}
-    for level in downsamplings:
-        rate = level["level"]
+    for lvl in downsamplings:
+        rate = lvl.level
         voxel_sizes_in_downsamplings[rate] = tuple(
             [float(Decimal(i) * Decimal(rate)) for i in original_voxel_size]
         )
@@ -96,17 +97,16 @@ def _get_mask_segmentation_sampling_info(
         mrc_header=mrc_header, downsamplings=downsamplings
     )
     for res_gr_name, res_gr in root_data_group.groups():
-        sampling_info["boxes"][res_gr_name] = {
+        sampling_info.boxes[res_gr_name] = SamplingBox.parse_obj({
             "origin": origin,
             "voxel_size": voxel_sizes_in_downsamplings[int(res_gr_name)],
             "grid_dimensions": None,
-            # 'force_dtype': None
-        }
+        })
 
         for time_gr_name, time_gr in res_gr.groups():
             first_group_key = sorted(time_gr.array_keys())[0]
 
-            sampling_info["boxes"][res_gr_name]["grid_dimensions"] = time_gr[
+            sampling_info.boxes[res_gr_name].grid_dimensions = time_gr[
                 first_group_key
             ].shape
             # sampling_info_dict['boxes'][res_gr_name]['force_dtype'] = time_gr[first_group_key].dtype.str
@@ -145,8 +145,8 @@ def _get_mask_segmentation_sampling_info(
 def mask_segmentation_metadata_preprocessing(
     internal_segmentation: InternalSegmentation,
 ):
-    root = open_zarr_structure_from_path(
-        internal_segmentation.intermediate_zarr_structure_path
+    root = open_zarr(
+        internal_segmentation.path
     )
     # TODO: no metadata dict
     metadata_dict: Metadata = root.attrs["metadata_dict"]

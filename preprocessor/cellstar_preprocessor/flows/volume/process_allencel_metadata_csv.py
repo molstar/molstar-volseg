@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 import zarr
-from cellstar_preprocessor.flows.common import open_zarr_structure_from_path
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 
 # PLAN:
 
@@ -20,7 +20,7 @@ from cellstar_preprocessor.flows.common import open_zarr_structure_from_path
 def process_allencell_metadata_csv(
     path: Path, cell_id: int, intermediate_zarr_structure_path: Path
 ):
-    zarr_structure: zarr.Group = open_zarr_structure_from_path(
+    zarr_structure: zarr.Group = open_zarr(
         intermediate_zarr_structure_path
     )
 

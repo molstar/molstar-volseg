@@ -1,4 +1,4 @@
-from cellstar_preprocessor.flows.segmentation._helper_methods import (
+from cellstar_preprocessor.flows.segmentation.helper_methods import (
     check_if_omezarr_has_labels,
 )
 from cellstar_preprocessor.flows.segmentation.geometric_segmentation_preprocessing import (

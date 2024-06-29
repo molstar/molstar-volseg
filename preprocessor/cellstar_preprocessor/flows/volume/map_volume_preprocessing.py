@@ -1,13 +1,13 @@
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import dask.array as da
 import mrcfile
 import numpy as np
 import zarr
 from cellstar_preprocessor.flows.common import (
-    open_zarr_structure_from_path,
     set_volume_custom_data,
 )
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
-from cellstar_preprocessor.flows.volume._helper_methods import (
+from cellstar_preprocessor.flows.volume.helper_methods import (
     normalize_axis_order_mrcfile,
     store_volume_data_in_zarr_stucture,
 )
@@ -18,8 +18,8 @@ def map_volume_preprocessing(internal_volume: InternalVolume):
     """1. normalize axis order
     2. add volume data to intermediate zarr structure
     """
-    zarr_structure: zarr.Group = open_zarr_structure_from_path(
-        internal_volume.intermediate_zarr_structure_path
+    zarr_structure: zarr.Group = open_zarr(
+        internal_volume.path
     )
 
     with mrcfile.mmap(str(internal_volume.input_path.resolve()), "r+") as mrc_original:

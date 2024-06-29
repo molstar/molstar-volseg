@@ -1,3 +1,5 @@
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
+from cellstar_preprocessor.flows.zarr_methods import get_downsamplings
 import dask.array as da
 import zarr
 from cellstar_db.models import (
@@ -9,9 +11,7 @@ from cellstar_db.models import (
 from cellstar_preprocessor.flows.common import (
     _get_ome_tiff_channel_ids_dict,
     _get_ome_tiff_voxel_sizes_in_downsamplings,
-    get_downsamplings,
     get_ome_tiff_origins,
-    open_zarr_structure_from_path,
 )
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
 from cellstar_preprocessor.model.volume import InternalVolume
@@ -57,49 +57,6 @@ def _get_ometiff_physical_size(ome_tiff_metadata):
         d["z"] = 1.0
 
     return d
-
-
-def _get_segmentation_sampling_info(root_data_group, sampling_info_dict):
-    for res_gr_name, res_gr in root_data_group.groups():
-        # create layers (time gr, channel gr)
-        sampling_info_dict["boxes"][res_gr_name] = {
-            "origin": None,
-            "voxel_size": None,
-            "grid_dimensions": None,
-            # 'force_dtype': None
-        }
-
-        for time_gr_name, time_gr in res_gr.groups():
-            sampling_info_dict["boxes"][res_gr_name][
-                "grid_dimensions"
-            ] = time_gr.grid.shape
-
-
-def _get_ometiff_axes_units(ome_tiff_metadata):
-    axes_units = {}
-    if "PhysicalSizeXUnit" in ome_tiff_metadata:
-        axes_units["x"] = _convert_short_units_to_long(
-            ome_tiff_metadata["PhysicalSizeXUnit"]
-        )
-    else:
-        axes_units["x"] = "micrometer"
-
-    if "PhysicalSizeYUnit" in ome_tiff_metadata:
-        axes_units["y"] = _convert_short_units_to_long(
-            ome_tiff_metadata["PhysicalSizeYUnit"]
-        )
-    else:
-        axes_units["y"] = "micrometer"
-
-    if "PhysicalSizeZUnit" in ome_tiff_metadata:
-        axes_units["z"] = _convert_short_units_to_long(
-            ome_tiff_metadata["PhysicalSizeZUnit"]
-        )
-    else:
-        axes_units["z"] = "micrometer"
-
-    return axes_units
-
 
 def _get_volume_sampling_info(root_data_group: zarr.Group, sampling_info_dict):
     for res_gr_name, res_gr in root_data_group.groups():
@@ -163,8 +120,8 @@ def _get_allencell_voxel_size(root: zarr.Group) -> list[float, float, float]:
 
 
 def ometiff_volume_metadata_preprocessing(internal_volume: InternalVolume):
-    root = open_zarr_structure_from_path(
-        internal_volume.intermediate_zarr_structure_path
+    root = open_zarr(
+        internal_volume.path
     )
     ometiff_custom_data: OMETIFFSpecificExtraData = internal_volume.custom_data[
         "dataset_specific_data"

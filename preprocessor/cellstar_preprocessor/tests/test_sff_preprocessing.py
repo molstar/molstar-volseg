@@ -1,11 +1,11 @@
 import pytest
 import zarr
-from cellstar_preprocessor.flows.common import open_zarr_structure_from_path
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.flows.constants import (
     LATTICE_SEGMENTATION_DATA_GROUPNAME,
     MESH_SEGMENTATION_DATA_GROUPNAME,
 )
-from cellstar_preprocessor.flows.segmentation._helper_methods import (
+from cellstar_preprocessor.flows.segmentation.helper_methods import (
     open_hdf5_as_segmentation_object,
 )
 from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing import (
@@ -43,8 +43,8 @@ def test_sff_preprocessing(test_input: TestInput):
         sff_segmentation_preprocessing(internal_segmentation=internal_segmentation)
 
         # check if zarr structure has right format
-        zarr_structure = open_zarr_structure_from_path(
-            internal_segmentation.intermediate_zarr_structure_path
+        zarr_structure = open_zarr(
+            internal_segmentation.path
         )
 
         # n of segments

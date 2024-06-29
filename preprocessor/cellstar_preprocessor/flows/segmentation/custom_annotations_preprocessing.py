@@ -3,15 +3,15 @@ from pathlib import Path
 
 from cellstar_db.models import AnnotationsMetadata
 from cellstar_preprocessor.flows.common import (
-    open_zarr_structure_from_path,
     update_dict,
 )
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 
 
 def custom_annotations_preprocessing(
     input_path: Path, intermediate_zarr_structure_path: Path
 ):
-    root = open_zarr_structure_from_path(intermediate_zarr_structure_path)
+    root = open_zarr(intermediate_zarr_structure_path)
     with open(str(input_path.absolute()), "r", encoding="utf-8") as f:
         d: AnnotationsMetadata = json.load(f)
         # TODO: check if conforms to datamodel
@@ -75,34 +75,25 @@ def custom_annotations_preprocessing(
             current_d["name"] = d["name"]
         if "entry_id" in d:
             current_d["entry_id"] = d["entry_id"]
-
-        if "volume_channels_annotations" in d:
-            old_volume_channel_annotations_list = current_d[
-                "volume_channels_annotations"
-            ]
-            to_be_added_volume_channel_annotations_list = d[
-                "volume_channels_annotations"
-            ]
+        if d.volume_channels_annotations is not None:
+        # if "volume_channels_annotations" in d:
+            old_volume_channels_annotations_list = current_d.volume_channels_annotations
+            to_be_added_volume_channels_annotations_list = d.volume_channels_annotations
 
             to_be_added_channel_ids = [
-                channel["channel_id"]
-                for channel in to_be_added_volume_channel_annotations_list
+                channel.channel_id
+                for channel in to_be_added_volume_channels_annotations_list
             ]
             new_list = [
                 channel
-                for channel in old_volume_channel_annotations_list
-                if channel["channel_id"] not in to_be_added_channel_ids
+                for channel in old_volume_channels_annotations_list
+                if channel.channel_id not in to_be_added_channel_ids
             ]
             updated_vol_ch_ann_list = (
-                new_list + to_be_added_volume_channel_annotations_list
+                new_list + to_be_added_volume_channels_annotations_list
             )
 
-            current_d["volume_channels_annotations"] = updated_vol_ch_ann_list
-
-        if "non_segment_annotation" in d:
-            update_dict(
-                current_d["non_segment_annotation"], d["non_segment_annotation"]
-            )
+            current_d.volume_channels_annotations = updated_vol_ch_ann_list
 
         root.attrs["annotations_dict"] = current_d
 

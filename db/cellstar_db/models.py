@@ -5,14 +5,14 @@ from typing import Any, List, Literal, Optional, Protocol, TypedDict, Union
 from numcodecs import Blosc
 import numpy as np
 import zarr
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class PreprocessorMode(str, Enum):
     add = "add"
     extend = "extend"
 
 
-class EntryMetadata(TypedDict):
+class EntryMetadata(BaseModel):
     description: str | None
     url: str | None
 
@@ -22,7 +22,7 @@ class QuantizationDtype(str, Enum):
     u2 = "u2"
 
 
-class PreprocessorParameters(TypedDict):
+class PreprocessorParameters(BaseModel):
     '''
     Preprocessor parameters for the purpose of
     building database. No working folder, db_path
@@ -36,6 +36,11 @@ class PreprocessorParameters(TypedDict):
     max_downsampling_level: int | None
     remove_original_resolution: bool | None
 
+
+class SegmentationKind(str, Enum):
+    lattice = "lattice"
+    mesh = "mesh"
+    primitve = "primitive"
 
 class InputKind(str, Enum):
     map = "map"
@@ -51,7 +56,7 @@ class InputKind(str, Enum):
     ometiff_segmentation = "ometiff_segmentation"
     extra_data = "extra_data"
 
-class RawInput(TypedDict):
+class RawInput(BaseModel):
     path: str | Path
     kind: InputKind
 
@@ -66,20 +71,20 @@ class PreprocessorArguments(PreprocessorParameters):
     source_db_name: str
     working_folder: str
     db_path: str
-    inputs: list[list[RawInput]]
+    inputs: list[RawInput]
   
-class RawInputFileResourceInfo(TypedDict):
+class RawInputFileResourceInfo(BaseModel):
     kind: Literal["local", "external"]
     uri: str
 
 
-class RawInputFileInfo(TypedDict):
+class RawInputFileInfo(BaseModel):
     kind: InputKind
     resource: RawInputFileResourceInfo
     preprocessor_parameters: PreprocessorParameters | None
 
 
-class RawInputFilesDownloadParams(TypedDict):
+class RawInputFilesDownloadParams(BaseModel):
     entry_id: str
     source_db: str
     source_db_id: str
@@ -95,7 +100,7 @@ class RawInputFilesDownloadParams(TypedDict):
 # need to create preprocessor input from
 
 
-class InputForBuildingDatabase(TypedDict):
+class InputForBuildingDatabase(BaseModel):
     quantize_dtype_str: QuantizationDtype | None
     quantize_downsampling_levels: list[int] | None
     force_volume_dtype: str | None
@@ -113,13 +118,13 @@ class InputForBuildingDatabase(TypedDict):
     inputs: list[RawInput]
 
 
-class OMETIFFSpecificExtraData(TypedDict):
+class OMETIFFSpecificExtraData(BaseModel):
     # missing_dimension: str
     cell_stage: Optional[str]
     ometiff_source_metadata: Optional[dict]
 
 
-class VolumeExtraData(TypedDict):
+class VolumeExtraData(BaseModel):
     voxel_size: list[float, float, float] | None
     # map sequential channel ID (e.g. "1" as string)
     # to biologically meaningfull channel id (string)
@@ -127,7 +132,7 @@ class VolumeExtraData(TypedDict):
     dataset_specific_data: object | None
 
 
-class SegmentationExtraData(TypedDict):
+class SegmentationExtraData(BaseModel):
     voxel_size: list[float, float, float] | None
     # map segmentation number (dimension) in case of >3D array (e.g. OMETIFF)
     # or in case segmentation ids are given as numbers by default
@@ -142,7 +147,7 @@ class SegmentationExtraData(TypedDict):
     dataset_specific_data: object | None
 
 
-class ExtraData(TypedDict):
+class ExtraData(BaseModel):
     entry_metadata: Optional[EntryMetadata]
     volume: Optional[VolumeExtraData]
     segmentation: Optional[SegmentationExtraData]
@@ -154,24 +159,24 @@ class ExtraData(TypedDict):
 # METADATA DATA MODEL
 
 
-class SamplingBox(TypedDict):
+class SamplingBox(BaseModel):
     origin: tuple[int, int, int]
     voxel_size: tuple[float, float, float]
     grid_dimensions: list[int, int, int]
 
 
-class TimeTransformation(TypedDict):
+class TimeTransformation(BaseModel):
     # to which downsampling level it is applied: can be to specific level, can be to all lvls
     downsampling_level: Union[int, Literal["all"]]
     factor: float
 
 
-class DownsamplingLevelInfo(TypedDict):
+class DownsamplingLevelInfo(BaseModel):
     level: int
     available: bool
 
 
-class SamplingInfo(TypedDict):
+class SamplingInfo(BaseModel):
     # Info about "downsampling dimension"
     spatial_downsampling_levels: list[DownsamplingLevelInfo]
     # the only thing which changes with SPATIAL downsampling is box!
@@ -182,51 +187,51 @@ class SamplingInfo(TypedDict):
     original_axis_order: list[int, int, int]
 
 
-class TimeInfo(TypedDict):
+class TimeInfo(BaseModel):
     kind: str
     start: int
     end: int
     units: str
 
 
-class SegmentationLatticesMetadata(TypedDict):
+class SegmentationLatticesMetadata(BaseModel):
     # e.g. label groups (Cell, Chromosomes)
     segmentation_ids: list[str]
     segmentation_sampling_info: dict[str, SamplingInfo]
     time_info: dict[str, TimeInfo]
 
 
-class GeometricSegmentationSetsMetadata(TypedDict):
+class GeometricSegmentationSetsMetadata(BaseModel):
     segmentation_ids: list[str]
     # maps set ids to time info
     time_info: dict[str, TimeInfo]
 
 
-class MeshMetadata(TypedDict):
+class MeshMetadata(BaseModel):
     num_vertices: int
     num_triangles: int
     num_normals: Optional[int]
 
 
-class MeshListMetadata(TypedDict):
+class MeshListMetadata(BaseModel):
     mesh_ids: dict[int, MeshMetadata]
 
 
-class DetailLvlsMetadata(TypedDict):
+class DetailLvlsMetadata(BaseModel):
     detail_lvls: dict[int, MeshListMetadata]
 
 
-class MeshComponentNumbers(TypedDict):
+class MeshComponentNumbers(BaseModel):
     segment_ids: dict[int, DetailLvlsMetadata]
 
 
-class MeshesMetadata(TypedDict):
+class MeshesMetadata(BaseModel):
     # maps timeframe index to MeshComponentNumbers
     mesh_timeframes: dict[int, MeshComponentNumbers]
     detail_lvl_to_fraction: dict
 
 
-class MeshSegmentationSetsMetadata(TypedDict):
+class MeshSegmentationSetsMetadata(BaseModel):
     segmentation_ids: list[str]
     # maps segmentation_id to MeshesMetadata
     segmentation_metadata: dict[str, MeshesMetadata]
@@ -234,7 +239,7 @@ class MeshSegmentationSetsMetadata(TypedDict):
     time_info: dict[str, TimeInfo]
 
 
-class VolumeDescriptiveStatistics(TypedDict):
+class VolumeDescriptiveStatistics(BaseModel):
     mean: float
     min: float
     max: float
@@ -246,21 +251,21 @@ class VolumeSamplingInfo(SamplingInfo):
     descriptive_statistics: dict[int, dict[int, dict[str, VolumeDescriptiveStatistics]]]
 
 
-class VolumesMetadata(TypedDict):
+class VolumesMetadata(BaseModel):
     channel_ids: list[str]
     # Values of time dimension
     time_info: TimeInfo
     volume_sampling_info: VolumeSamplingInfo
 
 
-class EntryId(TypedDict):
+class EntryId(BaseModel):
     source_db_name: str
     source_db_id: str
 
 
-class Metadata(TypedDict):
+class Metadata(BaseModel):
     entry_id: EntryId
-    volumes: VolumesMetadata
+    volumes: VolumesMetadata | None
     segmentation_lattices: Optional[SegmentationLatticesMetadata]
     segmentation_meshes: Optional[MeshSegmentationSetsMetadata]
     geometric_segmentation: Optional[GeometricSegmentationSetsMetadata]
@@ -272,7 +277,7 @@ class Metadata(TypedDict):
 # ANNOTATIONS DATA MODEL
 
 
-class ChannelAnnotation(TypedDict):
+class VolumeChannelAnnotation(BaseModel):
     # uuid
     channel_id: str
     # with transparency
@@ -280,20 +285,19 @@ class ChannelAnnotation(TypedDict):
     label: Optional[str]
 
 
-class SegmentAnnotationData(TypedDict):
+class SegmentAnnotationData(BaseModel):
     # label-value in NGFF
     # uuid
     id: Optional[str]
-
-    segment_kind: Literal["lattice", "mesh", "primitive"]
+    segment_kind: SegmentationKind
     segment_id: int
     segmentation_id: str
-    color: Optional[tuple[float, float, float, float]]
+    color: Optional[list[float, float, float, float]]
     time: Optional[int | list[int | tuple[int, int]]]
     # other props added later if needed
 
 
-class ExternalReference(TypedDict):
+class ExternalReference(BaseModel):
     # uuid
     id: Optional[str]
     resource: Optional[str]
@@ -303,20 +307,20 @@ class ExternalReference(TypedDict):
     url: Optional[str]
 
 
-class TargetId(TypedDict):
+class TargetId(BaseModel):
     segmentation_id: str
     segment_id: int
 
 
-class DetailsText(TypedDict):
+class DetailsText(BaseModel):
     format: Literal["text", "markdown"]
     text: str
 
 
-class DescriptionData(TypedDict):
+class DescriptionData(BaseModel):
     # uuid
     id: Optional[str]
-    target_kind: Literal["lattice", "mesh", "primitive", "entry"]
+    target_kind: SegmentationKind | Literal["entry"]
     target_id: Optional[TargetId]
     name: Optional[str]
     external_references: Optional[list[ExternalReference]]
@@ -327,7 +331,7 @@ class DescriptionData(TypedDict):
     metadata: Union[dict[str, Any], None]
 
 
-class AnnotationsMetadata(TypedDict):
+class AnnotationsMetadata(BaseModel):
     name: Optional[str]
     entry_id: EntryId
     # id => DescriptionData
@@ -336,7 +340,7 @@ class AnnotationsMetadata(TypedDict):
     segment_annotations: list[SegmentAnnotationData]
     # Only in SFF
     details: Optional[str]
-    volume_channels_annotations: Optional[list[ChannelAnnotation]]
+    volume_channels_annotations: Optional[list[VolumeChannelAnnotation]]
 
 
 # END ANNOTATIONS DATA MODEL
@@ -346,9 +350,9 @@ class AnnotationsMetadata(TypedDict):
 
 
 class LatticeSegmentationData(TypedDict):
-    grid: zarr.core.Array
+    grid: zarr.Array
     # NOTE: single item in the array which is a Dict
-    set_table: zarr.core.Array
+    set_table: zarr.Array
 
 
 class SingleMeshZattrs(TypedDict):
@@ -361,9 +365,9 @@ class SingleMeshZattrs(TypedDict):
 
 class SingleMeshSegmentationData(TypedDict):
     mesh_id: str
-    vertices: zarr.core.Array
-    triangles: zarr.core.Array
-    normals: zarr.core.Array
+    vertices: zarr.Array
+    triangles: zarr.Array
+    normals: zarr.Array
     attrs: SingleMeshZattrs
 
 
@@ -376,14 +380,14 @@ class ShapePrimitiveKind(str, Enum):
     pyramid = "pyramid"
 
 
-class ShapePrimitiveBase(TypedDict):
+class ShapePrimitiveBase(BaseModel):
     # NOTE: to be able to refer to it in annotations
     id: int
     kind: ShapePrimitiveKind
     # NOTE: color in annotations
 
 
-class RotationParameters(TypedDict):
+class RotationParameters(BaseModel):
     axis: tuple[float, float, float]
     radians: float
 
@@ -424,11 +428,11 @@ class Pyramid(ShapePrimitiveBase):
     rotation: RotationParameters
 
 
-class ShapePrimitiveData(TypedDict):
+class ShapePrimitiveData(BaseModel):
     shape_primitive_list: list[ShapePrimitiveBase]
 
 
-class GeometricSegmentationData(TypedDict):
+class GeometricSegmentationData(BaseModel):
     segmentation_id: str
     # maps timeframe index to ShapePrimitivesData
     primitives: dict[int, ShapePrimitiveData]
@@ -436,7 +440,7 @@ class GeometricSegmentationData(TypedDict):
 
 class ZarrRoot(TypedDict):
     # resolution => timeframe index => channel
-    volume_data: list[dict[int, list[dict[int, list[dict[int, zarr.core.Array]]]]]]
+    volume_data: list[dict[int, list[dict[int, list[dict[int, zarr.Array]]]]]]
     # segmentation_id => downsampling => timeframe index
     lattice_segmentation_data: list[
         dict[str, list[dict[int, list[dict[int, LatticeSegmentationData]]]]]
@@ -463,31 +467,38 @@ GeometricSegmentationJson = list[GeometricSegmentationData]
 # SERVER OUTPUT DATA MODEL (MESHES, SEGMENTATION LATTICES, VOLUMES)
 
 
-class MeshData(TypedDict):
+class MeshData(BaseModel):
     mesh_id: int
-    vertices: np.ndarray  # shape = (n_vertices, 3)
-    triangles: np.ndarray  # shape = (n_triangles, 3)
-    normals: Optional[np.ndarray]
-
+    vertices: np.ndarray = Field(default_factory=lambda: np.zeros(10))  # shape = (n_vertices, 3)
+    triangles: np.ndarray = Field(default_factory=lambda: np.zeros(10))  # shape = (n_triangles, 3)
+    normals: Optional[np.ndarray] = Field(default_factory=lambda: np.zeros(10))
+    
+    class Config:
+        arbitrary_types_allowed = True
 
 MeshesData = list[MeshData]
 
 
-class LatticeSegmentationSliceData(TypedDict):
+class LatticeSegmentationSliceData(BaseModel):
     # array with set ids
-    category_set_ids: np.ndarray
+    category_set_ids: np.ndarray = Field(default_factory=lambda: np.zeros(10))
     # dict mapping set ids to the actual segment ids (e.g. for set id=1, there may be several segment ids)
     category_set_dict: dict
     lattice_id: int
+    
+    class Config:
+        arbitrary_types_allowed = True
 
 
-class VolumeSliceData(TypedDict):
+class SliceData(BaseModel):
     # changed segm slice to another typeddict
     segmentation_slice: Optional[LatticeSegmentationSliceData]
-    volume_slice: Optional[np.ndarray]
+    volume_slice: Optional[np.ndarray] = Field(default_factory=lambda: np.zeros(10))
     channel_id: Optional[str]
     time: int
 
+    class Config:
+        arbitrary_types_allowed = True
 
 # END SERVER OUTPUT DATA MODEL
 

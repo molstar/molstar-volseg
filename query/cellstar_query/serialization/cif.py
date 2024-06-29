@@ -1,7 +1,7 @@
 from typing import Union
 
 import numpy as np
-from cellstar_db.models import MeshesData, VolumeMetadata, VolumeSliceData
+from cellstar_db.models import MeshesData, VolumeMetadata, SliceData
 from cellstar_query.core.models import GridSliceBox
 from cellstar_query.core.timing import Timing
 from cellstar_query.serialization.data.meshes_for_cif import MeshesForCif
@@ -31,7 +31,7 @@ from ciftools.serialization import create_binary_writer
 
 
 def serialize_volume_slice(
-    slice: VolumeSliceData, metadata: VolumeMetadata, box: GridSliceBox
+    slice: SliceData, metadata: VolumeMetadata, box: GridSliceBox
 ) -> Union[bytes, str]:
     writer = create_binary_writer(encoder="cellstar-volume-server")
 

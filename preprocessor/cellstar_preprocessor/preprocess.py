@@ -5,6 +5,7 @@ import typing
 from argparse import ArgumentError
 from enum import Enum
 from pathlib import Path
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from munch import DefaultMunch
 
 import typer
@@ -32,13 +33,12 @@ from cellstar_db.models import (
 from cellstar_preprocessor.flows.common import (
     dictget,
     read_json,
-    open_zarr_structure_from_path,
     process_extra_data,
 )
 from cellstar_preprocessor.flows.constants import (
     GEOMETRIC_SEGMENTATIONS_ZATTRS,
-    INIT_ANNOTATIONS_DICT,
-    INIT_METADATA_DICT,
+    INIT_ANNOTATIONS_MODEL,
+    INIT_METADATA_MODEL,
     LATTICE_SEGMENTATION_DATA_GROUPNAME,
     MESH_SEGMENTATION_DATA_GROUPNAME,
     RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS,
@@ -107,10 +107,10 @@ from cellstar_preprocessor.flows.segmentation.sff_segmentation_metadata_preproce
 from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing import (
     sff_segmentation_preprocessing,
 )
-from cellstar_preprocessor.flows.volume._process_allencel_metadata_csv import (
+from cellstar_preprocessor.flows.volume.process_allencel_metadata_csv import (
     process_allencell_metadata_csv,
 )
-from cellstar_preprocessor.flows.volume._quantize_internal_volume import (
+from cellstar_preprocessor.flows.volume.quantize_internal_volume import (
     quantize_internal_volume,
 )
 from cellstar_preprocessor.flows.volume.map_volume_metadata_preprocessing import (
@@ -288,7 +288,7 @@ class MAPMetadataCollectionTask(TaskBase):
 
     def execute(self) -> None:
         volume = self.internal_volume
-        metadata_dict = map_volume_metadata_preprocessing(internal_volume=volume)
+        metadata_dict = map_volume_metadata_preprocessing(v=volume)
 
 
 class OMEZARRAnnotationsCollectionTask(TaskBase):
@@ -297,7 +297,7 @@ class OMEZARRAnnotationsCollectionTask(TaskBase):
 
     def execute(self) -> None:
         annotations_dict = omezarr_volume_annotations_preprocessing(
-            internal_volume=self.internal_volume
+            v=self.internal_volume
         )
 
 
@@ -635,7 +635,7 @@ class Preprocessor:
             if isinstance(i, VOLUME_INPUT_TYPES):
                 self.store_internal_volume(
                     internal_volume=InternalVolume(
-                        intermediate_zarr_structure_path=self.intermediate_zarr_structure,
+                        path=self.intermediate_zarr_structure,
                         input_path=i.path,
                         params_for_storing=self.preprocessor_input.storing_params,
                         volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
@@ -660,7 +660,7 @@ class Preprocessor:
             if isinstance(i, SEGMENTATION_INPUT_TYPES):
                 self.store_internal_segmentation(
                     internal_segmentation=InternalSegmentation(
-                        intermediate_zarr_structure_path=self.intermediate_zarr_structure,
+                        path=self.intermediate_zarr_structure,
                         input_path=i.path,
                         params_for_storing=self.preprocessor_input.storing_params,
                         downsampling_parameters=self.preprocessor_input.downsampling,
@@ -947,7 +947,7 @@ class Preprocessor:
 
     def __check_if_inputs_exists(self, raw_inputs_list: list[RawInput]):
         for input_item in raw_inputs_list:
-            p = input_item["path"]
+            p = input_item.path
             assert p.exists(), f"Input file {p} does not exist"
 
     def _analyse_preprocessor_input(self) -> list[InputT]:
@@ -959,26 +959,26 @@ class Preprocessor:
         analyzed: list[InputT] = []
 
         extra_data = list(
-            filter(lambda i: i["kind"] == InputKind.extra_data, raw_inputs_list)
+            filter(lambda i: i.kind == InputKind.extra_data, raw_inputs_list)
         )
         assert len(extra_data) <= 1, "There must be no more than one extra data input"
         if len(extra_data) == 1:
             analyzed.append(extra_data[0])
 
-        if any(i["kind"] == InputKind.mask for i in raw_inputs_list):
+        if any(i.kind == InputKind.mask for i in raw_inputs_list):
             all_mask_input_pathes = [
-                i["path"] for i in raw_inputs_list if i["kind"] == InputKind.mask
+                i.path for i in raw_inputs_list if i.kind == InputKind.mask
             ]
             joint_mask_input = MaskInput(
                 path=all_mask_input_pathes, kind=InputKind.mask
             )
             analyzed.append(joint_mask_input)
 
-        if any(i["kind"] == InputKind.geometric_segmentation for i in raw_inputs_list):
+        if any(i.kind == InputKind.geometric_segmentation for i in raw_inputs_list):
             all_gs_pathes = [
-                i["path"]
+                i.path
                 for i in raw_inputs_list
-                if i["kind"] == InputKind.geometric_segmentation
+                if i.kind == InputKind.geometric_segmentation
             ]
             joint_geometric_segmentation_input = GeometricSegmentationInput(
                 all_gs_pathes, InputKind.geometric_segmentation
@@ -988,8 +988,8 @@ class Preprocessor:
         # TODO: three maps etc.?
 
         for i in raw_inputs_list:
-            k = i["kind"]
-            p = i["path"]
+            k = i.kind
+            p = i.path
             if k == InputKind.extra_data:
                 analyzed.append(ExtraDataInput(path=p, kind=k))
             elif k == InputKind.map:
@@ -1007,7 +1007,7 @@ class Preprocessor:
             elif k == InputKind.custom_annotations:
                 analyzed.append(CustomAnnotationsInput(path=p, kind=k))
             elif k == InputKind.application_specific_segmentation:
-                sff_path = convert_app_specific_segm_to_sff(i[0])
+                sff_path = convert_app_specific_segm_to_sff(i.path)
                 analyzed.append(SFFInput(path=sff_path, kind=InputKind.sff))
                 # TODO: remove app specific segm file?
             elif k == InputKind.ometiff_image:
@@ -1066,9 +1066,9 @@ class Preprocessor:
                 )
 
             elif mode == PreprocessorMode.add:
-                root.attrs["metadata_dict"] = INIT_METADATA_DICT
+                root.attrs["metadata_dict"] = INIT_METADATA_MODEL.dict()
 
-                root.attrs["annotations_dict"] = INIT_ANNOTATIONS_DICT
+                root.attrs["annotations_dict"] = INIT_ANNOTATIONS_MODEL.dict()
             else:
                 raise Exception("Preprocessor mode is not supported")
             # init GeometricSegmentationData in zattrs
@@ -1097,7 +1097,7 @@ class Preprocessor:
         # call it once and get context
         # get segmentation_ids from metadata
         # using its method
-        root = open_zarr_structure_from_path(self.intermediate_zarr_structure)
+        root = open_zarr(self.intermediate_zarr_structure)
 
         segmentation_lattice_ids = []
         segmentation_mesh_ids = []
@@ -1196,7 +1196,7 @@ async def main_preprocessor(
 
     inputs: list[RawInput] = args.inputs
     for idx, i in enumerate(inputs):
-        inputs[idx] = RawInput(path=Path(i["path"]), kind=i["kind"])
+        inputs[idx] = RawInput(path=Path(i.path), kind=i.kind)
         
     # for input_path, input_kind in zip(args.input_paths, args.input_kinds):
     preprocessor_input.inputs.files = inputs

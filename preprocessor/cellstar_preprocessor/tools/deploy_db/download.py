@@ -289,13 +289,4 @@ def store_db_building_params_to_json(
 ):
     filename = Path(args.db_building_parameters_json).name
     folder = Path(args.db_building_parameters_json).parent
-    save_dict_to_json_file(db_building_params, filename, folder)
-
-
-# test-data\preprocessor\download_raw_input_params.json
-if __name__ == "__main__":
-    # print("DEFAULT PORTS ARE TEMPORARILY SET TO 4000 and 8000, CHANGE THIS AFTERWARDS")
-    args = parse_script_args()
-    db_building_params = download(args)
-    store_db_building_params_to_json(db_building_params, args)
-    # store it to json
+    save_dict_to_json_file([d.dict() for d in db_building_params], filename, folder)

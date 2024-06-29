@@ -1,9 +1,9 @@
 from uuid import uuid4
 
-from cellstar_db.models import DownsamplingParams, QuantizationDtype, StoringParams
+from cellstar_db.models import DownsamplingParams, InputKind, QuantizationDtype, StoringParams
 import numpy as np
 import zarr
-from cellstar_preprocessor.flows.common import open_zarr_structure_from_path
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
 from cellstar_preprocessor.flows.volume.volume_downsampling import volume_downsampling
 from cellstar_db.models import (
@@ -21,7 +21,7 @@ def test_volume_downsampling():
     unique_folder_name = str(uuid4())
     p = initialize_intermediate_zarr_structure_for_tests(unique_folder_name)
     internal_volume = InternalVolume(
-        intermediate_zarr_structure_path=p,
+        path=p,
         input_path=TEST_MAP_PATH,
         params_for_storing=StoringParams(),
         volume_force_dtype="f2",
@@ -34,10 +34,11 @@ def test_volume_downsampling():
         ),
         quantize_dtype_str=QuantizationDtype.u1,
         quantize_downsampling_levels=(1,),
+        input_kind=InputKind.map
     )
 
-    zarr_structure: zarr.Group = open_zarr_structure_from_path(
-        internal_volume.intermediate_zarr_structure_path
+    zarr_structure: zarr.Group = open_zarr(
+        internal_volume.path
     )
 
     # create synthetic array filled with ones

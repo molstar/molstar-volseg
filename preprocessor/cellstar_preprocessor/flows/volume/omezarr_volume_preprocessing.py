@@ -4,11 +4,11 @@
 
 import gc
 
+from cellstar_preprocessor.flows.zarr_methods import create_dataset_wrapper
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import zarr
 from cellstar_preprocessor.flows.common import (
-    create_dataset_wrapper,
     get_channel_annotations,
-    open_zarr_structure_from_path,
 )
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
 from cellstar_preprocessor.model.volume import InternalVolume
@@ -19,8 +19,8 @@ from cellstar_preprocessor.model.volume import InternalVolume
 def omezarr_volume_preprocessing(internal_volume: InternalVolume):
     ome_zarr_root = zarr.open_group(internal_volume.input_path)
 
-    our_zarr_structure = open_zarr_structure_from_path(
-        internal_volume.intermediate_zarr_structure_path
+    our_zarr_structure = open_zarr(
+        internal_volume.path
     )
 
     # PROCESSING VOLUME
@@ -46,7 +46,7 @@ def omezarr_volume_preprocessing(internal_volume: InternalVolume):
         size_of_data_for_lvl = 0
         # first get volume channel annotations in preprocessing zarr image
         # then set channel ids according to them in preprocessing zarr image
-        volume_channel_annotations = get_channel_annotations(root_zattrs)
+        volume_channels_annotations = get_channel_annotations(root_zattrs)
         resolution_group = volume_data_gr.create_group(volume_arr_resolution)
         if len(axes) == 5 and axes[0]["name"] == "t":
             for i in range(volume_arr.shape[0]):
@@ -65,8 +65,8 @@ def omezarr_volume_preprocessing(internal_volume: InternalVolume):
                     # then label = j
                     target_annotations = list(
                         filter(
-                            lambda a: a["channel_id"] == str(j),
-                            volume_channel_annotations,
+                            lambda a: a.channel_id == str(j),
+                            volume_channels_annotations,
                         )
                     )
                     assert (

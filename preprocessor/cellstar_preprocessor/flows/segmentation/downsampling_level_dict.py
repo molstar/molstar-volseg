@@ -1,5 +1,5 @@
 import numpy as np
-from cellstar_preprocessor.flows.segmentation._segmentation_set_table import (
+from cellstar_preprocessor.flows.segmentation.segmentation_set_table import (
     SegmentationSetTable,
 )
 

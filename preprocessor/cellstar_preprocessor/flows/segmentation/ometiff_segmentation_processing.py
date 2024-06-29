@@ -1,11 +1,11 @@
 import gc
 
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import dask.array as da
 import numcodecs
 import numpy as np
 import zarr
 from cellstar_preprocessor.flows.common import (
-    open_zarr_structure_from_path,
     prepare_ometiff_for_writing,
     read_ometiff_to_dask,
     set_ometiff_source_metadata,
@@ -19,8 +19,8 @@ from cellstar_preprocessor.model.segmentation import InternalSegmentation
 def ometiff_segmentation_processing(internal_segmentation: InternalSegmentation):
     # NOTE: supports only 3D images
 
-    zarr_structure: zarr.Group = open_zarr_structure_from_path(
-        internal_segmentation.intermediate_zarr_structure_path
+    zarr_structure: zarr.Group = open_zarr(
+        internal_segmentation.path
     )
 
     internal_segmentation.primary_descriptor = (

@@ -17,9 +17,10 @@ from cellstar_db.file_system.constants import (
 )
 from cellstar_db.models import (
     GeometricSegmentationData,
+    LatticeSegmentationSliceData,
     MeshData,
     MeshesData,
-    VolumeSliceData,
+    SliceData,
 )
 from cellstar_db.protocol import DBReadContext, VolumeServerDB
 from cellstar_db.utils.box import normalize_box
@@ -37,7 +38,7 @@ class FileSystemDBReadContext(DBReadContext):
         mode: str = "dask",
         timer_printout=False,
         lattice_id: str = "0",
-    ) -> VolumeSliceData:
+    ) -> SliceData:
         """
         Reads a slice from a specific (down)sampling of segmentation and volume data
         from specific entry from DB based on key (e.g. EMD-1111), lattice_id (e.g. 0),
@@ -68,7 +69,7 @@ class FileSystemDBReadContext(DBReadContext):
                 )
 
             if VOLUME_DATA_GROUPNAME in root and (down_sampling_ratio is not None):
-                volume_arr: zarr.core.Array = root[VOLUME_DATA_GROUPNAME][
+                volume_arr: zarr.Array = root[VOLUME_DATA_GROUPNAME][
                     down_sampling_ratio
                 ][time][channel_id]
             else:
@@ -106,28 +107,15 @@ class FileSystemDBReadContext(DBReadContext):
 
             if timer_printout == True:
                 print(f"read_slice with mode {mode}: {end - start}")
+            d = SliceData(
+                    volume_slice=volume_slice,
+                    time=time,
+                    channel_id=channel_id
+                )
             if segm_arr:
-                d = {
-                    "segmentation_slice": {
-                        "category_set_ids": segm_slice,
-                        "category_set_dict": segm_dict,
-                        "lattice_id": lattice_id,
-                    },
-                    "volume_slice": volume_slice,
-                    "time": time,
-                    "channel_id": channel_id,
-                }
-            else:
-                d = {
-                    "segmentation_slice": {
-                        "category_set_ids": None,
-                        "category_set_dict": None,
-                        "lattice_id": lattice_id,
-                    },
-                    "volume_slice": volume_slice,
-                    "time": time,
-                    "channel_id": channel_id,
-                }
+                d.segmentation_slice = LatticeSegmentationSliceData(category_set_ids=segm_slice,
+                    category_set_dict=segm_dict,
+                    lattice_id=lattice_id)
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)
             raise e
@@ -192,14 +180,14 @@ class FileSystemDBReadContext(DBReadContext):
         time: int,
         mode: str = "dask",
         timer_printout=False,
-    ) -> VolumeSliceData:
+    ) -> SliceData:
         try:
             box = normalize_box(box)
 
             root: zarr.Group = zarr.group(self.store)
 
             if VOLUME_DATA_GROUPNAME in root and (down_sampling_ratio is not None):
-                volume_arr: zarr.core.Array = root[VOLUME_DATA_GROUPNAME][
+                volume_arr: zarr.Array = root[VOLUME_DATA_GROUPNAME][
                     down_sampling_ratio
                 ][time][channel_id]
 
@@ -251,7 +239,7 @@ class FileSystemDBReadContext(DBReadContext):
         time: int,
         mode: str = "dask",
         timer_printout=False,
-    ) -> VolumeSliceData:
+    ) -> SliceData:
         try:
             box = normalize_box(box)
 
@@ -297,7 +285,7 @@ class FileSystemDBReadContext(DBReadContext):
 
     def _do_slicing(
         self,
-        arr: zarr.core.Array,
+        arr: zarr.Array,
         box: Tuple[Tuple[int, int, int], Tuple[int, int, int]],
         mode: str,
     ) -> np.ndarray:
@@ -323,7 +311,7 @@ class FileSystemDBReadContext(DBReadContext):
 
     def __get_slice_from_zarr_three_d_arr(
         self,
-        arr: zarr.core.Array,
+        arr: zarr.Array,
         box: Tuple[Tuple[int, int, int], Tuple[int, int, int]],
     ):
         """
@@ -339,7 +327,7 @@ class FileSystemDBReadContext(DBReadContext):
 
     def __get_slice_from_zarr_three_d_arr_gbs(
         self,
-        arr: zarr.core.Array,
+        arr: zarr.Array,
         box: Tuple[Tuple[int, int, int], Tuple[int, int, int]],
     ):
         # TODO: check if slice is correct and equal to : notation slice
@@ -354,7 +342,7 @@ class FileSystemDBReadContext(DBReadContext):
 
     def __get_slice_from_zarr_three_d_arr_dask(
         self,
-        arr: zarr.core.Array,
+        arr: zarr.Array,
         box: Tuple[Tuple[int, int, int], Tuple[int, int, int]],
     ):
         # TODO: check if slice is correct and equal to : notation slice
@@ -369,7 +357,7 @@ class FileSystemDBReadContext(DBReadContext):
 
     def __get_slice_from_zarr_three_d_arr_dask_from_zarr(
         self,
-        arr: zarr.core.Array,
+        arr: zarr.Array,
         box: Tuple[Tuple[int, int, int], Tuple[int, int, int]],
     ):
         zd = da.from_zarr(arr, chunks=arr.chunks)
@@ -382,7 +370,7 @@ class FileSystemDBReadContext(DBReadContext):
 
     def __get_slice_from_zarr_three_d_arr_tensorstore(
         self,
-        arr: zarr.core.Array,
+        arr: zarr.Array,
         box: Tuple[Tuple[int, int, int], Tuple[int, int, int]],
     ):
         # TODO: check if slice is correct and equal to : notation slice
@@ -413,7 +401,7 @@ class FileSystemDBReadContext(DBReadContext):
         return sliced
 
     def __get_path_to_zarr_object(
-        self, zarr_obj: Union[zarr.Group, zarr.core.Array]
+        self, zarr_obj: Union[zarr.Group, zarr.Array]
     ) -> Path:
         """
         Returns Path to zarr object (array or group)

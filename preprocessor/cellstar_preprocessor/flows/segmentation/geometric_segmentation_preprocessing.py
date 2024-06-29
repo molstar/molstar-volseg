@@ -19,7 +19,7 @@ from cellstar_db.models import (
     Sphere,
     SphereInputParams,
 )
-from cellstar_preprocessor.flows.common import open_zarr_structure_from_path
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.flows.constants import (
     GEOMETRIC_SEGMENTATIONS_ZATTRS,
     RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS,
@@ -117,8 +117,8 @@ def _process_geometric_segmentation_data(
 
 
 def geometric_segmentation_preprocessing(internal_segmentation: InternalSegmentation):
-    zarr_structure: zarr.Group = open_zarr_structure_from_path(
-        internal_segmentation.intermediate_zarr_structure_path
+    zarr_structure: zarr.Group = open_zarr(
+        internal_segmentation.path
     )
 
     input_paths = internal_segmentation.input_path
@@ -133,7 +133,7 @@ def geometric_segmentation_preprocessing(internal_segmentation: InternalSegmenta
         geometric_segmentation_input = GeometricSegmentationInputData(**data)
         segmentation_id, primitives = _process_geometric_segmentation_data(
             data=geometric_segmentation_input,
-            zarr_structure_path=internal_segmentation.intermediate_zarr_structure_path,
+            zarr_structure_path=internal_segmentation.path,
         )
 
         # create GeometricSegmentationData

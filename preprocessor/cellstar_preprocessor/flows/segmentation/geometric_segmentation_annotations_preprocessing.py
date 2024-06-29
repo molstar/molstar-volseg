@@ -10,7 +10,7 @@ from cellstar_db.models import (
     ShapePrimitiveInputData,
     TargetId,
 )
-from cellstar_preprocessor.flows.common import open_zarr_structure_from_path
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.flows.constants import (
     GEOMETRIC_SEGMENTATIONS_ZATTRS,
     RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS,
@@ -21,8 +21,8 @@ from cellstar_preprocessor.model.segmentation import InternalSegmentation
 def geometric_segmentation_annotations_preprocessing(
     internal_segmentation: InternalSegmentation,
 ):
-    root = open_zarr_structure_from_path(
-        internal_segmentation.intermediate_zarr_structure_path
+    root = open_zarr(
+        internal_segmentation.path
     )
     d: AnnotationsMetadata = root.attrs["annotations_dict"]
 
@@ -32,8 +32,8 @@ def geometric_segmentation_annotations_preprocessing(
     )
 
     # NOTE: no volume channel annotations (no color, no labels)
-    root = open_zarr_structure_from_path(
-        internal_segmentation.intermediate_zarr_structure_path
+    root = open_zarr(
+        internal_segmentation.path
     )
 
     # segmentation is in zattrs

@@ -1,8 +1,8 @@
-from cellstar_preprocessor.flows.common import (
+from cellstar_preprocessor.flows.zarr_methods import (
     get_downsamplings,
-    open_zarr_structure_from_path,
 )
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
@@ -39,8 +39,8 @@ def nii_segmentation_metadata_preprocessing(
     # PLAN:
     # takes prefilled metadata dict from nii metadata
     # takes internal segmentation
-    root = open_zarr_structure_from_path(
-        internal_segmentation.intermediate_zarr_structure_path
+    root = open_zarr(
+        internal_segmentation.path
     )
     metadata_dict = root.attrs["metadata_dict"]
 

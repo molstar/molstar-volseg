@@ -4,22 +4,22 @@ import math
 import zlib
 from pathlib import Path
 
+from cellstar_preprocessor.flows.zarr_methods import create_dataset_wrapper
 import h5py
 import numcodecs
 import numpy as np
 import zarr
 from cellstar_preprocessor.flows.common import (
     chunk_numpy_arr,
-    create_dataset_wrapper,
     decide_np_dtype,
 )
-from cellstar_preprocessor.flows.segmentation._category_set_downsampling_methods import (
+from cellstar_preprocessor.flows.segmentation.category_set_downsampling_methods import (
     store_downsampling_levels_in_zarr,
 )
-from cellstar_preprocessor.flows.segmentation._downsampling_level_dict import (
+from cellstar_preprocessor.flows.segmentation.downsampling_level_dict import (
     DownsamplingLevelDict,
 )
-from cellstar_preprocessor.flows.segmentation._segmentation_set_table import (
+from cellstar_preprocessor.flows.segmentation.segmentation_set_table import (
     SegmentationSetTable,
 )
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
@@ -42,7 +42,7 @@ def open_hdf5_as_segmentation_object(file_path: Path) -> SFFSegmentation:
     return SFFSegmentation.from_file(str(file_path.resolve()))
 
 
-def extract_raw_annotations_from_sff(segm_file_path: Path) -> dict:
+def extract_raw_annotations_from_sff(segm_file_path: Path):
     """Returns dict of annotation metadata (some fields are removed)"""
     segm_obj = open_hdf5_as_segmentation_object(segm_file_path)
     segm_dict = segm_obj.as_json()
@@ -60,7 +60,7 @@ def hdf5_to_zarr(internal_segmentation: InternalSegmentation):
     Creates temp zarr structure mirroring that of hdf5
     """
     global temp_zarr_structure_path
-    temp_zarr_structure_path = internal_segmentation.intermediate_zarr_structure_path
+    temp_zarr_structure_path = internal_segmentation.path
     file_path = internal_segmentation.input_path
     try:
         # assert temp_zarr_structure_path.exists() == False, \
@@ -73,6 +73,22 @@ def hdf5_to_zarr(internal_segmentation: InternalSegmentation):
     except Exception as e:
         logging.error(e, stack_info=True, exc_info=True)
         raise e
+
+
+def get_segmentation_sampling_info(root_data_group, sampling_info_dict):
+    for res_gr_name, res_gr in root_data_group.groups():
+        # create layers (time gr, channel gr)
+        sampling_info_dict["boxes"][res_gr_name] = {
+            "origin": None,
+            "voxel_size": None,
+            "grid_dimensions": None,
+            # 'force_dtype': None
+        }
+
+        for time_gr_name, time_gr in res_gr.groups():
+            sampling_info_dict["boxes"][res_gr_name][
+                "grid_dimensions"
+            ] = time_gr.grid.shape
 
 
 def __visitor_function(name: str, node: h5py.Dataset) -> None:

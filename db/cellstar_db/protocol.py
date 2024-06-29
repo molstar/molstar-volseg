@@ -6,7 +6,7 @@ from cellstar_db.models import (
     GeometricSegmentationData,
     MeshesData,
     VolumeMetadata,
-    VolumeSliceData,
+    SliceData,
 )
 
 
@@ -20,7 +20,7 @@ class DBReadContext(Protocol):
         mode: str = "dask",
         timer_printout=False,
         lattice_id: str = "0",
-    ) -> VolumeSliceData:
+    ) -> SliceData:
         """
         Reads a slice from a specific (down)sampling of segmentation and volume data
         from specific entry from DB based on key (e.g. EMD-1111), lattice_id (e.g. 0),
@@ -53,7 +53,7 @@ class DBReadContext(Protocol):
         time: int,
         mode: str = "dask",
         timer_printout=False,
-    ) -> VolumeSliceData: ...
+    ) -> SliceData: ...
 
     async def read_segmentation_slice(
         self,
@@ -63,7 +63,7 @@ class DBReadContext(Protocol):
         time: int,
         mode: str = "dask",
         timer_printout=False,
-    ) -> VolumeSliceData: ...
+    ) -> SliceData: ...
 
     def close(self) -> None: ...
 

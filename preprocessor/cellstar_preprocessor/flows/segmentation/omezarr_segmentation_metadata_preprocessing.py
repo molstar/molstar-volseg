@@ -1,10 +1,10 @@
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
+from cellstar_preprocessor.flows.zarr_methods import get_downsamplings
 import numpy as np
 import zarr
 from cellstar_db.models import DownsamplingLevelInfo, Metadata
 from cellstar_preprocessor.flows.common import (
     _convert_to_angstroms,
-    get_downsamplings,
-    open_zarr_structure_from_path,
 )
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
 from cellstar_preprocessor.model.volume import InternalVolume
@@ -302,10 +302,10 @@ def _add_defaults_to_ome_zarr_attrs(ome_zarr_root: zarr.Group):
 
 
 def omezarr_segmentation_metadata_preprocessing(internal_volume: InternalVolume):
-    root = open_zarr_structure_from_path(
-        internal_volume.intermediate_zarr_structure_path
+    root = open_zarr(
+        internal_volume.path
     )
-    ome_zarr_root = open_zarr_structure_from_path(internal_volume.input_path)
+    ome_zarr_root = open_zarr(internal_volume.input_path)
 
     # new_volume_attrs_dict = _add_defaults_to_ome_zarr_attrs(ome_zarr_root=ome_zarr_root)
     # ome_zarr_root.attrs.put(new_volume_attrs_dict)

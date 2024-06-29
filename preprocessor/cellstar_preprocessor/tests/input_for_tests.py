@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import Literal, TypedDict
 
-from cellstar_db.models import DownsamplingParams, QuantizationDtype, StoringParams
+from attr import dataclass
+from cellstar_db.models import DownsamplingParams, InputKind, QuantizationDtype, StoringParams
 from cellstar_db.models import (
     EntryData,
 )
@@ -29,17 +30,18 @@ TEST_MAP_PATH_XYZ_ORDER = Path(
     "preprocessor/cellstar_preprocessor/tests/test_data/fake_ccp4_XYZ.map"
 )
 
-
-class TestInput(TypedDict):
-    kind: Literal["sff", "map", "omezarr"]
+@dataclass
+class TestInput:
+    kind: InputKind
     url: str
     entry_id: str
     source_db: str
+    __test__ = False
 
 
 MAP_TEST_INPUTS = [
     TestInput(
-        kind="map",
+        kind=InputKind.map,
         url="https://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-1832/map/emd_1832.map.gz",
         entry_id="emd-1832",
         source_db="emdb",
@@ -48,13 +50,13 @@ MAP_TEST_INPUTS = [
 
 SFF_TEST_INPUTS = [
     TestInput(
-        kind="sff",
+        kind=InputKind.sff,
         url="https://www.ebi.ac.uk/em_static/emdb_sff/empiar_10070_b3talongmusc20130301/empiar_10070_b3talongmusc20130301.hff.gz",
         entry_id="empiar-10070",
         source_db="empiar",
     ),
     TestInput(
-        kind="sff",
+        kind=InputKind.sff,
         url="https://www.ebi.ac.uk/em_static/emdb_sff/18/1832/emd_1832.hff.gz",
         entry_id="emd-1832",
         source_db="emdb",
@@ -63,13 +65,13 @@ SFF_TEST_INPUTS = [
 
 OMEZARR_TEST_INPUTS = [
     TestInput(
-        kind="omezarr",
+        kind=InputKind.omezarr,
         url="https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0062A/6001240.zarr",
         entry_id="idr-6001240",
         source_db="idr",
     ),
     TestInput(
-        kind="omezarr",
+        kind=InputKind.omezarr,
         url="https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0101A/13457537.zarr",
         entry_id="idr-13457537",
         source_db="idr",
@@ -79,7 +81,7 @@ OMEZARR_TEST_INPUTS = [
 MAP_INPUTS_FOR_AXES_TESTING = []
 
 INTERNAL_VOLUME_FOR_TESTING_XYZ_ORDER = InternalVolume(
-    intermediate_zarr_structure_path=WORKING_FOLDER_FOR_TESTS,
+    path=WORKING_FOLDER_FOR_TESTS,
     input_path=TEST_MAP_PATH_XYZ_ORDER,
     params_for_storing=StoringParams(),
     volume_force_dtype="f2",
@@ -92,10 +94,11 @@ INTERNAL_VOLUME_FOR_TESTING_XYZ_ORDER = InternalVolume(
     ),
     quantize_dtype_str=QuantizationDtype.u1,
     quantize_downsampling_levels=(1,),
+    input_kind=InputKind.map
 )
 
 INTERNAL_VOLUME_FOR_TESTING_ZYX_ORDER = InternalVolume(
-    intermediate_zarr_structure_path=WORKING_FOLDER_FOR_TESTS,
+    path=WORKING_FOLDER_FOR_TESTS,
     input_path=TEST_MAP_PATH_ZYX_ORDER,
     params_for_storing=StoringParams(),
     volume_force_dtype="f2",
@@ -108,11 +111,12 @@ INTERNAL_VOLUME_FOR_TESTING_ZYX_ORDER = InternalVolume(
     ),
     quantize_dtype_str=QuantizationDtype.u1,
     quantize_downsampling_levels=(1,),
+    input_kind=InputKind.map
 )
 
 
 INTERNAL_SEGMENTATION_FOR_TESTING = InternalSegmentation(
-    intermediate_zarr_structure_path=WORKING_FOLDER_FOR_TESTS,
+    path=WORKING_FOLDER_FOR_TESTS,
     input_path=TEST_SFF_PATH,
     params_for_storing=StoringParams(),
     downsampling_parameters=DownsamplingParams(),
@@ -122,10 +126,11 @@ INTERNAL_SEGMENTATION_FOR_TESTING = InternalSegmentation(
         source_db_id="emd-1832",
         source_db_name="emdb",
     ),
+    input_kind=InputKind.sff
 )
 
 INTERNAL_MESH_SEGMENTATION_FOR_TESTING = InternalSegmentation(
-    intermediate_zarr_structure_path=WORKING_FOLDER_FOR_TESTS,
+    path=WORKING_FOLDER_FOR_TESTS,
     input_path=TEST_MESH_SFF_PATH,
     params_for_storing=StoringParams(),
     downsampling_parameters=DownsamplingParams(),
@@ -135,4 +140,5 @@ INTERNAL_MESH_SEGMENTATION_FOR_TESTING = InternalSegmentation(
         source_db_id="empiar-10070",
         source_db_name="empiar",
     ),
+    input_kind=InputKind.sff
 )

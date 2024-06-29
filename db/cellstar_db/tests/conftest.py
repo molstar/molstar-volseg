@@ -8,27 +8,45 @@ from cellstar_db.file_system.db import FileSystemVolumeServerDB
 from cellstar_db.models import (
     AnnotationsMetadata,
     DescriptionData,
+    InputKind,
+    PreprocessorArguments,
+    PreprocessorMode,
+    RawInput,
     SegmentAnnotationData,
 )
 from cellstar_preprocessor.preprocess import main_preprocessor
 
 TEST_DB_FOLDER = "db/cellstar_db/tests/test_data/testing_db"
-TEST_ENTRY_INPUT_PATHS = [
-    "test-data/preprocessor/sample_volumes/emdb/EMD-1832.map",
-    "test-data/preprocessor/sample_segmentations/emdb_sff/emd_1832.hff",
-]
-TEST_ENTRY_INPUT_KINDS = ["map", "sff"]
 
-TEST_ENTRY_PREPROCESSOR_INPUT = dict(
-    mode="add",
+TEST_ENTRY_INPUTS = [
+    RawInput(
+        path="test-data/preprocessor/sample_volumes/emdb/EMD-1832.map",
+        kind=InputKind.map
+        ),
+    RawInput(
+        path="test-data/preprocessor/sample_segmentations/emdb_sff/emd_1832.hff",
+        kind=InputKind.sff
+    ) 
+]
+
+TEST_ENTRY_PREPROCESSOR_ARGUMENTS = PreprocessorArguments(
+    mode=PreprocessorMode.add,
     entry_id="emd-1832",
     source_db="emdb",
     source_db_id="emd-1832",
     source_db_name="emdb",
     working_folder="db/cellstar_db/tests/test_data/testing_working_folder",
     db_path=TEST_DB_FOLDER,
-    input_paths=TEST_ENTRY_INPUT_PATHS,
-    input_kinds=TEST_ENTRY_INPUT_KINDS,
+    inputs=[
+        RawInput(
+        path="test-data/preprocessor/sample_volumes/emdb/EMD-1832.map",
+        kind=InputKind.map
+        ),
+    RawInput(
+        path="test-data/preprocessor/sample_segmentations/emdb_sff/emd_1832.hff",
+        kind=InputKind.sff
+    ) 
+        ],
     quantize_dtype_str=None,
     quantize_downsampling_levels=None,
     force_volume_dtype=None,
@@ -43,7 +61,7 @@ TEST_ENTRY_PREPROCESSOR_INPUT = dict(
 @pytest.fixture(scope="module")
 def testing_db():
     # create db
-    test_db_path = Path(TEST_ENTRY_PREPROCESSOR_INPUT["db_path"])
+    test_db_path = Path(TEST_ENTRY_PREPROCESSOR_ARGUMENTS.db_path)
     if (test_db_path).is_dir() == False:
         test_db_path.mkdir(parents=True)
 
@@ -52,15 +70,15 @@ def testing_db():
     # remove previous test entry if it exists
     exists = asyncio.run(
         db.contains(
-            TEST_ENTRY_PREPROCESSOR_INPUT["source_db"],
-            TEST_ENTRY_PREPROCESSOR_INPUT["entry_id"],
+            TEST_ENTRY_PREPROCESSOR_ARGUMENTS.source_db,
+            TEST_ENTRY_PREPROCESSOR_ARGUMENTS.entry_id,
         )
     )
     if exists:
         asyncio.run(
             db.delete(
-                TEST_ENTRY_PREPROCESSOR_INPUT["source_db"],
-                TEST_ENTRY_PREPROCESSOR_INPUT["entry_id"],
+                TEST_ENTRY_PREPROCESSOR_ARGUMENTS.source_db,
+                TEST_ENTRY_PREPROCESSOR_ARGUMENTS.entry_id,
             )
         )
 
@@ -68,17 +86,17 @@ def testing_db():
     # NOTE: for now just could be emd-1832 sff, 6 descriptions, 6 segment annotations
     # TODO: in future can add to emd-1832 map and sff also geometric segmentation
     # but for testing annotations context emd-1832 sff is sufficient
-    asyncio.run(main_preprocessor(**TEST_ENTRY_PREPROCESSOR_INPUT))
+    asyncio.run(main_preprocessor(TEST_ENTRY_PREPROCESSOR_ARGUMENTS))
 
     yield db
 
 
-FAKE_SEGMENT_ANNOTATIONS: list[SegmentAnnotationData] = [
+FAKE_SEGMENT_ANNOTATIONS_DICT: list[SegmentAnnotationData] = [
     {
         "color": [0, 0, 0, 1.0],
         "id": "whatever_1",
         "segment_id": 9999999999999,
-        # "segment_kind": "lattice",
+        "segment_kind": "lattice",
         "segmentation_id": "999999999",
         "time": 999999999999999,
     },
@@ -92,7 +110,9 @@ FAKE_SEGMENT_ANNOTATIONS: list[SegmentAnnotationData] = [
     },
 ]
 
-FAKE_DESCRIPTIONS: list[DescriptionData] = [
+FAKE_SEGMENT_ANNOTATIONS = [SegmentAnnotationData.parse_obj(d) for d in FAKE_SEGMENT_ANNOTATIONS_DICT]
+
+FAKE_DESCRIPTIONS_DICTS: list[DescriptionData] = [
     {
         "details": None,
         "external_references": [
@@ -199,6 +219,7 @@ FAKE_DESCRIPTIONS: list[DescriptionData] = [
     },
 ]
 
+FAKE_DESCRIPTIONS = [DescriptionData.parse_obj(d) for d in FAKE_DESCRIPTIONS_DICTS]
 
 class TestData(TypedDict):
     modify_annotations: list[SegmentAnnotationData]
@@ -215,8 +236,8 @@ class TestData(TypedDict):
 def __get_annotations(testing_db: FileSystemVolumeServerDB):
     annotations: AnnotationsMetadata = asyncio.run(
         testing_db.read_annotations(
-            TEST_ENTRY_PREPROCESSOR_INPUT["source_db"],
-            TEST_ENTRY_PREPROCESSOR_INPUT["entry_id"],
+            TEST_ENTRY_PREPROCESSOR_ARGUMENTS.source_db,
+            TEST_ENTRY_PREPROCESSOR_ARGUMENTS.entry_id,
         )
     )
     return annotations

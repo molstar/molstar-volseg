@@ -1,11 +1,11 @@
 import math
 
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import numpy as np
 import zarr
 from cellstar_preprocessor.flows.common import (
     compute_downsamplings_to_be_stored,
     compute_number_of_downsampling_steps,
-    open_zarr_structure_from_path,
 )
 from cellstar_preprocessor.flows.constants import (
     LATTICE_SEGMENTATION_DATA_GROUPNAME,
@@ -13,19 +13,19 @@ from cellstar_preprocessor.flows.constants import (
     MESH_VERTEX_DENSITY_THRESHOLD,
     MIN_GRID_SIZE,
 )
-from cellstar_preprocessor.flows.segmentation._category_set_downsampling_methods import (
+from cellstar_preprocessor.flows.segmentation.category_set_downsampling_methods import (
     downsample_categorical_data,
     store_downsampling_levels_in_zarr,
 )
-from cellstar_preprocessor.flows.segmentation._downsampling_level_dict import (
+from cellstar_preprocessor.flows.segmentation.downsampling_level_dict import (
     DownsamplingLevelDict,
 )
-from cellstar_preprocessor.flows.segmentation._helper_methods import (
+from cellstar_preprocessor.flows.segmentation.helper_methods import (
     compute_vertex_density,
     simplify_meshes,
     store_mesh_data_in_zarr,
 )
-from cellstar_preprocessor.flows.segmentation._segmentation_set_table import (
+from cellstar_preprocessor.flows.segmentation.segmentation_set_table import (
     SegmentationSetTable,
 )
 from cellstar_db.models import SegmentationPrimaryDescriptor
@@ -36,8 +36,8 @@ from cellstar_preprocessor.tools.magic_kernel_downsampling_3d.magic_kernel_downs
 
 
 def segmentation_downsampling(internal_segmentation: InternalSegmentation):
-    zarr_structure = open_zarr_structure_from_path(
-        internal_segmentation.intermediate_zarr_structure_path
+    zarr_structure = open_zarr(
+        internal_segmentation.path
     )
     if (
         internal_segmentation.primary_descriptor

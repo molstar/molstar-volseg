@@ -1,11 +1,11 @@
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
+from cellstar_preprocessor.flows.zarr_methods import get_downsamplings
 import dask.array as da
 import zarr
 from cellstar_db.models import OMETIFFSpecificExtraData
 from cellstar_preprocessor.flows.common import (
     _get_ome_tiff_voxel_sizes_in_downsamplings,
-    get_downsamplings,
     get_ome_tiff_origins,
-    open_zarr_structure_from_path,
 )
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
@@ -119,63 +119,11 @@ def _get_segmentation_sampling_info(root_data_group, sampling_info_dict):
 def _get_allencell_voxel_size(root: zarr.Group) -> list[float, float, float]:
     return root.attrs["extra_data"]["scale_micron"]
 
-
-def _get_volume_sampling_info(root_data_group: zarr.Group, sampling_info_dict):
-    for res_gr_name, res_gr in root_data_group.groups():
-        # create layers (time gr, channel gr)
-        sampling_info_dict["boxes"][res_gr_name] = {
-            "origin": None,
-            "voxel_size": None,
-            "grid_dimensions": None,
-            # 'force_dtype': None
-        }
-
-        sampling_info_dict["descriptive_statistics"][res_gr_name] = {}
-
-        for time_gr_name, time_gr in res_gr.groups():
-            first_group_key = sorted(time_gr.array_keys())[0]
-
-            sampling_info_dict["boxes"][res_gr_name]["grid_dimensions"] = time_gr[
-                first_group_key
-            ].shape
-            # sampling_info_dict['boxes'][res_gr_name]['force_dtype'] = time_gr[first_group_key].dtype.str
-
-            sampling_info_dict["descriptive_statistics"][res_gr_name][time_gr_name] = {}
-            for channel_arr_name, channel_arr in time_gr.arrays():
-                assert (
-                    sampling_info_dict["boxes"][res_gr_name]["grid_dimensions"]
-                    == channel_arr.shape
-                )
-                # assert sampling_info_dict['boxes'][res_gr_name]['force_dtype'] == channel_arr.dtype.str
-
-                arr_view: da.Array = da.from_zarr(channel_arr)
-                # if QUANTIZATION_DATA_DICT_ATTR_NAME in arr.attrs:
-                #     data_dict = arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME]
-                #     data_dict['data'] = arr_view
-                #     arr_view = decode_quantized_data(data_dict)
-                #     if isinstance(arr_view, da.Array):
-                #         arr_view = arr_view.compute()
-
-                mean_val = float(str(arr_view.mean().compute()))
-                std_val = float(str(arr_view.std().compute()))
-                max_val = float(str(arr_view.max().compute()))
-                min_val = float(str(arr_view.min().compute()))
-
-                sampling_info_dict["descriptive_statistics"][res_gr_name][time_gr_name][
-                    channel_arr_name
-                ] = {
-                    "mean": mean_val,
-                    "std": std_val,
-                    "max": max_val,
-                    "min": min_val,
-                }
-
-
 def ometiff_segmentation_metadata_preprocessing(
     internal_segmentation: InternalSegmentation,
 ):
-    root = open_zarr_structure_from_path(
-        internal_segmentation.intermediate_zarr_structure_path
+    root = open_zarr(
+        internal_segmentation.path
     )
     # TODO: same as with volume metadata
     metadata_dict = root.attrs["metadata_dict"]

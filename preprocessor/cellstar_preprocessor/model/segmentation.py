@@ -1,30 +1,16 @@
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
-from cellstar_db.models import DownsamplingParams, InputKind, SegmentationExtraData
+from cellstar_db.models import DownsamplingParams, InputKind, SegmentationExtraData, SegmentationPrimaryDescriptor
 from cellstar_db.models import EntryData
+from cellstar_preprocessor.model.common import InternalData
 
-
-class InternalSegmentation:
-    def __init__(
-        self,
-        intermediate_zarr_structure_path: Path,
-        input_path: Union[Path, list[Path]],
-        params_for_storing: dict,
-        downsampling_parameters: DownsamplingParams,
-        entry_data: EntryData,
-        input_kind: InputKind,
-        custom_data: Optional[SegmentationExtraData] = None,
-    ):
-        self.intermediate_zarr_structure_path = intermediate_zarr_structure_path
-        self.input_path = input_path
-        self.params_for_storing = params_for_storing
-        self.downsampling_parameters = downsampling_parameters
-        self.primary_descriptor = None
-        self.value_to_segment_id_dict: dict = {}
-        self.simplification_curve: dict[int, float] = {}
-        self.entry_data = entry_data
-        self.raw_sff_annotations = {}
-        self.custom_data = custom_data
-        self.map_headers: dict[str, object] = dict()
-        self.input_kind = input_kind
+@dataclass
+class InternalSegmentation(InternalData):
+    custom_data: SegmentationExtraData | None = None
+    primary_descriptor: SegmentationPrimaryDescriptor | None = None
+    value_to_segment_id_dict: dict = field(default_factory=dict)
+    simplification_curve: dict[int, float] = field(default_factory=dict)
+    raw_sff_annotations: dict[str, Any] = field(default_factory=object)
+    map_headers: dict[str, object] = field(default_factory=dict)

@@ -1,6 +1,6 @@
 import pytest
 import zarr
-from cellstar_preprocessor.flows.common import open_zarr_structure_from_path
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
 from cellstar_preprocessor.flows.volume.omezarr_volume_preprocessing import (
     omezarr_volume_preprocessing,
@@ -29,8 +29,8 @@ def test_ome_zarr_image_preprocessing(omezar_test_input: TestInput):
         multiscales = root_zattrs["multiscales"]
         axes = multiscales[0]["axes"]
 
-        zarr_structure = open_zarr_structure_from_path(
-            internal_volume.intermediate_zarr_structure_path
+        zarr_structure = open_zarr(
+            internal_volume.path
         )
 
         assert VOLUME_DATA_GROUPNAME in zarr_structure
@@ -70,7 +70,7 @@ def test_ome_zarr_image_preprocessing(omezar_test_input: TestInput):
                 time_gr: zarr.Group = volume_gr[volume_arr_resolution][time]
                 for channel_id, channel_arr in time_gr.groups():
                     # for channel in range(n_of_channel_groups):
-                    assert isinstance(channel_arr, zarr.core.Array)
+                    assert isinstance(channel_arr, zarr.Array)
                     assert channel_arr.shape == volume_3d_arr_shape
                     # check dtype
                     assert channel_arr.dtype == volume_arr.dtype

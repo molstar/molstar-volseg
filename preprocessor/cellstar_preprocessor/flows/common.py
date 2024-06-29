@@ -6,11 +6,13 @@ import re
 from pathlib import Path
 from typing import TypedDict, Union
 
+# from cellstar_db.file_system.constants import VOLUME_DATA_GROUPNAME
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import dask.array as da
 import numpy as np
 import zarr
 from cellstar_db.models import (
-    ChannelAnnotation,
+    VolumeChannelAnnotation,
     DownsamplingLevelInfo,
     ExtraData,
     Metadata,
@@ -93,16 +95,17 @@ def set_segmentation_custom_data(
         internal_segmentation.custom_data = {}
 
 
+# for maps
 def process_extra_data(path: Path, intermediate_zarr_structure: Path):
     data: ExtraData = read_json(path)
-    zarr_structure: zarr.Group = open_zarr_structure_from_path(
+    zarr_structure: zarr.Group = open_zarr(
         intermediate_zarr_structure
     )
-    zarr_structure.attrs["extra_data"] = data
+    zarr_structure.attrs["extra_data"] = data.dict()
     # NOTE: entry_metadata
-    if "entry_metadata" in data:
-        metadata_dict: Metadata = zarr_structure.attrs["metadata_dict"]
-        metadata_dict["entry_metadata"] = data["entry_metadata"]
+    if data.entry_metadata is not None:
+        metadata_dict: Metadata = Metadata.parse_obj(zarr_structure.attrs["metadata_dict"])
+        metadata_dict.entry_metadata = data.entry_metadata
         zarr_structure.attrs["metadata_dict"] = metadata_dict
 
 
@@ -117,21 +120,6 @@ def update_dict(orig_dict, new_dict: dict):
             orig_dict[key] = new_dict[key]
     return orig_dict
 
-
-def get_downsamplings(data_group: zarr.Group) -> list[DownsamplingLevelInfo]:
-    downsamplings = []
-    for gr_name, gr in data_group.groups():
-        downsamplings.append(gr_name)
-        downsamplings = sorted(downsamplings)
-
-    # convert to ints
-    downsamplings = sorted([int(x) for x in downsamplings])
-    downsampling_info_list: list[DownsamplingLevelInfo] = []
-    for downsampling in downsamplings:
-        info: DownsamplingLevelInfo = {"available": True, "level": downsampling}
-        downsampling_info_list.append(info)
-
-    return downsampling_info_list
 
 # source: https://stackoverflow.com/a/11157531/13136429
 def dictget(d, *k):
@@ -243,63 +231,6 @@ def compute_number_of_downsampling_steps(
             return 1
 
     return num_of_downsampling_steps
-
-
-def _compute_chunk_size_based_on_data(arr: np.ndarray) -> tuple[int, int, int]:
-    shape: tuple = arr.shape
-    chunks = tuple([int(i / 4) if i > 4 else i for i in shape])
-    return chunks
-
-
-def open_zarr_zip(path: Path) -> zarr.Group:
-    store = zarr.ZipStore(path=path, compression=0, allowZip64=True, mode="r")
-    # Re-create zarr hierarchy from opened store
-    root: zarr.Group = zarr.group(store=store)
-    return root
-
-
-def open_zarr_structure_from_path(path: Path) -> zarr.Group:
-    store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(path))
-    # Re-create zarr hierarchy from opened store
-    root: zarr.Group = zarr.group(store=store)
-    return root
-
-
-def create_dataset_wrapper(
-    zarr_group: zarr.Group,
-    data,
-    name,
-    shape,
-    dtype,
-    params_for_storing: dict,
-    is_empty=False,
-) -> zarr.core.Array:
-    compressor = params_for_storing.compressor
-    chunking_mode = params_for_storing.chunking_mode
-
-    if chunking_mode == "auto":
-        chunks = True
-    elif chunking_mode == "custom_function":
-        chunks = _compute_chunk_size_based_on_data(data)
-    elif chunking_mode == "false":
-        chunks = False
-    else:
-        raise ValueError(f"Chunking approach arg value is invalid: {chunking_mode}")
-    if not is_empty:
-        zarr_arr = zarr_group.create_dataset(
-            data=data,
-            name=name,
-            shape=shape,
-            dtype=dtype,
-            compressor=compressor,
-            chunks=chunks,
-        )
-    else:
-        zarr_arr = zarr_group.create_dataset(
-            name=name, shape=shape, dtype=dtype, compressor=compressor, chunks=chunks
-        )
-
-    return zarr_arr
 
 
 def decide_np_dtype(mode: str, endianness: str):
@@ -529,18 +460,15 @@ def hex_to_rgba_normalized(channel_color_hex):
 
 
 def get_channel_annotations(ome_zarr_attrs: dict):
-    volume_channel_annotations: list[ChannelAnnotation] = []
+    volume_channels_annotations: list[VolumeChannelAnnotation] = []
     for channel_id, channel in enumerate(ome_zarr_attrs["omero"]["channels"]):
         label = None if not channel["label"] else channel["label"]
-        volume_channel_annotations.append(
-            {
-                "channel_id": str(channel_id),
-                "color": hex_to_rgba_normalized(channel["color"]),
-                "label": label,
-            }
+        volume_channels_annotations.append(
+            VolumeChannelAnnotation(channel_id=str(channel_id), color=hex_to_rgba_normalized(channel["color"]),
+                                    label=label)
         )
 
-    return volume_channel_annotations
+    return volume_channels_annotations
 
 
 def get_ome_tiff_origins(boxes_dict: dict, downsamplings: list[DownsamplingLevelInfo]):

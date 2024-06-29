@@ -5,10 +5,12 @@ import zarr.storage
 from cellstar_db.models import (
     AnnotationsMetadata,
     DescriptionData,
+    EntryId,
     SegmentAnnotationData,
+    SegmentationKind,
     TargetId,
 )
-from cellstar_preprocessor.flows.common import open_zarr_structure_from_path
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
@@ -44,15 +46,18 @@ def _get_label_time(label_value: int, our_label_gr: zarr.Group):
 
 # NOTE: Lattice IDs = Label groups
 def omezarr_segmentation_annotations_preprocessing(
-    internal_segmentation: InternalSegmentation,
+    s: InternalSegmentation,
 ):
-    ome_zarr_root = open_zarr_structure_from_path(internal_segmentation.input_path)
-    root = open_zarr_structure_from_path(
-        internal_segmentation.intermediate_zarr_structure_path
-    )
-    d: AnnotationsMetadata = root.attrs["annotations_dict"]
-
+    
+    a = s.get_annotations()
+    if not a.entry_id.source_db_id and not a.entry_id.source_db_name:
+        a.entry_id = EntryId(
+            source_db_id=s.entry_data.source_db_id,
+            source_db_name=s.entry_data.source_db_name,
+        )
+    ome_zarr_root = open_zarr(s.input_path)
     assert "labels" in ome_zarr_root, "No label group is present in input OME ZARR"
+
     for label_gr_name, label_gr in ome_zarr_root.labels.groups():
         labels_metadata_list = label_gr.attrs["image-label"]["colors"]
         # support multiple lattices
@@ -67,35 +72,35 @@ def omezarr_segmentation_annotations_preprocessing(
             # need to create two things: description and segment annotation
             # create description
             description_id = str(uuid4())
-            target_id: TargetId = {
-                "segment_id": label_value,
-                "segmentation_id": str(label_gr_name),
-            }
+            target_id = TargetId(
+                segment_id=label_value,
+                segmentation_id=str(label_gr_name),
+            )
 
-            our_label_gr = root[LATTICE_SEGMENTATION_DATA_GROUPNAME][label_gr_name]
+            our_label_gr: zarr.Group = s.get_segmentation_data_group(SegmentationKind.lattice)[label_gr_name]
             time = _get_label_time(label_value=label_value, our_label_gr=our_label_gr)
-            description: DescriptionData = {
-                "id": description_id,
-                "target_kind": "lattice",
-                "details": None,
-                "is_hidden": None,
-                "metadata": None,
-                "time": time,
-                "name": f"segment {label_value}",
-                "external_references": [],
-                "target_id": target_id,
-            }
+            description = DescriptionData(
+                id=description_id,
+                target_kind=SegmentationKind.lattice,
+                details=None,
+                is_hidden=None,
+                metadata=None,
+                time=time,
+                name=f"segment {label_value}",
+                external_references=[],
+                target_id=target_id,
+            )
+            segment_annotation = SegmentAnnotationData(
+                id=str(uuid4()),
+                color=ind_label_color_fractional,
+                segmentation_id=str(label_gr_name),
+                segment_id=label_value,
+                segment_kind=SegmentationKind.lattice,
+                time=time,
+            )
+            a.descriptions[description_id] = description
+            a.segment_annotations.append(segment_annotation)
 
-            segment_annotation: SegmentAnnotationData = {
-                "id": str(uuid4()),
-                "color": ind_label_color_fractional,
-                "segmentation_id": str(label_gr_name),
-                "segment_id": label_value,
-                "segment_kind": "lattice",
-                "time": time,
-            }
-            d["descriptions"][description_id] = description
-            d["segment_annotations"].append(segment_annotation)
 
-    root.attrs["annotations_dict"] = d
-    return d
+    s.set_annotations(a)
+    return a

@@ -1,16 +1,16 @@
 import nibabel as nib
 import numpy as np
-from cellstar_preprocessor.flows.common import open_zarr_structure_from_path
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
-from cellstar_preprocessor.flows.segmentation._helper_methods import (
+from cellstar_preprocessor.flows.segmentation.helper_methods import (
     store_segmentation_data_in_zarr_structure,
 )
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
 def nii_segmentation_preprocessing(internal_segmentation: InternalSegmentation):
-    our_zarr_structure = open_zarr_structure_from_path(
-        internal_segmentation.intermediate_zarr_structure_path
+    our_zarr_structure = open_zarr(
+        internal_segmentation.path
     )
 
     segmentation_data_gr = our_zarr_structure.create_group(

@@ -5,7 +5,7 @@ from cellstar_db.models import (
     Metadata,
     TimeInfo,
 )
-from cellstar_preprocessor.flows.common import open_zarr_structure_from_path
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.flows.constants import (
     GEOMETRIC_SEGMENTATIONS_ZATTRS,
     RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS,
@@ -16,8 +16,8 @@ from cellstar_preprocessor.model.segmentation import InternalSegmentation
 def geometric_segmentation_metadata_preprocessing(
     internal_segmentation: InternalSegmentation,
 ):
-    root = open_zarr_structure_from_path(
-        internal_segmentation.intermediate_zarr_structure_path
+    root = open_zarr(
+        internal_segmentation.path
     )
     metadata_dict: Metadata = root.attrs["metadata_dict"]
 

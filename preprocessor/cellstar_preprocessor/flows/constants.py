@@ -43,19 +43,20 @@ MESH_VERTEX_DENSITY_THRESHOLD = {
 
 SPACE_UNITS_CONVERSION_DICT = {"micrometer": 10000, "angstrom": 1}
 
-INIT_ANNOTATIONS_DICT: AnnotationsMetadata = {
+INIT_ANNOTATIONS_DICT = {
     "descriptions": {},
     "details": None,
-    "entry_id": {"source_db_name": None, "source_db_id": None},
+    "entry_id": {"source_db_name": "", "source_db_id": ""},
     "name": None,
     "segment_annotations": [],
     "volume_channels_annotations": [],
 }
 
-# TODO: fill more levels if needed
-INIT_METADATA_DICT: Metadata = {
-    "entry_id": {"source_db_name": None, "source_db_id": None},
-    "volumes": {},
+INIT_ANNOTATIONS_MODEL = AnnotationsMetadata.parse_obj(INIT_ANNOTATIONS_DICT)
+
+INIT_METADATA_DICT = {
+    "entry_id": {"source_db_name": "", "source_db_id": ""},
+    "volumes": None,
     "geometric_segmentation": {"segmentation_ids": [], "time_info": {}},
     "segmentation_lattices": {
         "segmentation_ids": [],
@@ -68,6 +69,7 @@ INIT_METADATA_DICT: Metadata = {
         "time_info": {},
     },
 }
+INIT_METADATA_MODEL = Metadata.parse_obj(INIT_METADATA_DICT)
 
 GEOMETRIC_SEGMENTATIONS_ZATTRS = "geometric_segmentations"
 RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS = "raw_geometric_segmentation_input"

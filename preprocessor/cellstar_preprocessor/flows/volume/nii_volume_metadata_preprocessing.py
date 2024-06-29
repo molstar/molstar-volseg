@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import dask.array as da
 import numpy as np
 from cellstar_db.models import (
@@ -8,9 +9,8 @@ from cellstar_db.models import (
     VolumeSamplingInfo,
     VolumesMetadata,
 )
-from cellstar_preprocessor.flows.common import (
+from cellstar_preprocessor.flows.zarr_methods import (
     get_downsamplings,
-    open_zarr_structure_from_path,
 )
 from cellstar_preprocessor.flows.constants import (
     QUANTIZATION_DATA_DICT_ATTR_NAME,
@@ -110,8 +110,8 @@ def _get_nii_volume_sampling_info(
 
 
 def nii_volume_metadata_preprocessing(internal_volume: InternalVolume):
-    root = open_zarr_structure_from_path(
-        internal_volume.intermediate_zarr_structure_path
+    root = open_zarr(
+        internal_volume.path
     )
 
     source_db_name = internal_volume.entry_data.source_db_name

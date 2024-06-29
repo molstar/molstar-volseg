@@ -8,7 +8,7 @@ from cellstar_db.models import (
     SegmentAnnotationData,
     TargetId,
 )
-from cellstar_preprocessor.flows.common import open_zarr_structure_from_path
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
@@ -31,8 +31,8 @@ def mask_segmentation_annotations_preprocessing(
 ):
     # segm_arr = root[SEGMENTATION_DATA_GROUPNAME][0][0][0][0]
 
-    root = open_zarr_structure_from_path(
-        internal_segmentation.intermediate_zarr_structure_path
+    root = open_zarr(
+        internal_segmentation.path
     )
     d: AnnotationsMetadata = root.attrs["annotations_dict"]
 
