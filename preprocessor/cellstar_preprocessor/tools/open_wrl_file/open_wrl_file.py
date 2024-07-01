@@ -5,20 +5,12 @@ from cellstar_preprocessor.tools.convert_app_specific_segm_to_sff.convert_app_sp
 import pymeshlab
 
 
-if __name__ == '__main__':
-    WRL_FILE = 'preprocessor/cellstar_preprocessor/tools/open_wrl_file/actin.wrl'
-    STL_FILE = 'preprocessor/cellstar_preprocessor/tools/open_wrl_file/actin.stl'
+def convert_wrl_to_sff(input_file: Path, working_folder: Path):
     ms = pymeshlab.MeshSet()
 # You can load, save meshes and apply MeshLab filters:
-    wrl_path = Path(WRL_FILE)
-    stl_path = Path(STL_FILE)
-    ms.load_new_mesh(str(wrl_path.resolve()))
-    print()
+    stl_path = working_folder / 'temp_stl_dir' / 'temp_stl.stl'
+    ms.load_new_mesh(str(input_file.resolve()))
     ms.save_current_mesh(str(stl_path.resolve()))
-    print()
-    
-    sff = convert_app_specific_segm_to_sff(stl_path)
-    sff_obj = open_hdf5_as_segmentation_object(sff)
-    print(sff_obj)
-    # ms.generate_convex_hull()
-    # ms.save_current_mesh('convex_hull.ply')
+    sff_path = convert_app_specific_segm_to_sff(stl_path)
+    # sff_obj = open_hdf5_as_segmentation_object(sff)
+    return sff_path
