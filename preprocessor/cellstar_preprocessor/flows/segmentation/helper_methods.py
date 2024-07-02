@@ -259,6 +259,9 @@ def _convert_mesh_to_vedo_obj(mesh_from_zarr):
 
 
 def _decimate_vedo_obj(vedo_obj, ratio):
+    # TODO: breaks here while trying to decimate mesh
+    # would it break with empiar 10070?
+    # no
     return vedo_obj.decimate(fraction=ratio)
 
 
@@ -315,7 +318,7 @@ def store_mesh_data_in_zarr(
 
 
 def simplify_meshes(
-    mesh_list_group: zarr.hierarchy.Group, ratio: float, segment_id: int
+    mesh_list_group: zarr.Group, ratio: float
 ):
     """Returns dict with mesh data for each mesh in mesh list"""
     # for each mesh

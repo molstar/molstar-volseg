@@ -14,3 +14,7 @@ def convert_wrl_to_sff(input_file: Path, working_folder: Path):
     sff_path = convert_app_specific_segm_to_sff(stl_path)
     # sff_obj = open_hdf5_as_segmentation_object(sff)
     return sff_path
+
+
+if __name__ == "__main__":
+    convert_wrl_to_sff(Path('preprocessor/cellstar_preprocessor/tools/open_wrl_file/actin.wrl'), Path('preprocessor/cellstar_preprocessor/tools/open_wrl_file/'))

@@ -110,12 +110,12 @@ def sff_segmentation_downsampling(internal_segmentation: InternalSegmentation):
                             <= density_threshold
                         ):
                             break
-                        if fraction == 1:
+                        if fraction == 1.0:
                             continue  # original data, don't need to compute anything
+                        # breaks here
                         mesh_data_dict = simplify_meshes(
                             original_detail_lvl_mesh_list_group,
-                            ratio=fraction,
-                            segment_id=segment_name_id,
+                            ratio=fraction
                         )
                         # TODO: potentially simplify meshes may output mesh with 0 vertices, normals, triangles
                         # it should not be stored?
@@ -147,7 +147,9 @@ def sff_segmentation_downsampling(internal_segmentation: InternalSegmentation):
         if internal_segmentation.downsampling_parameters.remove_original_resolution:
             # del internal_segmentation.simplification_curve[1]
             internal_segmentation.simplification_curve.pop(1, None)
-
+    else:
+        # Breaks
+        raise Exception(f"Primary descriptor {internal_segmentation.primary_descriptor} is not supported")
     print("Segmentation downsampled")
 
 
