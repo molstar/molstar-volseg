@@ -2,20 +2,18 @@ import dask.array as da
 import nibabel as nib
 import numpy as np
 import zarr
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
 from cellstar_preprocessor.flows.volume.helper_methods import (
     store_volume_data_in_zarr_stucture,
 )
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.volume import InternalVolume
 
 
 def nii_volume_preprocessing(internal_volume: InternalVolume):
     # NOTE: supports only 3D images
 
-    zarr_structure: zarr.Group = open_zarr(
-        internal_volume.path
-    )
+    zarr_structure: zarr.Group = open_zarr(internal_volume.path)
 
     img = nib.load(str(internal_volume.input_path.resolve()))
     data = img.get_fdata()

@@ -1,4 +1,3 @@
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import zarr
 from cellstar_preprocessor.flows.common import (
     prepare_ometiff_for_writing,
@@ -9,15 +8,14 @@ from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
 from cellstar_preprocessor.flows.volume.helper_methods import (
     store_volume_data_in_zarr_stucture,
 )
-from cellstar_preprocessor.model.volume import InternalVolume, set_volume_extra_data
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
+from cellstar_preprocessor.model.volume import InternalVolume
 
 
 def ometiff_volume_preprocessing(v: InternalVolume):
     # NOTE: supports only 3D images
 
-    zarr_structure: zarr.Group = open_zarr(
-        v.path
-    )
+    zarr_structure: zarr.Group = open_zarr(v.path)
     v.set_volume_custom_data()
 
     # print(f"Processing volume file {internal_volume.volume_input_path}")
@@ -40,9 +38,7 @@ def ometiff_volume_preprocessing(v: InternalVolume):
     if "channel_ids_mapping" not in v.custom_data:
         v.custom_data["channel_ids_mapping"] = artificial_channel_ids
 
-    channel_ids_mapping: dict[str, str] = v.custom_data[
-        "channel_ids_mapping"
-    ]
+    channel_ids_mapping: dict[str, str] = v.custom_data["channel_ids_mapping"]
     for data_item in prepared_data:
         dask_arr = data_item["data"]
         channel_number = data_item["channel_number"]

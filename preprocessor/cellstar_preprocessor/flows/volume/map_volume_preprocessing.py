@@ -1,11 +1,7 @@
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import dask.array as da
 import mrcfile
 import numpy as np
 import zarr
-from cellstar_preprocessor.model.volume import (
-    set_volume_extra_data,
-)
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
 from cellstar_preprocessor.flows.volume.helper_methods import (
     normalize_axis_order_mrcfile,
@@ -48,9 +44,7 @@ def map_volume_preprocessing(v: InternalVolume):
         (v.volume_force_dtype in (np.uint8, np.int8))
         or (
             (v.volume_force_dtype in (np.uint16, np.int16))
-            and (
-                v.quantize_dtype_str.value in ["u2", "|u2", ">u2", "<u2"]
-            )
+            and (v.quantize_dtype_str.value in ["u2", "|u2", ">u2", "<u2"])
         )
     ):
         print(

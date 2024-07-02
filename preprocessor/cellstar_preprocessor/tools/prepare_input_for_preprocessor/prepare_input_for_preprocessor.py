@@ -23,7 +23,5 @@ def prepare_input_for_preprocessor(
 ) -> list[dict]:
     arguments_list = []
     for input in config:
-        arguments_list.append(
-            (input, Path(db_path), Path(working_folder))
-        )
+        arguments_list.append((input, Path(db_path), Path(working_folder)))
     return arguments_list

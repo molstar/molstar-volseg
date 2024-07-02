@@ -5,8 +5,8 @@ from cellstar_db.models import (
     AnnotationsMetadata,
     GeometricSegmentationData,
     MeshesData,
-    VolumeMetadata,
     SliceData,
+    VolumeMetadata,
 )
 
 

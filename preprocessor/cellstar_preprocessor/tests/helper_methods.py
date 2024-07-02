@@ -3,16 +3,19 @@ import urllib.request
 from pathlib import Path
 from uuid import uuid4
 
-from cellstar_db.models import DownsamplingParams, InputKind, QuantizationDtype, StoringParams
 import ome_zarr
 import ome_zarr.utils
 import zarr
+from cellstar_db.models import (
+    DownsamplingParams,
+    EntryData,
+    InputKind,
+    QuantizationDtype,
+    StoringParams,
+)
 from cellstar_preprocessor.flows.constants import (
     INIT_ANNOTATIONS_MODEL,
     INIT_METADATA_MODEL,
-)
-from cellstar_db.models import (
-    EntryData,
 )
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from cellstar_preprocessor.model.volume import InternalVolume
@@ -47,7 +50,7 @@ def get_internal_XYZ_volume(intermediate_zarr_structure_for_tests: Path):
         ),
         quantize_dtype_str=QuantizationDtype.u1,
         quantize_downsampling_levels=(1,),
-        input_kind=InputKind.map
+        input_kind=InputKind.map,
     )
 
 
@@ -66,7 +69,7 @@ def get_internal_ZYX_volume(intermediate_zarr_structure_for_tests: Path):
         ),
         quantize_dtype_str=QuantizationDtype.u1,
         quantize_downsampling_levels=(1,),
-        input_kind=InputKind.map
+        input_kind=InputKind.map,
     )
 
 
@@ -98,7 +101,7 @@ def get_sff_internal_segmentation(
             source_db_id=t.entry_id,
             source_db_name=t.source_db,
         ),
-        input_kind=InputKind.sff
+        input_kind=InputKind.sff,
     )
     return internal_segmentation
 
@@ -121,7 +124,7 @@ def get_internal_volume_from_input(
         ),
         quantize_dtype_str=None,
         quantize_downsampling_levels=None,
-        input_kind=test_input.kind
+        input_kind=test_input.kind,
     )
     return internal_volume
 
@@ -143,7 +146,7 @@ def get_omezarr_internal_segmentation(
             source_db_id=omezar_test_input.entry_id,
             source_db_name=omezar_test_input.source_db,
         ),
-        input_kind=InputKind.omezarr
+        input_kind=InputKind.omezarr,
     )
     return internal_segmentation
 

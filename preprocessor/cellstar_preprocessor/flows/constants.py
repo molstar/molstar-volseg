@@ -1,6 +1,19 @@
 from pathlib import Path
 
-from cellstar_db.models import AnnotationsMetadata, AxisName, EntryId, GeometricSegmentationsMetadata, MeshSegmentationsMetadata, Metadata, SpatialAxisUnit, SamplingInfo, SegmentationLatticesMetadata, TimeAxisUnit, TimeInfo, VolumeSamplingInfo, VolumesMetadata
+from cellstar_db.models import (
+    AnnotationsMetadata,
+    AxisName,
+    EntryId,
+    GeometricSegmentationsMetadata,
+    MeshSegmentationsMetadata,
+    Metadata,
+    SamplingInfo,
+    SegmentationLatticesMetadata,
+    SpatialAxisUnit,
+    TimeInfo,
+    VolumeSamplingInfo,
+    VolumesMetadata,
+)
 
 CSV_WITH_ENTRY_IDS_FILE = Path(
     "test-data/preprocessor/db_building_parameters_custom_entries.csv"
@@ -46,26 +59,21 @@ DEFAULT_ORIGINAL_AXIS_ORDER = [
     AxisName.z,
 ]
 DEFAULT_SOURCE_AXES_UNITS = {
-                AxisName.x: SpatialAxisUnit.angstrom,
-                AxisName.y: SpatialAxisUnit.angstrom,
-                AxisName.z: SpatialAxisUnit.angstrom,
-            }
+    AxisName.x: SpatialAxisUnit.angstrom,
+    AxisName.y: SpatialAxisUnit.angstrom,
+    AxisName.z: SpatialAxisUnit.angstrom,
+}
 
-SPACE_UNITS_CONVERSION_DICT = {SpatialAxisUnit.micrometer: 10000, SpatialAxisUnit.angstrom: 1}
 
-BLANK_ENTRY_ID = EntryId(
-        source_db_name="",
-        source_db_id=""
-    )
-
+BLANK_ENTRY_ID = EntryId(source_db_name="", source_db_id="")
 
 
 TIME_INFO_STANDARD = TimeInfo(
-            end=0,
-            kind="range",
-            start=0,
-            units="millisecond",
-        )
+    end=0,
+    kind="range",
+    start=0,
+    units="millisecond",
+)
 
 INIT_ANNOTATIONS_MODEL = AnnotationsMetadata(
     descriptions={},
@@ -73,7 +81,7 @@ INIT_ANNOTATIONS_MODEL = AnnotationsMetadata(
     entry_id=BLANK_ENTRY_ID,
     name=None,
     segment_annotations=[],
-    volume_channels_annotations=[]
+    volume_channels_annotations=[],
 )
 
 BLANK_SAMPLING_INFO = SamplingInfo(
@@ -95,24 +103,17 @@ INIT_METADATA_MODEL = Metadata(
             time_transformations=[],
             source_axes_units={},
             original_axis_order=[],
-            descriptive_statistics=[]
-        )
+            descriptive_statistics=[],
+        ),
     ),
-    geometric_segmentation=GeometricSegmentationsMetadata(
-        ids=[],
-        time_info_mapping={}
-    ),
+    geometric_segmentation=GeometricSegmentationsMetadata(ids=[], time_info_mapping={}),
     segmentation_lattices=SegmentationLatticesMetadata(
-        ids=[],
-        sampling_info={},
-        time_info_mapping={}
+        ids=[], sampling_info={}, time_info_mapping={}
     ),
     segmentation_meshes=MeshSegmentationsMetadata(
-        ids=[],
-        metadata={},
-        time_info_mapping={}
+        ids=[], metadata={}, time_info_mapping={}
     ),
-    entry_metadata=None
+    entry_metadata=None,
 )
 DEFAULT_TIME_UNITS = "millisecond"
 GEOMETRIC_SEGMENTATIONS_ZATTRS = "geometric_segmentations"
@@ -121,4 +122,3 @@ SHORT_UNIT_NAMES_TO_LONG = {
     "µm": "micrometer",
     # TODO: support other units
 }
-

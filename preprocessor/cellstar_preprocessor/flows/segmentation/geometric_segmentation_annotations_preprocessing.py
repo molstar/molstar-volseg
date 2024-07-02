@@ -1,20 +1,12 @@
 from uuid import uuid4
 
 from cellstar_db.models import (
-    AnnotationsMetadata,
     DescriptionData,
     EntryId,
-    GeometricSegmentationData,
-    GeometricSegmentationInputData,
     SegmentAnnotationData,
     SegmentationKind,
     ShapePrimitiveInputData,
     TargetId,
-)
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
-from cellstar_preprocessor.flows.constants import (
-    GEOMETRIC_SEGMENTATIONS_ZATTRS,
-    RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS,
 )
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
@@ -23,7 +15,7 @@ def geometric_segmentation_annotations_preprocessing(
     s: InternalSegmentation,
 ):
     a = s.get_annotations()
-    
+
     a.entry_id = EntryId(
         source_db_id=s.entry_data.source_db_id,
         source_db_name=s.entry_data.source_db_name,
@@ -37,7 +29,7 @@ def geometric_segmentation_annotations_preprocessing(
 
         # collect color from input data as well
         raw = s.get_raw_geometric_segmentation_input_data()[segmentation_id]
-        
+
         primitives = gs.primitives
         # iterate over timeframe index and ShapePrimitiveData
         for timeframe_index, shape_primitive_data in primitives.items():
@@ -50,7 +42,7 @@ def geometric_segmentation_annotations_preprocessing(
                     segment_id=sp.id,
                     segmentation_id=segmentation_id,
                 )
-                description=DescriptionData(
+                description = DescriptionData(
                     id=description_id,
                     target_kind=SegmentationKind.primitve,
                     details=None,
@@ -75,7 +67,7 @@ def geometric_segmentation_annotations_preprocessing(
                 item: ShapePrimitiveInputData = filter_results[0]
                 color = item.parameters.color
 
-                segment_annotation=SegmentAnnotationData(
+                segment_annotation = SegmentAnnotationData(
                     id=str(uuid4()),
                     color=color,
                     segmentation_id=segmentation_id,

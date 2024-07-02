@@ -2,7 +2,7 @@ import numcodecs
 import numpy as np
 import pytest
 import zarr
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
+from cellstar_db.models import SegmentationPrimaryDescriptor
 from cellstar_preprocessor.flows.constants import (
     LATTICE_SEGMENTATION_DATA_GROUPNAME,
     MESH_SEGMENTATION_DATA_GROUPNAME,
@@ -16,7 +16,7 @@ from cellstar_preprocessor.flows.segmentation.segmentation_downsampling import (
 from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing import (
     sff_segmentation_preprocessing,
 )
-from cellstar_db.models import SegmentationPrimaryDescriptor
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.tests.helper_methods import get_sff_internal_segmentation
 from cellstar_preprocessor.tests.input_for_tests import (
     INTERNAL_MESH_SEGMENTATION_FOR_TESTING,
@@ -47,9 +47,7 @@ def test_sff_segmentation_downsampling(test_input: TestInput):
             SegmentationPrimaryDescriptor.three_d_volume
         )
 
-        zarr_structure: zarr.Group = open_zarr(
-            internal_segmentation.path
-        )
+        zarr_structure: zarr.Group = open_zarr(internal_segmentation.path)
 
         segment_ids_data = np.arange(64).reshape(4, 4, 4)
         # create arr
@@ -118,9 +116,7 @@ def test_sff_segmentation_downsampling(test_input: TestInput):
         sff_segmentation_preprocessing(internal_segmentation=internal_segmentation)
 
         # check if zarr structure has right format
-        zarr_structure = open_zarr(
-            internal_segmentation.path
-        )
+        zarr_structure = open_zarr(internal_segmentation.path)
 
         # TODO: do downsampling
         segmentation_downsampling(internal_segmentation=internal_segmentation)

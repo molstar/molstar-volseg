@@ -3,17 +3,15 @@ import gc
 import numcodecs
 import numpy as np
 import zarr
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
 def omezarr_segmentations_preprocessing(internal_segmentation: InternalSegmentation):
     ome_zarr_root = zarr.open_group(internal_segmentation.input_path)
 
-    our_zarr_structure = open_zarr(
-        internal_segmentation.path
-    )
+    our_zarr_structure = open_zarr(internal_segmentation.path)
 
     segmentation_data_gr = our_zarr_structure.create_group(
         LATTICE_SEGMENTATION_DATA_GROUPNAME

@@ -1,7 +1,8 @@
 from pathlib import Path
-from cellstar_db.models import DownsamplingLevelInfo
+
 import numpy as np
 import zarr
+from cellstar_db.models import DownsamplingLevelInfo
 
 
 def _compute_chunk_size_based_on_data(arr: np.ndarray) -> tuple[int, int, int]:
@@ -46,6 +47,7 @@ def create_dataset_wrapper(
 
     return zarr_arr
 
+
 # TODO: refactor to internal data
 def get_downsamplings(data_group: zarr.Group) -> list[DownsamplingLevelInfo]:
     downsamplings = []
@@ -57,7 +59,9 @@ def get_downsamplings(data_group: zarr.Group) -> list[DownsamplingLevelInfo]:
     downsamplings = sorted([int(x) for x in downsamplings])
     downsampling_info_list: list[DownsamplingLevelInfo] = []
     for downsampling in downsamplings:
-        info: DownsamplingLevelInfo = DownsamplingLevelInfo.parse_obj({"available": True, "level": downsampling})
+        info: DownsamplingLevelInfo = DownsamplingLevelInfo.parse_obj(
+            {"available": True, "level": downsampling}
+        )
         downsampling_info_list.append(info)
 
     return downsampling_info_list

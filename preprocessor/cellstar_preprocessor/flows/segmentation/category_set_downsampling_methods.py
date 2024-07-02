@@ -1,13 +1,13 @@
 import numcodecs
 import numpy as np
 import zarr
-from cellstar_preprocessor.flows.zarr_methods import create_dataset_wrapper
 from cellstar_preprocessor.flows.segmentation.downsampling_level_dict import (
     DownsamplingLevelDict,
 )
 from cellstar_preprocessor.flows.segmentation.segmentation_set_table import (
     SegmentationSetTable,
 )
+from cellstar_preprocessor.flows.zarr_methods import create_dataset_wrapper
 from cellstar_preprocessor.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import (
     MagicKernel3dDownsampler,
 )

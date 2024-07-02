@@ -1,8 +1,8 @@
 import math
 
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import numpy as np
 import zarr
+from cellstar_db.models import SegmentationPrimaryDescriptor
 from cellstar_preprocessor.flows.common import (
     compute_downsamplings_to_be_stored,
     compute_number_of_downsampling_steps,
@@ -28,7 +28,7 @@ from cellstar_preprocessor.flows.segmentation.helper_methods import (
 from cellstar_preprocessor.flows.segmentation.segmentation_set_table import (
     SegmentationSetTable,
 )
-from cellstar_db.models import SegmentationPrimaryDescriptor
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from cellstar_preprocessor.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import (
     MagicKernel3dDownsampler,
@@ -36,9 +36,7 @@ from cellstar_preprocessor.tools.magic_kernel_downsampling_3d.magic_kernel_downs
 
 
 def segmentation_downsampling(internal_segmentation: InternalSegmentation):
-    zarr_structure = open_zarr(
-        internal_segmentation.path
-    )
+    zarr_structure = open_zarr(internal_segmentation.path)
     if (
         internal_segmentation.primary_descriptor
         == SegmentationPrimaryDescriptor.three_d_volume

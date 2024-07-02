@@ -6,26 +6,23 @@ import re
 from pathlib import Path
 from typing import Union
 
-# from cellstar_db.file_system.constants import VOLUME_DATA_GROUPNAME
-from cellstar_db.models import SpatialAxisUnit, PreparedOMETIFFData
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import dask.array as da
 import numpy as np
 import zarr
 from cellstar_db.models import (
-    VolumeChannelAnnotation,
     DownsamplingLevelInfo,
     ExtraData,
     Metadata,
     OMETIFFSpecificExtraData,
+    convert_to_angstroms,
 )
-from cellstar_preprocessor.flows.constants import (
-    SHORT_UNIT_NAMES_TO_LONG,
-    SPACE_UNITS_CONVERSION_DICT,
-)
+from cellstar_preprocessor.flows.constants import SHORT_UNIT_NAMES_TO_LONG
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
+
+# from cellstar_db.file_system.constants import VOLUME_DATA_GROUPNAME
+from cellstar_preprocessor.model.common import PreparedOMETIFFData
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from cellstar_preprocessor.model.volume import InternalVolume
-from PIL import ImageColor
 from pyometiff import OMETIFFReader
 
 
@@ -75,13 +72,13 @@ def get_ometiff_source_metadata(int_vol_or_seg: InternalVolume | InternalSegment
 # for maps
 def process_extra_data(path: Path, intermediate_zarr_structure: Path):
     data: ExtraData = read_json(path)
-    zarr_structure: zarr.Group = open_zarr(
-        intermediate_zarr_structure
-    )
+    zarr_structure: zarr.Group = open_zarr(intermediate_zarr_structure)
     zarr_structure.attrs["extra_data"] = data.dict()
     # NOTE: entry_metadata
     if data.entry_metadata is not None:
-        metadata_dict: Metadata = Metadata.parse_obj(zarr_structure.attrs["metadata_dict"])
+        metadata_dict: Metadata = Metadata.parse_obj(
+            zarr_structure.attrs["metadata_dict"]
+        )
         metadata_dict.entry_metadata = data.entry_metadata
         zarr_structure.attrs["metadata_dict"] = metadata_dict
 
@@ -102,6 +99,7 @@ def update_dict(orig_dict, new_dict: dict):
 def dictget(d, *k):
     """Get the values corresponding to the given keys in the provided dict."""
     return (d[i] for i in k)
+
 
 def save_dict_to_json_file(d: dict | list, filename: str, path: Path) -> None:
     output_file = path / filename
@@ -242,14 +240,6 @@ def _get_ometiff_physical_size(ome_tiff_metadata):
     return d
 
 
-def convert_to_angstroms(value: float, input_unit: SpatialAxisUnit):
-    # TODO: support other units
-    if input_unit in SPACE_UNITS_CONVERSION_DICT:
-        return value * SPACE_UNITS_CONVERSION_DICT[input_unit]
-    else:
-        raise Exception(f"{input_unit} spatial unit is not supported")
-
-
 def _convert_short_units_to_long(short_unit_name: str):
     # TODO: support conversion of other axes units (currently only µm to micrometer).
     # https://www.openmicroscopy.org/Schemas/Documentation/Generated/OME-2016-06/ome_xsd.html#Pixels_PhysicalSizeXUnit
@@ -372,6 +362,7 @@ def _get_missing_dims(sizesBF: list[int]):
     print(f"Missing dims: {missing}")
     return missing
 
+
 def prepare_ometiff_for_writing(
     img_array: da.Array, metadata, int_vol_or_seg: InternalVolume | InternalSegmentation
 ):
@@ -405,7 +396,7 @@ def prepare_ometiff_for_writing(
         time_arr = rearranged_arr[time]
         for channel_number in range(time_arr.shape[0]):
             three_d_arr = time_arr[channel_number]
-            p=PreparedOMETIFFData(
+            p = PreparedOMETIFFData(
                 channel_number=channel_number,
                 time=time,
                 data=three_d_arr,
@@ -417,10 +408,6 @@ def prepare_ometiff_for_writing(
     )
     return prepared_data, artificial_channel_ids_dict
 
-def hex_to_rgba_normalized(channel_color_hex):
-    channel_color_rgba = ImageColor.getcolor(f"#{channel_color_hex}", "RGBA")
-    channel_color_rgba_fractional = tuple([i / 255 for i in channel_color_rgba])
-    return channel_color_rgba_fractional
 
 def get_ome_tiff_origins(boxes_dict: dict, downsamplings: list[DownsamplingLevelInfo]):
     # NOTE: origins seem to be 0, 0, 0, as they are not specified

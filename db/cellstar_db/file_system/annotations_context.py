@@ -13,7 +13,9 @@ from cellstar_preprocessor.flows.common import save_dict_to_json_file
 class AnnnotationsEditContext:
     async def update_annotations_json(self, annotations_json: AnnotationsMetadata):
         path = self.db._path_to_object(namespace=self.namespace, key=self.key)
-        save_dict_to_json_file(annotations_json.dict(), ANNOTATION_METADATA_FILENAME, path)
+        save_dict_to_json_file(
+            annotations_json.dict(), ANNOTATION_METADATA_FILENAME, path
+        )
 
     async def remove_descriptions(self, ids: list[str]):
         # 1. read annotations.json file using existing read_annotations function to AnnotationsMetadata TypedDict in d variable

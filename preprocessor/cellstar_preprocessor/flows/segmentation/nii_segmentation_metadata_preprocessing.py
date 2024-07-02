@@ -1,8 +1,5 @@
-from cellstar_preprocessor.flows.zarr_methods import (
-    get_downsamplings,
-)
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
+from cellstar_preprocessor.flows.zarr_methods import get_downsamplings, open_zarr
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
@@ -39,16 +36,11 @@ def nii_segmentation_metadata_preprocessing(
     # PLAN:
     # takes prefilled metadata dict from nii metadata
     # takes internal segmentation
-    root = open_zarr(
-        internal_segmentation.path
-    )
+    root = open_zarr(internal_segmentation.path)
     metadata_dict = root.attrs["metadata_dict"]
 
     # nii has one channel
     channel_ids = [0]
-    start_time = 0
-    end_time = 0
-    time_units = "millisecond"
     lattice_ids = []
 
     # TODO: check - some units are defined (spatial?)

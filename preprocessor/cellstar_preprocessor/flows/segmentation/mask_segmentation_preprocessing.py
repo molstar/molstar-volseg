@@ -1,16 +1,13 @@
 from pathlib import Path
 
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import mrcfile
 import numpy as np
-from cellstar_preprocessor.model.segmentation import (
-    set_segmentation_extra_data,
-)
+from cellstar_db.models import SegmentationPrimaryDescriptor
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
 from cellstar_preprocessor.flows.segmentation.helper_methods import (
     store_segmentation_data_in_zarr_structure,
 )
-from cellstar_db.models import SegmentationPrimaryDescriptor
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
@@ -35,13 +32,9 @@ def _normalize_axis_order_mrcfile_numpy(
 
 
 def mask_segmentation_preprocessing(s: InternalSegmentation):
-    our_zarr_structure = open_zarr(
-        s.path
-    )
+    our_zarr_structure = open_zarr(s.path)
 
-    s.primary_descriptor = (
-        SegmentationPrimaryDescriptor.three_d_volume
-    )
+    s.primary_descriptor = SegmentationPrimaryDescriptor.three_d_volume
 
     segmentation_data_gr = our_zarr_structure.create_group(
         LATTICE_SEGMENTATION_DATA_GROUPNAME
@@ -59,9 +52,7 @@ def mask_segmentation_preprocessing(s: InternalSegmentation):
             s.stem: s.stem for s in list_of_sesgmentation_pathes
         }
 
-    segmentation_ids_mapping: dict[str, str] = s.custom_data[
-        "segmentation_ids_mapping"
-    ]
+    segmentation_ids_mapping: dict[str, str] = s.custom_data["segmentation_ids_mapping"]
 
     # for lattice_id, mask in enumerate(internal_segmentation.segmentation_input_path):
     for mask in s.input_path:
@@ -80,9 +71,7 @@ def mask_segmentation_preprocessing(s: InternalSegmentation):
                 data = data.astype("i4")
 
             for value in np.unique(data):
-                s.value_to_segment_id_dict[lattice_id][
-                    int(value)
-                ] = int(value)
+                s.value_to_segment_id_dict[lattice_id][int(value)] = int(value)
 
             lattice_gr = segmentation_data_gr.create_group(lattice_id)
             params_for_storing = s.params_for_storing

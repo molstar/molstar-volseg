@@ -1,6 +1,5 @@
 import math
 
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import numpy as np
 import zarr
 from cellstar_preprocessor.flows.common import (
@@ -21,6 +20,7 @@ from cellstar_preprocessor.flows.segmentation.downsampling_level_dict import (
 from cellstar_preprocessor.flows.segmentation.segmentation_set_table import (
     SegmentationSetTable,
 )
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from cellstar_preprocessor.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import (
     MagicKernel3dDownsampler,
@@ -28,9 +28,7 @@ from cellstar_preprocessor.tools.magic_kernel_downsampling_3d.magic_kernel_downs
 
 
 def nii_segmentation_downsampling(internal_segmentation: InternalSegmentation):
-    zarr_structure = open_zarr(
-        internal_segmentation.path
-    )
+    zarr_structure = open_zarr(internal_segmentation.path)
     for lattice_gr_name, lattice_gr in zarr_structure[
         LATTICE_SEGMENTATION_DATA_GROUPNAME
     ].groups():

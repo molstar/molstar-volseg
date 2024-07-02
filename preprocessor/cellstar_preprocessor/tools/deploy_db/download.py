@@ -20,6 +20,7 @@ import ome_zarr.utils
 # from _old.input_data_model import QuantizationDtype
 from cellstar_db.models import (
     InputForBuildingDatabase,
+    InputKind,
     RawInputFileInfo,
     RawInputFilesDownloadParams,
 )
@@ -29,7 +30,6 @@ from cellstar_preprocessor.flows.constants import (
     RAW_INPUT_DOWNLOAD_PARAMS_JSON,
     RAW_INPUT_FILES_DIR,
 )
-from cellstar_db.models import InputKind
 from cellstar_preprocessor.tools.gunzip.gunzip import gunzip
 
 

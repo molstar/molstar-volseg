@@ -3,11 +3,11 @@ from uuid import uuid4
 
 import pytest
 import zarr
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
 from cellstar_preprocessor.flows.volume.map_volume_preprocessing import (
     map_volume_preprocessing,
 )
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.tests.helper_methods import (
     get_internal_XYZ_volume,
     get_internal_ZYX_volume,
@@ -52,9 +52,7 @@ def test_map_preprocessing(order: Literal["XYZ", "ZYX"]):
     # 2. check if 1st level zarr group (resolution) is group and if there is just one group (1)
     # 3. check if 2nd level zarr group (time) is group and if there is just one group (0)
     # 4. check if 3rd level in zarr (channel) is array and if there is just one array (0)
-    zarr_structure = open_zarr(
-        internal_volume.path
-    )
+    zarr_structure = open_zarr(internal_volume.path)
 
     assert VOLUME_DATA_GROUPNAME in zarr_structure
     volume_gr = zarr_structure[VOLUME_DATA_GROUPNAME]

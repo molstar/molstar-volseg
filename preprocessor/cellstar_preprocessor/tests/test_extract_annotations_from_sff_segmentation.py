@@ -1,6 +1,13 @@
 from typing import Any
+
 import pytest
-from cellstar_db.models import DescriptionData, ExternalReference, SegmentAnnotationData, SegmentationKind
+from cellstar_db.models import (
+    DescriptionData,
+    ExternalReference,
+    SegmentAnnotationData,
+    SegmentationKind,
+    SegmentationPrimaryDescriptor,
+)
 from cellstar_preprocessor.flows.segmentation.helper_methods import (
     extract_raw_annotations_from_sff,
 )
@@ -11,7 +18,6 @@ from cellstar_preprocessor.flows.segmentation.sff_segmentation_annotations_prepr
 from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing import (
     sff_segmentation_preprocessing,
 )
-from cellstar_db.models import SegmentationPrimaryDescriptor
 from cellstar_preprocessor.tests.helper_methods import get_sff_internal_segmentation
 from cellstar_preprocessor.tests.input_for_tests import (
     SFF_TEST_INPUTS,
@@ -36,13 +42,9 @@ def test_extract_annotations_from_sff_segmentation(test_input: TestInput):
         r = extract_raw_annotations_from_sff(internal_segmentation.input_path)
         assert d.details == r["details"]
         assert d.name == r["name"]
+        assert d.entry_id.source_db_id == internal_segmentation.entry_data.source_db_id
         assert (
-            d.entry_id.source_db_id
-            == internal_segmentation.entry_data.source_db_id
-        )
-        assert (
-            d.entry_id.source_db_name
-            == internal_segmentation.entry_data.source_db_name
+            d.entry_id.source_db_name == internal_segmentation.entry_data.source_db_name
         )
 
         description_items = list(d.descriptions.items())
@@ -55,11 +57,13 @@ def test_extract_annotations_from_sff_segmentation(test_input: TestInput):
                 segmentation_id = str(segment["three_d_volume"]["lattice_id"])
                 kind = SegmentationKind.lattice
             else:
-                assert internal_segmentation.primary_descriptor == SegmentationPrimaryDescriptor.mesh_list, 'Primary descriptor not supported'
+                assert (
+                    internal_segmentation.primary_descriptor
+                    == SegmentationPrimaryDescriptor.mesh_list
+                ), "Primary descriptor not supported"
                 segmentation_id = "0"
                 kind = SegmentationKind.mesh
-                
-                
+
                 description_filter_results = list(
                     filter(
                         lambda d: d[1].target_id.segment_id == segment["id"]
@@ -78,9 +82,7 @@ def test_extract_annotations_from_sff_segmentation(test_input: TestInput):
                 )
 
                 assert description_item.external_references == external_referneces
-                assert (
-                    description_item.name == segment["biological_annotation"]["name"]
-                )
+                assert description_item.name == segment["biological_annotation"]["name"]
 
                 assert description_item.target_kind == kind
 

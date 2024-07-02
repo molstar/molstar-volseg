@@ -107,15 +107,13 @@ class FileSystemDBReadContext(DBReadContext):
 
             if timer_printout == True:
                 print(f"read_slice with mode {mode}: {end - start}")
-            d = SliceData(
-                    volume_slice=volume_slice,
-                    time=time,
-                    channel_id=channel_id
-                )
+            d = SliceData(volume_slice=volume_slice, time=time, channel_id=channel_id)
             if segm_arr:
-                d.segmentation_slice = LatticeSegmentationSliceData(category_set_ids=segm_slice,
+                d.segmentation_slice = LatticeSegmentationSliceData(
+                    category_set_ids=segm_slice,
                     category_set_dict=segm_dict,
-                    lattice_id=lattice_id)
+                    lattice_id=lattice_id,
+                )
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)
             raise e
@@ -217,9 +215,7 @@ class FileSystemDBReadContext(DBReadContext):
                     print(f"read_volume_slice with mode {mode}: {end - start}")
 
                 return SliceData(
-                    volume_slice=volume_slice,
-                    time=time,
-                    channel_id=channel_id
+                    volume_slice=volume_slice, time=time, channel_id=channel_id
                 )
             else:
                 raise HTTPException(

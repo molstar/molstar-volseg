@@ -1,3 +1,4 @@
+from cellstar_db.models import InputKind
 from cellstar_preprocessor.flows.volume.map_volume_preprocessing import (
     map_volume_preprocessing,
 )
@@ -8,7 +9,6 @@ from cellstar_preprocessor.flows.volume.omezarr_volume_preprocessing import (
     omezarr_volume_preprocessing,
 )
 from cellstar_preprocessor.flows.volume.volume_downsampling import volume_downsampling
-from cellstar_db.models import InputKind
 from cellstar_preprocessor.model.volume import InternalVolume
 
 

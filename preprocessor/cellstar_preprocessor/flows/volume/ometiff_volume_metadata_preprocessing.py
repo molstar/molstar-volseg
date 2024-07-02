@@ -1,5 +1,3 @@
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
-from cellstar_preprocessor.flows.zarr_methods import get_downsamplings
 import dask.array as da
 import zarr
 from cellstar_db.models import (
@@ -14,6 +12,7 @@ from cellstar_preprocessor.flows.common import (
     get_ome_tiff_origins,
 )
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
+from cellstar_preprocessor.flows.zarr_methods import get_downsamplings, open_zarr
 from cellstar_preprocessor.model.volume import InternalVolume
 
 SHORT_UNIT_NAMES_TO_LONG = {
@@ -57,6 +56,7 @@ def _get_ometiff_physical_size(ome_tiff_metadata):
         d["z"] = 1.0
 
     return d
+
 
 def _get_volume_sampling_info(root_data_group: zarr.Group, sampling_info_dict):
     for res_gr_name, res_gr in root_data_group.groups():
@@ -120,9 +120,7 @@ def _get_allencell_voxel_size(root: zarr.Group) -> list[float, float, float]:
 
 
 def ometiff_volume_metadata_preprocessing(internal_volume: InternalVolume):
-    root = open_zarr(
-        internal_volume.path
-    )
+    root = open_zarr(internal_volume.path)
     ometiff_custom_data: OMETIFFSpecificExtraData = internal_volume.custom_data[
         "dataset_specific_data"
     ]["ometiff"]

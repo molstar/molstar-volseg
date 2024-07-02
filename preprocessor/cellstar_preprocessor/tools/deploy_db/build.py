@@ -65,33 +65,27 @@ def _preprocessor_internal_wrapper(
         )
     preprocessor_args: PreprocessorArguments = PreprocessorArguments(
         mode=PreprocessorMode.add,
-            quantize_dtype_str=input_for_building.get("quantize_dtype_str"),
-            quantize_downsampling_levels=quantize_downsampling_levels,
-            force_volume_dtype=input_for_building.get("force_volume_dtype"),
-            max_size_per_downsampling_lvl_mb=input_for_building.get(
-                "max_size_per_downsampling_lvl_mb"
-            ),
-            min_size_per_downsampling_lvl_mb=input_for_building.get(
-                "min_size_per_downsampling_lvl_mb", 5.0
-            ),
-            max_downsampling_level=input_for_building.get("max_downsampling_level"),
-            min_downsampling_level=input_for_building.get("min_downsampling_level"),
-            remove_original_resolution=input_for_building.get(
-                "remove_original_resolution"
-            ),
-            entry_id=input_for_building.get("entry_id"),
-            source_db=input_for_building.get("source_db"),
-            source_db_id=input_for_building.get("source_db_id"),
-            source_db_name=input_for_building.get("source_db_name"),
-            working_folder=Path(working_folder),
-            db_path=Path(db_path),
-            inputs=input_for_building.get("inputs")
+        quantize_dtype_str=input_for_building.get("quantize_dtype_str"),
+        quantize_downsampling_levels=quantize_downsampling_levels,
+        force_volume_dtype=input_for_building.get("force_volume_dtype"),
+        max_size_per_downsampling_lvl_mb=input_for_building.get(
+            "max_size_per_downsampling_lvl_mb"
+        ),
+        min_size_per_downsampling_lvl_mb=input_for_building.get(
+            "min_size_per_downsampling_lvl_mb", 5.0
+        ),
+        max_downsampling_level=input_for_building.get("max_downsampling_level"),
+        min_downsampling_level=input_for_building.get("min_downsampling_level"),
+        remove_original_resolution=input_for_building.get("remove_original_resolution"),
+        entry_id=input_for_building.get("entry_id"),
+        source_db=input_for_building.get("source_db"),
+        source_db_id=input_for_building.get("source_db_id"),
+        source_db_name=input_for_building.get("source_db_name"),
+        working_folder=Path(working_folder),
+        db_path=Path(db_path),
+        inputs=input_for_building.get("inputs"),
     )
-    asyncio.run(
-        main_preprocessor(
-            preprocessor_args
-        )
-    )
+    asyncio.run(main_preprocessor(preprocessor_args))
     print(f"Internal wrapper have added {entry_id} to the database")
 
 
@@ -110,9 +104,7 @@ def build(args):
         shutil.rmtree(args.db_path)
 
     if not args.working_folder:
-        working_folder = (
-            Path(WORKING_FOLDER_PATH) / args.db_path
-        )
+        working_folder = Path(WORKING_FOLDER_PATH) / args.db_path
     else:
         working_folder = Path(args.working_folder)
 

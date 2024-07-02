@@ -1,26 +1,18 @@
-from cellstar_preprocessor.flows.segmentation.omezarr_segmentation_annotations_preprocessing import omezarr_segmentation_annotations_preprocessing
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import pytest
 from cellstar_db.models import (
     AnnotationsMetadata,
-    SegmentationKind,
-    VolumeChannelAnnotation,
     DescriptionData,
     SegmentAnnotationData,
+    SegmentationKind,
 )
-from cellstar_preprocessor.flows.common import (
-    hex_to_rgba_normalized,
+from cellstar_preprocessor.flows.segmentation.omezarr_segmentation_annotations_preprocessing import (
+    omezarr_segmentation_annotations_preprocessing,
 )
 from cellstar_preprocessor.flows.segmentation.omezarr_segmentations_preprocessing import (
     omezarr_segmentations_preprocessing,
 )
-from cellstar_preprocessor.flows.volume.omezarr_volume_annotations_preprocessing import (
-    omezarr_volume_annotations_preprocessing,
-)
-from cellstar_preprocessor.tests.helper_methods import (
-    get_internal_volume_from_input,
-    get_omezarr_internal_segmentation,
-)
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
+from cellstar_preprocessor.tests.helper_methods import get_omezarr_internal_segmentation
 from cellstar_preprocessor.tests.input_for_tests import (
     OMEZARR_TEST_INPUTS,
     WORKING_FOLDER_FOR_TESTS,
@@ -44,7 +36,7 @@ def test_omezarr_segmentation_annotations_preprocessing(omezar_test_input: TestI
         # d = omezarr
 
         ome_zarr_root = open_zarr(internal_segmentation.input_path)
-        ome_zarr_attrs = ome_zarr_root.attrs
+        ome_zarr_root.attrs
 
         # root = open_zarr_structure_from_path(
         #     internal_volume.intermediate_zarr_structure_path
@@ -56,9 +48,9 @@ def test_omezarr_segmentation_annotations_preprocessing(omezar_test_input: TestI
             d.entry_id.source_db_name == internal_segmentation.entry_data.source_db_name
         )
 
-        description_items = list(d.descriptions.items())    
+        description_items = list(d.descriptions.items())
         assert "labels" in ome_zarr_root, "No labels group"
-        
+
         for label_gr_name, label_gr in ome_zarr_root.labels.groups():
             # PLAN
             # for each label gr
@@ -87,10 +79,7 @@ def test_omezarr_segmentation_annotations_preprocessing(omezar_test_input: TestI
 
                 # check that
                 assert description_item.target_id.segment_id == label_value
-                assert (
-                    description_item.target_id.segmentation_id
-                    == label_gr_name
-                )
+                assert description_item.target_id.segmentation_id == label_gr_name
                 assert description_item.target_kind == "lattice"
 
                 # find segment annotation
@@ -109,9 +98,7 @@ def test_omezarr_segmentation_annotations_preprocessing(omezar_test_input: TestI
                 )
 
                 # check each field
-                assert (
-                    segment_annotation_item.color == ind_label_color_fractional
-                )
+                assert segment_annotation_item.color == ind_label_color_fractional
                 assert segment_annotation_item.segment_id == label_value
                 assert segment_annotation_item.segment_kind == SegmentationKind.lattice
                 # can be not 0

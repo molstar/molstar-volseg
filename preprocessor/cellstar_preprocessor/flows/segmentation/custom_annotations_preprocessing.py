@@ -2,9 +2,7 @@ import json
 from pathlib import Path
 
 from cellstar_db.models import AnnotationsMetadata
-from cellstar_preprocessor.flows.common import (
-    update_dict,
-)
+from cellstar_preprocessor.flows.common import update_dict
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
 
 
@@ -76,7 +74,7 @@ def custom_annotations_preprocessing(
         if "entry_id" in d:
             current_d.entry_id = d.entry_id
         if d.volume_channels_annotations is not None:
-        # if "volume_channels_annotations" in d:
+            # if "volume_channels_annotations" in d:
             old_volume_channels_annotations_list = current_d.volume_channels_annotations
             to_be_added_volume_channels_annotations_list = d.volume_channels_annotations
 

@@ -9,7 +9,6 @@ from argparse import ArgumentError
 from pathlib import Path
 from typing import Literal
 
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import zarr
 from cellstar_db.file_system.constants import (
     ANNOTATION_METADATA_FILENAME,
@@ -20,12 +19,10 @@ from cellstar_db.file_system.constants import (
     MESH_SEGMENTATION_DATA_GROUPNAME,
     VOLUME_DATA_GROUPNAME,
 )
-from cellstar_db.models import AnnotationsMetadata, GeometricSegmentationData, Metadata
+from cellstar_db.models import GeometricSegmentationData
 from cellstar_db.protocol import VolumeServerDB
-from cellstar_preprocessor.flows.common import (
-    read_json,
-    save_dict_to_json_file,
-)
+from cellstar_preprocessor.flows.common import read_json, save_dict_to_json_file
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 
 
 class VolumeAndSegmentationContext:
@@ -76,9 +73,7 @@ class VolumeAndSegmentationContext:
     def add_volume(self):
         # NOTE: only a single volume for now
         temp_store = zarr.DirectoryStore(str(self.intermediate_zarr_structure))
-        temp_zarr_structure: zarr.Group = open_zarr(
-            self.intermediate_zarr_structure
-        )
+        temp_zarr_structure: zarr.Group = open_zarr(self.intermediate_zarr_structure)
         zarr.group(self.store)
         zarr.copy_store(
             source=temp_store,
@@ -92,9 +87,7 @@ class VolumeAndSegmentationContext:
         self, id: str, kind: Literal["lattice", "mesh", "geometric_segmentation"]
     ):
         temp_store = zarr.DirectoryStore(str(self.intermediate_zarr_structure))
-        temp_zarr_structure: zarr.Group = open_zarr(
-            self.intermediate_zarr_structure
-        )
+        temp_zarr_structure: zarr.Group = open_zarr(self.intermediate_zarr_structure)
         perm_root = zarr.group(self.store)
         if kind == "lattice":
             source_path = f"{LATTICE_SEGMENTATION_DATA_GROUPNAME}/{id}"
@@ -146,7 +139,9 @@ class VolumeAndSegmentationContext:
             d.append(target_geometric_segmentation)
             # save back to file
             save_dict_to_json_file(
-                [i.dict() for i in d], GEOMETRIC_SEGMENTATION_FILENAME, self.path_to_entry
+                [i.dict() for i in d],
+                GEOMETRIC_SEGMENTATION_FILENAME,
+                self.path_to_entry,
             )
 
         print("Segmentation added")
@@ -176,9 +171,7 @@ class VolumeAndSegmentationContext:
                 self.path_to_entry / GEOMETRIC_SEGMENTATION_FILENAME
             )
             # if (shape_primitives_path).exists():
-            d: list[GeometricSegmentationData] = read_json(
-                path=shape_primitives_path
-            )
+            d: list[GeometricSegmentationData] = read_json(path=shape_primitives_path)
             # TODO: find that geometric segmentation by id
 
             filter_results = [
@@ -193,7 +186,9 @@ class VolumeAndSegmentationContext:
 
             # save back to file
             save_dict_to_json_file(
-                [i.dict() for i in d], GEOMETRIC_SEGMENTATION_FILENAME, self.path_to_entry
+                [i.dict() for i in d],
+                GEOMETRIC_SEGMENTATION_FILENAME,
+                self.path_to_entry,
             )
 
     def _before_closing(self):
@@ -218,9 +213,7 @@ class VolumeAndSegmentationContext:
 
     def __save_annotations_and_metadata(self):
         zarr.DirectoryStore(str(self.intermediate_zarr_structure))
-        root: zarr.Group = open_zarr(
-            self.intermediate_zarr_structure
-        )
+        root: zarr.Group = open_zarr(self.intermediate_zarr_structure)
         a = root.attrs["annotations_dict"]
         m = root.attrs["metadata_dict"]
         save_dict_to_json_file(

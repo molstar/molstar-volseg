@@ -1,8 +1,8 @@
 import shutil
 from pathlib import Path
 
-from cellstar_db.models import InputKind
 import zarr
+from cellstar_db.models import InputKind
 from cellstar_preprocessor.flows.constants import (
     INIT_ANNOTATIONS_MODEL,
     INIT_METADATA_MODEL,
@@ -17,6 +17,7 @@ from cellstar_preprocessor.tests.input_for_tests import TestInput
 
 class TestContext:
     __test__ = False
+
     def _download_input(self):
         # TODO: extract omezarr annotations require segmentations
         p: Path

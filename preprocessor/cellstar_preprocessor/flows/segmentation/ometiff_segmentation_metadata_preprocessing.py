@@ -1,6 +1,3 @@
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
-from cellstar_preprocessor.flows.zarr_methods import get_downsamplings
-import dask.array as da
 import zarr
 from cellstar_db.models import OMETIFFSpecificExtraData
 from cellstar_preprocessor.flows.common import (
@@ -8,6 +5,7 @@ from cellstar_preprocessor.flows.common import (
     get_ome_tiff_origins,
 )
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
+from cellstar_preprocessor.flows.zarr_methods import get_downsamplings, open_zarr
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 # SHORT_UNIT_NAMES_TO_LONG = {
@@ -119,12 +117,11 @@ def _get_segmentation_sampling_info(root_data_group, sampling_info_dict):
 def _get_allencell_voxel_size(root: zarr.Group) -> list[float, float, float]:
     return root.attrs["extra_data"]["scale_micron"]
 
+
 def ometiff_segmentation_metadata_preprocessing(
     internal_segmentation: InternalSegmentation,
 ):
-    root = open_zarr(
-        internal_segmentation.path
-    )
+    root = open_zarr(internal_segmentation.path)
     # TODO: same as with volume metadata
     metadata_dict = root.attrs["metadata_dict"]
     ometiff_custom_data: OMETIFFSpecificExtraData = internal_segmentation.custom_data[
@@ -135,9 +132,7 @@ def ometiff_segmentation_metadata_preprocessing(
     # ometiff_metadata = internal_segmentation.custom_data['ometiff_metadata']
     # NOTE: sample ometiff has no time
     # channel_ids = _get_allencell_segmentation_channel_ids(root)
-    start_time = 0
-    end_time = ometiff_metadata["SizeT"] - 1
-    time_units = "millisecond"
+    ometiff_metadata["SizeT"] - 1
 
     # original_voxel_size_in_micrometers = _get_allencell_voxel_size(root)
 
@@ -178,17 +173,23 @@ def ometiff_segmentation_metadata_preprocessing(
 
             _get_segmentation_sampling_info(
                 root_data_group=label_gr,
-                sampling_info_dict=metadata_dict.segmentation_lattices.sampling_info[str(lattice_id)],
+                sampling_info_dict=metadata_dict.segmentation_lattices.sampling_info[
+                    str(lattice_id)
+                ],
             )
 
             get_ome_tiff_origins(
-                boxes_dict=metadata_dict.segmentation_lattices.sampling_info[str(lattice_id)].boxes,
+                boxes_dict=metadata_dict.segmentation_lattices.sampling_info[
+                    str(lattice_id)
+                ].boxes,
                 downsamplings=segmentation_downsamplings,
             )
 
             _get_ome_tiff_voxel_sizes_in_downsamplings(
                 internal_volume_or_segmentation=internal_segmentation,
-                boxes_dict=metadata_dict.segmentation_lattices.sampling_info[str(lattice_id)].boxes,
+                boxes_dict=metadata_dict.segmentation_lattices.sampling_info[
+                    str(lattice_id)
+                ].boxes,
                 downsamplings=segmentation_downsamplings,
                 ometiff_metadata=ometiff_metadata,
             )

@@ -1,26 +1,22 @@
-from decimal import ROUND_CEILING, Decimal, getcontext
 import logging
+from decimal import ROUND_CEILING, Decimal, getcontext
 
-from cellstar_db.models import AxisName, DownsamplingLevelInfo
 import dask.array as da
 import numpy as np
 import zarr
+from cellstar_db.models import AxisName, DownsamplingLevelInfo
 from cellstar_preprocessor.flows.zarr_methods import create_dataset_wrapper
 
 
 def get_axis_order_mrcfile(mrc_header: object):
-    d = {
-        0: AxisName.x,
-        1: AxisName.y,
-        2: AxisName.z
-    }
+    d = {0: AxisName.x, 1: AxisName.y, 2: AxisName.z}
     h = mrc_header
     current_order = int(h.mapc) - 1, int(h.mapr) - 1, int(h.maps) - 1
     return [d[x] for x in current_order]
 
+
 def get_voxel_sizes_from_map_header(
-    map_header: object,
-    volume_downsamplings: list[DownsamplingLevelInfo]
+    map_header: object, volume_downsamplings: list[DownsamplingLevelInfo]
 ):
     d = _ccp4_words_to_dict_mrcfile(map_header)
     ao = {d["MAPC"] - 1: 0, d["MAPR"] - 1: 1, d["MAPS"] - 1: 2}
@@ -45,11 +41,9 @@ def get_voxel_sizes_from_map_header(
         )
 
     return voxel_sizes
-    
 
-def get_origin_from_map_header(
-    map_header: object
-):
+
+def get_origin_from_map_header(map_header: object):
     d = _ccp4_words_to_dict_mrcfile(map_header)
     ao = {d["MAPC"] - 1: 0, d["MAPR"] - 1: 1, d["MAPS"] - 1: 2}
 
@@ -144,7 +138,6 @@ def store_volume_data_in_zarr_stucture(
     )
 
     da.to_zarr(arr=data, url=zarr_arr, overwrite=True, compute=True)
-
 
 
 # could be method of internal volume?

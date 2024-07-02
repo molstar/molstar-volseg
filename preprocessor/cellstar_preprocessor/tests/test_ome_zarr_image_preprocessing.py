@@ -1,10 +1,10 @@
 import pytest
 import zarr
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
 from cellstar_preprocessor.flows.volume.omezarr_volume_preprocessing import (
     omezarr_volume_preprocessing,
 )
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.tests.helper_methods import get_internal_volume_from_input
 from cellstar_preprocessor.tests.input_for_tests import (
     OMEZARR_TEST_INPUTS,
@@ -29,9 +29,7 @@ def test_ome_zarr_image_preprocessing(omezar_test_input: TestInput):
         multiscales = root_zattrs["multiscales"]
         axes = multiscales[0]["axes"]
 
-        zarr_structure = open_zarr(
-            internal_volume.path
-        )
+        zarr_structure = open_zarr(internal_volume.path)
 
         assert VOLUME_DATA_GROUPNAME in zarr_structure
         volume_gr = zarr_structure[VOLUME_DATA_GROUPNAME]

@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 from uuid import uuid4
 
-import zarr
 from cellstar_db.models import (
     Box,
     BoxInputParams,
@@ -19,18 +18,11 @@ from cellstar_db.models import (
     Sphere,
     SphereInputParams,
 )
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
-from cellstar_preprocessor.flows.constants import (
-    GEOMETRIC_SEGMENTATIONS_ZATTRS,
-    RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS,
-)
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
 # should return tuple - segmentation_id, primitives
-def _process_geometric_segmentation_data(
-    data: GeometricSegmentationInputData
-):
+def _process_geometric_segmentation_data(data: GeometricSegmentationInputData):
     shape_primitives_input = data.shape_primitives_input
     segmentation_id = data.segmentation_id
 
@@ -129,7 +121,7 @@ def geometric_segmentation_preprocessing(s: InternalSegmentation):
         if custom_segmentation_id:
             segmentation_id = custom_segmentation_id
 
-        d=GeometricSegmentationData(
+        d = GeometricSegmentationData(
             segmentation_id=segmentation_id,
             primitive=primitives,
         )

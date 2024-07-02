@@ -1,14 +1,13 @@
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import seaborn as sns
 from cellstar_db.models import AnnotationsMetadata, EntryId, VolumeChannelAnnotation
-from cellstar_preprocessor.flows.common import (
-    _get_ome_tiff_channel_ids_dict,
-)
+from cellstar_preprocessor.flows.common import _get_ome_tiff_channel_ids_dict
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.volume import InternalVolume
 
 
 def _get_ome_tiff_channel_annotations(
-    volume_channels_annotations: list[VolumeChannelAnnotation], channel_ids_dict: dict[str, str]
+    volume_channels_annotations: list[VolumeChannelAnnotation],
+    channel_ids_dict: dict[str, str],
 ):
     palette = sns.color_palette(None, len(list(channel_ids_dict.keys())))
 
@@ -18,17 +17,13 @@ def _get_ome_tiff_channel_annotations(
         print(f"Color: {color} for channel {channel_id}")
         volume_channels_annotations.append(
             VolumeChannelAnnotation(
-                channel_id=channel_id,
-                color=color,
-                label=channel_id
+                channel_id=channel_id, color=color, label=channel_id
             )
         )
 
 
 def ometiff_volume_annotations_preprocessing(internal_volume: InternalVolume):
-    root = open_zarr(
-        internal_volume.path
-    )
+    root = open_zarr(internal_volume.path)
 
     internal_volume.custom_data["dataset_specific_data"]["ometiff"][
         "ometiff_source_metadata"

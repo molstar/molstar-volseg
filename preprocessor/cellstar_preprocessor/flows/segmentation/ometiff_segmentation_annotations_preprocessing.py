@@ -1,6 +1,5 @@
 from uuid import uuid4
 
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import seaborn as sns
 import zarr
 from cellstar_db.models import (
@@ -10,10 +9,9 @@ from cellstar_db.models import (
     SegmentationKind,
     TargetId,
 )
-from cellstar_preprocessor.flows.common import (
-    get_ometiff_source_metadata,
-)
+from cellstar_preprocessor.flows.common import get_ometiff_source_metadata
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
@@ -24,9 +22,7 @@ def _get_allencell_cell_stage(root: zarr.Group):
 def ometiff_segmentation_annotations_preprocessing(
     internal_segmentation: InternalSegmentation,
 ):
-    root = open_zarr(
-        internal_segmentation.path
-    )
+    root = open_zarr(internal_segmentation.path)
     # this is based on Channels which is wrong in many cases
 
     get_ometiff_source_metadata(internal_segmentation)
@@ -83,7 +79,7 @@ def ometiff_segmentation_annotations_preprocessing(
         )
 
         time = 0
-        description=DescriptionData(
+        description = DescriptionData(
             id=description_id,
             target_kind="lattice",
             details=None,
@@ -95,7 +91,7 @@ def ometiff_segmentation_annotations_preprocessing(
             target_id=target_id,
         )
 
-        segment_annotation=SegmentAnnotationData(
+        segment_annotation = SegmentAnnotationData(
             id=str(uuid4()),
             color=ind_label_color_fractional,
             segmentation_id=str(label_gr_name),

@@ -1,20 +1,14 @@
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
-from cellstar_preprocessor.flows.zarr_methods import get_downsamplings
 import numpy as np
 import zarr
 from cellstar_db.file_system.constants import VOLUME_DATA_GROUPNAME
 from cellstar_db.models import (
     DownsamplingLevelInfo,
-    EntryId,
-    Metadata,
     TimeInfo,
     VolumeSamplingInfo,
     VolumesMetadata,
-)
-from cellstar_preprocessor.flows.common import (
     convert_to_angstroms,
 )
-from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
+from cellstar_preprocessor.flows.zarr_methods import get_downsamplings, open_zarr
 from cellstar_preprocessor.model.volume import InternalVolume
 
 
@@ -150,6 +144,7 @@ def get_voxel_sizes_in_downsamplings(ome_zarr_attrs, boxes_dict):
 
     return boxes_dict
 
+
 def _get_volume_sampling_info(root_data_group: zarr.Group, sampling_info_dict):
     for res_gr_name, res_gr in root_data_group.groups():
         # create layers (time gr, channel gr)
@@ -232,23 +227,21 @@ def _get_source_axes_units(ome_zarr_root_attrs: zarr.Group):
 
 
 def omezarr_volume_metadata_preprocessing(v: InternalVolume):
-    root = open_zarr(
-        v.path
-    )
-    ome_zarr_root = open_zarr(v.input_path)
+    root = open_zarr(v.path)
+    open_zarr(v.input_path)
     w = v.get_omezarr_wrapper()
-    
+
     # TODO: refactor
     w.add_defaults_to_ome_zarr_attrs()
 
     volume_downsamplings = get_downsamplings(data_group=root[VOLUME_DATA_GROUPNAME])
-    
+
     channel_ids = v.get_channel_ids()
     start_time, end_time = v.get_start_end_time(v.get_volume_data_group())
 
-    m = v.get_metadata()    
+    m = v.get_metadata()
     v.set_entry_id_in_metadata()
-    
+
     m.volumes = VolumesMetadata(
         channel_ids=channel_ids,
         time_info=TimeInfo(
@@ -270,11 +263,10 @@ def omezarr_volume_metadata_preprocessing(v: InternalVolume):
 
     time_transformations = w.process_time_transformations()
     v.set_time_transformations(time_transformations)
-    
-    
+
     sampling_info = v.get_volume_sampling_info()
     m.volumes.sampling_info = sampling_info
-    
+
     v.get_volume_sampling_info()
     v.set_metadata(m)
     return m

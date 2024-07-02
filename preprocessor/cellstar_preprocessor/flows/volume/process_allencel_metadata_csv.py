@@ -20,9 +20,7 @@ from cellstar_preprocessor.flows.zarr_methods import open_zarr
 def process_allencell_metadata_csv(
     path: Path, cell_id: int, intermediate_zarr_structure_path: Path
 ):
-    zarr_structure: zarr.Group = open_zarr(
-        intermediate_zarr_structure_path
-    )
+    zarr_structure: zarr.Group = open_zarr(intermediate_zarr_structure_path)
 
     df = pd.read_csv(str(path.resolve()))
     target_row = df[df["CellId"] == cell_id]

@@ -1,5 +1,5 @@
 import zarr
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
+from cellstar_db.models import SegmentationPrimaryDescriptor
 from cellstar_preprocessor.flows.constants import (
     LATTICE_SEGMENTATION_DATA_GROUPNAME,
     MESH_SEGMENTATION_DATA_GROUPNAME,
@@ -15,7 +15,7 @@ from cellstar_preprocessor.flows.segmentation.helper_methods import (
     store_segmentation_data_in_zarr_structure,
     write_mesh_component_data_to_zarr_arr,
 )
-from cellstar_db.models import SegmentationPrimaryDescriptor
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from vedo import Mesh
 
@@ -23,9 +23,7 @@ from vedo import Mesh
 def sff_segmentation_preprocessing(internal_segmentation: InternalSegmentation):
     hdf5_to_zarr(internal_segmentation=internal_segmentation)
 
-    zarr_structure: zarr.Group = open_zarr(
-        internal_segmentation.path
-    )
+    zarr_structure: zarr.Group = open_zarr(internal_segmentation.path)
 
     internal_segmentation.raw_sff_annotations = extract_raw_annotations_from_sff(
         segm_file_path=internal_segmentation.input_path

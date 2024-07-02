@@ -1,28 +1,26 @@
 from decimal import Decimal
 
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
-from cellstar_preprocessor.flows.volume.helper_methods import _ccp4_words_to_dict_mrcfile
 import dask.array as da
 import numpy as np
 from cellstar_db.models import (
     DownsamplingLevelInfo,
-    Metadata,
     TimeInfo,
     VolumeSamplingInfo,
     VolumesMetadata,
 )
-from cellstar_preprocessor.flows.zarr_methods import (
-    get_downsamplings,
-)
 from cellstar_preprocessor.flows.constants import (
     DEFAULT_TIME_UNITS,
     QUANTIZATION_DATA_DICT_ATTR_NAME,
-    VOLUME_DATA_GROUPNAME,
 )
+from cellstar_preprocessor.flows.volume.helper_methods import (
+    _ccp4_words_to_dict_mrcfile,
+)
+from cellstar_preprocessor.flows.zarr_methods import get_downsamplings
 from cellstar_preprocessor.model.volume import InternalVolume
 from cellstar_preprocessor.tools.quantize_data.quantize_data import (
     decode_quantized_data,
 )
+
 
 def _get_origin_and_voxel_sizes_from_map_header(
     mrc_header: object, volume_downsamplings: list[DownsamplingLevelInfo]
@@ -127,11 +125,10 @@ def map_volume_metadata_preprocessing(v: InternalVolume):
 
     volume_downsamplings = get_downsamplings(data_group=v.get_volume_data_group())
     # TODO: check - some units are defined (spatial?)
-    source_axes_units = v.get_source_axes_units()
     m = v.get_metadata()
-    
+
     v.set_entry_id_in_metadata()
-    
+
     m.volumes = VolumesMetadata(
         channel_ids=channel_ids,
         time_info=TimeInfo(
@@ -142,20 +139,22 @@ def map_volume_metadata_preprocessing(v: InternalVolume):
             boxes={},
             descriptive_statistics={},
             time_transformations=[],
-            source_axes_units=source_axes_units,
-            original_axis_order=_get_axis_order_mrcfile(v.map_header),
+            source_axes_units=v.get_source_axes_units(),
+            original_axis_order=v.get_original_axis_order(),
         ),
     )
     sampling_info = v.get_volume_sampling_info()
     m.volumes.sampling_info = sampling_info
     v.set_metadata(m)
-    
+
     # NOTE: remove original level resolution data
     if v.downsampling_parameters.remove_original_resolution:
         del v.get_volume_data_group["1"]
         print("Original resolution volume data removed")
 
-        current_levels: list[DownsamplingLevelInfo] = m.volumes.sampling_info.spatial_downsampling_levels
+        current_levels: list[DownsamplingLevelInfo] = (
+            m.volumes.sampling_info.spatial_downsampling_levels
+        )
         for i, item in enumerate(current_levels):
             if item.level == 1:
                 current_levels[i].available = False

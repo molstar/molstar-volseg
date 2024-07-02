@@ -1,5 +1,5 @@
-
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
+
 
 def mask_segmentation_metadata_preprocessing(
     s: InternalSegmentation,

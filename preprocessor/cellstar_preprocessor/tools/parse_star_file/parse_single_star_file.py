@@ -9,7 +9,7 @@ from cellstar_db.models import (
     ShapePrimitiveKind,
     SphereInputParams,
 )
-from cellstar_preprocessor.flows.common import hex_to_rgba_normalized
+from cellstar_preprocessor.model.common import hex_to_rgba_normalized
 
 
 # divisor = 4

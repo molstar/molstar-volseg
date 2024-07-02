@@ -1,10 +1,12 @@
 from pathlib import Path
-from typing import Literal, TypedDict
 
 from attr import dataclass
-from cellstar_db.models import DownsamplingParams, InputKind, QuantizationDtype, StoringParams
 from cellstar_db.models import (
+    DownsamplingParams,
     EntryData,
+    InputKind,
+    QuantizationDtype,
+    StoringParams,
 )
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from cellstar_preprocessor.model.volume import InternalVolume
@@ -29,6 +31,7 @@ TEST_MAP_PATH_ZYX_ORDER = Path(
 TEST_MAP_PATH_XYZ_ORDER = Path(
     "preprocessor/cellstar_preprocessor/tests/test_data/fake_ccp4_XYZ.map"
 )
+
 
 @dataclass
 class TestInput:
@@ -94,7 +97,7 @@ INTERNAL_VOLUME_FOR_TESTING_XYZ_ORDER = InternalVolume(
     ),
     quantize_dtype_str=QuantizationDtype.u1,
     quantize_downsampling_levels=(1,),
-    input_kind=InputKind.map
+    input_kind=InputKind.map,
 )
 
 INTERNAL_VOLUME_FOR_TESTING_ZYX_ORDER = InternalVolume(
@@ -111,7 +114,7 @@ INTERNAL_VOLUME_FOR_TESTING_ZYX_ORDER = InternalVolume(
     ),
     quantize_dtype_str=QuantizationDtype.u1,
     quantize_downsampling_levels=(1,),
-    input_kind=InputKind.map
+    input_kind=InputKind.map,
 )
 
 
@@ -126,7 +129,7 @@ INTERNAL_SEGMENTATION_FOR_TESTING = InternalSegmentation(
         source_db_id="emd-1832",
         source_db_name="emdb",
     ),
-    input_kind=InputKind.sff
+    input_kind=InputKind.sff,
 )
 
 INTERNAL_MESH_SEGMENTATION_FOR_TESTING = InternalSegmentation(
@@ -140,5 +143,5 @@ INTERNAL_MESH_SEGMENTATION_FOR_TESTING = InternalSegmentation(
         source_db_id="empiar-10070",
         source_db_name="empiar",
     ),
-    input_kind=InputKind.sff
+    input_kind=InputKind.sff,
 )

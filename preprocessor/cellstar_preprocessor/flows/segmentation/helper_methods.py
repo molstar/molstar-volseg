@@ -4,15 +4,11 @@ import math
 import zlib
 from pathlib import Path
 
-from cellstar_preprocessor.flows.zarr_methods import create_dataset_wrapper
 import h5py
 import numcodecs
 import numpy as np
 import zarr
-from cellstar_preprocessor.flows.common import (
-    chunk_numpy_arr,
-    decide_np_dtype,
-)
+from cellstar_preprocessor.flows.common import chunk_numpy_arr, decide_np_dtype
 from cellstar_preprocessor.flows.segmentation.category_set_downsampling_methods import (
     store_downsampling_levels_in_zarr,
 )
@@ -22,6 +18,7 @@ from cellstar_preprocessor.flows.segmentation.downsampling_level_dict import (
 from cellstar_preprocessor.flows.segmentation.segmentation_set_table import (
     SegmentationSetTable,
 )
+from cellstar_preprocessor.flows.zarr_methods import create_dataset_wrapper
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from cellstar_preprocessor.model.volume import InternalVolume
 from sfftkrw.schema.adapter_v0_8_0_dev1 import SFFSegmentation

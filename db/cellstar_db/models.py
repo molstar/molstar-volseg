@@ -1,12 +1,16 @@
 from enum import Enum
+from functools import partial
 from pathlib import Path
 from typing import Any, List, Literal, Optional, Protocol, TypedDict, Union
 
-from cellstar_preprocessor.flows.common import convert_to_angstroms
-from numcodecs import Blosc
 import numpy as np
 import zarr
+from numcodecs import Blosc
 from pydantic import BaseModel, Extra, Field
+
+
+def hyphenize(field: str):
+    return field.replace("_", "-")
 
 
 class ModelExtra(BaseModel, extra=Extra.allow):
@@ -14,22 +18,39 @@ class ModelExtra(BaseModel, extra=Extra.allow):
 
 
 class OMEZarrAxesType(str, Enum):
-    space = "space",
-    time = "time",
+    space = ("space",)
+    time = ("time",)
     channel = "channel"
+
 
 class SpatialAxisUnit(str, Enum):
     micrometer = "micrometer"
     angstrom = "angstrom"
     # TODO: other
 
-class TimeAxisUnit(str, Enum):    
+
+class TimeAxisUnit(str, Enum):
     millisecond = "millisecond"
+
 
 class OMEZarrAxisInfo(ModelExtra):
     name: str
     type: OMEZarrAxesType | None
     unit: SpatialAxisUnit | TimeAxisUnit | None
+
+
+def convert_to_angstroms(value: float, input_unit: SpatialAxisUnit):
+    # TODO: support other units
+    SPACE_UNITS_CONVERSION_DICT = {
+        SpatialAxisUnit.micrometer: 10000,
+        SpatialAxisUnit.angstrom: 1,
+    }
+
+    if input_unit in SPACE_UNITS_CONVERSION_DICT:
+        return value * SPACE_UNITS_CONVERSION_DICT[input_unit]
+    else:
+        raise Exception(f"{input_unit} spatial unit is not supported")
+
 
 class OMEZarrCoordinateTransformations(ModelExtra):
     type: Literal["scale", "identity", "translation"]
@@ -37,8 +58,8 @@ class OMEZarrCoordinateTransformations(ModelExtra):
     translation: list[float] | None
     path: str | None
 
-    def  get_normalized_space_scale_arr(self) -> list[float, float, float]:
-        '''Normalizes axes order to XYZ and units to Angstroms'''
+    def get_normalized_space_scale_arr(self) -> list[float, float, float]:
+        """Normalizes axes order to XYZ and units to Angstroms"""
         # Order
         assert self.type == "scale"
         s = []
@@ -54,7 +75,7 @@ class OMEZarrCoordinateTransformations(ModelExtra):
         angstroms_scale_arr: list[float] = [
             convert_to_angstroms(v) for v in normalized_space_scale_arr
         ]
-        
+
         return angstroms_scale_arr
 
     def get_normalized_space_translation_arr(self) -> list[float, float, float]:
@@ -66,30 +87,32 @@ class OMEZarrCoordinateTransformations(ModelExtra):
             t = self.translation[1:]
         else:
             raise Exception("Length of translation arr is not supported")
-        
+
         n: list[float] = [t[2], t[1], t[0]]
         # to angstroms
-        a: list[float] = [
-            convert_to_angstroms(v) for v in n
-        ]
-        
+        a: list[float] = [convert_to_angstroms(v) for v in n]
+
         return a
-    
+
+
 class OMEZarrDatasetsMetadata(ModelExtra):
     coordinateTransformations: list[OMEZarrCoordinateTransformations]
     path: str
+
 
 class OmeroChannelMetadata(ModelExtra):
     active: bool
     label: str
     color: str
     # TODO: other fields
-    
+
+
 class OMEZarrOmeroMetadata(ModelExtra):
     id: int | None
     name: str | None
     version: str | None
     channels: list[OmeroChannelMetadata]
+
 
 class OMEZarrMultiscales(ModelExtra):
     axes: list[OMEZarrAxisInfo]
@@ -97,13 +120,34 @@ class OMEZarrMultiscales(ModelExtra):
     coordinateTransformations: list[OMEZarrCoordinateTransformations] | None
     name: str | None
     type: str | None
-    
+
+
+class OMEZarrColorsMetadata(ModelExtra):
+    class Config:
+        alias_generator = hyphenize
+
+    label_value: int
+    rgba: list[int, int, int, int]
+
+
+class OMEZarrImageLabelMetadata(ModelExtra):
+    colors: list[OMEZarrColorsMetadata] | None
+    properties: list[object] | None
+    source: object | None
+    version: str | None
+
+
 class OMEZarrAttrs(ModelExtra):
+    class Config:
+        alias_generator = hyphenize
+
     axes: list[OMEZarrAxisInfo]
     datasets: list[OMEZarrDatasetsMetadata]
     coordinateTransformations: list[OMEZarrCoordinateTransformations] | None
     multiscales: list[OMEZarrMultiscales]
     omero: OMEZarrOmeroMetadata
+    image_label: OMEZarrImageLabelMetadata
+
 
 class PreprocessorMode(str, Enum):
     add = "add"
@@ -121,10 +165,11 @@ class QuantizationDtype(str, Enum):
 
 
 class PreprocessorParameters(BaseModel):
-    '''
+    """
     Preprocessor parameters for the purpose of
     building database. No working folder, db_path
-    '''
+    """
+
     quantize_dtype_str: QuantizationDtype | None
     quantize_downsampling_levels: list[int] | None
     force_volume_dtype: str | None
@@ -140,6 +185,7 @@ class SegmentationKind(str, Enum):
     mesh = "mesh"
     primitve = "primitive"
 
+
 class InputKind(str, Enum):
     map = "map"
     sff = "sff"
@@ -154,14 +200,17 @@ class InputKind(str, Enum):
     ometiff_segmentation = "ometiff_segmentation"
     extra_data = "extra_data"
 
+
 class RawInput(BaseModel):
     path: str | Path
     kind: InputKind
 
+
 class PreprocessorArguments(PreprocessorParameters):
-    '''
+    """
     Full list of preprocessor arguments
-    '''
+    """
+
     mode: PreprocessorMode
     entry_id: str
     source_db: str
@@ -170,7 +219,8 @@ class PreprocessorArguments(PreprocessorParameters):
     working_folder: str
     db_path: str
     inputs: list[RawInput]
-  
+
+
 class RawInputFileResourceInfo(BaseModel):
     kind: Literal["local", "external"]
     uri: str
@@ -221,17 +271,21 @@ class OMETIFFSpecificExtraData(BaseModel):
     cell_stage: Optional[str]
     ometiff_source_metadata: Optional[dict]
 
+
 class DatasetSpecificExtraData(BaseModel):
     omezarr: OMEZarrAttrs | None
+
 
 class ExtraData(BaseModel):
     dataset_specific_data: DatasetSpecificExtraData | None
     voxel_size: list[float, float, float] | None
 
+
 class VolumeExtraData(ExtraData):
     # map sequential channel ID (e.g. "1" as string)
     # to biologically meaningfull channel id (string)
     channel_ids_mapping: dict[str, str] | None
+
 
 class SegmentationExtraData(ExtraData):
     # map segmentation number (dimension) in case of >3D array (e.g. OMETIFF)
@@ -240,7 +294,8 @@ class SegmentationExtraData(ExtraData):
     segmentation_ids_mapping: dict[str, str] | None
     # CURRENTLY IS A KEY THAT IS PROVIDED IN SEGMENTATION_IDS_MAPPING
     segment_ids_to_segment_names_mapping: dict[str, dict[str, str]] | None
-    
+
+
 class ExtraData(BaseModel):
     entry_metadata: Optional[EntryMetadata]
     volume: Optional[VolumeExtraData]
@@ -269,6 +324,7 @@ class DownsamplingLevelInfo(BaseModel):
     level: int
     available: bool
 
+
 class AxisName(str, Enum):
     x = "x"
     y = "y"
@@ -276,15 +332,15 @@ class AxisName(str, Enum):
     t = "t"
     c = "c"
 
+
 class SamplingInfo(BaseModel):
     # Info about "downsampling dimension"
     spatial_downsampling_levels: list[DownsamplingLevelInfo]
     # the only thing which changes with SPATIAL downsampling is box!
     boxes: dict[int, SamplingBox]
     time_transformations: Optional[list[TimeTransformation]]
-    # axis number to unit
-    source_axes_units: dict[AxisName, SpatialAxisUnit | TimeAxisUnit]
     original_axis_order: list[AxisName]
+
 
 # TODO:
 class TimeInfo(BaseModel):
@@ -348,6 +404,7 @@ class VolumeDescriptiveStatistics(BaseModel):
 
 class VolumeSamplingInfo(SamplingInfo):
     # resolution -> time -> channel_id
+    source_axes_units: dict[AxisName, SpatialAxisUnit | TimeAxisUnit]
     descriptive_statistics: dict[int, dict[int, dict[str, VolumeDescriptiveStatistics]]]
 
 
@@ -566,15 +623,18 @@ GeometricSegmentationJson = list[GeometricSegmentationData]
 
 # SERVER OUTPUT DATA MODEL (MESHES, SEGMENTATION LATTICES, VOLUMES)
 
+NumpyField = partial(Field, default_factory=lambda: np.zeros(10))
+
 
 class MeshData(BaseModel):
     mesh_id: int
-    vertices: np.ndarray = Field(default_factory=lambda: np.zeros(10))  # shape = (n_vertices, 3)
-    triangles: np.ndarray = Field(default_factory=lambda: np.zeros(10))  # shape = (n_triangles, 3)
-    normals: Optional[np.ndarray] = Field(default_factory=lambda: np.zeros(10))
-    
+    vertices: np.ndarray = NumpyField  # shape = (n_vertices, 3)
+    triangles: np.ndarray = NumpyField  # shape = (n_triangles, 3)
+    normals: Optional[np.ndarray] = NumpyField
+
     class Config:
         arbitrary_types_allowed = True
+
 
 MeshesData = list[MeshData]
 
@@ -585,7 +645,7 @@ class LatticeSegmentationSliceData(BaseModel):
     # dict mapping set ids to the actual segment ids (e.g. for set id=1, there may be several segment ids)
     category_set_dict: dict
     lattice_id: int
-    
+
     class Config:
         arbitrary_types_allowed = True
 
@@ -598,6 +658,7 @@ class SliceData(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
+
 
 # END SERVER OUTPUT DATA MODEL
 
@@ -674,8 +735,7 @@ class GeometricSegmentationInputData(BaseModel):
 
 
 class VolumeMetadata(Protocol):
-    def model(self) -> Metadata:
-        ...
+    def model(self) -> Metadata: ...
     def dict(self) -> dict: ...
 
     def db_name(self) -> str: ...
@@ -827,9 +887,3 @@ class PreprocessorInput(BaseModel):
     # add_segmentation_to_entry: bool = False
     # add_custom_annotations: bool = False
     custom_data: Optional[dict[str, Any]]
-
-
-class PreparedOMETIFFData(BaseModel):
-    time: int
-    channel_number: int
-    data: np.ndarray

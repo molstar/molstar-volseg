@@ -4,14 +4,10 @@
 
 import gc
 
-from cellstar_db.models import AxisName, OMEZarrAxesType
-from cellstar_preprocessor.flows.zarr_methods import create_dataset_wrapper
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import zarr
-from cellstar_preprocessor.flows.common import (
-    get_channel_annotations,
-)
+from cellstar_db.models import AxisName
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
+from cellstar_preprocessor.flows.zarr_methods import create_dataset_wrapper
 from cellstar_preprocessor.model.volume import InternalVolume
 
 # TODO: support 3 axes case?
@@ -23,10 +19,10 @@ def omezarr_volume_preprocessing(v: InternalVolume):
     w = v.get_omezarr_wrapper()
     # PROCESSING VOLUME
     volume_data_gr: zarr.Group = root.create_group(VOLUME_DATA_GROUPNAME)
-    
+
     multiscale = w.get_multiscale()
     axes = multiscale.axes
-    
+
     omezarr_root = w.get_root()
     for volume_arr_resolution, volume_arr in omezarr_root.arrays():
         size_of_data_for_lvl = 0
@@ -51,7 +47,7 @@ def omezarr_volume_preprocessing(v: InternalVolume):
                         target_annotation = target_annotations[0]
                         if "label" in target_annotation:
                             label = target_annotation["label"]
-                    
+
                     channel_arr = create_dataset_wrapper(
                         zarr_group=time_group,
                         name=label,
@@ -61,9 +57,8 @@ def omezarr_volume_preprocessing(v: InternalVolume):
                         params_for_storing=v.params_for_storing,
                     )
 
-                    size_of_data_for_lvl = (
-                        size_of_data_for_lvl
-                        + root.store.getsize(channel_arr.path)
+                    size_of_data_for_lvl = size_of_data_for_lvl + root.store.getsize(
+                        channel_arr.path
                     )
                     del corrected_volume_arr_data
                     gc.collect()
@@ -80,9 +75,8 @@ def omezarr_volume_preprocessing(v: InternalVolume):
                     dtype=corrected_volume_arr_data.dtype,
                     params_for_storing=v.params_for_storing,
                 )
-                size_of_data_for_lvl = (
-                    size_of_data_for_lvl
-                    + root.store.getsize(channel_arr.path)
+                size_of_data_for_lvl = size_of_data_for_lvl + root.store.getsize(
+                    channel_arr.path
                 )
                 del corrected_volume_arr_data
                 gc.collect()
@@ -109,18 +103,14 @@ def omezarr_volume_preprocessing(v: InternalVolume):
 
     if v.downsampling_parameters.max_downsampling_level is not None:
         for downsampling, downsampling_gr in volume_data_gr.groups():
-            if (
-                int(downsampling)
-                > v.downsampling_parameters.max_downsampling_level
-            ):
+            if int(downsampling) > v.downsampling_parameters.max_downsampling_level:
                 del volume_data_gr[downsampling]
                 print(f"Data for downsampling {downsampling} removed for volume")
 
     if v.downsampling_parameters.min_downsampling_level is not None:
         for downsampling, downsampling_gr in volume_data_gr.groups():
             if (
-                int(downsampling)
-                < v.downsampling_parameters.min_downsampling_level
+                int(downsampling) < v.downsampling_parameters.min_downsampling_level
                 and downsampling != original_resolution
             ):
                 del volume_data_gr[downsampling]

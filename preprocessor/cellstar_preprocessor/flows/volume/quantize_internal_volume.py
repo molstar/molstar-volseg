@@ -1,15 +1,12 @@
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import dask.array as da
 import numpy as np
 import zarr
-from cellstar_preprocessor.flows.zarr_methods import (
-    create_dataset_wrapper,
-)
 from cellstar_preprocessor.flows.constants import (
     QUANTIZATION_DATA_DICT_ATTR_NAME,
     VOLUME_DATA_GROUPNAME,
     VOLUME_DATA_GROUPNAME_COPY,
 )
+from cellstar_preprocessor.flows.zarr_methods import create_dataset_wrapper, open_zarr
 from cellstar_preprocessor.model.volume import InternalVolume
 from cellstar_preprocessor.tools.quantize_data.quantize_data import quantize_data
 
@@ -47,9 +44,7 @@ def quantize_internal_volume(internal_volume: InternalVolume):
     else:
         quantize_dtype_str = internal_volume.quantize_dtype_str
 
-    zarr_structure: zarr.Group = open_zarr(
-        internal_volume.path
-    )
+    zarr_structure: zarr.Group = open_zarr(internal_volume.path)
 
     # iterate over all arrays
     # create dask array

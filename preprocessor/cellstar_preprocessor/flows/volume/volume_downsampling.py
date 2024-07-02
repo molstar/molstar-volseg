@@ -1,6 +1,5 @@
 import math
 
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import dask.array as da
 import zarr
 from cellstar_preprocessor.flows.common import (
@@ -17,6 +16,7 @@ from cellstar_preprocessor.flows.volume.helper_methods import (
     generate_kernel_3d_arr,
     store_volume_data_in_zarr_stucture,
 )
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.volume import InternalVolume
 from cellstar_preprocessor.tools.quantize_data.quantize_data import (
     decode_quantized_data,
@@ -32,9 +32,7 @@ def volume_downsampling(internal_volume: InternalVolume):
     Do downsamplings, store them in intermediate zarr structure
     Note: takes original data from 0th resolution, time_frame and channel
     """
-    zarr_structure = open_zarr(
-        internal_volume.path
-    )
+    zarr_structure = open_zarr(internal_volume.path)
     # TODO: figure out how what to do in case of several channels (or time frames)
     # single resolution group "1"
     # N time groups

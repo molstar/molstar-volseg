@@ -3,10 +3,7 @@ import logging
 import shutil
 import typing
 from argparse import ArgumentError
-from enum import Enum
 from pathlib import Path
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
-from munch import DefaultMunch
 
 import typer
 import zarr
@@ -23,18 +20,14 @@ from cellstar_db.models import (
     InputKind,
     Inputs,
     PreprocessorArguments,
+    PreprocessorInput,
     PreprocessorMode,
-    QuantizationDtype,
     RawInput,
     SegmentAnnotationData,
     StoringParams,
     VolumeParams,
 )
-from cellstar_preprocessor.flows.common import (
-    dictget,
-    read_json,
-    process_extra_data,
-)
+from cellstar_preprocessor.flows.common import process_extra_data, read_json
 from cellstar_preprocessor.flows.constants import (
     GEOMETRIC_SEGMENTATIONS_ZATTRS,
     INIT_ANNOTATIONS_MODEL,
@@ -107,12 +100,6 @@ from cellstar_preprocessor.flows.segmentation.sff_segmentation_metadata_preproce
 from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing import (
     sff_segmentation_preprocessing,
 )
-from cellstar_preprocessor.flows.volume.process_allencel_metadata_csv import (
-    process_allencell_metadata_csv,
-)
-from cellstar_preprocessor.flows.volume.quantize_internal_volume import (
-    quantize_internal_volume,
-)
 from cellstar_preprocessor.flows.volume.map_volume_metadata_preprocessing import (
     map_volume_metadata_preprocessing,
 )
@@ -143,6 +130,9 @@ from cellstar_preprocessor.flows.volume.omezarr_volume_metadata_preprocessing im
 from cellstar_preprocessor.flows.volume.omezarr_volume_preprocessing import (
     omezarr_volume_preprocessing,
 )
+from cellstar_preprocessor.flows.volume.process_allencel_metadata_csv import (
+    process_allencell_metadata_csv,
+)
 from cellstar_preprocessor.flows.volume.process_volume import process_volume
 from cellstar_preprocessor.flows.volume.process_volume_annotations import (
     process_volume_annotations,
@@ -150,17 +140,18 @@ from cellstar_preprocessor.flows.volume.process_volume_annotations import (
 from cellstar_preprocessor.flows.volume.process_volume_metadata import (
     process_volume_metadata,
 )
-from cellstar_preprocessor.flows.volume.volume_downsampling import volume_downsampling
-from cellstar_db.models import (
-    PreprocessorInput,
+from cellstar_preprocessor.flows.volume.quantize_internal_volume import (
+    quantize_internal_volume,
 )
+from cellstar_preprocessor.flows.volume.volume_downsampling import volume_downsampling
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from cellstar_preprocessor.model.volume import InternalVolume
 from cellstar_preprocessor.tools.convert_app_specific_segm_to_sff.convert_app_specific_segm_to_sff import (
     convert_app_specific_segm_to_sff,
 )
+from munch import DefaultMunch
 from pydantic import BaseModel
-from typing_extensions import Annotated
 
 
 class InputT(BaseModel):
@@ -306,9 +297,7 @@ class OMEZARRMetadataCollectionTask(TaskBase):
         self.internal_volume = internal_volume
 
     def execute(self) -> None:
-        metadata_dict = omezarr_volume_metadata_preprocessing(
-            v=self.internal_volume
-        )
+        metadata_dict = omezarr_volume_metadata_preprocessing(v=self.internal_volume)
 
 
 class OMEZARRImageProcessTask(TaskBase):
@@ -579,9 +568,7 @@ class GeometricSegmentationAnnotationsCollectionTask(TaskBase):
     def execute(self) -> None:
         segmentation = self.internal_segmentation
 
-        geometric_segmentation_annotations_preprocessing(
-            s=segmentation
-        )
+        geometric_segmentation_annotations_preprocessing(s=segmentation)
 
 
 class Preprocessor:
@@ -1001,9 +988,7 @@ class Preprocessor:
             elif k == InputKind.mask:
                 analyzed.append(MaskInput(path=p, kind=k))
             elif k == InputKind.geometric_segmentation:
-                analyzed.append(
-                    GeometricSegmentationInput(path=p, kind=k)
-                )
+                analyzed.append(GeometricSegmentationInput(path=p, kind=k))
             elif k == InputKind.custom_annotations:
                 analyzed.append(CustomAnnotationsInput(path=p, kind=k))
             elif k == InputKind.application_specific_segmentation:
@@ -1146,7 +1131,7 @@ class Preprocessor:
 
 
 async def main_preprocessor(
-    arguments: PreprocessorArguments
+    arguments: PreprocessorArguments,
     # mode: PreprocessorMode,
     # quantize_dtype_str: typing.Optional[QuantizationDtype],
     # quantize_downsampling_levels: typing.Optional[str],
@@ -1197,7 +1182,7 @@ async def main_preprocessor(
     inputs: list[RawInput] = args.inputs
     for idx, i in enumerate(inputs):
         inputs[idx] = RawInput(path=Path(i.path), kind=i.kind)
-        
+
     # for input_path, input_kind in zip(args.input_paths, args.input_kinds):
     preprocessor_input.inputs.files = inputs
 
@@ -1212,7 +1197,9 @@ async def main_preprocessor(
             raise Exception(
                 f"Entry {preprocessor_input.entry_data.entry_id} from {preprocessor_input.entry_data.source_db} source does not exist in database {preprocessor_input.db_path}"
             )
-        assert args.mode == PreprocessorMode.extend, "Preprocessor mode is not supported"
+        assert (
+            args.mode == PreprocessorMode.extend
+        ), "Preprocessor mode is not supported"
 
     await preprocessor.initialization(mode=args.mode)
     preprocessor.preprocessing()
@@ -1226,7 +1213,7 @@ app = typer.Typer()
 # it will not add anything, throwing error instead (group exists in destination)
 @app.command("preprocess")
 def main(
-    arguments_json: str = typer.Option(default=...)
+    arguments_json: str = typer.Option(default=...),
     # mode: PreprocessorMode = PreprocessorMode.add.value,
     # quantize_dtype_str: Annotated[
     #     typing.Optional[QuantizationDtype], typer.Option(None)

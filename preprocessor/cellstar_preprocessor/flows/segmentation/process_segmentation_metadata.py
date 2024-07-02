@@ -1,3 +1,4 @@
+from cellstar_db.models import InputKind
 from cellstar_preprocessor.flows.segmentation.geometric_segmentation_annotations_preprocessing import (
     geometric_segmentation_annotations_preprocessing,
 )
@@ -13,7 +14,6 @@ from cellstar_preprocessor.flows.segmentation.sff_segmentation_metadata_preproce
 from cellstar_preprocessor.flows.volume.ometiff_volume_metadata_preprocessing import (
     ometiff_volume_metadata_preprocessing,
 )
-from cellstar_db.models import InputKind
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
@@ -24,7 +24,7 @@ def process_segmentation_metadata(s: InternalSegmentation):
     elif kind == InputKind.mask:
         mask_segmentation_metadata_preprocessing(s)
     elif kind == InputKind.geometric_segmentation:
-        
+
         geometric_segmentation_annotations_preprocessing(s)
     elif kind == InputKind.ometiff_segmentation:
         ometiff_volume_metadata_preprocessing(s)

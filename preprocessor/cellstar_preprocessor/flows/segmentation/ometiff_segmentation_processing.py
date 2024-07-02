@@ -1,30 +1,26 @@
 import gc
 
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import dask.array as da
 import numcodecs
 import numpy as np
 import zarr
+from cellstar_db.models import SegmentationPrimaryDescriptor
 from cellstar_preprocessor.flows.common import (
     prepare_ometiff_for_writing,
     read_ometiff_to_dask,
     set_ometiff_source_metadata,
 )
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
-from cellstar_db.models import SegmentationPrimaryDescriptor
-from cellstar_preprocessor.model.segmentation import InternalSegmentation, set_segmentation_extra_data
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
+from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
 def ometiff_segmentation_processing(s: InternalSegmentation):
     # NOTE: supports only 3D images
 
-    zarr_structure: zarr.Group = open_zarr(
-        s.path
-    )
+    zarr_structure: zarr.Group = open_zarr(s.path)
 
-    s.primary_descriptor = (
-        SegmentationPrimaryDescriptor.three_d_volume
-    )
+    s.primary_descriptor = SegmentationPrimaryDescriptor.three_d_volume
 
     # create value_to_segment_id_dict artificially for each lattice
     s.value_to_segment_id_dict = {}
@@ -45,13 +41,9 @@ def ometiff_segmentation_processing(s: InternalSegmentation):
     )
 
     if "channel_ids_mapping" not in s.custom_data:
-        s.custom_data["channel_ids_mapping"] = (
-            artificial_channel_ids
-        )
+        s.custom_data["channel_ids_mapping"] = artificial_channel_ids
 
-    channel_ids_mapping: dict[str, str] = s.custom_data[
-        "segmentation_ids_mapping"
-    ]
+    channel_ids_mapping: dict[str, str] = s.custom_data["segmentation_ids_mapping"]
 
     # similar to volume do loop
     for data_item in prepared_data:
@@ -65,9 +57,7 @@ def ometiff_segmentation_processing(s: InternalSegmentation):
         unique = da.unique(arr)
         unique.compute_chunk_sizes()
         for value in unique:
-            s.value_to_segment_id_dict[lattice_id][int(value)] = (
-                int(value)
-            )
+            s.value_to_segment_id_dict[lattice_id][int(value)] = int(value)
 
         # TODO: create datasets etc.
         lattice_id_gr = segmentation_data_gr.create_group(lattice_id)

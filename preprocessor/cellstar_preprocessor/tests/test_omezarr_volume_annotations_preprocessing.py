@@ -1,20 +1,13 @@
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import pytest
-from cellstar_db.models import (
-    AnnotationsMetadata,
-    VolumeChannelAnnotation,
-    DescriptionData,
-    SegmentAnnotationData,
-)
-from cellstar_preprocessor.flows.common import (
-    hex_to_rgba_normalized,
-)
+from cellstar_db.models import AnnotationsMetadata, VolumeChannelAnnotation
 from cellstar_preprocessor.flows.segmentation.omezarr_segmentations_preprocessing import (
     omezarr_segmentations_preprocessing,
 )
 from cellstar_preprocessor.flows.volume.omezarr_volume_annotations_preprocessing import (
     omezarr_volume_annotations_preprocessing,
 )
+from cellstar_preprocessor.flows.zarr_methods import open_zarr
+from cellstar_preprocessor.model.common import hex_to_rgba_normalized
 from cellstar_preprocessor.tests.helper_methods import (
     get_internal_volume_from_input,
     get_omezarr_internal_segmentation,
@@ -57,11 +50,9 @@ def test_omezarr_volume_annotations_preprocessing(omezar_test_input: TestInput):
 
         # d = root.attrs.annotations_dict"]
         assert d.entry_id.source_db_id == internal_volume.entry_data.source_db_id
-        assert (
-            d.entry_id.source_db_name == internal_volume.entry_data.source_db_name
-        )
+        assert d.entry_id.source_db_name == internal_volume.entry_data.source_db_name
 
-        description_items = list(d.descriptions.items())
+        list(d.descriptions.items())
 
         for channel_id, channel in enumerate(ome_zarr_attrs["omero"]["channels"]):
             # PLAN
@@ -82,7 +73,5 @@ def test_omezarr_volume_annotations_preprocessing(omezar_test_input: TestInput):
                 )
             )[0]
 
-            assert vol_ch_annotation.color == hex_to_rgba_normalized(
-                channel["color"]
-            )
+            assert vol_ch_annotation.color == hex_to_rgba_normalized(channel["color"])
             assert vol_ch_annotation.label == channel["label"]

@@ -2,12 +2,7 @@ import logging
 from typing import List
 
 import numpy as np
-from cellstar_db.models import (
-    DownsamplingLevelInfo,
-    MeshComponentNumbers,
-    Metadata,
-    VolumeMetadata,
-)
+from cellstar_db.models import DownsamplingLevelInfo, Metadata, VolumeMetadata
 
 
 class FileSystemVolumeMedatada(VolumeMetadata):
@@ -16,7 +11,7 @@ class FileSystemVolumeMedatada(VolumeMetadata):
 
     def model(self):
         return self.raw_metadata
-    
+
     def dict(self):
         return self.raw_metadata.dict()
 
@@ -47,7 +42,9 @@ class FileSystemVolumeMedatada(VolumeMetadata):
         if len(self.segmentation_lattice_ids()) > 0:
             s = []
             try:
-                s = self.raw_metadata.segmentation_lattices.sampling_info[lattice_id].spatial_downsampling_levels
+                s = self.raw_metadata.segmentation_lattices.sampling_info[
+                    lattice_id
+                ].spatial_downsampling_levels
             except Exception as e:
                 logging.error(e, stack_info=True, exc_info=True)
             return s
@@ -73,35 +70,31 @@ class FileSystemVolumeMedatada(VolumeMetadata):
         ].grid_dimensions
 
     def sampled_grid_dimensions(self, level: int) -> List[int]:
-        return self.raw_metadata.volumes.sampling_info.boxes[
-            str(level)
-        ].grid_dimensions
+        return self.raw_metadata.volumes.sampling_info.boxes[str(level)].grid_dimensions
 
     def descriptive_statistics(self, level: int, time: int, channel_id: str):
-        return self.raw_metadata.volumes.sampling_info.descriptive_statistics[str(level)][str(time)][str(channel_id)]
-        
+        return self.raw_metadata.volumes.sampling_info.descriptive_statistics[
+            str(level)
+        ][str(time)][str(channel_id)]
+
     def mean(self, level: int, time: int, channel_id: str) -> np.float32:
-        return np.float32(
-            self.descriptive_statistics(level, time, channel_id).mean
-        )
+        return np.float32(self.descriptive_statistics(level, time, channel_id).mean)
 
     def std(self, level: int, time: int, channel_id: str) -> np.float32:
-        return np.float32(
-            self.descriptive_statistics(level, time, channel_id).std
-        )
+        return np.float32(self.descriptive_statistics(level, time, channel_id).std)
 
     def max(self, level: int, time: int, channel_id: str) -> np.float32:
-        return np.float32(
-            self.descriptive_statistics(level, time, channel_id).max
-        )
+        return np.float32(self.descriptive_statistics(level, time, channel_id).max)
 
     def min(self, level: int, time: int, channel_id: str) -> np.float32:
-        return np.float32(
-            self.descriptive_statistics(level, time, channel_id).min
-        )
+        return np.float32(self.descriptive_statistics(level, time, channel_id).min)
 
     def mesh_component_numbers(self, segmentation_id: str, time: int):
-        return self.raw_metadata.segmentation_meshes.metadata[segmentation_id].mesh_timeframes[time]
+        return self.raw_metadata.segmentation_meshes.metadata[
+            segmentation_id
+        ].mesh_timeframes[time]
 
     def detail_lvl_to_fraction(self, segmentation_id: str, time: int):
-        return self.raw_metadata.segmentation_meshes.metadata[segmentation_id].detail_lvl_to_fraction
+        return self.raw_metadata.segmentation_meshes.metadata[
+            segmentation_id
+        ].detail_lvl_to_fraction

@@ -1,17 +1,5 @@
-from cellstar_db.models import (
-    GeometricSegmentationData,
-    GeometricSegmentationInputData,
-    GeometricSegmentationsMetadata,
-    Metadata,
-    TimeInfo,
-)
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
-from cellstar_preprocessor.flows.constants import (
-    DEFAULT_TIME_UNITS,
-    GEOMETRIC_SEGMENTATIONS_ZATTRS,
-    RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS,
-    TIME_INFO_STANDARD,
-)
+from cellstar_db.models import TimeInfo
+from cellstar_preprocessor.flows.constants import DEFAULT_TIME_UNITS, TIME_INFO_STANDARD
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
@@ -32,13 +20,11 @@ def geometric_segmentation_metadata_preprocessing(
         gs_metadata.ids.append(segmentation_id)
 
         raw = s.get_raw_geometric_segmentation_input_data()[segmentation_id]
-        
-        time_units = (
-            DEFAULT_TIME_UNITS if not raw.time_units else raw.time_units
-        )
+
+        time_units = DEFAULT_TIME_UNITS if not raw.time_units else raw.time_units
         time_info = TIME_INFO_STANDARD
         time_info.units = time_units
-        
+
         primitives = gs.primitives
         first_iteration = True
         # iterate over timeframe index and ShapePrimitiveData
