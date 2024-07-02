@@ -307,6 +307,9 @@ def omezarr_segmentation_metadata_preprocessing(internal_volume: InternalVolume)
     )
     ome_zarr_root = open_zarr(internal_volume.input_path)
 
+    
+    # should be same as volume
+    
     # new_volume_attrs_dict = _add_defaults_to_ome_zarr_attrs(ome_zarr_root=ome_zarr_root)
     # ome_zarr_root.attrs.put(new_volume_attrs_dict)
 
