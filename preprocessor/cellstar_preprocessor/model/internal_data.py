@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import zarr
 
-from cellstar_db.models import AnnotationsMetadata, DownsamplingParams, GeometricSegmentationData, GeometricSegmentationInputData, InputKind, Metadata, OMEZarrCoordinateTransformations, SegmentationKind, TimeTransformation
+from cellstar_db.models import AnnotationsMetadata, AxisName, DownsamplingParams, GeometricSegmentationData, GeometricSegmentationInputData, InputKind, Metadata, OMEZarrAxesType, OMEZarrCoordinateTransformations, SegmentationKind, SpatialAxisUnit, TimeAxisUnit, TimeTransformation
 from cellstar_db.models import (
     EntryData,
 )
@@ -20,10 +20,32 @@ class InternalData:
     entry_data: EntryData
     input_kind: InputKind
 
+    def get_source_axes_units(self) -> dict[AxisName, SpatialAxisUnit | TimeAxisUnit | None]:
+        if self.input_kind == InputKind.map:
+            # map always in angstroms
+            return {
+                AxisName.x: SpatialAxisUnit.angstrom,
+                AxisName.y: SpatialAxisUnit.angstrom,
+                AxisName.z: SpatialAxisUnit.angstrom
+            }
+        elif self.input_kind == InputKind.omezarr:
+            w = self.get_omezarr_wrapper()
+            multiscale = w.get_multiscale()
+            d: dict[AxisName, SpatialAxisUnit | TimeAxisUnit] = {}
+            axes = multiscale.axes
+            for idx, axis in enumerate(axes):
+                if axis.unit is None or axis.type == OMEZarrAxesType.channel:
+                    # order strict = zyx
+                    d[] = None
+                else:
+                    d[axis["name"]] = axis["unit"]
+
+            return d
+
     def get_first_resolution_group(self, data_group: zarr.Group) -> zarr.Group:
         first_resolution = sorted(data_group.group_keys())[0
                                                   ]
-        return v[first_resolution]
+        return data_group[first_resolution]
     
     def get_first_time_group(self, data_group: zarr.Group) -> zarr.Group:
         first_resolution_gr = self.get_first_resolution_group(data_group)
@@ -31,12 +53,12 @@ class InternalData:
         return first_resolution_gr[first_time]
     
     def get_first_channel_array(self, data_group: zarr.Group) -> zarr.Array:
-        first_time_gr = self.get_first_time_group()
+        first_time_gr = self.get_first_time_group(data_group)
         first_channel: str = sorted(first_time_gr.array_keys())[0]
         return first_time_gr[first_channel]
     
-    def get_start_end_time(self) -> tuple[int, int]:
-        first_resolution_gr = self.get_first_resolution_group()
+    def get_start_end_time(self, data_group: zarr.Group) -> tuple[int, int]:
+        first_resolution_gr = self.get_first_resolution_group(data_group)
         time_intervals = sorted(first_resolution_gr.group_keys())
         time_intervals = sorted(int(x) for x in time_intervals)
         start_time = min(time_intervals)

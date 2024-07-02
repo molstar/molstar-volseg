@@ -11,7 +11,8 @@ from pydantic import BaseModel, Extra, Field
 
 class ModelExtra(BaseModel, extra=Extra.allow):
     pass
-    
+
+
 class OMEZarrAxesType(str, Enum):
     space = "space",
     time = "time",
@@ -22,13 +23,13 @@ class SpatialAxisUnit(str, Enum):
     angstrom = "angstrom"
     # TODO: other
 
-class OMEZarrTimeAxesUnits(str, Enum):    
+class TimeAxisUnit(str, Enum):    
     millisecond = "millisecond"
 
 class OMEZarrAxisInfo(ModelExtra):
     name: str
     type: OMEZarrAxesType | None
-    unit: SpatialAxisUnit | OMEZarrTimeAxesUnits | None
+    unit: SpatialAxisUnit | TimeAxisUnit | None
 
 class OMEZarrCoordinateTransformations(ModelExtra):
     type: Literal["scale", "identity", "translation"]
@@ -268,6 +269,12 @@ class DownsamplingLevelInfo(BaseModel):
     level: int
     available: bool
 
+class AxisName(str, Enum):
+    x = "x"
+    y = "y"
+    z = "z"
+    t = "t"
+    c = "c"
 
 class SamplingInfo(BaseModel):
     # Info about "downsampling dimension"
@@ -275,9 +282,9 @@ class SamplingInfo(BaseModel):
     # the only thing which changes with SPATIAL downsampling is box!
     boxes: dict[int, SamplingBox]
     time_transformations: Optional[list[TimeTransformation]]
-    source_axes_units: dict[str, str]
-    # e.g. (0, 1, 2) as standard
-    original_axis_order: list[int, int, int]
+    # axis number to unit
+    source_axes_units: dict[AxisName, SpatialAxisUnit | TimeAxisUnit]
+    original_axis_order: list[AxisName]
 
 # TODO:
 class TimeInfo(BaseModel):

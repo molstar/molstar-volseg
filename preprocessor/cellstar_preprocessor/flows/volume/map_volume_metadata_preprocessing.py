@@ -129,12 +129,12 @@ def _get_volume_sampling_info(
 
 def map_volume_metadata_preprocessing(v: InternalVolume):
     channel_ids = v.get_channel_ids()
-    start_time, end_time = v.get_start_end_time()
+    start_time, end_time = v.get_start_end_time(v.get_volume_data_group())
     time_units = DEFAULT_TIME_UNITS
 
     volume_downsamplings = get_downsamplings(data_group=v.get_volume_data_group())
     # TODO: check - some units are defined (spatial?)
-    source_axes_units = {}
+    source_axes_units = v.get_source_axes_units()
     m = v.get_metadata()
     
     v.set_entry_id_in_metadata()

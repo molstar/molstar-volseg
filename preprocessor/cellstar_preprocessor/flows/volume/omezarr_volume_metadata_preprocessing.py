@@ -244,11 +244,9 @@ def omezarr_volume_metadata_preprocessing(v: InternalVolume):
     volume_downsamplings = get_downsamplings(data_group=root[VOLUME_DATA_GROUPNAME])
     
     channel_ids = v.get_channel_ids()
-    start_time, end_time = v.get_start_end_time()
+    start_time, end_time = v.get_start_end_time(v.get_volume_data_group())
 
-    # 1. Collect common metadata
-    m = v.get_metadata()
-    
+    m = v.get_metadata()    
     v.set_entry_id_in_metadata()
     
     m.volumes = VolumesMetadata(
@@ -281,88 +279,6 @@ def omezarr_volume_metadata_preprocessing(v: InternalVolume):
     sampling_info = v.get_volume_sampling_info()
     m.volumes.sampling_info = sampling_info
     
-    # should take into account coordinate transformations
-    
     v.get_volume_sampling_info()
-    
-    # lattice_dict = {}
-    # lattice_ids = []
-
-    # if LATTICE_SEGMENTATION_DATA_GROUPNAME in root:
-    #     m.segmentation_lattices = {
-    #         "segmentation_ids": [],
-    #         "segmentation_sampling_info": {},
-    #         "time_info": {},
-    #     }
-    #     for label_gr_name, label_gr in root[
-    #         LATTICE_SEGMENTATION_DATA_GROUPNAME
-    #     ].groups():
-    #         new_segm_attrs_dict = _add_defaults_to_ome_zarr_attrs(
-    #             ome_zarr_root=ome_zarr_root.labels[label_gr_name]
-    #         )
-    #         ome_zarr_root.labels[label_gr_name].attrs.put(new_segm_attrs_dict)
-
-    #         # each label group is lattice id
-    #         lattice_id = label_gr_name
-
-    #         # segm_downsamplings = sorted(label_gr.group_keys())
-    #         # # convert to ints
-    #         # segm_downsamplings = sorted([int(x) for x in segm_downsamplings])
-    #         # lattice_dict[str(lattice_id)] = segm_downsamplings
-
-    #         lattice_ids.append(lattice_id)
-
-    #         segmentation_downsamplings = get_downsamplings(data_group=label_gr)
-
-    #         first_available_segm_resolution = _get_first_available_resolution(
-    #             segmentation_downsamplings
-    #         )
-    #         m.segmentation_lattices["segmentation_sampling_info"][
-    #             str(lattice_id)
-    #         ] = {
-    #             # Info about "downsampling dimension"
-    #             "spatial_downsampling_levels": segmentation_downsamplings,
-    #             # the only thing with changes with SPATIAL downsampling is box!
-    #             "boxes": {},
-    #             "time_transformations": [],
-    #             "source_axes_units": _get_source_axes_units(
-    #                 ome_zarr_root_attrs=ome_zarr_root.labels[str(label_gr_name)].attrs
-    #             ),
-    #             "original_axis_order": _get_axis_order_omezarr(
-    #                 ome_zarr_attrs=ome_zarr_root.labels[str(label_gr_name)].attrs
-    #             ),
-    #         }
-    #         get_time_transformations(
-    #             ome_zarr_attrs=ome_zarr_root.labels[str(label_gr_name)].attrs,
-    #             time_transformations_list=m.segmentation_lattices.sampling_info[str(lattice_id)]["time_transformations"],
-    #         )
-    #         _get_segmentation_sampling_info(
-    #             root_data_group=label_gr,
-    #             sampling_info_dict=m.segmentation_lattices.sampling_info[str(lattice_id)],
-    #         )
-
-    #         get_origins(
-    #             ome_zarr_attrs=ome_zarr_root.labels[str(label_gr_name)].attrs,
-    #             boxes_dict=m.segmentation_lattices.sampling_info[str(lattice_id)].boxes,
-    #         )
-    #         get_voxel_sizes_in_downsamplings(
-    #             ome_zarr_attrs=ome_zarr_root.labels[str(label_gr_name)].attrs,
-    #             boxes_dict=m.segmentation_lattices.sampling_info[str(lattice_id)].boxes,
-    #         )
-
-    #         segm_start_time, segm_end_time = _get_start_end_time(
-    #             resolution_data_group=label_gr[first_available_segm_resolution]
-    #         )
-    #         # metadata_dict.segmentation_lattices["time_info"][label_gr_name] = {
-    #         #     kind="range",
-    #         #     start=segm_start_time,
-    #         #     end=segm_end_time,
-    #         #     units=get_time_units(
-    #         #         ome_zarr_attrs=ome_zarr_root.labels[str(label_gr_name)].attrs
-    #         #     ),
-    #         # }
-
-    #     m.segmentation_lattices.ids = lattice_ids
-
     v.set_metadata(m)
     return m

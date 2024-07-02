@@ -37,7 +37,7 @@ class InternalVolume(InternalData):
         return v[first_resolution][first_time].array_keys()
     
     def get_grid_dimensions(self):
-        return self.get_first_channel_array().shape
+        return self.get_first_channel_array(self.get_volume_data_group()).shape
     
     def get_volume_sampling_info(self):
         volume_data_group = self.get_volume_data_group()

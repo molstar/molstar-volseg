@@ -4,7 +4,7 @@
 
 import gc
 
-from cellstar_db.models import OMEZarrAxesType
+from cellstar_db.models import AxisName, OMEZarrAxesType
 from cellstar_preprocessor.flows.zarr_methods import create_dataset_wrapper
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import zarr
@@ -32,7 +32,7 @@ def omezarr_volume_preprocessing(v: InternalVolume):
         size_of_data_for_lvl = 0
         volume_channels_annotations = v.set_volume_channel_annotations()
         resolution_group = volume_data_gr.create_group(volume_arr_resolution)
-        if len(axes) == 5 and axes[0].type == OMEZarrAxesType.time:
+        if len(axes) == 5 and axes[0].name == AxisName.t:
             for i in range(volume_arr.shape[0]):
                 time_group = resolution_group.create_group(str(i))
                 for j in range(volume_arr.shape[1]):
@@ -68,7 +68,7 @@ def omezarr_volume_preprocessing(v: InternalVolume):
                     del corrected_volume_arr_data
                     gc.collect()
 
-        elif len(axes) == 4 and axes[0].type == OMEZarrAxesType.channel:
+        elif len(axes) == 4 and axes[0].name == AxisName.c:
             time_group = resolution_group.create_group("0")
             for j in range(volume_arr.shape[0]):
                 corrected_volume_arr_data = volume_arr[...][j].swapaxes(0, 2)

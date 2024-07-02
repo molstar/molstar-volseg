@@ -1,5 +1,6 @@
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.flows.zarr_methods import get_downsamplings
+from cellstar_preprocessor.model.segmentation import InternalSegmentation
 import numpy as np
 import zarr
 from cellstar_db.models import DownsamplingLevelInfo, Metadata
@@ -301,30 +302,16 @@ def _add_defaults_to_ome_zarr_attrs(ome_zarr_root: zarr.Group):
     return d
 
 
-def omezarr_segmentation_metadata_preprocessing(internal_volume: InternalVolume):
+def omezarr_segmentation_metadata_preprocessing(s: InternalSegmentation):
     root = open_zarr(
-        internal_volume.path
+        s.path
     )
-    ome_zarr_root = open_zarr(internal_volume.input_path)
+    ome_zarr_root = open_zarr(s.input_path)
+    w = s.get_omezarr_wrapper()
+    w.add_defaults_to_ome_zarr_attrs()
 
     
     # should be same as volume
-    
-    # new_volume_attrs_dict = _add_defaults_to_ome_zarr_attrs(ome_zarr_root=ome_zarr_root)
-    # ome_zarr_root.attrs.put(new_volume_attrs_dict)
-
-    # volume_downsamplings = get_downsamplings(data_group=root[VOLUME_DATA_GROUPNAME])
-    # first_available_image_resolution = _get_first_available_resolution(
-    #     volume_downsamplings
-    # )
-    # channel_ids = _get_channel_ids(
-    #     time_data_group=root[VOLUME_DATA_GROUPNAME][first_available_image_resolution][0]
-    # )
-    # start_time, end_time = _get_start_end_time(
-    #     resolution_data_group=root[VOLUME_DATA_GROUPNAME][
-    #         first_available_image_resolution
-    #     ]
-    # )
 
     metadata_dict: Metadata = root.attrs["metadata_dict"]
     lattice_ids = []

@@ -2,10 +2,14 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any, Literal
-from cellstar_db.models import OMEZarrAttrs, OMEZarrAxesType, SpatialAxisUnit, OMEZarrTimeAxesUnits, TimeTransformation
+from cellstar_db.models import AxisName, OMEZarrAttrs, OMEZarrAxesType, SpatialAxisUnit, TimeAxisUnit, TimeTransformation
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from pydantic import BaseModel, Extra
 import zarr
+
+# OMEZARR_AXIS_NUMBER_TO_NAME_ORDER = {
+#     0: 
+# }
 
 @dataclass
 class OMEZarrWrapper:
@@ -37,12 +41,12 @@ class OMEZarrWrapper:
         m = self.get_multiscale()
         axes = m.axes
         t_axis = axes[0]
-        assert t_axis.type is not None
-        if t_axis.type == OMEZarrAxesType.time:
+        # change to ax
+        if t_axis.name == AxisName.t:
             if t_axis.unit is not None:
                 return t_axis.unit
         # if first axes is not time
-        return OMEZarrTimeAxesUnits.millisecond
+        return TimeAxisUnit.millisecond
     
     def set_zattrs(self, new_zattrs: dict[str, Any]):
         root = self.get_root()
@@ -54,11 +58,11 @@ class OMEZarrWrapper:
         axes = zattrs.multiscales[0].axes
         for axis in axes:
             if axis.unit is None:
-                if axis.type is not None:
-                    if axis.type == OMEZarrAxesType.space:
-                        axis.unit = SpatialAxisUnit.angstrom
-                    elif axis.type == OMEZarrAxesType.time:
-                        axis.unit = OMEZarrTimeAxesUnits.millisecond
+                # if axis.type is not None:
+                if axis.name in [AxisName.x, AxisName.y, AxisName.z]:
+                    axis.unit = SpatialAxisUnit.angstrom
+                elif axis.name == AxisName.t:
+                    axis.unit = TimeAxisUnit.millisecond
                         
         self.set_zattrs(zattrs.dict())
         
@@ -69,7 +73,7 @@ class OMEZarrWrapper:
         axes = multiscales.axes
         datasets_meta = multiscales.datasets
         first_axis = axes[0]
-        if first_axis.type == OMEZarrAxesType.time:
+        if first_axis.name == AxisName.t:
             for idx, level in enumerate(datasets_meta):
                 assert level.coordinateTransformations[0].scale is not None, 'OMEZarr should conform to v4 specification with scale'
                 scale_arr = level.coordinateTransformations[0].scale
