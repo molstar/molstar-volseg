@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from cellstar_db.models import AnnotationsMetadata, EntryId, GeometricSegmentationsMetadata, MeshSegmentationsMetadata, Metadata, SpatialAxisUnit, SamplingInfo, SegmentationLatticesMetadata, TimeInfo, VolumeSamplingInfo, VolumesMetadata
+from cellstar_db.models import AnnotationsMetadata, AxisName, EntryId, GeometricSegmentationsMetadata, MeshSegmentationsMetadata, Metadata, SpatialAxisUnit, SamplingInfo, SegmentationLatticesMetadata, TimeAxisUnit, TimeInfo, VolumeSamplingInfo, VolumesMetadata
 
 CSV_WITH_ENTRY_IDS_FILE = Path(
     "test-data/preprocessor/db_building_parameters_custom_entries.csv"
@@ -40,6 +40,16 @@ MESH_VERTEX_DENSITY_THRESHOLD = {
     # 'area': 0.02,
     # 'volume': 0.0015,
 }
+DEFAULT_ORIGINAL_AXIS_ORDER = [
+    AxisName.x,
+    AxisName.y,
+    AxisName.z,
+]
+DEFAULT_SOURCE_AXES_UNITS = {
+                AxisName.x: SpatialAxisUnit.angstrom,
+                AxisName.y: SpatialAxisUnit.angstrom,
+                AxisName.z: SpatialAxisUnit.angstrom,
+            }
 
 SPACE_UNITS_CONVERSION_DICT = {SpatialAxisUnit.micrometer: 10000, SpatialAxisUnit.angstrom: 1}
 

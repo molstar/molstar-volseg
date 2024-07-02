@@ -24,13 +24,6 @@ from cellstar_preprocessor.tools.quantize_data.quantize_data import (
     decode_quantized_data,
 )
 
-
-def _get_axis_order_mrcfile(mrc_header: object):
-    h = mrc_header
-    current_order = int(h.mapc) - 1, int(h.mapr) - 1, int(h.maps) - 1
-    return current_order
-
-
 def _get_origin_and_voxel_sizes_from_map_header(
     mrc_header: object, volume_downsamplings: list[DownsamplingLevelInfo]
 ):

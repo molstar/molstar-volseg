@@ -1,14 +1,15 @@
 from dataclasses import dataclass
 from pathlib import Path
+from cellstar_preprocessor.model.volume import InternalVolume
 import zarr
 
 from cellstar_db.models import AnnotationsMetadata, AxisName, DownsamplingParams, GeometricSegmentationData, GeometricSegmentationInputData, InputKind, Metadata, OMEZarrAxesType, OMEZarrCoordinateTransformations, SegmentationKind, SpatialAxisUnit, TimeAxisUnit, TimeTransformation
 from cellstar_db.models import (
     EntryData,
 )
-from cellstar_preprocessor.flows.constants import GEOMETRIC_SEGMENTATIONS_ZATTRS, LATTICE_SEGMENTATION_DATA_GROUPNAME, MESH_SEGMENTATION_DATA_GROUPNAME, RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS, VOLUME_DATA_GROUPNAME
+from cellstar_preprocessor.flows.constants import DEFAULT_ORIGINAL_AXIS_ORDER, DEFAULT_SOURCE_AXES_UNITS, GEOMETRIC_SEGMENTATIONS_ZATTRS, LATTICE_SEGMENTATION_DATA_GROUPNAME, MESH_SEGMENTATION_DATA_GROUPNAME, RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS, VOLUME_DATA_GROUPNAME
 from cellstar_preprocessor.flows.omezarr import OMEZarrWrapper
-from cellstar_preprocessor.flows.volume.helper_methods import get_origin_from_map_header, get_voxel_sizes_from_map_header
+from cellstar_preprocessor.flows.volume.helper_methods import get_axis_order_mrcfile, get_origin_from_map_header, get_voxel_sizes_from_map_header
 from cellstar_preprocessor.flows.zarr_methods import get_downsamplings, open_zarr
 
 @dataclass
@@ -19,28 +20,6 @@ class InternalData:
     downsampling_parameters: DownsamplingParams
     entry_data: EntryData
     input_kind: InputKind
-
-    def get_source_axes_units(self) -> dict[AxisName, SpatialAxisUnit | TimeAxisUnit | None]:
-        if self.input_kind == InputKind.map:
-            # map always in angstroms
-            return {
-                AxisName.x: SpatialAxisUnit.angstrom,
-                AxisName.y: SpatialAxisUnit.angstrom,
-                AxisName.z: SpatialAxisUnit.angstrom
-            }
-        elif self.input_kind == InputKind.omezarr:
-            w = self.get_omezarr_wrapper()
-            multiscale = w.get_multiscale()
-            d: dict[AxisName, SpatialAxisUnit | TimeAxisUnit] = {}
-            axes = multiscale.axes
-            for idx, axis in enumerate(axes):
-                if axis.unit is None or axis.type == OMEZarrAxesType.channel:
-                    # order strict = zyx
-                    d[] = None
-                else:
-                    d[axis["name"]] = axis["unit"]
-
-            return d
 
     def get_first_resolution_group(self, data_group: zarr.Group) -> zarr.Group:
         first_resolution = sorted(data_group.group_keys())[0

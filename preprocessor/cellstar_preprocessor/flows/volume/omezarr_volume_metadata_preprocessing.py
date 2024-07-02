@@ -263,12 +263,8 @@ def omezarr_volume_metadata_preprocessing(v: InternalVolume):
             boxes={},
             descriptive_statistics={},
             time_transformations=[],
-            source_axes_units=_get_source_axes_units(
-                ome_zarr_root_attrs=ome_zarr_root.attrs
-            ),
-            original_axis_order=_get_axis_order_omezarr(
-                ome_zarr_attrs=ome_zarr_root.attrs
-            ),
+            source_axes_units=v.get_source_axes_units(),
+            original_axis_order=v.get_original_axis_order(),
         ),
     )
 
