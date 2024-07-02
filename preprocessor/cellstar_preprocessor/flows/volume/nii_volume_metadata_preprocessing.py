@@ -61,27 +61,27 @@ def _get_nii_volume_sampling_info(
 
     for res_gr_name, res_gr in root_data_group.groups():
         # create layers (time gr, channel gr)
-        sampling_info_dict["boxes"][res_gr_name] = {
+        sampling_info_dict.boxes[res_gr_name] = {
             "origin": origin,
             "voxel_size": voxel_sizes_in_downsamplings[int(res_gr_name)],
             "grid_dimensions": None,
             # 'force_dtype': None
         }
 
-        sampling_info_dict["descriptive_statistics"][res_gr_name] = {}
+        sampling_info_dict.descriptive_statistics[res_gr_name] = {}
 
         for time_gr_name, time_gr in res_gr.groups():
             first_group_key = sorted(time_gr.array_keys())[0]
 
-            sampling_info_dict["boxes"][res_gr_name]["grid_dimensions"] = time_gr[
+            sampling_info_dict.boxes[res_gr_name].grid_dimensions = time_gr[
                 first_group_key
             ].shape
             # sampling_info_dict['boxes'][res_gr_name]['force_dtype'] = time_gr[first_group_key].dtype.str
 
-            sampling_info_dict["descriptive_statistics"][res_gr_name][time_gr_name] = {}
+            sampling_info_dict.descriptive_statistics[res_gr_name][time_gr_name] = {}
             for channel_arr_name, channel_arr in time_gr.arrays():
                 assert (
-                    sampling_info_dict["boxes"][res_gr_name]["grid_dimensions"]
+                    sampling_info_dict.boxes[res_gr_name].grid_dimensions
                     == channel_arr.shape
                 )
                 # assert sampling_info_dict['boxes'][res_gr_name]['force_dtype'] == channel_arr.dtype.str
@@ -99,7 +99,7 @@ def _get_nii_volume_sampling_info(
                 max_val = float(str(arr_view.max()))
                 min_val = float(str(arr_view.min()))
 
-                sampling_info_dict["descriptive_statistics"][res_gr_name][time_gr_name][
+                sampling_info_dict.descriptive_statistics[res_gr_name][time_gr_name][
                     channel_arr_name
                 ] = {
                     "mean": mean_val,
@@ -126,14 +126,14 @@ def nii_volume_metadata_preprocessing(internal_volume: InternalVolume):
 
     source_axes_units = _get_source_axes_units(nii_header=internal_volume.map_header)
     metadata_dict = root.attrs["metadata_dict"]
-    metadata_dict["entry_id"]["source_db_name"] = source_db_name
-    metadata_dict["entry_id"]["source_db_id"] = source_db_id
-    metadata_dict["volumes"] = VolumesMetadata(
+    metadata_dict.entry_id.source_db_name = source_db_name
+    metadata_dict.entry_id.source_db_id = source_db_id
+    metadata_dict.volumes = VolumesMetadata(
         channel_ids=channel_ids,
         time_info=TimeInfo(
             kind="range", start=start_time, end=end_time, units=time_units
         ),
-        volume_sampling_info=VolumeSamplingInfo(
+        sampling_info=VolumeSamplingInfo(
             spatial_downsampling_levels=volume_downsamplings,
             boxes={},
             descriptive_statistics={},
@@ -144,7 +144,7 @@ def nii_volume_metadata_preprocessing(internal_volume: InternalVolume):
     )
     _get_nii_volume_sampling_info(
         root_data_group=root[VOLUME_DATA_GROUPNAME],
-        sampling_info_dict=metadata_dict["volumes"]["volume_sampling_info"],
+        sampling_info_dict=metadata_dict.volumes.sampling_info,
         nii_header=internal_volume.map_header,
         volume_downsamplings=volume_downsamplings,
     )

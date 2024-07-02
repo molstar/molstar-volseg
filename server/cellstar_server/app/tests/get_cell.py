@@ -8,13 +8,13 @@ test_configs = {
         "emd-1832": {
             "cell": {
                 "segmentation": "0",
-                "time": 0,
+                time=0,
                 "channel_id": "0",
                 "max_points": 100000000,
             },
             "down_sampled": {
                 "segmentation": "0",
-                "time": 0,
+                time=0,
                 "channel_id": "0",
                 "max_points": 10,
             },

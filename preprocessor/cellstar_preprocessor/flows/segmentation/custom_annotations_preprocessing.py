@@ -19,13 +19,13 @@ def custom_annotations_preprocessing(
         # 1. Updating segment list
         if "segmentation_lattices" in d:
             # if there are annotations already
-            if current_d["segmentation_lattices"]:
-                for lattice in current_d["segmentation_lattices"]:
+            if current_d.segmentation_lattices:
+                for lattice in current_d.segmentation_lattices:
                     old_segment_list = lattice["segment_list"]
                     to_be_added_segment_list = list(
                         filter(
                             lambda x: x["lattice_id"] == lattice["lattice_id"],
-                            d["segmentation_lattices"],
+                            d.segmentation_lattices,
                         )
                     )[0]["segment_list"]
 
@@ -66,7 +66,7 @@ def custom_annotations_preprocessing(
                     updated_segment_list = list_1 + segments_to_be_modified
                     lattice["segment_list"] = updated_segment_list
             else:
-                current_d["segmentation_lattices"] = d["segmentation_lattices"]
+                current_d.segmentation_lattices = d.segmentation_lattices
 
         # 2. Updating other information
         if "details" in d:
@@ -74,7 +74,7 @@ def custom_annotations_preprocessing(
         if "name" in d:
             current_d["name"] = d["name"]
         if "entry_id" in d:
-            current_d["entry_id"] = d["entry_id"]
+            current_d.entry_id = d.entry_id
         if d.volume_channels_annotations is not None:
         # if "volume_channels_annotations" in d:
             old_volume_channels_annotations_list = current_d.volume_channels_annotations

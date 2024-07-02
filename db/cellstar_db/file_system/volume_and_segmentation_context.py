@@ -221,15 +221,15 @@ class VolumeAndSegmentationContext:
         root: zarr.Group = open_zarr(
             self.intermediate_zarr_structure
         )
-        a: AnnotationsMetadata = root.attrs["annotations_dict"]
-        m: Metadata = root.attrs["metadata_dict"]
+        a = root.attrs["annotations_dict"]
+        m = root.attrs["metadata_dict"]
         save_dict_to_json_file(
-            a.dict(),
+            a,
             ANNOTATION_METADATA_FILENAME,
             self.path_to_entry,
         )
         save_dict_to_json_file(
-            m.dict(),
+            m,
             GRID_METADATA_FILENAME,
             self.path_to_entry,
         )

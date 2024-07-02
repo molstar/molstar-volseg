@@ -55,7 +55,7 @@ def _get_source_axes_units():
 def _get_segmentation_sampling_info(root_data_group, sampling_info_dict):
     for res_gr_name, res_gr in root_data_group.groups():
         # create layers (time gr, channel gr)
-        sampling_info_dict["boxes"][res_gr_name] = {
+        sampling_info_dict.boxes[res_gr_name] = {
             "origin": None,
             "voxel_size": None,
             "grid_dimensions": None,
@@ -63,7 +63,7 @@ def _get_segmentation_sampling_info(root_data_group, sampling_info_dict):
         }
 
         for time_gr_name, time_gr in res_gr.groups():
-            sampling_info_dict["boxes"][res_gr_name][
+            sampling_info_dict.boxes[res_gr_name][
                 "grid_dimensions"
             ] = time_gr.grid.shape
 
@@ -144,7 +144,7 @@ def ometiff_segmentation_metadata_preprocessing(
     if LATTICE_SEGMENTATION_DATA_GROUPNAME in root:
         lattice_ids = []
 
-        metadata_dict["segmentation_lattices"] = {
+        metadata_dict.segmentation_lattices = {
             "segmentation_ids": [],
             "segmentation_sampling_info": {},
             "time_info": {},
@@ -164,7 +164,7 @@ def ometiff_segmentation_metadata_preprocessing(
 
             segmentation_downsamplings = get_downsamplings(data_group=label_gr)
 
-            metadata_dict["segmentation_lattices"]["segmentation_sampling_info"][
+            metadata_dict.segmentation_lattices["segmentation_sampling_info"][
                 str(lattice_id)
             ] = {
                 # Info about "downsampling dimension"
@@ -178,36 +178,30 @@ def ometiff_segmentation_metadata_preprocessing(
 
             _get_segmentation_sampling_info(
                 root_data_group=label_gr,
-                sampling_info_dict=metadata_dict["segmentation_lattices"][
-                    "segmentation_sampling_info"
-                ][str(lattice_id)],
+                sampling_info_dict=metadata_dict.segmentation_lattices.sampling_info[str(lattice_id)],
             )
 
             get_ome_tiff_origins(
-                boxes_dict=metadata_dict["segmentation_lattices"][
-                    "segmentation_sampling_info"
-                ][str(lattice_id)]["boxes"],
+                boxes_dict=metadata_dict.segmentation_lattices.sampling_info[str(lattice_id)].boxes,
                 downsamplings=segmentation_downsamplings,
             )
 
             _get_ome_tiff_voxel_sizes_in_downsamplings(
                 internal_volume_or_segmentation=internal_segmentation,
-                boxes_dict=metadata_dict["segmentation_lattices"][
-                    "segmentation_sampling_info"
-                ][str(lattice_id)]["boxes"],
+                boxes_dict=metadata_dict.segmentation_lattices.sampling_info[str(lattice_id)].boxes,
                 downsamplings=segmentation_downsamplings,
                 ometiff_metadata=ometiff_metadata,
             )
 
             # NOTE: for now time 0
-            metadata_dict["segmentation_lattices"]["time_info"][label_gr_name] = {
-                "kind": "range",
-                "start": start_time,
-                "end": end_time,
-                "units": time_units,
-            }
+            # metadata_dict.segmentation_lattices["time_info"][label_gr_name] = {
+            #     kind="range",
+            #     start=start_time,
+            #     end=end_time,
+            #     units=time_units,
+            # }
 
-        metadata_dict["segmentation_lattices"]["segmentation_ids"] = lattice_ids
+        metadata_dict.segmentation_lattices.ids = lattice_ids
 
     root.attrs["metadata_dict"] = metadata_dict
     return metadata_dict

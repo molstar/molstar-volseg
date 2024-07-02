@@ -64,9 +64,9 @@ def test_omezarr_segmentation_annotations_preprocessing(omezar_test_input: TestI
             # for each label gr
             # check if for each
 
-            # # check if there is object in d["segmentation_lattices"] with that lattice_id == label_gr_name
-            # assert list(filter(lambda lat: lat["lattice_id"] == label_gr_name, d["segmentation_lattices"]))[0]
-            # lat_obj = list(filter(lambda lat: lat["lattice_id"] == label_gr_name, d["segmentation_lattices"]))[0]
+            # # check if there is object in d.segmentation_lattices with that lattice_id == label_gr_name
+            # assert list(filter(lambda lat: lat["lattice_id"] == label_gr_name, d.segmentation_lattices))[0]
+            # lat_obj = list(filter(lambda lat: lat["lattice_id"] == label_gr_name, d.segmentation_lattices))[0]
 
             labels_metadata_list = label_gr.attrs["image-label"]["colors"]
             for ind_label_meta in labels_metadata_list:

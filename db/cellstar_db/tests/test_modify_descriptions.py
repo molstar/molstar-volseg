@@ -8,8 +8,8 @@ from cellstar_db.tests.conftest import TEST_ENTRY_PREPROCESSOR_ARGUMENTS
 async def test_modify_descriptions(generate_test_data):
     testing_db, test_data = generate_test_data
     with testing_db.edit_annotations(
-        TEST_ENTRY_PREPROCESSOR_ARGUMENTS["source_db"],
-        TEST_ENTRY_PREPROCESSOR_ARGUMENTS["entry_id"],
+        TEST_ENTRY_PREPROCESSOR_ARGUMENTS.source_db,
+        TEST_ENTRY_PREPROCESSOR_ARGUMENTS.entry_id,
     ) as edit_annotations_context:
         edit_annotations_context: AnnnotationsEditContext
         await edit_annotations_context.add_or_modify_descriptions(
@@ -17,8 +17,8 @@ async def test_modify_descriptions(generate_test_data):
         )
 
         annotations_metadata: AnnotationsMetadata = await testing_db.read_annotations(
-            TEST_ENTRY_PREPROCESSOR_ARGUMENTS["source_db"],
-            TEST_ENTRY_PREPROCESSOR_ARGUMENTS["entry_id"],
+            TEST_ENTRY_PREPROCESSOR_ARGUMENTS.source_db,
+            TEST_ENTRY_PREPROCESSOR_ARGUMENTS.entry_id,
         )
         current_descriptions = annotations_metadata["descriptions"]
 

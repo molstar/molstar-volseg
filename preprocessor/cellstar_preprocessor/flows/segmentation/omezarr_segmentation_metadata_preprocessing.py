@@ -4,7 +4,7 @@ import numpy as np
 import zarr
 from cellstar_db.models import DownsamplingLevelInfo, Metadata
 from cellstar_preprocessor.flows.common import (
-    _convert_to_angstroms,
+    convert_to_angstroms,
 )
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
 from cellstar_preprocessor.model.volume import InternalVolume
@@ -48,13 +48,13 @@ def get_origins(ome_zarr_attrs, boxes_dict: dict):
             translation_arr = level["coordinateTransformations"][1]["translation"]
 
             # instead of swapaxes, -1, -2, -3
-            boxes_dict[level["path"]]["origin"] = [
+            boxes_dict[level["path"]].origin = [
                 translation_arr[-1],
                 translation_arr[-2],
                 translation_arr[-3],
             ]
         else:
-            boxes_dict[level["path"]]["origin"] = [0, 0, 0]
+            boxes_dict[level["path"]].origin = [0, 0, 0]
 
     # apply global
 
@@ -70,23 +70,23 @@ def get_origins(ome_zarr_attrs, boxes_dict: dict):
             )
 
             for resolution in boxes_dict:
-                boxes_dict[resolution]["origin"] = [
+                boxes_dict[resolution].origin = [
                     a + b
                     for a, b in zip(
-                        boxes_dict[resolution]["origin"], global_translation_arr
+                        boxes_dict[resolution].origin, global_translation_arr
                     )
                 ]
 
     # convert to angstroms
     for resolution in boxes_dict:
-        boxes_dict[resolution]["origin"][0] = _convert_to_angstroms(
-            boxes_dict[resolution]["origin"][0], input_unit=axes[-1]["unit"]
+        boxes_dict[resolution].origin[0] = convert_to_angstroms(
+            boxes_dict[resolution].origin[0], input_unit=axes[-1]["unit"]
         )
-        boxes_dict[resolution]["origin"][1] = _convert_to_angstroms(
-            boxes_dict[resolution]["origin"][1], input_unit=axes[-2]["unit"]
+        boxes_dict[resolution].origin[1] = convert_to_angstroms(
+            boxes_dict[resolution].origin[1], input_unit=axes[-2]["unit"]
         )
-        boxes_dict[resolution]["origin"][2] = _convert_to_angstroms(
-            boxes_dict[resolution]["origin"][2], input_unit=axes[-3]["unit"]
+        boxes_dict[resolution].origin[2] = convert_to_angstroms(
+            boxes_dict[resolution].origin[2], input_unit=axes[-3]["unit"]
         )
 
     return boxes_dict
@@ -140,10 +140,10 @@ def get_voxel_sizes_in_downsamplings(ome_zarr_attrs, boxes_dict):
             raise Exception("Length of scale arr is not supported")
 
         # x and z swapped
-        boxes_dict[level["path"]]["voxel_size"] = [
-            _convert_to_angstroms(scale_arr[2], input_unit=axes[-1]["unit"]),
-            _convert_to_angstroms(scale_arr[1], input_unit=axes[-2]["unit"]),
-            _convert_to_angstroms(scale_arr[0], input_unit=axes[-3]["unit"]),
+        boxes_dict[level["path"]].voxel_size = [
+            convert_to_angstroms(scale_arr[2], input_unit=axes[-1]["unit"]),
+            convert_to_angstroms(scale_arr[1], input_unit=axes[-2]["unit"]),
+            convert_to_angstroms(scale_arr[0], input_unit=axes[-3]["unit"]),
         ]
 
         if "coordinateTransformations" in multiscales[0]:
@@ -157,14 +157,14 @@ def get_voxel_sizes_in_downsamplings(ome_zarr_attrs, boxes_dict):
                     global_scale_arr = global_scale_arr[1:]
                 else:
                     raise Exception("Length of scale arr is not supported")
-                boxes_dict[level["path"]]["voxel_size"][0] = (
-                    boxes_dict[level["path"]]["voxel_size"][0] * global_scale_arr[2]
+                boxes_dict[level["path"]].voxel_size[0] = (
+                    boxes_dict[level["path"]].voxel_size[0] * global_scale_arr[2]
                 )
-                boxes_dict[level["path"]]["voxel_size"][1] = (
-                    boxes_dict[level["path"]]["voxel_size"][1] * global_scale_arr[1]
+                boxes_dict[level["path"]].voxel_size[1] = (
+                    boxes_dict[level["path"]].voxel_size[1] * global_scale_arr[1]
                 )
-                boxes_dict[level["path"]]["voxel_size"][2] = (
-                    boxes_dict[level["path"]]["voxel_size"][2] * global_scale_arr[0]
+                boxes_dict[level["path"]].voxel_size[2] = (
+                    boxes_dict[level["path"]].voxel_size[2] * global_scale_arr[0]
                 )
             else:
                 raise Exception("First transformation should be of scale type")
@@ -208,27 +208,27 @@ def _get_start_end_time(resolution_data_group) -> tuple[int, int]:
 def _get_volume_sampling_info(root_data_group: zarr.Group, sampling_info_dict):
     for res_gr_name, res_gr in root_data_group.groups():
         # create layers (time gr, channel gr)
-        sampling_info_dict["boxes"][res_gr_name] = {
+        sampling_info_dict.boxes[res_gr_name] = {
             "origin": None,
             "voxel_size": None,
             "grid_dimensions": None,
             # 'force_dtype': None
         }
 
-        sampling_info_dict["descriptive_statistics"][res_gr_name] = {}
+        sampling_info_dict.descriptive_statistics[res_gr_name] = {}
 
         for time_gr_name, time_gr in res_gr.groups():
             first_group_key = sorted(time_gr.array_keys())[0]
 
-            sampling_info_dict["boxes"][res_gr_name]["grid_dimensions"] = time_gr[
+            sampling_info_dict.boxes[res_gr_name].grid_dimensions = time_gr[
                 first_group_key
             ].shape
             # sampling_info_dict['boxes'][res_gr_name]['force_dtype'] = time_gr[first_group_key].dtype.str
 
-            sampling_info_dict["descriptive_statistics"][res_gr_name][time_gr_name] = {}
+            sampling_info_dict.descriptive_statistics[res_gr_name][time_gr_name] = {}
             for channel_arr_name, channel_arr in time_gr.arrays():
                 assert (
-                    sampling_info_dict["boxes"][res_gr_name]["grid_dimensions"]
+                    sampling_info_dict.boxes[res_gr_name].grid_dimensions
                     == channel_arr.shape
                 )
                 # assert sampling_info_dict['boxes'][res_gr_name]['force_dtype'] == channel_arr.dtype.str
@@ -246,7 +246,7 @@ def _get_volume_sampling_info(root_data_group: zarr.Group, sampling_info_dict):
                 max_val = float(str(arr_view.max()))
                 min_val = float(str(arr_view.min()))
 
-                sampling_info_dict["descriptive_statistics"][res_gr_name][time_gr_name][
+                sampling_info_dict.descriptive_statistics[res_gr_name][time_gr_name][
                     channel_arr_name
                 ] = {
                     "mean": mean_val,
@@ -259,7 +259,7 @@ def _get_volume_sampling_info(root_data_group: zarr.Group, sampling_info_dict):
 def _get_segmentation_sampling_info(root_data_group, sampling_info_dict):
     for res_gr_name, res_gr in root_data_group.groups():
         # create layers (time gr, channel gr)
-        sampling_info_dict["boxes"][res_gr_name] = {
+        sampling_info_dict.boxes[res_gr_name] = {
             "origin": None,
             "voxel_size": None,
             "grid_dimensions": None,
@@ -267,7 +267,7 @@ def _get_segmentation_sampling_info(root_data_group, sampling_info_dict):
         }
 
         for time_gr_name, time_gr in res_gr.groups():
-            sampling_info_dict["boxes"][res_gr_name][
+            sampling_info_dict.boxes[res_gr_name][
                 "grid_dimensions"
             ] = time_gr.grid.shape
 
@@ -326,7 +326,7 @@ def omezarr_segmentation_metadata_preprocessing(internal_volume: InternalVolume)
     metadata_dict: Metadata = root.attrs["metadata_dict"]
     lattice_ids = []
     assert LATTICE_SEGMENTATION_DATA_GROUPNAME, "No segmentation data available"
-    metadata_dict["segmentation_lattices"] = {
+    metadata_dict.segmentation_lattices = {
         "segmentation_ids": [],
         "segmentation_sampling_info": {},
         "time_info": {},
@@ -352,7 +352,7 @@ def omezarr_segmentation_metadata_preprocessing(internal_volume: InternalVolume)
         first_available_segm_resolution = _get_first_available_resolution(
             segmentation_downsamplings
         )
-        metadata_dict["segmentation_lattices"]["segmentation_sampling_info"][
+        metadata_dict.segmentation_lattices["segmentation_sampling_info"][
             str(lattice_id)
         ] = {
             # Info about "downsampling dimension"
@@ -369,43 +369,43 @@ def omezarr_segmentation_metadata_preprocessing(internal_volume: InternalVolume)
         }
         get_time_transformations(
             ome_zarr_attrs=ome_zarr_root.labels[str(label_gr_name)].attrs,
-            time_transformations_list=metadata_dict["segmentation_lattices"][
+            time_transformations_list=metadata_dict.segmentation_lattices[
                 "segmentation_sampling_info"
             ][str(lattice_id)]["time_transformations"],
         )
         _get_segmentation_sampling_info(
             root_data_group=label_gr,
-            sampling_info_dict=metadata_dict["segmentation_lattices"][
+            sampling_info_dict=metadata_dict.segmentation_lattices[
                 "segmentation_sampling_info"
             ][str(lattice_id)],
         )
 
         get_origins(
             ome_zarr_attrs=ome_zarr_root.labels[str(label_gr_name)].attrs,
-            boxes_dict=metadata_dict["segmentation_lattices"][
+            boxes_dict=metadata_dict.segmentation_lattices[
                 "segmentation_sampling_info"
-            ][str(lattice_id)]["boxes"],
+            ][str(lattice_id)].boxes,
         )
         get_voxel_sizes_in_downsamplings(
             ome_zarr_attrs=ome_zarr_root.labels[str(label_gr_name)].attrs,
-            boxes_dict=metadata_dict["segmentation_lattices"][
+            boxes_dict=metadata_dict.segmentation_lattices[
                 "segmentation_sampling_info"
-            ][str(lattice_id)]["boxes"],
+            ][str(lattice_id)].boxes,
         )
 
         segm_start_time, segm_end_time = _get_start_end_time(
             resolution_data_group=label_gr[first_available_segm_resolution]
         )
-        metadata_dict["segmentation_lattices"]["time_info"][label_gr_name] = {
-            "kind": "range",
-            "start": segm_start_time,
-            "end": segm_end_time,
-            "units": get_time_units(
-                ome_zarr_attrs=ome_zarr_root.labels[str(label_gr_name)].attrs
-            ),
-        }
+        # metadata_dict.segmentation_lattices["time_info"][label_gr_name] = {
+        #     kind="range",
+        #     start=segm_start_time,
+        #     end=segm_end_time,
+        #     units=get_time_units(
+        #         ome_zarr_attrs=ome_zarr_root.labels[str(label_gr_name)].attrs
+        #     ),
+        # }
 
-    metadata_dict["segmentation_lattices"]["segmentation_ids"] = lattice_ids
+    metadata_dict.segmentation_lattices.ids = lattice_ids
 
     root.attrs["metadata_dict"] = metadata_dict
     return metadata_dict

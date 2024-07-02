@@ -7,6 +7,7 @@ from cellstar_db.models import (
     GeometricSegmentationData,
     GeometricSegmentationInputData,
     SegmentAnnotationData,
+    SegmentationKind,
     ShapePrimitiveInputData,
     TargetId,
 )
@@ -19,84 +20,73 @@ from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
 def geometric_segmentation_annotations_preprocessing(
-    internal_segmentation: InternalSegmentation,
+    s: InternalSegmentation,
 ):
-    root = open_zarr(
-        internal_segmentation.path
-    )
-    d: AnnotationsMetadata = root.attrs["annotations_dict"]
-
-    d["entry_id"] = EntryId(
-        source_db_id=internal_segmentation.entry_data.source_db_id,
-        source_db_name=internal_segmentation.entry_data.source_db_name,
-    )
-
-    # NOTE: no volume channel annotations (no color, no labels)
-    root = open_zarr(
-        internal_segmentation.path
+    a = s.get_annotations()
+    
+    a.entry_id = EntryId(
+        source_db_id=s.entry_data.source_db_id,
+        source_db_name=s.entry_data.source_db_name,
     )
 
     # segmentation is in zattrs
-    geometric_segmentation_data: list[GeometricSegmentationData] = root.attrs[
-        GEOMETRIC_SEGMENTATIONS_ZATTRS
-    ]
+    geometric_segmentation_data = s.get_geometric_segmentation_data()
     # it is a list of objects each of which has timeframes as keys
-    for gs_set in geometric_segmentation_data:
-        set_id = gs_set["segmentation_id"]
+    for gs in geometric_segmentation_data:
+        segmentation_id = gs.segmentation_id
 
         # collect color from input data as well
-        raw_input_data = root.attrs[RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS][set_id]
-        input_data = GeometricSegmentationInputData(**raw_input_data)
-
-        primitives = gs_set["primitives"]
+        raw = s.get_raw_geometric_segmentation_input_data()[segmentation_id]
+        
+        primitives = gs.primitives
         # iterate over timeframe index and ShapePrimitiveData
         for timeframe_index, shape_primitive_data in primitives.items():
             # iterate over individual primitives
             time = int(timeframe_index)
-            for sp in shape_primitive_data["shape_primitive_list"]:
+            for sp in shape_primitive_data.shape_primitive_list:
                 # create description
                 description_id = str(uuid4())
-                target_id: TargetId = {
-                    "segment_id": sp["id"],
-                    "segmentation_id": set_id,
-                }
-                description: DescriptionData = {
-                    "id": description_id,
-                    "target_kind": "primitive",
-                    "details": None,
-                    "is_hidden": None,
-                    "metadata": None,
-                    "time": time,
-                    "name": sp["id"],
-                    "external_references": None,
-                    "target_id": target_id,
-                }
+                target_id = TargetId(
+                    segment_id=sp.id,
+                    segmentation_id=segmentation_id,
+                )
+                description=DescriptionData(
+                    id=description_id,
+                    target_kind=SegmentationKind.primitve,
+                    details=None,
+                    is_hidden=None,
+                    metadata=None,
+                    time=time,
+                    name=sp.id,
+                    external_references=None,
+                    target_id=target_id,
+                )
                 # get segment annotations
 
                 # how to get color from raw_input_data
                 # need to get raw input data for that shape primitive input
                 # raw input data should be dict
                 # with keys as set ids
-                sp_input_list = input_data.shape_primitives_input[time]
+                sp_input_list = raw.shape_primitives_input[time]
                 filter_results: list[ShapePrimitiveInputData] = list(
-                    filter(lambda s: s.parameters.id == sp["id"], sp_input_list)
+                    filter(lambda s: s.parameters.id == sp.id, sp_input_list)
                 )
                 assert len(filter_results) == 1
                 item: ShapePrimitiveInputData = filter_results[0]
                 color = item.parameters.color
 
-                segment_annotation: SegmentAnnotationData = {
-                    "id": str(uuid4()),
-                    "color": color,
-                    "segmentation_id": set_id,
-                    "segment_id": sp["id"],
-                    "segment_kind": "primitive",
-                    "time": time,
-                }
+                segment_annotation=SegmentAnnotationData(
+                    id=str(uuid4()),
+                    color=color,
+                    segmentation_id=segmentation_id,
+                    segment_id=sp["id"],
+                    segment_kind=SegmentationKind.primitve,
+                    time=time,
+                )
 
-                d["descriptions"][description_id] = description
-                d["segment_annotations"].append(segment_annotation)
+                a.descriptions[description_id] = description
+                a.segment_annotations.append(segment_annotation)
 
-    root.attrs["annotations_dict"] = d
+    s.set_annotations(a)
     print("Annotations extracted")
-    return d
+    return a

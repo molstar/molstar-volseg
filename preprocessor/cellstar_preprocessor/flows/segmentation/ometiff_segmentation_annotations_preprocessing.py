@@ -7,6 +7,7 @@ from cellstar_db.models import (
     AnnotationsMetadata,
     DescriptionData,
     SegmentAnnotationData,
+    SegmentationKind,
     TargetId,
 )
 from cellstar_preprocessor.flows.common import (
@@ -76,32 +77,32 @@ def ometiff_segmentation_annotations_preprocessing(
         # need to create two things: description and segment annotation
         # create description
         description_id = str(uuid4())
-        target_id: TargetId = {
-            "segment_id": label_value,
-            "segmentation_id": str(label_gr_name),
-        }
+        target_id = TargetId(
+            segment_id=label_value,
+            segmentation_id=str(label_gr_name),
+        )
 
         time = 0
-        description: DescriptionData = {
-            "id": description_id,
-            "target_kind": "lattice",
-            "details": None,
-            "is_hidden": None,
-            "metadata": None,
-            "time": time,
-            "name": label_gr_name,
-            "external_references": [],
-            "target_id": target_id,
-        }
+        description=DescriptionData(
+            id=description_id,
+            target_kind="lattice",
+            details=None,
+            is_hidden=None,
+            metadata=None,
+            time=time,
+            name=label_gr_name,
+            external_references=[],
+            target_id=target_id,
+        )
 
-        segment_annotation: SegmentAnnotationData = {
-            "id": str(uuid4()),
-            "color": ind_label_color_fractional,
-            "segmentation_id": str(label_gr_name),
-            "segment_id": label_value,
-            "segment_kind": "lattice",
-            "time": time,
-        }
+        segment_annotation=SegmentAnnotationData(
+            id=str(uuid4()),
+            color=ind_label_color_fractional,
+            segmentation_id=str(label_gr_name),
+            segment_id=label_value,
+            segment_kind=SegmentationKind.lattice,
+            time=time,
+        )
         d["descriptions"][description_id] = description
         d["segment_annotations"].append(segment_annotation)
 

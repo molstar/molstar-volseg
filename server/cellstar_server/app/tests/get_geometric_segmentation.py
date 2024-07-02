@@ -5,7 +5,7 @@ from cellstar_server.app.tests._test_server_runner import ServerTestBase
 
 # test_configs = {
 #     # "empiar": {"empiar-1.rec-geometric_segmentation": {
-#     #     # "0": {"segmentation_id": "0"}
+#     #     # "0": {segmentation_id="0"}
 #     #     }}
 # }
 
@@ -34,7 +34,7 @@ class FetchGeometricSegmentationTest(ServerTestBase):
         test_configs = {
             "empiar": {
                 "empiar-11756": {
-                    segmentation_id: {"segmentation_id": segmentation_id, "time": 0},
+                    segmentation_id: {segmentation_id=segmentation_id, time=0},
                 }
             }
         }

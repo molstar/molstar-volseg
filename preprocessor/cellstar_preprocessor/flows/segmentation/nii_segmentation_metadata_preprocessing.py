@@ -11,10 +11,10 @@ def _get_segmentation_sampling_info(
 ):
     for res_gr_name, res_gr in root_data_group.groups():
         # create layers (time gr, channel gr)
-        sampling_info_dict["boxes"][res_gr_name] = {
-            "origin": volume_sampling_info_dict["boxes"][res_gr_name]["origin"],
+        sampling_info_dict.boxes[res_gr_name] = {
+            "origin": volume_sampling_info_dict.boxes[res_gr_name].origin,
             # TODO: voxel size needs to be taken from header of nii file for segmentation?
-            "voxel_size": volume_sampling_info_dict["boxes"][res_gr_name]["voxel_size"],
+            "voxel_size": volume_sampling_info_dict.boxes[res_gr_name].voxel_size,
             "grid_dimensions": None,
             # 'force_dtype': None
         }
@@ -22,13 +22,13 @@ def _get_segmentation_sampling_info(
         for time_gr_name, time_gr in res_gr.groups():
             first_group_key = sorted(time_gr.group_keys())[0]
 
-            sampling_info_dict["boxes"][res_gr_name]["grid_dimensions"] = time_gr[
+            sampling_info_dict.boxes[res_gr_name].grid_dimensions = time_gr[
                 first_group_key
             ].grid.shape
 
             for channel_gr_name, channel_gr in time_gr.groups():
                 assert (
-                    sampling_info_dict["boxes"][res_gr_name]["grid_dimensions"]
+                    sampling_info_dict.boxes[res_gr_name].grid_dimensions
                     == channel_gr.grid.shape
                 )
 
@@ -58,7 +58,7 @@ def nii_segmentation_metadata_preprocessing(
         downsamplings = get_downsamplings(data_group=lattice_gr)
         lattice_ids.append(lattice_id)
 
-        metadata_dict["segmentation_lattices"]["segmentation_sampling_info"][
+        metadata_dict.segmentation_lattices["segmentation_sampling_info"][
             str(lattice_id)
         ] = {
             # Info about "downsampling dimension"
@@ -70,22 +70,22 @@ def nii_segmentation_metadata_preprocessing(
         }
         _get_segmentation_sampling_info(
             root_data_group=lattice_gr,
-            sampling_info_dict=metadata_dict["segmentation_lattices"][
+            sampling_info_dict=metadata_dict.segmentation_lattices[
                 "segmentation_sampling_info"
             ][str(lattice_id)],
-            volume_sampling_info_dict=metadata_dict["volumes"]["volume_sampling_info"],
+            volume_sampling_info_dict=metadata_dict.volumes.sampling_info,
         )
 
-        metadata_dict["segmentation_lattices"]["channel_ids"][lattice_id] = channel_ids
+        metadata_dict.segmentation_lattices["channel_ids"][lattice_id] = channel_ids
 
-        metadata_dict["segmentation_lattices"]["time_info"][lattice_id] = {
-            "kind": "range",
-            "start": start_time,
-            "end": end_time,
-            "units": time_units,
-        }
+        # metadata_dict.segmentation_lattices["time_info"][lattice_id] = {
+        #     kind="range",
+        #     start=start_time,
+        #     end=end_time,
+        #     units=time_units,
+        # }
 
-    metadata_dict["segmentation_lattices"]["segmentation_ids"] = lattice_ids
+    metadata_dict.segmentation_lattices.ids = lattice_ids
 
     root.attrs["metadata_dict"] = metadata_dict
     return metadata_dict

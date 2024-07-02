@@ -6,6 +6,7 @@ from cellstar_db.models import (
     DescriptionData,
     EntryId,
     SegmentAnnotationData,
+    SegmentationKind,
     TargetId,
 )
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
@@ -36,7 +37,7 @@ def mask_segmentation_annotations_preprocessing(
     )
     d: AnnotationsMetadata = root.attrs["annotations_dict"]
 
-    d["entry_id"] = EntryId(
+    d.entry_id = EntryId(
         source_db_id=internal_segmentation.entry_data.source_db_id,
         source_db_name=internal_segmentation.entry_data.source_db_name,
     )
@@ -106,10 +107,10 @@ def mask_segmentation_annotations_preprocessing(
             if segment_id > 0:
                 # create description
                 description_id = str(uuid4())
-                target_id: TargetId = {
-                    "segment_id": segment_id,
-                    "segmentation_id": str(lattice_id),
-                }
+                target_id = TargetId(
+                    segment_id=segment_id,
+                    segmentation_id=str(lattice_id),
+                )
                 # if segment is not in the mapping
                 # or if segmentation not in the mapping
                 # get default segment name
@@ -118,19 +119,19 @@ def mask_segmentation_annotations_preprocessing(
                     str(lattice_id),
                     str(segment_id),
                 )
-                description: DescriptionData = {
-                    "id": description_id,
-                    "target_kind": "lattice",
-                    "details": None,
-                    "is_hidden": None,
-                    "metadata": None,
-                    "time": 0,
+                description=DescriptionData(
+                    id=description_id,
+                    target_kind="lattice",
+                    details=None,
+                    is_hidden=None,
+                    metadata=None,
+                    time=0,
                     # here segment name from extra data if available
                     # 'name': f"Segment {segment_id}",
-                    "name": segment_name,
-                    "external_references": [],
-                    "target_id": target_id,
-                }
+                    name=segment_name,
+                    external_references=[],
+                    target_id=target_id,
+                )
                 # create segment annotation
                 color: list = [
                     palette[count][0],
@@ -139,14 +140,14 @@ def mask_segmentation_annotations_preprocessing(
                     1.0,
                 ]
                 count = count + 1
-                segment_annotation: SegmentAnnotationData = {
-                    "id": str(uuid4()),
-                    "color": color,
-                    "segmentation_id": str(lattice_id),
-                    "segment_id": segment_id,
-                    "segment_kind": "lattice",
-                    "time": 0,
-                }
+                segment_annotation=SegmentAnnotationData(
+                    id=str(uuid4()),
+                    color=color,
+                    segmentation_id=str(lattice_id),
+                    segment_id=segment_id,
+                    segment_kind=SegmentationKind.lattice,
+                    time=0,
+                )
                 d["descriptions"][description_id] = description
                 d["segment_annotations"].append(segment_annotation)
 

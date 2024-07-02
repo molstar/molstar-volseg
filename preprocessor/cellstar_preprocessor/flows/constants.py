@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from cellstar_db.models import AnnotationsMetadata, Metadata
+from cellstar_db.models import AnnotationsMetadata, EntryId, GeometricSegmentationsMetadata, MeshSegmentationsMetadata, Metadata, SpatialAxisUnit, SamplingInfo, SegmentationLatticesMetadata, TimeInfo, VolumeSamplingInfo, VolumesMetadata
 
 CSV_WITH_ENTRY_IDS_FILE = Path(
     "test-data/preprocessor/db_building_parameters_custom_entries.csv"
@@ -41,39 +41,74 @@ MESH_VERTEX_DENSITY_THRESHOLD = {
     # 'volume': 0.0015,
 }
 
-SPACE_UNITS_CONVERSION_DICT = {"micrometer": 10000, "angstrom": 1}
+SPACE_UNITS_CONVERSION_DICT = {SpatialAxisUnit.micrometer: 10000, SpatialAxisUnit.angstrom: 1}
 
-INIT_ANNOTATIONS_DICT = {
-    "descriptions": {},
-    "details": None,
-    "entry_id": {"source_db_name": "", "source_db_id": ""},
-    "name": None,
-    "segment_annotations": [],
-    "volume_channels_annotations": [],
-}
+BLANK_ENTRY_ID = EntryId(
+        source_db_name="",
+        source_db_id=""
+    )
 
-INIT_ANNOTATIONS_MODEL = AnnotationsMetadata.parse_obj(INIT_ANNOTATIONS_DICT)
 
-INIT_METADATA_DICT = {
-    "entry_id": {"source_db_name": "", "source_db_id": ""},
-    "volumes": None,
-    "geometric_segmentation": {"segmentation_ids": [], "time_info": {}},
-    "segmentation_lattices": {
-        "segmentation_ids": [],
-        "segmentation_sampling_info": {},
-        "time_info": {},
-    },
-    "segmentation_meshes": {
-        "segmentation_metadata": {},
-        "segmentation_ids": [],
-        "time_info": {},
-    },
-}
-INIT_METADATA_MODEL = Metadata.parse_obj(INIT_METADATA_DICT)
 
+TIME_INFO_STANDARD = TimeInfo(
+            end=0,
+            kind="range",
+            start=0,
+            units="millisecond",
+        )
+
+INIT_ANNOTATIONS_MODEL = AnnotationsMetadata(
+    descriptions={},
+    details=None,
+    entry_id=BLANK_ENTRY_ID,
+    name=None,
+    segment_annotations=[],
+    volume_channels_annotations=[]
+)
+
+BLANK_SAMPLING_INFO = SamplingInfo(
+    spatial_downsampling_levels=[],
+    boxes={},
+    time_transformations=[],
+    source_axes_units={},
+    original_axis_order=[],
+)
+
+INIT_METADATA_MODEL = Metadata(
+    entry_id=BLANK_ENTRY_ID,
+    volumes=VolumesMetadata(
+        channel_ids=[],
+        time_info=TIME_INFO_STANDARD,
+        sampling_info=VolumeSamplingInfo(
+            spatial_downsampling_levels=[],
+            boxes={},
+            time_transformations=[],
+            source_axes_units={},
+            original_axis_order=[],
+            descriptive_statistics=[]
+        )
+    ),
+    geometric_segmentation=GeometricSegmentationsMetadata(
+        ids=[],
+        time_info_mapping={}
+    ),
+    segmentation_lattices=SegmentationLatticesMetadata(
+        ids=[],
+        sampling_info={},
+        time_info_mapping={}
+    ),
+    segmentation_meshes=MeshSegmentationsMetadata(
+        ids=[],
+        metadata={},
+        time_info_mapping={}
+    ),
+    entry_metadata=None
+)
+DEFAULT_TIME_UNITS = "millisecond"
 GEOMETRIC_SEGMENTATIONS_ZATTRS = "geometric_segmentations"
 RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS = "raw_geometric_segmentation_input"
 SHORT_UNIT_NAMES_TO_LONG = {
     "µm": "micrometer",
     # TODO: support other units
 }
+

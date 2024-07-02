@@ -78,7 +78,7 @@ def hdf5_to_zarr(internal_segmentation: InternalSegmentation):
 def get_segmentation_sampling_info(root_data_group, sampling_info_dict):
     for res_gr_name, res_gr in root_data_group.groups():
         # create layers (time gr, channel gr)
-        sampling_info_dict["boxes"][res_gr_name] = {
+        sampling_info_dict.boxes[res_gr_name] = {
             "origin": None,
             "voxel_size": None,
             "grid_dimensions": None,
@@ -86,7 +86,7 @@ def get_segmentation_sampling_info(root_data_group, sampling_info_dict):
         }
 
         for time_gr_name, time_gr in res_gr.groups():
-            sampling_info_dict["boxes"][res_gr_name][
+            sampling_info_dict.boxes[res_gr_name][
                 "grid_dimensions"
             ] = time_gr.grid.shape
 

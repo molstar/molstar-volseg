@@ -138,7 +138,7 @@ def sff_segmentation_annotations_preprocessing(
             #             color=segment["colour"],
             #             segmentation_id=str(lattice_id),
             #             segment_id=segment["id"],
-            #             segment_kind="lattice",
+            #             segment_kind=SegmentationKind.lattice,
             #             time=time,
             #         )
             #         d.descriptions[description_id] = description
@@ -153,9 +153,9 @@ def sff_segmentation_annotations_preprocessing(
             # separate function
             # for segment in internal_segmentation.raw_sff_annotations["segment_list"]:
             #     description_id = str(uuid4())
-            #     target_id: TargetId = {
-            #         "segment_id": segment["id"],
-            #         "segmentation_id": str(set_id),
+            #     target_id = TargetId(
+            #         segment_id=segment["id"],
+            #         segmentation_id=str(set_id),
             #     }
             #     raw_external_references: list[ExternalReference] = segment[
             #         "biological_annotation"
@@ -163,24 +163,24 @@ def sff_segmentation_annotations_preprocessing(
             #     external_referneces: list[ExternalReference] = (
             #         _preprocess_raw_external_references(raw_external_references)
             #     )
-            #     description: DescriptionData = {
-            #         "id": description_id,
-            #         "target_kind": "mesh",
-            #         "details": None,
-            #         "is_hidden": None,
-            #         "metadata": None,
-            #         "time": time,
-            #         "name": segment["biological_annotation"]["name"],
+            #     description=DescriptionData(
+            #         id=description_id,
+            #         target_kind="mesh",
+            #         details=None,
+            #         is_hidden=None,
+            #         metadata=None,
+            #         time=time,
+            #         name=segment["biological_annotation"]["name"],
             #         "external_references": external_referneces,
-            #         "target_id": target_id,
+            #         target_id=target_id,
             #     }
-            #     segment_annotation: SegmentAnnotationData = {
-            #         "id": str(uuid4()),
-            #         "color": segment["colour"],
-            #         "segmentation_id": str(set_id),
-            #         "segment_id": segment["id"],
-            #         "segment_kind": "mesh",
-            #         "time": time,
+            #     segment_annotation=SegmentAnnotationData(
+            #         id=str(uuid4()),
+            #         .color=segment["colour"],
+            #         segmentation_id=str(set_id),
+            #         segment_id=segment["id"],
+            #         segment_kind="mesh",
+            #         time=time,
             #     }
             #     d["descriptions"][description_id] = description
             #     d["segment_annotations"].append(segment_annotation)

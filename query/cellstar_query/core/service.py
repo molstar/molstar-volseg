@@ -81,7 +81,7 @@ class VolumeServerService:
         except Exception:
             annotation = None
 
-        return {"grid": grid.json_metadata(), "annotation": annotation}
+        return {"grid": grid.dict(), "annotation": annotation}
 
     async def get_volume_data(
         self, req: VolumeRequestInfo, req_box: Optional[VolumeRequestBox] = None
@@ -242,7 +242,7 @@ class VolumeServerService:
         self, meta: VolumeMetadata, timeframe: int, segmentation_id: str
     ) -> dict[int, list[int]]:
         """Extract available segment_ids and detail_lvls for each segment_id"""
-        meta_js = meta.json_metadata()
+        meta_js = meta.dict()
         # should accept timeframe parameter and segmentation id
 
         segments_levels = (

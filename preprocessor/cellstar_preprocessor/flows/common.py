@@ -4,9 +4,10 @@ import json
 import math
 import re
 from pathlib import Path
-from typing import TypedDict, Union
+from typing import Union
 
 # from cellstar_db.file_system.constants import VOLUME_DATA_GROUPNAME
+from cellstar_db.models import SpatialAxisUnit, PreparedOMETIFFData
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
 import dask.array as da
 import numpy as np
@@ -69,30 +70,6 @@ def get_ometiff_source_metadata(int_vol_or_seg: InternalVolume | InternalSegment
     return int_vol_or_seg.custom_data["dataset_specific_data"]["ometiff"][
         "ometiff_source_metadata"
     ]
-
-
-def set_volume_custom_data(internal_volume: InternalVolume, zarr_structure: zarr.Group):
-    if "extra_data" in zarr_structure.attrs:
-        if "volume" in zarr_structure.attrs["extra_data"]:
-            internal_volume.custom_data = zarr_structure.attrs["extra_data"]["volume"]
-        else:
-            internal_volume.custom_data = {}
-    else:
-        internal_volume.custom_data = {}
-
-
-def set_segmentation_custom_data(
-    internal_segmentation: InternalSegmentation, zarr_structure: zarr.Group
-):
-    if "extra_data" in zarr_structure.attrs:
-        if "segmentation" in zarr_structure.attrs["extra_data"]:
-            internal_segmentation.custom_data = zarr_structure.attrs["extra_data"][
-                "segmentation"
-            ]
-        else:
-            internal_segmentation.custom_data = {}
-    else:
-        internal_segmentation.custom_data = {}
 
 
 # for maps
@@ -265,12 +242,12 @@ def _get_ometiff_physical_size(ome_tiff_metadata):
     return d
 
 
-def _convert_to_angstroms(value, input_unit: str):
+def convert_to_angstroms(value: float, input_unit: SpatialAxisUnit):
     # TODO: support other units
     if input_unit in SPACE_UNITS_CONVERSION_DICT:
         return value * SPACE_UNITS_CONVERSION_DICT[input_unit]
     else:
-        raise Exception(f"{input_unit} space unit is not supported")
+        raise Exception(f"{input_unit} spatial unit is not supported")
 
 
 def _convert_short_units_to_long(short_unit_name: str):
@@ -319,7 +296,7 @@ def _get_ome_tiff_voxel_sizes_in_downsamplings(
 
     # TODO: here check if internal_volume contains voxel_sizes
     if "voxel_size" in internal_volume_or_segmentation.custom_data:
-        l = internal_volume_or_segmentation.custom_data["voxel_size"]
+        l = internal_volume_or_segmentation.custom_data.voxel_size
         # if 'extra_data' in root.attrs:
         #     # TODO: this is in micrometers
         #     # we anyway do not support other units
@@ -338,29 +315,29 @@ def _get_ome_tiff_voxel_sizes_in_downsamplings(
         level = info["level"]
         downsampling_level = str(level)
         if downsampling_level == "1":
-            boxes_dict[downsampling_level]["voxel_size"] = [
-                _convert_to_angstroms(
+            boxes_dict[downsampling_level].voxel_size = [
+                convert_to_angstroms(
                     ometiff_physical_size_dict["x"], ometiff_axes_units_dict["x"]
                 ),
-                _convert_to_angstroms(
+                convert_to_angstroms(
                     ometiff_physical_size_dict["y"], ometiff_axes_units_dict["y"]
                 ),
-                _convert_to_angstroms(
+                convert_to_angstroms(
                     ometiff_physical_size_dict["z"], ometiff_axes_units_dict["z"]
                 ),
             ]
         else:
             # NOTE: rounding error - if one of dimensions in original data is odd
-            boxes_dict[downsampling_level]["voxel_size"] = [
-                _convert_to_angstroms(
+            boxes_dict[downsampling_level].voxel_size = [
+                convert_to_angstroms(
                     ometiff_physical_size_dict["x"] * int(downsampling_level),
                     ometiff_axes_units_dict["x"],
                 ),
-                _convert_to_angstroms(
+                convert_to_angstroms(
                     ometiff_physical_size_dict["y"] * int(downsampling_level),
                     ometiff_axes_units_dict["y"],
                 ),
-                _convert_to_angstroms(
+                convert_to_angstroms(
                     ometiff_physical_size_dict["z"] * int(downsampling_level),
                     ometiff_axes_units_dict["z"],
                 ),
@@ -395,15 +372,6 @@ def _get_missing_dims(sizesBF: list[int]):
     print(f"Missing dims: {missing}")
     return missing
 
-
-class PreparedOMETIFFData(TypedDict):
-    time: int
-    # channel would be int
-    # TODO: get its name later on
-    channel_number: int
-    data: np.ndarray
-
-
 def prepare_ometiff_for_writing(
     img_array: da.Array, metadata, int_vol_or_seg: InternalVolume | InternalSegmentation
 ):
@@ -417,12 +385,9 @@ def prepare_ometiff_for_writing(
     missing_dims = []
 
     if len(img_array.shape) != 5:
-        local_d = {"T": 0, "Z": 1, "C": 2, "Y": 3, "X": 4}
         missing_dims = _get_missing_dims(metadata["Sizes BF"])
         for missing_dim in missing_dims:
-            img_array = da.expand_dims(img_array, axis=local_d[missing_dim])
-
-        d = local_d
+            img_array = da.expand_dims(img_array, axis=d[missing_dim])
 
     CORRECT_ORDER = "TCXYZ"
     reorder_tuple = _create_reorder_tuple(d, CORRECT_ORDER)
@@ -440,11 +405,11 @@ def prepare_ometiff_for_writing(
         time_arr = rearranged_arr[time]
         for channel_number in range(time_arr.shape[0]):
             three_d_arr = time_arr[channel_number]
-            p: PreparedOMETIFFData = {
-                "channel_number": channel_number,
-                "time": time,
-                "data": three_d_arr,
-            }
+            p=PreparedOMETIFFData(
+                channel_number=channel_number,
+                time=time,
+                data=three_d_arr,
+            )
             prepared_data.append(p)
 
     artificial_channel_ids_dict = dict(
@@ -452,24 +417,10 @@ def prepare_ometiff_for_writing(
     )
     return prepared_data, artificial_channel_ids_dict
 
-
 def hex_to_rgba_normalized(channel_color_hex):
     channel_color_rgba = ImageColor.getcolor(f"#{channel_color_hex}", "RGBA")
     channel_color_rgba_fractional = tuple([i / 255 for i in channel_color_rgba])
     return channel_color_rgba_fractional
-
-
-def get_channel_annotations(ome_zarr_attrs: dict):
-    volume_channels_annotations: list[VolumeChannelAnnotation] = []
-    for channel_id, channel in enumerate(ome_zarr_attrs["omero"]["channels"]):
-        label = None if not channel["label"] else channel["label"]
-        volume_channels_annotations.append(
-            VolumeChannelAnnotation(channel_id=str(channel_id), color=hex_to_rgba_normalized(channel["color"]),
-                                    label=label)
-        )
-
-    return volume_channels_annotations
-
 
 def get_ome_tiff_origins(boxes_dict: dict, downsamplings: list[DownsamplingLevelInfo]):
     # NOTE: origins seem to be 0, 0, 0, as they are not specified
@@ -477,4 +428,4 @@ def get_ome_tiff_origins(boxes_dict: dict, downsamplings: list[DownsamplingLevel
     downsampling_levels = sorted([a["level"] for a in available])
     for level in downsampling_levels:
         downsampling_level = str(level)
-        boxes_dict[downsampling_level]["origin"] = [0, 0, 0]
+        boxes_dict[downsampling_level].origin = [0, 0, 0]

@@ -11,8 +11,8 @@ from cellstar_server.app.tests._test_server_runner import ServerTestBase
 test_configs = {
     "empiar": {
         "empiar-10070": {
-            "5": {"segmentation_id": "0", "segment_id": 1, "detail_lvl": 5, "time": 0},
-            "1": {"segmentation_id": "0", "segment_id": 1, "detail_lvl": 1, "time": 0},
+            "5": {segmentation_id="0", segment_id=1, "detail_lvl": 5, time=0},
+            "1": {segmentation_id="0", segment_id=1, "detail_lvl": 1, time=0},
         }
     }
 }

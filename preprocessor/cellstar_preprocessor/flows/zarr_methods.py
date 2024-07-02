@@ -46,7 +46,7 @@ def create_dataset_wrapper(
 
     return zarr_arr
 
-
+# TODO: refactor to internal data
 def get_downsamplings(data_group: zarr.Group) -> list[DownsamplingLevelInfo]:
     downsamplings = []
     for gr_name, gr in data_group.groups():

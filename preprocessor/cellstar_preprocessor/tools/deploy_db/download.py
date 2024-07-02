@@ -199,17 +199,17 @@ def _create_db_building_params(updated_download_items: list[InputItemParams]):
         # check if object exist in list
         target_item_idx = None
         for idx, p in enumerate(db_building_params):
-            if p["entry_id"] == item["entry_id"] and p["source_db"] == p["source_db"]:
+            if p.entry_id == item.entry_id and p.source_db == p.source_db:
                 target_item_idx = idx
                 break
 
         single_input = RawInput(path=str(complete_path.resolve()), kind=kind)
         if target_item_idx == None:
             input_for_building_db: InputForBuildingDatabase = {
-                "entry_id": item["entry_id"],
-                "source_db": item["source_db"],
-                "source_db_id": item["source_db_id"],
-                "source_db_name": item["source_db_name"],
+                "entry_id": item.entry_id,
+                "source_db": item.source_db,
+                "source_db_id": item.source_db_id,
+                "source_db_name": item.source_db_name,
                 "inputs": [single_input],
             }
             if "preprocessor_parameters" in i:
@@ -221,8 +221,8 @@ def _create_db_building_params(updated_download_items: list[InputItemParams]):
         else:
             f = list(
                 filter(
-                    lambda p: p["entry_id"] == item["entry_id"]
-                    and p["source_db"] == p["source_db"],
+                    lambda p: p.entry_id == item.entry_id
+                    and p.source_db == p.source_db,
                     db_building_params,
                 )
             )
@@ -258,7 +258,7 @@ def download(args: argparse.Namespace):
     download_items: list[InputItemParams] = []
 
     for item in download_params:
-        entry_folder_path = raw_unput_files_dir / item["source_db"] / item["entry_id"]
+        entry_folder_path = raw_unput_files_dir / item.source_db / item.entry_id
         for raw_input in item["inputs"]:
             d: InputItemParams = {
                 "raw_input_file_info": raw_input,

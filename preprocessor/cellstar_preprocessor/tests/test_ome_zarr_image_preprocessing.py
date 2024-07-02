@@ -22,7 +22,7 @@ def test_ome_zarr_image_preprocessing(omezar_test_input: TestInput):
             omezar_test_input, ctx.test_file_path, ctx.intermediate_zarr_structure_path
         )
 
-        omezarr_volume_preprocessing(internal_volume=internal_volume)
+        omezarr_volume_preprocessing(v=internal_volume)
 
         ome_zarr_root = zarr.open_group(internal_volume.input_path)
         root_zattrs = ome_zarr_root.attrs

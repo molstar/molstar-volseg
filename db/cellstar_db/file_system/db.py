@@ -312,7 +312,7 @@ class FileSystemVolumeServerDB(VolumeServerDB):
         )
         with open(path.resolve(), "r", encoding="utf-8") as f:
             # reads into dict
-            read_json_of_metadata: Metadata = json.load(f)
+            read_json_of_metadata: Metadata = Metadata.parse_file(f)
         return FileSystemVolumeMedatada(read_json_of_metadata)
 
     async def read_annotations(self, namespace: str, key: str) -> AnnotationsMetadata:

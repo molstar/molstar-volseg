@@ -9,48 +9,47 @@ from cellstar_preprocessor.flows.common import (
     prepare_ometiff_for_writing,
     read_ometiff_to_dask,
     set_ometiff_source_metadata,
-    set_segmentation_custom_data,
 )
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
 from cellstar_db.models import SegmentationPrimaryDescriptor
-from cellstar_preprocessor.model.segmentation import InternalSegmentation
+from cellstar_preprocessor.model.segmentation import InternalSegmentation, set_segmentation_extra_data
 
 
-def ometiff_segmentation_processing(internal_segmentation: InternalSegmentation):
+def ometiff_segmentation_processing(s: InternalSegmentation):
     # NOTE: supports only 3D images
 
     zarr_structure: zarr.Group = open_zarr(
-        internal_segmentation.path
+        s.path
     )
 
-    internal_segmentation.primary_descriptor = (
+    s.primary_descriptor = (
         SegmentationPrimaryDescriptor.three_d_volume
     )
 
     # create value_to_segment_id_dict artificially for each lattice
-    internal_segmentation.value_to_segment_id_dict = {}
+    s.value_to_segment_id_dict = {}
 
-    img_array, metadata, xml_metadata = read_ometiff_to_dask(internal_segmentation)
+    img_array, metadata, xml_metadata = read_ometiff_to_dask(s)
 
-    set_segmentation_custom_data(internal_segmentation, zarr_structure)
-    set_ometiff_source_metadata(internal_segmentation, metadata)
+    s.set_segmentation_custom_data()
+    set_ometiff_source_metadata(s, metadata)
 
-    print(f"Processing segmentation file {internal_segmentation.input_path}")
+    print(f"Processing segmentation file {s.input_path}")
 
     segmentation_data_gr: zarr.Group = zarr_structure.create_group(
         LATTICE_SEGMENTATION_DATA_GROUPNAME
     )
 
     prepared_data, artificial_channel_ids = prepare_ometiff_for_writing(
-        img_array, metadata, internal_segmentation
+        img_array, metadata, s
     )
 
-    if "channel_ids_mapping" not in internal_segmentation.custom_data:
-        internal_segmentation.custom_data["channel_ids_mapping"] = (
+    if "channel_ids_mapping" not in s.custom_data:
+        s.custom_data["channel_ids_mapping"] = (
             artificial_channel_ids
         )
 
-    channel_ids_mapping: dict[str, str] = internal_segmentation.custom_data[
+    channel_ids_mapping: dict[str, str] = s.custom_data[
         "segmentation_ids_mapping"
     ]
 
@@ -61,12 +60,12 @@ def ometiff_segmentation_processing(internal_segmentation: InternalSegmentation)
         lattice_id = channel_ids_mapping[str(channel_number)]
         time = data_item["time"]
 
-        internal_segmentation.value_to_segment_id_dict[lattice_id] = {}
+        s.value_to_segment_id_dict[lattice_id] = {}
         arr.compute_chunk_sizes()
         unique = da.unique(arr)
         unique.compute_chunk_sizes()
         for value in unique:
-            internal_segmentation.value_to_segment_id_dict[lattice_id][int(value)] = (
+            s.value_to_segment_id_dict[lattice_id][int(value)] = (
                 int(value)
             )
 

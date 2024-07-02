@@ -42,7 +42,7 @@ def ometiff_volume_annotations_preprocessing(internal_volume: InternalVolume):
         channel_ids_dict=channel_ids_dict,
     )
 
-    d["entry_id"] = EntryId(
+    d.entry_id = EntryId(
         source_db_id=internal_volume.entry_data.source_db_id,
         source_db_name=internal_volume.entry_data.source_db_name,
     )

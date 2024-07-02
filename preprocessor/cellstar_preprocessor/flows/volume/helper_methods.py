@@ -1,9 +1,7 @@
 from decimal import ROUND_CEILING, Decimal, getcontext
 import logging
 
-from cellstar_db.models import DownsamplingLevelInfo, InputKind
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
-from cellstar_preprocessor.model.common import InternalData
+from cellstar_db.models import DownsamplingLevelInfo
 import dask.array as da
 import numpy as np
 import zarr
@@ -29,7 +27,7 @@ def get_voxel_sizes_from_map_header(
         d["zLength"] / N[2],
     )
 
-    voxel_sizes: dict = {}
+    voxel_sizes: dict[int, tuple[float, float, float]] = {}
     for lvl in volume_downsamplings:
         rate = lvl.level
         voxel_sizes[rate] = tuple(

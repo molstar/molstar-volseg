@@ -1,70 +1,59 @@
 from cellstar_db.models import (
     GeometricSegmentationData,
     GeometricSegmentationInputData,
-    GeometricSegmentationSetsMetadata,
+    GeometricSegmentationsMetadata,
     Metadata,
     TimeInfo,
 )
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.flows.constants import (
+    DEFAULT_TIME_UNITS,
     GEOMETRIC_SEGMENTATIONS_ZATTRS,
     RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS,
+    TIME_INFO_STANDARD,
 )
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
 def geometric_segmentation_metadata_preprocessing(
-    internal_segmentation: InternalSegmentation,
+    s: InternalSegmentation,
 ):
-    root = open_zarr(
-        internal_segmentation.path
-    )
-    metadata_dict: Metadata = root.attrs["metadata_dict"]
 
+    m = s.get_metadata()
     # segmentation is in zattrs
-    geometric_segmentation_sets_metadata: GeometricSegmentationSetsMetadata = (
-        metadata_dict["geometric_segmentation"]
-    )
+    gs_metadata = m.geometric_segmentation
 
-    time_info_for_all_sets: dict[str, TimeInfo] = {}
+    time_info_mapping: dict[str, TimeInfo] = {}
 
-    geometric_segmentation_data: list[GeometricSegmentationData] = root.attrs[
-        GEOMETRIC_SEGMENTATIONS_ZATTRS
-    ]
+    gs_data = s.get_geometric_segmentation_data()
     # it is a list of objects each of which has timeframes as keys
-    for gs_set in geometric_segmentation_data:
-        set_id = gs_set["segmentation_id"]
-        geometric_segmentation_sets_metadata["segmentation_ids"].append(set_id)
+    for gs in gs_data:
+        segmentation_id = gs.segmentation_id
+        gs_metadata.ids.append(segmentation_id)
 
-        raw_input_data = root.attrs[RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS][set_id]
-        input_data = GeometricSegmentationInputData(**raw_input_data)
-
+        raw = s.get_raw_geometric_segmentation_input_data()[segmentation_id]
+        
         time_units = (
-            "millisecond" if not input_data.time_units else input_data.time_units
+            DEFAULT_TIME_UNITS if not raw.time_units else raw.time_units
         )
-        time_info: TimeInfo = {
-            "end": 0,
-            "kind": "range",
-            "start": 0,
-            # TODO: specify units of time in input?
-            "units": time_units,
-        }
-
-        primitives = gs_set["primitives"]
+        time_info = TIME_INFO_STANDARD
+        time_info.units = time_units
+        
+        primitives = gs.primitives
         first_iteration = True
         # iterate over timeframe index and ShapePrimitiveData
         for timeframe_index, shape_primitive_data in primitives.items():
             time = int(timeframe_index)
             if first_iteration:
-                time_info["start"] = time
+                time_info.start = time
                 first_iteration = False
-            time_info["end"] = time
+            time_info.end = time
 
-        time_info_for_all_sets[set_id] = time_info
+        time_info[segmentation_id] = time_info
 
-    geometric_segmentation_sets_metadata["time_info"] = time_info_for_all_sets
+    gs_metadata.time_info_mapping = time_info_mapping
 
-    metadata_dict["geometric_segmentation"] = geometric_segmentation_sets_metadata
+    m.geometric_segmentation = gs_metadata
 
-    root.attrs["metadata_dict"] = metadata_dict
-    return metadata_dict
+    s.set_metadata(m)
+    return m

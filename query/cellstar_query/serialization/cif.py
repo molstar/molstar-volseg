@@ -29,7 +29,7 @@ from cellstar_query.serialization.volume_cif_categories.volume_data_time_and_cha
 )
 from ciftools.serialization import create_binary_writer
 
-
+# TODO: change here as well
 def serialize_volume_slice(
     slice: SliceData, metadata: VolumeMetadata, box: GridSliceBox
 ) -> Union[bytes, str]:
@@ -41,15 +41,15 @@ def serialize_volume_slice(
     # writer.write_category(volume_info_category, [volume_info])
 
     channel_id = (
-        slice["channel_id"]
-        if "channel_id" in slice
-        else metadata.json_metadata()["volumes"]["channel_ids"][0]
+        slice.channel_id
+        if slice.channel_id != None
+        else metadata.model().volumes.channel_ids[0]
     )
     volume_info = VolumeInfo(
         name="volume",
         metadata=metadata,
         box=box,
-        time=slice["time"],
+        time=slice.time,
         channel_id=channel_id,
     )
 
@@ -59,7 +59,7 @@ def serialize_volume_slice(
     # VolumeDataTimeAndChannelInfo for volume and segmentation blocks
 
     # volume
-    if "volume_slice" in slice:
+    if slice.volume_slice is not None:
         writer.start_data_block("volume")  # Currently needs to be EM for
         writer.write_category(VolumeData3dInfoCategory, [volume_info])
         # which channel_id and time_id is it
@@ -72,8 +72,8 @@ def serialize_volume_slice(
 
     # segmentation
     if (
-        "segmentation_slice" in slice
-        and slice["segmentation_slice"]["category_set_ids"] is not None
+        slice.segmentation_slice is not None
+        and slice.segmentation_slice.category_set_ids is not None
     ):
         # TODO: add lattice_id info
         writer.start_data_block("segmentation_data")
@@ -81,10 +81,10 @@ def serialize_volume_slice(
         # which channel_id and time_id is it
         writer.write_category(VolumeDataTimeAndChannelInfo, [volume_info])
 
-        segmentation = slice["segmentation_slice"]
+        segmentation = slice.segmentation_slice
 
         # table
-        set_dict = segmentation["category_set_dict"]
+        set_dict = segmentation.category_set_dict
         segment_set_table = SegmentSetTable.from_dict(set_dict)
         writer.write_category(SegmentationDataTableCategory, [segment_set_table])
 
@@ -92,7 +92,7 @@ def serialize_volume_slice(
         # uint32
         writer.write_category(
             SegmentationData3dCategory,
-            [np.ravel(segmentation["category_set_ids"], order="F")],
+            [np.ravel(segmentation.category_set_ids, order="F")],
         )
 
     return writer.encode()

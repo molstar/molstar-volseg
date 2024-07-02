@@ -29,7 +29,7 @@ from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 # should return tuple - segmentation_id, primitives
 def _process_geometric_segmentation_data(
-    data: GeometricSegmentationInputData, zarr_structure_path: Path
+    data: GeometricSegmentationInputData
 ):
     shape_primitives_input = data.shape_primitives_input
     segmentation_id = data.segmentation_id
@@ -110,58 +110,30 @@ def _process_geometric_segmentation_data(
 
     return segmentation_id, primitives
 
-    # return d
-    # NOTE: from save annotations
-    # segm_data_gr.attrs["geometric_segmentation"] = d
-    # save_dict_to_json(d, GEOMETRIC_SEGMENTATION_FILENAME, zarr_structure_path)
 
-
-def geometric_segmentation_preprocessing(internal_segmentation: InternalSegmentation):
-    zarr_structure: zarr.Group = open_zarr(
-        internal_segmentation.path
-    )
-
-    input_paths = internal_segmentation.input_path
+def geometric_segmentation_preprocessing(s: InternalSegmentation):
+    input_paths: list[Path] = s.input_path
 
     for input_path in input_paths:
         if input_path.suffix == ".json":
             with open(str(input_path.resolve()), "r", encoding="utf-8") as f:
-                data = json.load(f)
+                json_data = json.load(f)
         else:
             raise Exception("Geometric segmentation input is not supported")
 
-        geometric_segmentation_input = GeometricSegmentationInputData(**data)
-        segmentation_id, primitives = _process_geometric_segmentation_data(
-            data=geometric_segmentation_input,
-            zarr_structure_path=internal_segmentation.path,
+        raw_input_data = GeometricSegmentationInputData.parse_obj(json_data)
+        custom_segmentation_id, primitives = _process_geometric_segmentation_data(
+            data=raw_input_data
         )
+        segmentation_id = str(uuid4())
+        if custom_segmentation_id:
+            segmentation_id = custom_segmentation_id
 
-        # create GeometricSegmentationData
-        # with new set id
-        set_id = str(uuid4())
-        if segmentation_id:
-            set_id = segmentation_id
-
-        geometric_segmentation_data: GeometricSegmentationData = {
-            "segmentation_id": set_id,
-            "primitives": primitives,
-        }
-        raw_geometric_segmentation_input = zarr_structure.attrs[
-            RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS
-        ]
-        raw_geometric_segmentation_input[set_id] = data
-        zarr_structure.attrs[RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS] = (
-            raw_geometric_segmentation_input
+        d=GeometricSegmentationData(
+            segmentation_id=segmentation_id,
+            primitive=primitives,
         )
-
-        # put to zattrs
-        # instead of append, add to existing one
-        existing_geometric_segmentations = zarr_structure.attrs[
-            GEOMETRIC_SEGMENTATIONS_ZATTRS
-        ]
-        existing_geometric_segmentations.append(geometric_segmentation_data)
-        zarr_structure.attrs[GEOMETRIC_SEGMENTATIONS_ZATTRS] = (
-            existing_geometric_segmentations
-        )
+        s.add_raw_geometric_segmentation_input_data(raw_input_data)
+        s.add_geometric_segmentation_data(d)
 
         print("Geometric segmentation processed")

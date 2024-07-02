@@ -45,7 +45,7 @@ def test_map_preprocessing(order: Literal["XYZ", "ZYX"]):
         internal_volume = get_internal_ZYX_volume(p)
 
     # internal_volume = INTERNAL_VOLUME_FOR_TESTING
-    map_volume_preprocessing(internal_volume=internal_volume)
+    map_volume_preprocessing(v=internal_volume)
 
     # check if zarr structure has right format
     # 1. open zarr structure

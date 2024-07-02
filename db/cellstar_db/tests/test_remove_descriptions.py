@@ -9,13 +9,13 @@ async def test_remove_descriptions(generate_test_data):
     testing_db, test_data = generate_test_data
     annotations_metadata_before_removing: AnnotationsMetadata = (
         await testing_db.read_annotations(
-            TEST_ENTRY_PREPROCESSOR_ARGUMENTS["source_db"],
-            TEST_ENTRY_PREPROCESSOR_ARGUMENTS["entry_id"],
+            TEST_ENTRY_PREPROCESSOR_ARGUMENTS.source_db,
+            TEST_ENTRY_PREPROCESSOR_ARGUMENTS.entry_id,
         )
     )
     with testing_db.edit_annotations(
-        TEST_ENTRY_PREPROCESSOR_ARGUMENTS["source_db"],
-        TEST_ENTRY_PREPROCESSOR_ARGUMENTS["entry_id"],
+        TEST_ENTRY_PREPROCESSOR_ARGUMENTS.source_db,
+        TEST_ENTRY_PREPROCESSOR_ARGUMENTS.entry_id,
     ) as edit_annotations_context:
         edit_annotations_context: AnnnotationsEditContext
         await edit_annotations_context.remove_descriptions(
@@ -26,8 +26,8 @@ async def test_remove_descriptions(generate_test_data):
         # i.e. if length of annotations list decreased by length of test_data['remove_descriptions']
         annotations_metadata_after_removing: AnnotationsMetadata = (
             await testing_db.read_annotations(
-                TEST_ENTRY_PREPROCESSOR_ARGUMENTS["source_db"],
-                TEST_ENTRY_PREPROCESSOR_ARGUMENTS["entry_id"],
+                TEST_ENTRY_PREPROCESSOR_ARGUMENTS.source_db,
+                TEST_ENTRY_PREPROCESSOR_ARGUMENTS.entry_id,
             )
         )
 

@@ -307,7 +307,7 @@ class OMEZARRMetadataCollectionTask(TaskBase):
 
     def execute(self) -> None:
         metadata_dict = omezarr_volume_metadata_preprocessing(
-            internal_volume=self.internal_volume
+            v=self.internal_volume
         )
 
 
@@ -335,7 +335,7 @@ class SFFMetadataCollectionTask(TaskBase):
 
     def execute(self) -> None:
         metadata_dict = sff_segmentation_metadata_preprocessing(
-            internal_segmentation=self.internal_segmentation
+            s=self.internal_segmentation
         )
 
 
@@ -348,7 +348,7 @@ class MaskMetadataCollectionTask(TaskBase):
         #     internal_segmentation=self.internal_segmentation
         # )
         metadata_dict = mask_segmentation_metadata_preprocessing(
-            internal_segmentation=self.internal_segmentation
+            s=self.internal_segmentation
         )
 
 
@@ -358,7 +358,7 @@ class GeometricSegmentationMetadataCollectionTask(TaskBase):
 
     def execute(self) -> None:
         metadata_dict = geometric_segmentation_metadata_preprocessing(
-            internal_segmentation=self.internal_segmentation
+            s=self.internal_segmentation
         )
 
 
@@ -450,7 +450,7 @@ class OMETIFFImageProcessingTask(TaskBase):
 
     def execute(self) -> None:
         volume = self.internal_volume
-        ometiff_volume_preprocessing(internal_volume=volume)
+        ometiff_volume_preprocessing(v=volume)
         volume_downsampling(internal_volume=volume)
 
 
@@ -460,7 +460,7 @@ class OMETIFFSegmentationProcessingTask(TaskBase):
 
     def execute(self) -> None:
         segmentation = self.internal_segmentation
-        ometiff_segmentation_processing(internal_segmentation=segmentation)
+        ometiff_segmentation_processing(s=segmentation)
         segmentation_downsampling(segmentation)
 
 
@@ -558,7 +558,7 @@ class MaskProcessSegmentationTask(TaskBase):
     def execute(self) -> None:
         segmentation = self.internal_segmentation
 
-        mask_segmentation_preprocessing(internal_segmentation=segmentation)
+        mask_segmentation_preprocessing(s=segmentation)
         segmentation_downsampling(segmentation)
 
 
@@ -569,7 +569,7 @@ class ProcessGeometricSegmentationTask(TaskBase):
     def execute(self) -> None:
         segmentation = self.internal_segmentation
 
-        geometric_segmentation_preprocessing(internal_segmentation=segmentation)
+        geometric_segmentation_preprocessing(s=segmentation)
 
 
 class GeometricSegmentationAnnotationsCollectionTask(TaskBase):
@@ -580,7 +580,7 @@ class GeometricSegmentationAnnotationsCollectionTask(TaskBase):
         segmentation = self.internal_segmentation
 
         geometric_segmentation_annotations_preprocessing(
-            internal_segmentation=segmentation
+            s=segmentation
         )
 
 
@@ -1059,7 +1059,7 @@ class Preprocessor:
                     self.preprocessor_input.entry_data.source_db,
                     self.preprocessor_input.entry_data.entry_id,
                 )
-                root.attrs["metadata_dict"] = volume_metadata.json_metadata()
+                root.attrs["metadata_dict"] = volume_metadata.dict()
                 root.attrs["annotations_dict"] = await db.read_annotations(
                     self.preprocessor_input.entry_data.source_db,
                     self.preprocessor_input.entry_data.entry_id,

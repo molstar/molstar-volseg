@@ -216,11 +216,11 @@ class FileSystemDBReadContext(DBReadContext):
                 if timer_printout == True:
                     print(f"read_volume_slice with mode {mode}: {end - start}")
 
-                return {
-                    "volume_slice": volume_slice,
-                    "time": time,
-                    "channel_id": channel_id,
-                }
+                return SliceData(
+                    volume_slice=volume_slice,
+                    time=time,
+                    channel_id=channel_id
+                )
             else:
                 raise HTTPException(
                     status_code=404,
@@ -270,14 +270,14 @@ class FileSystemDBReadContext(DBReadContext):
             if timer_printout == True:
                 print(f"read_segmentation_slice with mode {mode}: {end - start}")
 
-            return {
-                "segmentation_slice": {
-                    "category_set_ids": segm_slice,
-                    "category_set_dict": segm_dict,
-                    "lattice_id": lattice_id,
-                },
-                "time": time,
-            }
+            return SliceData(
+                segmentation_slice=LatticeSegmentationSliceData(
+                    category_set_ids=segm_slice,
+                    category_set_dict=segm_dict,
+                    lattice_id=lattice_id,
+                ),
+                time=time,
+            )
 
         except Exception as e:
             logging.error(e, stack_info=True, exc_info=True)
@@ -305,7 +305,7 @@ class FileSystemDBReadContext(DBReadContext):
                 arr=arr, box=box
             )
         else:
-            raise Exception("Slicing mode is not supported: {mode}")
+            raise Exception(f"Slicing mode is not supported: {mode}")
 
         return arr_slice
 

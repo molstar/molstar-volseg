@@ -55,7 +55,7 @@ def parse_script_args():
 def _preprocessor_internal_wrapper(
     input_for_building: InputForBuildingDatabase, db_path: str, working_folder: str
 ):
-    entry_id = input_for_building["entry_id"]
+    entry_id = input_for_building.entry_id
     print(f"Internal wrapper is adding {entry_id} to the database")
     quantize_downsampling_levels = None
     if "quantize_downsampling_levels" in input_for_building:
