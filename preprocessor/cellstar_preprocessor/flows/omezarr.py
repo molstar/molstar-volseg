@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
 import zarr
 from cellstar_db.models import (
     AxisName,
@@ -23,7 +24,7 @@ class OMEZarrWrapper:
     def get_image_resolutions(self):
         r_str = self.get_image_group().array_keys()
         return sorted([int(r) for r in r_str])
-    
+
     def get_label_resolutions(self, label_name: str):
         r_str = self.get_label_group()[label_name].group_keys()
         return sorted([int(r) for r in r_str])
@@ -47,7 +48,7 @@ class OMEZarrWrapper:
         """Only the first multiscale"""
         # NOTE: can be multiple multiscales, here picking just 1st
         return self.get_image_zattrs().multiscales[0]
-    
+
     def get_label_multiscale(self, label_name: str):
         """Only the first multiscale"""
         # NOTE: can be multiple multiscales, here picking just 1st

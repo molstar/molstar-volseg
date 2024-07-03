@@ -5,11 +5,6 @@ import typing
 from argparse import ArgumentError
 from pathlib import Path
 
-from cellstar_preprocessor.flows.segmentation.extract_tiff_segmentation_stack_dir_metadata import extract_tiff_segmentation_stack_dir_metadata
-from cellstar_preprocessor.flows.segmentation.tiff_segmentation_stack_dir_processing import tiff_segmentation_stack_dir_processing
-from cellstar_preprocessor.flows.volume.extract_tiff_image_stack_dir_metadata import extract_tiff_image_stack_dir_metadata
-from cellstar_preprocessor.flows.volume.pre_downsample_data import pre_downsample_data
-from cellstar_preprocessor.flows.volume.tiff_image_processing import tiff_image_stack_dir_processing
 import typer
 import zarr
 from cellstar_db.file_system.annotations_context import AnnnotationsEditContext
@@ -45,6 +40,9 @@ from cellstar_preprocessor.flows.constants import (
 )
 from cellstar_preprocessor.flows.segmentation.custom_annotations_preprocessing import (
     custom_annotations_preprocessing,
+)
+from cellstar_preprocessor.flows.segmentation.extract_tiff_segmentation_stack_dir_metadata import (
+    extract_tiff_segmentation_stack_dir_metadata,
 )
 from cellstar_preprocessor.flows.segmentation.geometric_segmentation_annotations_preprocessing import (
     geometric_segmentation_annotations_preprocessing,
@@ -106,6 +104,12 @@ from cellstar_preprocessor.flows.segmentation.sff_segmentation_metadata_preproce
 from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing import (
     sff_segmentation_preprocessing,
 )
+from cellstar_preprocessor.flows.segmentation.tiff_segmentation_stack_dir_processing import (
+    tiff_segmentation_stack_dir_processing,
+)
+from cellstar_preprocessor.flows.volume.extract_tiff_image_stack_dir_metadata import (
+    extract_tiff_image_stack_dir_metadata,
+)
 from cellstar_preprocessor.flows.volume.map_volume_metadata_preprocessing import (
     map_volume_metadata_preprocessing,
 )
@@ -136,6 +140,7 @@ from cellstar_preprocessor.flows.volume.omezarr_volume_metadata_preprocessing im
 from cellstar_preprocessor.flows.volume.omezarr_volume_preprocessing import (
     omezarr_volume_preprocessing,
 )
+from cellstar_preprocessor.flows.volume.pre_downsample_data import pre_downsample_data
 from cellstar_preprocessor.flows.volume.process_allencel_metadata_csv import (
     process_allencell_metadata_csv,
 )
@@ -149,6 +154,9 @@ from cellstar_preprocessor.flows.volume.process_volume_metadata import (
 from cellstar_preprocessor.flows.volume.quantize_internal_volume import (
     quantize_internal_volume,
 )
+from cellstar_preprocessor.flows.volume.tiff_image_processing import (
+    tiff_image_stack_dir_processing,
+)
 from cellstar_preprocessor.flows.volume.volume_downsampling import volume_downsampling
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
@@ -156,7 +164,6 @@ from cellstar_preprocessor.model.volume import InternalVolume
 from cellstar_preprocessor.tools.convert_app_specific_segm_to_sff.convert_app_specific_segm_to_sff import (
     convert_app_specific_segm_to_sff,
 )
-
 from pydantic import BaseModel
 
 
@@ -164,11 +171,14 @@ class InputT(BaseModel):
     path: Path | list[Path]
     kind: InputKind
 
+
 class TIFFImageStackDirInput(InputT):
     pass
 
+
 class TIFFSegmentationStackDirInput(InputT):
-    pass 
+    pass
+
 
 class OMETIFFImageInput(InputT):
     pass
@@ -249,7 +259,7 @@ SEGMENTATION_INPUT_TYPES = (
     GeometricSegmentationInput,
     OMETIFFSegmentationInput,
     OMEZARRInput,
-    TIFFSegmentationStackDirInput
+    TIFFSegmentationStackDirInput,
 )
 
 
@@ -325,9 +335,7 @@ class OMEZARRLabelsProcessTask(TaskBase):
         self.internal_segmentation = internal_segmentation
 
     def execute(self) -> None:
-        omezarr_segmentations_preprocessing(
-            s=self.internal_segmentation
-        )
+        omezarr_segmentations_preprocessing(s=self.internal_segmentation)
 
 
 class SFFMetadataCollectionTask(TaskBase):
@@ -514,6 +522,7 @@ class TIFFImageStackDirProcessingTask(TaskBase):
         tiff_image_stack_dir_processing(internal_volume=volume)
         volume_downsampling(internal_volume=volume)
 
+
 class TIFFSegmentationStackDirProcessingTask(TaskBase):
     def __init__(self, internal_segmentation: InternalSegmentation):
         self.internal_segmentation = internal_segmentation
@@ -523,6 +532,7 @@ class TIFFSegmentationStackDirProcessingTask(TaskBase):
         tiff_segmentation_stack_dir_processing(internal_segmentation)
         segmentation_downsampling(internal_segmentation)
 
+
 class TIFFImageStackDirMetadataExtractionTask(TaskBase):
     def __init__(self, internal_volume: InternalVolume):
         self.internal_volume = internal_volume
@@ -531,6 +541,7 @@ class TIFFImageStackDirMetadataExtractionTask(TaskBase):
         volume = self.internal_volume
         extract_tiff_image_stack_dir_metadata(internal_volume=volume)
 
+
 class TIFFSegmentationStackDirMetadataExtractionTask(TaskBase):
     def __init__(self, internal_segmentation: InternalSegmentation):
         self.internal_segmentation = internal_segmentation
@@ -538,12 +549,16 @@ class TIFFSegmentationStackDirMetadataExtractionTask(TaskBase):
     def execute(self) -> None:
         extract_tiff_segmentation_stack_dir_metadata(self.internal_segmentation)
 
+
 class TIFFSegmentationStackDirAnnotationCreationTask(TaskBase):
     def __init__(self, internal_segmentation: InternalSegmentation):
         self.internal_segmentation = internal_segmentation
 
     def execute(self) -> None:
-        mask_segmentation_annotations_preprocessing(internal_segmentation=self.internal_segmentation)
+        mask_segmentation_annotations_preprocessing(
+            internal_segmentation=self.internal_segmentation
+        )
+
 
 class ProcessExtraDataTask(TaskBase):
     def __init__(self, path: Path, intermediate_zarr_structure_path: Path):
@@ -1075,7 +1090,9 @@ class Preprocessor:
 
         return exists
 
-    async def initialization(self, mode: PreprocessorMode, extra_metadata: ExtraMetadata):
+    async def initialization(
+        self, mode: PreprocessorMode, extra_metadata: ExtraMetadata
+    ):
         self.intermediate_zarr_structure = (
             self.preprocessor_input.working_folder
             / self.preprocessor_input.entry_data.entry_id
@@ -1111,7 +1128,7 @@ class Preprocessor:
                 init_annotations_model = INIT_ANNOTATIONS_MODEL.copy()
                 if extra_metadata is not None:
                     init_metadata_model.extra_metadata = extra_metadata
-                    
+
                 root.attrs["metadata_dict"] = init_metadata_model.dict()
 
                 root.attrs["annotations_dict"] = init_annotations_model.dict()
@@ -1213,14 +1230,16 @@ async def main_preprocessor(
 ):
     # for k, v in arguments.items():
     #     setattr(args, k, v)
-    
+
     extra_metadata = ExtraMetadata()
     if a.pre_downsampling_factor:
         extra_metadata.pre_downsampling_factor = int(a.pre_downsampling_factor)
         # should not exclude extra data a
-        inputs = pre_downsample_data(a.inputs, extra_metadata.pre_downsampling_factor, a.working_folder)
+        inputs = pre_downsample_data(
+            a.inputs, extra_metadata.pre_downsampling_factor, a.working_folder
+        )
         a.inputs = inputs
-        
+
     preprocessor_input = PreprocessorInput(
         inputs=Inputs(files=[]),
         volume=VolumeParams(
@@ -1264,9 +1283,7 @@ async def main_preprocessor(
             raise Exception(
                 f"Entry {preprocessor_input.entry_data.entry_id} from {preprocessor_input.entry_data.source_db} source does not exist in database {preprocessor_input.db_path}"
             )
-        assert (
-            a.mode == PreprocessorMode.extend
-        ), "Preprocessor mode is not supported"
+        assert a.mode == PreprocessorMode.extend, "Preprocessor mode is not supported"
 
     await preprocessor.initialization(mode=a.mode, extra_metadata=extra_metadata)
     preprocessor.preprocessing()

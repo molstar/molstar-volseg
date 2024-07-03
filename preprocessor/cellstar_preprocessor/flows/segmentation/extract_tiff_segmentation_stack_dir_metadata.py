@@ -1,21 +1,19 @@
 from decimal import Decimal
-from cellstar_preprocessor.flows.zarr_methods import get_downsamplings, open_zarr
-from cellstar_preprocessor.model.segmentation import InternalSegmentation
+
 import dask.array as da
 import zarr
 from cellstar_db.models import (
-    OMETIFFSpecificExtraData,
+    DownsamplingLevelInfo,
+    Metadata,
+    SamplingInfo,
+    SegmentationLatticesMetadata,
     TimeInfo,
     VolumeSamplingInfo,
-    VolumesMetadata,
 )
-
-from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME, VOLUME_DATA_GROUPNAME
+from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
+from cellstar_preprocessor.flows.zarr_methods import get_downsamplings, open_zarr
+from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from cellstar_preprocessor.model.volume import InternalVolume
-
-from cellstar_db.models import DownsamplingLevelInfo
-
-from cellstar_db.models import Metadata, SamplingInfo, SegmentationLatticesMetadata
 
 SHORT_UNIT_NAMES_TO_LONG = {
     "µm": "micrometer",
@@ -102,10 +100,9 @@ SHORT_UNIT_NAMES_TO_LONG = {
 #     return axes_units
 
 
-
 def _get_voxel_sizes_in_downsamplings(
     original_voxel_size: list[float, float, float],
-    volume_downsamplings: list[DownsamplingLevelInfo]
+    volume_downsamplings: list[DownsamplingLevelInfo],
 ):
     voxel_sizes_in_downsamplings: dict = {}
     for level in volume_downsamplings:
@@ -115,13 +112,20 @@ def _get_voxel_sizes_in_downsamplings(
         )
     return voxel_sizes_in_downsamplings
 
-def _get_volume_sampling_info(root_data_group: zarr.Group, sampling_info_dict, internal_volume: InternalVolume):
+
+def _get_volume_sampling_info(
+    root_data_group: zarr.Group, sampling_info_dict, internal_volume: InternalVolume
+):
     volume_downsamplings = get_downsamplings(root_data_group)
     if "voxel_size" in internal_volume.custom_data:
-        voxel_sizes_in_downsamplings = _get_voxel_sizes_in_downsamplings(internal_volume.custom_data["voxel_size"], volume_downsamplings)
+        voxel_sizes_in_downsamplings = _get_voxel_sizes_in_downsamplings(
+            internal_volume.custom_data["voxel_size"], volume_downsamplings
+        )
     else:
-        raise Exception('Voxel size should be specified for TIFF stack image processing')
-    
+        raise Exception(
+            "Voxel size should be specified for TIFF stack image processing"
+        )
+
     for res_gr_name, res_gr in root_data_group.groups():
         # create layers (time gr, channel gr)
         sampling_info_dict["boxes"][res_gr_name] = {
@@ -181,16 +185,17 @@ def _get_volume_sampling_info(root_data_group: zarr.Group, sampling_info_dict, i
 # def _get_allencell_voxel_size(root: zarr.Group) -> list[float, float, float]:
 #     return root.attrs["extra_data"]["scale_micron"]
 
+
 def _get_tiff_segmentation_sampling_info(
     root_data_group: zarr.Group,
     sampling_info: SamplingInfo,
     # mrc_header: object,
     downsamplings: list[VolumeSamplingInfo],
-    internal_segmentation: InternalSegmentation
+    internal_segmentation: InternalSegmentation,
 ):
-    
+
     voxel_sizes_in_downsamplings: dict = {}
-    
+
     # TODO: get from file itself https://forum.image.sc/t/reading-pixel-size-from-image-file-with-python/74798/2
     if "voxel_size" in internal_segmentation.custom_data:
         original_voxel_size = internal_segmentation.custom_data["voxel_size"]
@@ -200,7 +205,7 @@ def _get_tiff_segmentation_sampling_info(
                 [float(Decimal(i) * Decimal(rate)) for i in original_voxel_size]
             )
     else:
-        raise Exception('Voxel size should be provided in extra data')
+        raise Exception("Voxel size should be provided in extra data")
     for res_gr_name, res_gr in root_data_group.groups():
         sampling_info["boxes"][res_gr_name] = {
             "origin": [0, 0, 0],
@@ -217,10 +222,10 @@ def _get_tiff_segmentation_sampling_info(
             ].shape
 
 
-def extract_tiff_segmentation_stack_dir_metadata(internal_segmentation: InternalSegmentation):
-    root = open_zarr(
-        internal_segmentation.intermediate_zarr_structure_path
-    )
+def extract_tiff_segmentation_stack_dir_metadata(
+    internal_segmentation: InternalSegmentation,
+):
+    root = open_zarr(internal_segmentation.intermediate_zarr_structure_path)
     # TODO: no metadata dict
     metadata_dict: Metadata = root.attrs["metadata_dict"]
 
@@ -253,10 +258,12 @@ def extract_tiff_segmentation_stack_dir_metadata(internal_segmentation: Internal
             time_transformations=[],
             source_axes_units=source_axes_units,
             # TODO: get?
-            original_axis_order=(0, 1, 2)
+            original_axis_order=(0, 1, 2),
         )
-        
-        _get_tiff_segmentation_sampling_info(lattice_gr, segmentation_sampling_info, downsamplings, internal_segmentation)
+
+        _get_tiff_segmentation_sampling_info(
+            lattice_gr, segmentation_sampling_info, downsamplings, internal_segmentation
+        )
 
         segmentation_lattices_metadata["segmentation_sampling_info"][
             str(lattice_id)
@@ -266,15 +273,13 @@ def extract_tiff_segmentation_stack_dir_metadata(internal_segmentation: Internal
     metadata_dict["segmentation_lattices"] = segmentation_lattices_metadata
 
     root.attrs["metadata_dict"] = metadata_dict
-    
-    
+
     return metadata_dict
-    
-    
+
     # root = open_zarr_structure_from_path(
     #     internal_segmentation.intermediate_zarr_structure_path
     # )
-    
+
     # source_db_name = internal_segmentation.entry_data.source_db_name
     # source_db_id = internal_segmentation.entry_data.source_db_id
 
@@ -286,18 +291,18 @@ def extract_tiff_segmentation_stack_dir_metadata(internal_segmentation: Internal
 
     # # TODO:
     # source_axes_units = {}
-    
+
     # metadata_dict = root.attrs["metadata_dict"]
     # metadata_dict["entry_id"]["source_db_name"] = source_db_name
     # metadata_dict["entry_id"]["source_db_id"] = source_db_id
-    
+
     # # channel_ids = ['0']
-    
+
     # # TODO: change
     # metadata_dict["volumes"] = SegmentationLatticesMetadata(
     #     segmentation_ids=
     # )
-    
+
     # VolumesMetadata(
     #     channel_ids=channel_ids,
     #     time_info=TimeInfo(

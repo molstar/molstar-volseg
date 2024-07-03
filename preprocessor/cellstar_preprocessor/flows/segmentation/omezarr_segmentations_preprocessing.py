@@ -1,11 +1,10 @@
 import gc
 
-from cellstar_db.models import AxisName
 import numcodecs
 import numpy as np
 import zarr
+from cellstar_db.models import AxisName
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
@@ -17,9 +16,7 @@ def omezarr_segmentations_preprocessing(s: InternalSegmentation):
     axes = multiscale.axes
 
     omezarr_root = w.get_image_group()
-    segmentation_data_gr = root.create_group(
-        LATTICE_SEGMENTATION_DATA_GROUPNAME
-    )
+    segmentation_data_gr = root.create_group(LATTICE_SEGMENTATION_DATA_GROUPNAME)
 
     # root_zattrs = ome_zarr_root.attrs
     # multiscales = root_zattrs["multiscales"]
@@ -28,7 +25,7 @@ def omezarr_segmentations_preprocessing(s: InternalSegmentation):
 
     # NOTE: hack to support NGFFs where image has time dimension > 1 and label has time dimension = 1
     original_resolution = w.get_image_resolutions()[0]
-    
+
     for label_name, label_gr in w.get_label_group().groups():
         multiscale = w.get_label_multiscale(label_name)
         # NOTE: can be multiple multiscales, here picking just 1st
@@ -196,8 +193,7 @@ def omezarr_segmentations_preprocessing(s: InternalSegmentation):
             ):
                 print(f"Data for resolution {arr_name} removed for segmentation")
                 del lattice_gr[arr_name]
-        
-        
+
         w.get_label_resolutions(label_name)
         all_resolutions = sorted(label_gr.array_keys())
         original_resolution = all_resolutions[0]
@@ -205,28 +201,18 @@ def omezarr_segmentations_preprocessing(s: InternalSegmentation):
             del lattice_gr[original_resolution]
             print("Original resolution data removed for segmentation")
 
-        if (
-            s.downsampling_parameters.max_downsampling_level
-            is not None
-        ):
+        if s.downsampling_parameters.max_downsampling_level is not None:
             for downsampling, downsampling_gr in lattice_gr.groups():
-                if (
-                    int(downsampling)
-                    > s.downsampling_parameters.max_downsampling_level
-                ):
+                if int(downsampling) > s.downsampling_parameters.max_downsampling_level:
                     del lattice_gr[downsampling]
                     print(
                         f"Data for downsampling {downsampling} removed for segmentation"
                     )
 
-        if (
-            s.downsampling_parameters.min_downsampling_level
-            is not None
-        ):
+        if s.downsampling_parameters.min_downsampling_level is not None:
             for downsampling, downsampling_gr in lattice_gr.groups():
                 if (
-                    int(downsampling)
-                    < s.downsampling_parameters.min_downsampling_level
+                    int(downsampling) < s.downsampling_parameters.min_downsampling_level
                     and downsampling != original_resolution
                 ):
                     del lattice_gr[downsampling]

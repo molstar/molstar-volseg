@@ -1,5 +1,7 @@
 from cellstar_db.models import InputKind
-from cellstar_preprocessor.flows.segmentation.extract_tiff_segmentation_stack_dir_metadata import extract_tiff_segmentation_stack_dir_metadata
+from cellstar_preprocessor.flows.segmentation.extract_tiff_segmentation_stack_dir_metadata import (
+    extract_tiff_segmentation_stack_dir_metadata,
+)
 from cellstar_preprocessor.flows.segmentation.geometric_segmentation_annotations_preprocessing import (
     geometric_segmentation_annotations_preprocessing,
 )

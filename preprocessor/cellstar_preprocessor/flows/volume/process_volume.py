@@ -8,7 +8,9 @@ from cellstar_preprocessor.flows.volume.ometiff_volume_preprocessing import (
 from cellstar_preprocessor.flows.volume.omezarr_volume_preprocessing import (
     omezarr_volume_preprocessing,
 )
-from cellstar_preprocessor.flows.volume.tiff_image_processing import tiff_image_stack_dir_processing
+from cellstar_preprocessor.flows.volume.tiff_image_processing import (
+    tiff_image_stack_dir_processing,
+)
 from cellstar_preprocessor.flows.volume.volume_downsampling import volume_downsampling
 from cellstar_preprocessor.model.volume import InternalVolume
 

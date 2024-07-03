@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from cellstar_preprocessor.flows.volume.helper_methods import get_origin_from_map_header, get_voxel_sizes_from_map_header
 import zarr
 from cellstar_db.models import (
     AnnotationsMetadata,
@@ -22,6 +21,10 @@ from cellstar_preprocessor.flows.constants import (
     VOLUME_DATA_GROUPNAME,
 )
 from cellstar_preprocessor.flows.omezarr import OMEZarrWrapper
+from cellstar_preprocessor.flows.volume.helper_methods import (
+    get_origin_from_map_header,
+    get_voxel_sizes_from_map_header,
+)
 from cellstar_preprocessor.flows.zarr_methods import get_downsamplings, open_zarr
 
 

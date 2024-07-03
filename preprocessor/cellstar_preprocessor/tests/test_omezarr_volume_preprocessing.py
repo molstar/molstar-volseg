@@ -1,11 +1,10 @@
-from cellstar_db.models import AxisName
 import pytest
 import zarr
+from cellstar_db.models import AxisName
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
 from cellstar_preprocessor.flows.volume.omezarr_volume_preprocessing import (
     omezarr_volume_preprocessing,
 )
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.tests.helper_methods import get_internal_volume_from_input
 from cellstar_preprocessor.tests.input_for_tests import (
     OMEZARR_TEST_INPUTS,
@@ -26,8 +25,7 @@ def test_omezarr_volume_preprocessing(omezar_test_input: TestInput):
         omezarr_volume_preprocessing(v=v)
 
         w = v.get_omezarr_wrapper()
-        
-        
+
         # ome_zarr_root = zarr.open_group(v.input_path)
         # root_zattrs = ome_zarr_root.attrs
         # multiscales = root_zattrs["multiscales"]

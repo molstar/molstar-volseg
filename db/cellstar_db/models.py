@@ -417,8 +417,10 @@ class VolumesMetadata(BaseModel):
     time_info: TimeInfo
     sampling_info: VolumeSamplingInfo
 
+
 class ExtraMetadata(BaseModel):
     pre_downsampling_factor: int | None
+
 
 class EntryId(BaseModel):
     source_db_name: str

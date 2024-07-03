@@ -1,4 +1,3 @@
-from cellstar_preprocessor.flows.omezarr import OMEZarrWrapper
 import pytest
 from cellstar_db.models import AnnotationsMetadata, VolumeChannelAnnotation
 from cellstar_preprocessor.flows.segmentation.omezarr_segmentations_preprocessing import (
@@ -7,7 +6,6 @@ from cellstar_preprocessor.flows.segmentation.omezarr_segmentations_preprocessin
 from cellstar_preprocessor.flows.volume.omezarr_volume_annotations_preprocessing import (
     omezarr_volume_annotations_preprocessing,
 )
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.common import hex_to_rgba_normalized
 from cellstar_preprocessor.tests.helper_methods import (
     get_internal_volume_from_input,
@@ -37,9 +35,7 @@ def test_omezarr_volume_annotations_preprocessing(omezar_test_input: TestInput):
         )
 
         omezarr_segmentations_preprocessing(s=internal_segmentation)
-        d: AnnotationsMetadata = omezarr_volume_annotations_preprocessing(
-            v=v
-        )
+        d: AnnotationsMetadata = omezarr_volume_annotations_preprocessing(v=v)
         # d = omezarr
 
         # root = open_zarr_structure_from_path(

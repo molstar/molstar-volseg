@@ -1,5 +1,7 @@
 from cellstar_db.models import InputKind
-from cellstar_preprocessor.flows.volume.extract_tiff_image_stack_dir_metadata import extract_tiff_image_stack_dir_metadata
+from cellstar_preprocessor.flows.volume.extract_tiff_image_stack_dir_metadata import (
+    extract_tiff_image_stack_dir_metadata,
+)
 from cellstar_preprocessor.flows.volume.map_volume_metadata_preprocessing import (
     map_volume_metadata_preprocessing,
 )

@@ -1,11 +1,10 @@
-from cellstar_db.models import AxisName, SegmentationKind
 import pytest
 import zarr
+from cellstar_db.models import AxisName, SegmentationKind
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
 from cellstar_preprocessor.flows.segmentation.omezarr_segmentations_preprocessing import (
     omezarr_segmentations_preprocessing,
 )
-from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.tests.helper_methods import get_omezarr_internal_segmentation
 from cellstar_preprocessor.tests.input_for_tests import (
     OMEZARR_TEST_INPUTS,
@@ -26,7 +25,7 @@ def test_omezarr_segmentations_preprocessing(omezar_test_input: TestInput):
         omezarr_segmentations_preprocessing(s=s)
         w = s.get_omezarr_wrapper()
         root = s.get_zarr_root()
-        
+
         assert LATTICE_SEGMENTATION_DATA_GROUPNAME in root
         segmentation_gr = s.get_segmentation_data_group(SegmentationKind.lattice)
         assert isinstance(segmentation_gr, zarr.Group)
@@ -56,17 +55,17 @@ def test_omezarr_segmentations_preprocessing(omezar_test_input: TestInput):
                     n_of_time_groups = 1
                 else:
                     raise Exception("Axes number/order is not supported")
-                
-                original_resolution = w.get_image_multiscale().datasets[
-                    0
-                ].path
+
+                original_resolution = w.get_image_multiscale().datasets[0].path
 
                 if len(axes) == 5 and axes[0].name == AxisName.t:
-                    image_time_dimension = w.get_image_group()[original_resolution].shape[0]
+                    image_time_dimension = w.get_image_group()[
+                        original_resolution
+                    ].shape[0]
                 elif len(axes) == 4 and axes[0].name == AxisName.c:
                     image_time_dimension = 1
                 else:
-                    raise Exception('Axes length is not supported')
+                    raise Exception("Axes length is not supported")
 
                 label_time_dimension = arr.shape[0]
 

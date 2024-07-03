@@ -297,7 +297,7 @@ def _add_defaults_to_ome_zarr_attrs(ome_zarr_root: zarr.Group):
 
 
 def omezarr_segmentation_metadata_preprocessing(s: InternalSegmentation):
-    root = open_zarr(s.path)
+    open_zarr(s.path)
     s.set_segmentation_lattices_metadata()
 
     # m: Metadata = root.attrs["metadata_dict"]
