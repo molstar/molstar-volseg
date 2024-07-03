@@ -3,7 +3,8 @@ import logging
 import math
 import zlib
 from pathlib import Path
-
+from vtk import vtkPolyData
+from cellstar_preprocessor.tools.open_wrl_file.mesh import create_mesh_from_vertices_and_triangles, decimate_mesh, get_vertices_and_triangles_from_vtk_mesh
 import h5py
 import numcodecs
 import numpy as np
@@ -251,6 +252,12 @@ def compute_vertex_density(mesh_list_group: zarr.hierarchy.group, mode="area"):
         return total_vertex_count / total_volume
 
 
+def _convert_mesh_to_vtk_mesh(mesh_from_zarr: zarr.Group):
+    vertices = mesh_from_zarr.vertices[...]
+    triangles = mesh_from_zarr.triangles[...]
+    vtk_mesh = create_mesh_from_vertices_and_triangles(triangles, vertices)
+    return vtk_mesh
+
 def _convert_mesh_to_vedo_obj(mesh_from_zarr):
     vertices = mesh_from_zarr.vertices[...]
     triangles = mesh_from_zarr.triangles[...]
@@ -263,6 +270,13 @@ def _decimate_vedo_obj(vedo_obj, ratio):
     # would it break with empiar 10070?
     # no
     return vedo_obj.decimate(fraction=ratio)
+
+def _decimate_vtk_mesh(vtk_mesh: vtkPolyData, fraction: float):
+    return decimate_mesh(vtk_mesh, fraction)
+
+def _get_mesh_data_from_vtk_mesh(vtk_mesh: vtkPolyData):
+   triangles, verts  = get_vertices_and_triangles_from_vtk_mesh(vtk_mesh)
+   return triangles, verts
 
 
 def _get_mesh_data_from_vedo_obj(vedo_obj):
@@ -327,8 +341,12 @@ def simplify_meshes(
     # get vertices and triangles back
     d = {}
     for mesh_id, mesh in mesh_list_group.groups():
-        vedo_obj = _convert_mesh_to_vedo_obj(mesh)
-        decimated_vedo_obj = _decimate_vedo_obj(vedo_obj, ratio)
-        mesh_data = _get_mesh_data_from_vedo_obj(decimated_vedo_obj)
+        vtk_mesh = _convert_mesh_to_vtk_mesh(mesh)
+        decimated_vtk_mesh = _decimate_vtk_mesh(vtk_mesh, ratio)
+        mesh_data = _get_mesh_data_from_vtk_mesh(decimated_vtk_mesh)
+        print(mesh_data)
+        # vedo_obj = _convert_mesh_to_vedo_obj(mesh)
+        # decimated_vedo_obj = _decimate_vedo_obj(vedo_obj, ratio)
+        # mesh_data = _get_mesh_data_from_vedo_obj(decimated_vedo_obj)
         d[mesh_id] = mesh_data
     return d
