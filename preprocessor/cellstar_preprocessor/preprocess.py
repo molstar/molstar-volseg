@@ -1218,8 +1218,9 @@ async def main_preprocessor(
     if a.pre_downsampling_factor:
         extra_metadata.pre_downsampling_factor = int(a.pre_downsampling_factor)
         # should not exclude extra data a
-        input_paths = pre_downsample_data(a.inputs, extra_metadata.pre_downsampling_factor, a.working_folder)
-    
+        inputs = pre_downsample_data(a.inputs, extra_metadata.pre_downsampling_factor, a.working_folder)
+        a.inputs = inputs
+        
     preprocessor_input = PreprocessorInput(
         inputs=Inputs(files=[]),
         volume=VolumeParams(
