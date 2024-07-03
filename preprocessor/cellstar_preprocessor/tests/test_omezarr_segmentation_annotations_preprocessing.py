@@ -29,7 +29,7 @@ def test_omezarr_segmentation_annotations_preprocessing(omezar_test_input: TestI
             omezar_test_input, ctx.test_file_path, ctx.intermediate_zarr_structure_path
         )
 
-        omezarr_segmentations_preprocessing(internal_segmentation=internal_segmentation)
+        omezarr_segmentations_preprocessing(s=internal_segmentation)
         d: AnnotationsMetadata = omezarr_segmentation_annotations_preprocessing(
             s=internal_segmentation
         )

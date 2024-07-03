@@ -29,16 +29,16 @@ def test_omezarr_volume_annotations_preprocessing(omezar_test_input: TestInput):
         # then here create internal volumes, segmentations etc.
         # initialize_intermediate_zarr_structure_for_tests()
 
-        internal_volume = get_internal_volume_from_input(
+        v = get_internal_volume_from_input(
             omezar_test_input, ctx.test_file_path, ctx.intermediate_zarr_structure_path
         )
         internal_segmentation = get_omezarr_internal_segmentation(
             omezar_test_input, ctx.test_file_path, ctx.intermediate_zarr_structure_path
         )
 
-        omezarr_segmentations_preprocessing(internal_segmentation=internal_segmentation)
+        omezarr_segmentations_preprocessing(s=internal_segmentation)
         d: AnnotationsMetadata = omezarr_volume_annotations_preprocessing(
-            v=internal_volume
+            v=v
         )
         # d = omezarr
 
@@ -47,12 +47,12 @@ def test_omezarr_volume_annotations_preprocessing(omezar_test_input: TestInput):
         # )
 
         # d = root.attrs.annotations_dict"]
-        assert d.entry_id.source_db_id == internal_volume.entry_data.source_db_id
-        assert d.entry_id.source_db_name == internal_volume.entry_data.source_db_name
+        assert d.entry_id.source_db_id == v.entry_data.source_db_id
+        assert d.entry_id.source_db_name == v.entry_data.source_db_name
 
         list(d.descriptions.items())
 
-        w = OMEZarrWrapper(internal_volume.input_path)
+        w = v.get_omezarr_wrapper()
         omero_channels = w.get_root_zattrs_wrapper().omero.channels
         for c in omero_channels:
             assert list(

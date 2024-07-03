@@ -29,7 +29,7 @@ SEGMENTATIONS = [
 
 
 @pytest.mark.parametrize("test_input", SFF_TEST_INPUTS)
-def test_sff_preprocessing(test_input: TestInput):
+def test_sff_segmentation_preprocessing(test_input: TestInput):
     with context_for_tests(test_input, WORKING_FOLDER_FOR_TESTS) as ctx:
         ctx: TestContext
 

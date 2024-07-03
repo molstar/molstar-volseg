@@ -1,3 +1,4 @@
+from cellstar_db.models import AxisName
 import pytest
 import zarr
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
@@ -15,39 +16,41 @@ from cellstar_preprocessor.tests.test_context import TestContext, context_for_te
 
 
 @pytest.mark.parametrize("omezar_test_input", OMEZARR_TEST_INPUTS)
-def test_ome_zarr_image_preprocessing(omezar_test_input: TestInput):
+def test_omezarr_volume_preprocessing(omezar_test_input: TestInput):
     with context_for_tests(omezar_test_input, WORKING_FOLDER_FOR_TESTS) as ctx:
         ctx: TestContext
-        internal_volume = get_internal_volume_from_input(
+        v = get_internal_volume_from_input(
             omezar_test_input, ctx.test_file_path, ctx.intermediate_zarr_structure_path
         )
 
-        omezarr_volume_preprocessing(v=internal_volume)
+        omezarr_volume_preprocessing(v=v)
 
-        ome_zarr_root = zarr.open_group(internal_volume.input_path)
-        root_zattrs = ome_zarr_root.attrs
-        multiscales = root_zattrs["multiscales"]
-        axes = multiscales[0]["axes"]
+        w = v.get_omezarr_wrapper()
+        
+        
+        # ome_zarr_root = zarr.open_group(v.input_path)
+        # root_zattrs = ome_zarr_root.attrs
+        # multiscales = root_zattrs["multiscales"]
+        axes = w.get_multiscale().axes
 
-        zarr_structure = open_zarr(internal_volume.path)
-
-        assert VOLUME_DATA_GROUPNAME in zarr_structure
-        volume_gr = zarr_structure[VOLUME_DATA_GROUPNAME]
+        root = v.get_zarr_root()
+        assert VOLUME_DATA_GROUPNAME in root
+        volume_gr = v.get_volume_data_group()
         assert isinstance(volume_gr, zarr.Group)
 
         # check if number of resolution groups is the same as number of arrays in ome zarr
-        assert len(volume_gr) == len(list(ome_zarr_root.array_keys()))
+        assert len(volume_gr) == len(w.get_image_resolutions())
 
-        for volume_arr_resolution, volume_arr in ome_zarr_root.arrays():
+        for volume_arr_resolution, volume_arr in w.get_zarr_root().arrays():
             volume_3d_arr_shape = volume_arr[...].swapaxes(-3, -1).shape[-3:]
 
             assert str(volume_arr_resolution) in volume_gr
             assert isinstance(volume_gr[volume_arr_resolution], zarr.Group)
 
             # check number of time groups
-            if len(axes) == 5 and axes[0]["name"] == "t":
+            if len(axes) == 5 and axes[0].name == AxisName.t:
                 n_of_time_groups = volume_arr.shape[0]
-            elif len(axes) == 4 and axes[0]["name"] == "c":
+            elif len(axes) == 4 and axes[0].name == AxisName.c:
                 n_of_time_groups = 1
             else:
                 raise Exception("Axes number/order is not supported")

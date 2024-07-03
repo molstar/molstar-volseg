@@ -21,20 +21,24 @@ class OMEZarrWrapper:
     path: Path
 
     def get_image_resolutions(self):
-        r_str = self.get_root().array_keys()
+        r_str = self.get_zarr_root().array_keys()
+        return sorted([int(r) for r in r_str])
+    
+    def get_label_resolutions(self, label_gr_name: str):
+        r_str = self.get_labels()[label_gr_name].group_keys()
         return sorted([int(r) for r in r_str])
 
-    def get_root(self):
+    def get_zarr_root(self):
         return open_zarr(self.path)
 
     def get_labels(self):
-        return self.get_root().labels
+        return self.get_zarr_root().labels
 
     def get_labels_group_names(self):
         return self.get_labels().group_keys()
 
     def get_root_zattrs_wrapper(self):
-        return OMEZarrAttrs.parse_obj(self.get_root().attrs)
+        return OMEZarrAttrs.parse_obj(self.get_zarr_root().attrs)
 
     def get_label_group_zattrs_wrapper(self, label_group_name: str):
         return OMEZarrAttrs.parse_obj(self.get_labels()[label_group_name].attrs)
@@ -63,7 +67,7 @@ class OMEZarrWrapper:
         return TimeAxisUnit.millisecond
 
     def set_zattrs(self, new_zattrs: dict[str, Any]):
-        root = self.get_root()
+        root = self.get_zarr_root()
         root.attrs.put(new_zattrs)
         print(f"New zattrs: {root.attrs}")
 

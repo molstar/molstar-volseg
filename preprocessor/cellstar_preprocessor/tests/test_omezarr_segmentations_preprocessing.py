@@ -1,3 +1,4 @@
+from cellstar_db.models import AxisName
 import pytest
 import zarr
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
@@ -18,27 +19,22 @@ from cellstar_preprocessor.tests.test_context import TestContext, context_for_te
 def test_ome_zarr_labels_preprocessing(omezar_test_input: TestInput):
     with context_for_tests(omezar_test_input, WORKING_FOLDER_FOR_TESTS) as ctx:
         ctx: TestContext
-        internal_segmentation = get_omezarr_internal_segmentation(
+        s = get_omezarr_internal_segmentation(
             omezar_test_input, ctx.test_file_path, ctx.intermediate_zarr_structure_path
         )
 
-        omezarr_segmentations_preprocessing(internal_segmentation=internal_segmentation)
-
-        zarr_structure = open_zarr(internal_segmentation.path)
-
-        ome_zarr_root = zarr.open_group(internal_segmentation.input_path)
-
-        assert LATTICE_SEGMENTATION_DATA_GROUPNAME in zarr_structure
-        segmentation_gr = zarr_structure[LATTICE_SEGMENTATION_DATA_GROUPNAME]
+        omezarr_segmentations_preprocessing(s=s)
+        w = s.get_omezarr_wrapper()
+        root = s.get_zarr_root()
+        
+        assert LATTICE_SEGMENTATION_DATA_GROUPNAME in root
+        segmentation_gr = s.get_label_group()
         assert isinstance(segmentation_gr, zarr.Group)
         # check if number of label groups is the same as number of groups in ome zarr
-        assert len(segmentation_gr) == len(list(ome_zarr_root.labels.group_keys()))
+        assert len(segmentation_gr) == len(w.get_labels_group_names())
 
-        for label_gr_name, label_gr in ome_zarr_root.labels.groups():
-            label_gr_zattrs = label_gr.attrs
-            label_gr_multiscales = label_gr_zattrs["multiscales"]
-            # NOTE: can be multiple multiscales, here picking just 1st
-            axes = label_gr_multiscales[0]["axes"]
+        for label_gr_name, label_gr in w.get_labels():
+            axes = w.get_multiscale().axes
 
             for arr_resolution, arr in label_gr.arrays():
                 segm_3d_arr_shape = arr[...].swapaxes(-3, -1).shape[-3:]
@@ -60,15 +56,17 @@ def test_ome_zarr_labels_preprocessing(omezar_test_input: TestInput):
                     n_of_time_groups = 1
                 else:
                     raise Exception("Axes number/order is not supported")
-
-                original_resolution = ome_zarr_root.attrs["multiscales"][0]["datasets"][
+                
+                original_resolution = w.get_multiscale().datasets[
                     0
-                ]["path"]
+                ].path
 
-                if len(axes) == 5 and axes[0]["name"] == "t":
-                    image_time_dimension = ome_zarr_root[original_resolution].shape[0]
-                else:
+                if len(axes) == 5 and axes[0].name == AxisName.t:
+                    image_time_dimension = w.get_zarr_root()[original_resolution].shape[0]
+                elif len(axes) == 4 and axes[0].name == AxisName.c:
                     image_time_dimension = 1
+                else:
+                    raise Exception('Axes length is not supported')
 
                 label_time_dimension = arr.shape[0]
 

@@ -23,7 +23,7 @@ def omezarr_volume_preprocessing(v: InternalVolume):
     multiscale = w.get_multiscale()
     axes = multiscale.axes
 
-    omezarr_root = w.get_root()
+    omezarr_root = w.get_zarr_root()
     for volume_arr_resolution, volume_arr in omezarr_root.arrays():
         size_of_data_for_lvl = 0
         volume_channels_annotations = v.set_volume_channel_annotations()

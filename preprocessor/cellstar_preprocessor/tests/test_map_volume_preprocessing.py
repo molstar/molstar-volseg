@@ -33,7 +33,7 @@ ORDERS = ["XYZ", "ZYX"]
 
 # two maps
 @pytest.mark.parametrize("order", ORDERS)
-def test_map_preprocessing(order: Literal["XYZ", "ZYX"]):
+def test_map_volume_preprocessing(order: Literal["XYZ", "ZYX"]):
     # TODO: create sample internal volume with all params
     # TODO: test different functions (map preprocessing, quantization, downsampling)
     # using  the same internal volume

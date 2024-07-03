@@ -314,7 +314,7 @@ class OMEZARRLabelsProcessTask(TaskBase):
 
     def execute(self) -> None:
         omezarr_segmentations_preprocessing(
-            internal_segmentation=self.internal_segmentation
+            s=self.internal_segmentation
         )
 
 

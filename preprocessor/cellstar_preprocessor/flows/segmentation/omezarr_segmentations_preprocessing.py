@@ -8,10 +8,10 @@ from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
-def omezarr_segmentations_preprocessing(internal_segmentation: InternalSegmentation):
-    ome_zarr_root = zarr.open_group(internal_segmentation.input_path)
+def omezarr_segmentations_preprocessing(s: InternalSegmentation):
+    ome_zarr_root = zarr.open_group(s.input_path)
 
-    our_zarr_structure = open_zarr(internal_segmentation.path)
+    our_zarr_structure = open_zarr(s.path)
 
     segmentation_data_gr = our_zarr_structure.create_group(
         LATTICE_SEGMENTATION_DATA_GROUPNAME
@@ -187,27 +187,27 @@ def omezarr_segmentations_preprocessing(internal_segmentation: InternalSegmentat
             size_of_data_for_lvl_mb = size_of_data_for_lvl / 1024**2
             print(f"size of data for lvl in mb: {size_of_data_for_lvl_mb}")
             if (
-                internal_segmentation.downsampling_parameters.max_size_per_downsampling_lvl_mb
+                s.downsampling_parameters.max_size_per_downsampling_lvl_mb
                 and size_of_data_for_lvl_mb
-                > internal_segmentation.downsampling_parameters.max_size_per_downsampling_lvl_mb
+                > s.downsampling_parameters.max_size_per_downsampling_lvl_mb
             ):
                 print(f"Data for resolution {arr_name} removed for segmentation")
                 del lattice_id_gr[arr_name]
 
         all_resolutions = sorted(label_gr.array_keys())
         original_resolution = all_resolutions[0]
-        if internal_segmentation.downsampling_parameters.remove_original_resolution:
+        if s.downsampling_parameters.remove_original_resolution:
             del lattice_id_gr[original_resolution]
             print("Original resolution data removed for segmentation")
 
         if (
-            internal_segmentation.downsampling_parameters.max_downsampling_level
+            s.downsampling_parameters.max_downsampling_level
             is not None
         ):
             for downsampling, downsampling_gr in lattice_id_gr.groups():
                 if (
                     int(downsampling)
-                    > internal_segmentation.downsampling_parameters.max_downsampling_level
+                    > s.downsampling_parameters.max_downsampling_level
                 ):
                     del lattice_id_gr[downsampling]
                     print(
@@ -215,13 +215,13 @@ def omezarr_segmentations_preprocessing(internal_segmentation: InternalSegmentat
                     )
 
         if (
-            internal_segmentation.downsampling_parameters.min_downsampling_level
+            s.downsampling_parameters.min_downsampling_level
             is not None
         ):
             for downsampling, downsampling_gr in lattice_id_gr.groups():
                 if (
                     int(downsampling)
-                    < internal_segmentation.downsampling_parameters.min_downsampling_level
+                    < s.downsampling_parameters.min_downsampling_level
                     and downsampling != original_resolution
                 ):
                     del lattice_id_gr[downsampling]
@@ -231,6 +231,6 @@ def omezarr_segmentations_preprocessing(internal_segmentation: InternalSegmentat
 
         if len(sorted(lattice_id_gr.group_keys())) == 0:
             raise Exception(
-                f"No downsamplings will be saved: max_size_per_downsampling_lvl_mb {internal_segmentation.downsampling_parameters.max_size_per_downsampling_lvl_mb} is too low"
+                f"No downsamplings will be saved: max_size_per_downsampling_lvl_mb {s.downsampling_parameters.max_size_per_downsampling_lvl_mb} is too low"
             )
     print("Labels processed")

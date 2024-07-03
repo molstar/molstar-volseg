@@ -56,6 +56,15 @@ class InternalData:
         end_time = max(time_intervals)
         return (start_time, end_time)
 
+    def get_label_resolutions(self):
+        return list(self.get_zarr_root().group_keys())
+    
+    def get_label_group(self):
+        return self.get_zarr_root().labels
+    
+    def get_label_resolutions(self, label_gr_name: str):
+        return list(self.get_label_group()[label_gr_name].group_keys())
+    
     def get_omezarr_wrapper(self):
         return OMEZarrWrapper(self.input_path)
 

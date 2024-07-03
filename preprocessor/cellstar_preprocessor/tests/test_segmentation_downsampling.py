@@ -34,7 +34,7 @@ SEGMENTATIONS = [
 
 
 @pytest.mark.parametrize("test_input", SFF_TEST_INPUTS)
-def test_sff_segmentation_downsampling(test_input: TestInput):
+def test_segmentation_downsampling(test_input: TestInput):
     with context_for_tests(test_input, WORKING_FOLDER_FOR_TESTS) as ctx:
         ctx: TestContext
     internal_segmentation = get_sff_internal_segmentation(
