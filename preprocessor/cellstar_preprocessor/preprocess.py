@@ -5,6 +5,11 @@ import typing
 from argparse import ArgumentError
 from pathlib import Path
 
+from cellstar_preprocessor.flows.segmentation.extract_tiff_segmentation_stack_dir_metadata import extract_tiff_segmentation_stack_dir_metadata
+from cellstar_preprocessor.flows.segmentation.tiff_segmentation_stack_dir_processing import tiff_segmentation_stack_dir_processing
+from cellstar_preprocessor.flows.volume.extract_tiff_image_stack_dir_metadata import extract_tiff_image_stack_dir_metadata
+from cellstar_preprocessor.flows.volume.pre_downsample_data import pre_downsample_data
+from cellstar_preprocessor.flows.volume.tiff_image_processing import tiff_image_stack_dir_processing
 import typer
 import zarr
 from cellstar_db.file_system.annotations_context import AnnnotationsEditContext
@@ -16,6 +21,7 @@ from cellstar_db.models import (
     DescriptionData,
     DownsamplingParams,
     EntryData,
+    ExtraMetadata,
     GeometricSegmentationData,
     InputKind,
     Inputs,
@@ -158,6 +164,11 @@ class InputT(BaseModel):
     path: Path | list[Path]
     kind: InputKind
 
+class TIFFImageStackDirInput(InputT):
+    pass
+
+class TIFFSegmentationStackDirInput(InputT):
+    pass 
 
 class OMETIFFImageInput(InputT):
     pass
@@ -230,7 +241,7 @@ class QuantizeInternalVolumeTask(TaskBase):
         quantize_internal_volume(internal_volume=self.internal_volume)
 
 
-VOLUME_INPUT_TYPES = (MAPInput, OMETIFFImageInput, OMEZARRInput)
+VOLUME_INPUT_TYPES = (MAPInput, OMETIFFImageInput, OMEZARRInput, TIFFImageStackDirInput)
 
 SEGMENTATION_INPUT_TYPES = (
     SFFInput,
@@ -238,6 +249,7 @@ SEGMENTATION_INPUT_TYPES = (
     GeometricSegmentationInput,
     OMETIFFSegmentationInput,
     OMEZARRInput,
+    TIFFSegmentationStackDirInput
 )
 
 
@@ -492,6 +504,46 @@ class OMETIFFSegmentationAnnotationsExtractionTask(TaskBase):
             internal_segmentation=internal_segmentation
         )
 
+
+class TIFFImageStackDirProcessingTask(TaskBase):
+    def __init__(self, internal_volume: InternalVolume):
+        self.internal_volume = internal_volume
+
+    def execute(self) -> None:
+        volume = self.internal_volume
+        tiff_image_stack_dir_processing(internal_volume=volume)
+        volume_downsampling(internal_volume=volume)
+
+class TIFFSegmentationStackDirProcessingTask(TaskBase):
+    def __init__(self, internal_segmentation: InternalSegmentation):
+        self.internal_segmentation = internal_segmentation
+
+    def execute(self) -> None:
+        internal_segmentation = self.internal_segmentation
+        tiff_segmentation_stack_dir_processing(internal_segmentation)
+        segmentation_downsampling(internal_segmentation)
+
+class TIFFImageStackDirMetadataExtractionTask(TaskBase):
+    def __init__(self, internal_volume: InternalVolume):
+        self.internal_volume = internal_volume
+
+    def execute(self) -> None:
+        volume = self.internal_volume
+        extract_tiff_image_stack_dir_metadata(internal_volume=volume)
+
+class TIFFSegmentationStackDirMetadataExtractionTask(TaskBase):
+    def __init__(self, internal_segmentation: InternalSegmentation):
+        self.internal_segmentation = internal_segmentation
+
+    def execute(self) -> None:
+        extract_tiff_segmentation_stack_dir_metadata(self.internal_segmentation)
+
+class TIFFSegmentationStackDirAnnotationCreationTask(TaskBase):
+    def __init__(self, internal_segmentation: InternalSegmentation):
+        self.internal_segmentation = internal_segmentation
+
+    def execute(self) -> None:
+        mask_segmentation_annotations_preprocessing(internal_segmentation=self.internal_segmentation)
 
 class ProcessExtraDataTask(TaskBase):
     def __init__(self, path: Path, intermediate_zarr_structure_path: Path):
@@ -999,6 +1051,10 @@ class Preprocessor:
                 analyzed.append(OMETIFFImageInput(path=p, kind=k))
             elif k == InputKind.ometiff_segmentation:
                 analyzed.append(OMETIFFSegmentationInput(path=p, kind=k))
+            elif k == InputKind.tiff_image_stack_dir:
+                analyzed.append(TIFFImageStackDirInput(path=p, kind=k))
+            elif k == InputKind.tiff_segmentation_stack_dir:
+                analyzed.append(TIFFSegmentationStackDirInput(path=p, kind=k))
             else:
                 raise Exception(f"Input kind is not recognized. Input item: {i}")
 
@@ -1019,7 +1075,7 @@ class Preprocessor:
 
         return exists
 
-    async def initialization(self, mode: PreprocessorMode):
+    async def initialization(self, mode: PreprocessorMode, extra_metadata: ExtraMetadata):
         self.intermediate_zarr_structure = (
             self.preprocessor_input.working_folder
             / self.preprocessor_input.entry_data.entry_id
@@ -1051,9 +1107,14 @@ class Preprocessor:
                 )
 
             elif mode == PreprocessorMode.add:
-                root.attrs["metadata_dict"] = INIT_METADATA_MODEL.dict()
+                init_metadata_model = INIT_METADATA_MODEL.copy()
+                init_annotations_model = INIT_ANNOTATIONS_MODEL.copy()
+                if extra_metadata is not None:
+                    init_metadata_model.extra_metadata = extra_metadata
+                    
+                root.attrs["metadata_dict"] = init_metadata_model.dict()
 
-                root.attrs["annotations_dict"] = INIT_ANNOTATIONS_MODEL.dict()
+                root.attrs["annotations_dict"] = init_annotations_model.dict()
             else:
                 raise Exception("Preprocessor mode is not supported")
             # init GeometricSegmentationData in zattrs
@@ -1131,7 +1192,7 @@ class Preprocessor:
 
 
 async def main_preprocessor(
-    arguments: PreprocessorArguments,
+    a: PreprocessorArguments,
     # mode: PreprocessorMode,
     # quantize_dtype_str: typing.Optional[QuantizationDtype],
     # quantize_downsampling_levels: typing.Optional[str],
@@ -1150,36 +1211,42 @@ async def main_preprocessor(
     # input_kinds: list[InputKind],
     # min_size_per_downsampling_lvl_mb: typing.Optional[float] = 5.0,
 ):
-    args = DefaultMunch.fromDict(arguments)
+    # args = DefaultMunch.fromDict(arguments)
     # for k, v in arguments.items():
     #     setattr(args, k, v)
-
+    
+    extra_metadata = ExtraMetadata()
+    if a.pre_downsampling_factor:
+        extra_metadata.pre_downsampling_factor = int(a.pre_downsampling_factor)
+        # should not exclude extra data a
+        input_paths = pre_downsample_data(a.inputs, extra_metadata.pre_downsampling_factor, a.working_folder)
+    
     preprocessor_input = PreprocessorInput(
         inputs=Inputs(files=[]),
         volume=VolumeParams(
-            quantize_dtype_str=args.quantize_dtype_str,
-            quantize_downsampling_levels=args.quantize_downsampling_levels,
-            force_volume_dtype=args.force_volume_dtype,
+            quantize_dtype_str=a.quantize_dtype_str,
+            quantize_downsampling_levels=a.quantize_downsampling_levels,
+            force_volume_dtype=a.force_volume_dtype,
         ),
         downsampling=DownsamplingParams(
-            min_size_per_downsampling_lvl_mb=args.min_size_per_downsampling_lvl_mb,
-            max_size_per_downsampling_lvl_mb=args.max_size_per_downsampling_lvl_mb,
-            min_downsampling_level=args.min_downsampling_level,
-            max_downsampling_level=args.max_downsampling_level,
-            remove_original_resolution=args.remove_original_resolution,
+            min_size_per_downsampling_lvl_mb=a.min_size_per_downsampling_lvl_mb,
+            max_size_per_downsampling_lvl_mb=a.max_size_per_downsampling_lvl_mb,
+            min_downsampling_level=a.min_downsampling_level,
+            max_downsampling_level=a.max_downsampling_level,
+            remove_original_resolution=a.remove_original_resolution,
         ),
         entry_data=EntryData(
-            entry_id=args.entry_id,
-            source_db=args.source_db,
-            source_db_id=args.source_db_id,
-            source_db_name=args.source_db_name,
+            entry_id=a.entry_id,
+            source_db=a.source_db,
+            source_db_id=a.source_db_id,
+            source_db_name=a.source_db_name,
         ),
-        working_folder=Path(args.working_folder),
+        working_folder=Path(a.working_folder),
         storing_params=StoringParams(),
-        db_path=Path(args.db_path),
+        db_path=Path(a.db_path),
     )
 
-    inputs: list[RawInput] = args.inputs
+    inputs: list[RawInput] = a.inputs
     for idx, i in enumerate(inputs):
         inputs[idx] = RawInput(path=Path(i.path), kind=i.kind)
 
@@ -1187,7 +1254,7 @@ async def main_preprocessor(
     preprocessor_input.inputs.files = inputs
 
     preprocessor = Preprocessor(preprocessor_input)
-    if args.mode == PreprocessorMode.add:
+    if a.mode == PreprocessorMode.add:
         if await preprocessor.entry_exists():
             raise Exception(
                 f"Entry {preprocessor_input.entry_data.entry_id} from {preprocessor_input.entry_data.source_db} source already exists in database {preprocessor_input.db_path}"
@@ -1198,12 +1265,12 @@ async def main_preprocessor(
                 f"Entry {preprocessor_input.entry_data.entry_id} from {preprocessor_input.entry_data.source_db} source does not exist in database {preprocessor_input.db_path}"
             )
         assert (
-            args.mode == PreprocessorMode.extend
+            a.mode == PreprocessorMode.extend
         ), "Preprocessor mode is not supported"
 
-    await preprocessor.initialization(mode=args.mode)
+    await preprocessor.initialization(mode=a.mode, extra_metadata=extra_metadata)
     preprocessor.preprocessing()
-    preprocessor.store_to_db(mode=args.mode)
+    preprocessor.store_to_db(mode=a.mode)
 
 
 app = typer.Typer()
@@ -1249,7 +1316,7 @@ def main(
     # TODO: unpack to variables
     asyncio.run(
         main_preprocessor(
-            arguments=arguments
+            a=arguments
             # mode=mode,
             # entry_id=entry_id,
             # source_db=source_db,

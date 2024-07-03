@@ -114,6 +114,7 @@ INIT_METADATA_MODEL = Metadata(
         ids=[], metadata={}, time_info_mapping={}
     ),
     entry_metadata=None,
+    extra_metadata=None
 )
 DEFAULT_TIME_UNITS = "millisecond"
 GEOMETRIC_SEGMENTATIONS_ZATTRS = "geometric_segmentations"

@@ -178,6 +178,7 @@ class PreprocessorParameters(BaseModel):
     min_downsampling_level: int | None
     max_downsampling_level: int | None
     remove_original_resolution: bool | None
+    pre_downsampling_factor: int | None
 
 
 class SegmentationKind(str, Enum):
@@ -199,6 +200,8 @@ class InputKind(str, Enum):
     ometiff_image = "ometiff_image"
     ometiff_segmentation = "ometiff_segmentation"
     extra_data = "extra_data"
+    tiff_image_stack_dir = "tiff_image_stack_dir"
+    tiff_segmentation_stack_dir = "tiff_segmentation_stack_dir"
 
 
 class RawInput(BaseModel):
@@ -414,6 +417,8 @@ class VolumesMetadata(BaseModel):
     time_info: TimeInfo
     sampling_info: VolumeSamplingInfo
 
+class ExtraMetadata(BaseModel):
+    pre_downsampling_factor: int | None
 
 class EntryId(BaseModel):
     source_db_name: str
@@ -427,6 +432,7 @@ class Metadata(BaseModel):
     segmentation_meshes: Optional[MeshSegmentationsMetadata]
     geometric_segmentation: Optional[GeometricSegmentationsMetadata]
     entry_metadata: EntryMetadata | None
+    extra_metadata: ExtraMetadata | None
 
 
 # END METADATA DATA MODEL

@@ -1,4 +1,5 @@
 from cellstar_db.models import InputKind
+from cellstar_preprocessor.flows.segmentation.extract_tiff_segmentation_stack_dir_metadata import extract_tiff_segmentation_stack_dir_metadata
 from cellstar_preprocessor.flows.segmentation.geometric_segmentation_annotations_preprocessing import (
     geometric_segmentation_annotations_preprocessing,
 )
@@ -30,3 +31,6 @@ def process_segmentation_metadata(s: InternalSegmentation):
         ometiff_volume_metadata_preprocessing(s)
     elif kind == InputKind.omezarr:
         omezarr_segmentation_metadata_preprocessing(s)
+    elif kind == InputKind.tiff_segmentation_stack_dir:
+        # tiff_s
+        extract_tiff_segmentation_stack_dir_metadata(s)

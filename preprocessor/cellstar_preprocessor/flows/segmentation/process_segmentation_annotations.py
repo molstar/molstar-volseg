@@ -29,3 +29,5 @@ def process_segmentation_annotations(s: InternalSegmentation):
         ometiff_segmentation_annotations_preprocessing(s)
     elif kind == InputKind.omezarr:
         omezarr_segmentation_annotations_preprocessing(s)
+    elif kind == InputKind.tiff_segmentation_stack_dir:
+        mask_segmentation_annotations_preprocessing(s)

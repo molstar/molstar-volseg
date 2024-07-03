@@ -1,4 +1,5 @@
 from cellstar_db.models import InputKind
+from cellstar_preprocessor.flows.volume.extract_tiff_image_stack_dir_metadata import extract_tiff_image_stack_dir_metadata
 from cellstar_preprocessor.flows.volume.map_volume_metadata_preprocessing import (
     map_volume_metadata_preprocessing,
 )
@@ -19,3 +20,5 @@ def process_volume_metadata(internal_volume: InternalVolume):
         ometiff_volume_metadata_preprocessing(internal_volume)
     elif kind == InputKind.omezarr:
         omezarr_volume_metadata_preprocessing(internal_volume)
+    elif kind == InputKind.tiff_image_stack_dir:
+        extract_tiff_image_stack_dir_metadata(internal_volume)

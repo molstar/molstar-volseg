@@ -15,3 +15,5 @@ def process_volume_annotations(v: InternalVolume):
         ometiff_volume_annotations_preprocessing(v)
     elif kind == InputKind.omezarr:
         omezarr_volume_annotations_preprocessing(v)
+    # elif kind == InputKind.tiff_image_stack_dir:
+    #     raise NotImplementedError()

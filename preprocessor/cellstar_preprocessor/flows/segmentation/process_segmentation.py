@@ -20,6 +20,7 @@ from cellstar_preprocessor.flows.segmentation.segmentation_downsampling import (
 from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing import (
     sff_segmentation_preprocessing,
 )
+from cellstar_preprocessor.flows.segmentation.tiff_segmentation_stack_dir_processing import tiff_segmentation_stack_dir_processing
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
@@ -38,3 +39,5 @@ def process_segmentation(s: InternalSegmentation):
     elif kind == InputKind.omezarr:
         if check_if_omezarr_has_labels(s):
             omezarr_segmentations_preprocessing(s)
+    elif kind == InputKind.tiff_segmentation_stack_dir:
+        tiff_segmentation_stack_dir_processing(s)
