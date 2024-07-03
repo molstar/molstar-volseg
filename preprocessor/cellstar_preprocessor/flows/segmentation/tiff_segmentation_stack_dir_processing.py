@@ -3,6 +3,7 @@ from cellstar_db.models import SegmentationPrimaryDescriptor
 from cellstar_preprocessor.flows.segmentation.helper_methods import store_segmentation_data_in_zarr_structure
 # from cellstar_preprocessor.model.input import SegmentationPrimaryDescriptor
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
+from cellstar_preprocessor.tools.tiff_stack_to_da_arr.tiff_stack_to_da_arr import tiff_stack_to_da_arr
 import numpy as np
 import zarr
 import dask.array as da

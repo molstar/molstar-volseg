@@ -4,6 +4,9 @@ import shutil
 from cellstar_db.models import InputKind, RawInput
 from cellstar_preprocessor.flows.constants import DOWNSAMPLING_KERNEL
 from cellstar_preprocessor.flows.volume.helper_methods import generate_kernel_3d_arr
+from cellstar_preprocessor.tools.downsample_map.downsample_map import downsample_map
+from cellstar_preprocessor.tools.downsample_stl.downsample_stl import downsample_stl
+from cellstar_preprocessor.tools.downsize_tiff.downsize_tiff import downsize_tiff
 # from cellstar_preprocessor.model.input import InputKind
 # from cellstar_preprocessor.tools.downsample_map.downsample_map import downsample_map
 # from cellstar_preprocessor.tools.downsize_tiff.downsize_tiff import downsize_tiff
@@ -42,6 +45,10 @@ def pre_downsample_data(inputs: list[RawInput], pre_downsample_data_factor: int,
             kernel = generate_kernel_3d_arr(list(DOWNSAMPLING_KERNEL))
             downsample_map(Path(inputs[idx].path), downsized_input_path, pre_downsample_data_factor, kernel)
             inputs[idx].path = downsized_input_path
+            
+        elif inputs[idx].kind == InputKind.application_specific_segmentation:
+            if inputs[idx].path.suffix == '.stl':
+                downsample_stl(inputs[idx].path)
             
     # return downsized_pathes
     # TODO: check if they were changed indeed

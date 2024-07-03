@@ -156,7 +156,7 @@ from cellstar_preprocessor.model.volume import InternalVolume
 from cellstar_preprocessor.tools.convert_app_specific_segm_to_sff.convert_app_specific_segm_to_sff import (
     convert_app_specific_segm_to_sff,
 )
-from munch import DefaultMunch
+
 from pydantic import BaseModel
 
 
@@ -1211,7 +1211,6 @@ async def main_preprocessor(
     # input_kinds: list[InputKind],
     # min_size_per_downsampling_lvl_mb: typing.Optional[float] = 5.0,
 ):
-    # args = DefaultMunch.fromDict(arguments)
     # for k, v in arguments.items():
     #     setattr(args, k, v)
     
