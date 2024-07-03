@@ -31,7 +31,7 @@ def test_omezarr_volume_preprocessing(omezar_test_input: TestInput):
         # ome_zarr_root = zarr.open_group(v.input_path)
         # root_zattrs = ome_zarr_root.attrs
         # multiscales = root_zattrs["multiscales"]
-        axes = w.get_multiscale().axes
+        axes = w.get_image_multiscale().axes
 
         root = v.get_zarr_root()
         assert VOLUME_DATA_GROUPNAME in root
@@ -41,7 +41,7 @@ def test_omezarr_volume_preprocessing(omezar_test_input: TestInput):
         # check if number of resolution groups is the same as number of arrays in ome zarr
         assert len(volume_gr) == len(w.get_image_resolutions())
 
-        for volume_arr_resolution, volume_arr in w.get_zarr_root().arrays():
+        for volume_arr_resolution, volume_arr in w.get_image_group().arrays():
             volume_3d_arr_shape = volume_arr[...].swapaxes(-3, -1).shape[-3:]
 
             assert str(volume_arr_resolution) in volume_gr

@@ -39,7 +39,7 @@ class InternalVolume(InternalData):
             return get_axis_order_mrcfile(self.map_header)
 
         elif self.input_kind == InputKind.omezarr:
-            axes = self.get_omezarr_wrapper().get_multiscale().axes
+            axes = self.get_omezarr_wrapper().get_image_multiscale().axes
             if len(axes) == 5:
                 return [AxisName.t, AxisName.c] + DEFAULT_ORIGINAL_AXIS_ORDER
             elif len(axes) == 4:
@@ -55,7 +55,7 @@ class InternalVolume(InternalData):
             return DEFAULT_SOURCE_AXES_UNITS
         elif self.input_kind == InputKind.omezarr:
             w = self.get_omezarr_wrapper()
-            multiscale = w.get_multiscale()
+            multiscale = w.get_image_multiscale()
             axes = multiscale.axes
             if len(axes) == 5:
                 return {

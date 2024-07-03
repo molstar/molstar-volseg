@@ -54,8 +54,8 @@ def omezarr_segmentation_annotations_preprocessing(
             source_db_name=s.entry_data.source_db_name,
         )
 
-    for label_gr_name in w.get_labels_group_names():
-        label_zattrs = w.get_label_group_zattrs_wrapper(label_gr_name)
+    for label_gr_name in w.get_label_names():
+        label_zattrs = w.get_label_zattrs(label_gr_name)
         colors_meta = label_zattrs.image_label.colors
 
         for c in colors_meta:

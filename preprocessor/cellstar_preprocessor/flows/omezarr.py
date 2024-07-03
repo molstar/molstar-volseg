@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-
+import zarr
 from cellstar_db.models import (
     AxisName,
     OMEZarrAttrs,
@@ -21,42 +21,47 @@ class OMEZarrWrapper:
     path: Path
 
     def get_image_resolutions(self):
-        r_str = self.get_zarr_root().array_keys()
+        r_str = self.get_image_group().array_keys()
         return sorted([int(r) for r in r_str])
     
-    def get_label_resolutions(self, label_gr_name: str):
-        r_str = self.get_labels()[label_gr_name].group_keys()
+    def get_label_resolutions(self, label_name: str):
+        r_str = self.get_label_group()[label_name].group_keys()
         return sorted([int(r) for r in r_str])
 
-    def get_zarr_root(self):
+    def get_image_group(self):
         return open_zarr(self.path)
 
-    def get_labels(self):
-        return self.get_zarr_root().labels
+    def get_label_group(self) -> zarr.Group:
+        return self.get_image_group().labels
 
-    def get_labels_group_names(self):
-        return self.get_labels().group_keys()
+    def get_label_names(self):
+        return list(self.get_label_group().group_keys())
 
-    def get_root_zattrs_wrapper(self):
-        return OMEZarrAttrs.parse_obj(self.get_zarr_root().attrs)
+    def get_image_zattrs(self):
+        return OMEZarrAttrs.parse_obj(self.get_image_group().attrs)
 
-    def get_label_group_zattrs_wrapper(self, label_group_name: str):
-        return OMEZarrAttrs.parse_obj(self.get_labels()[label_group_name].attrs)
+    def get_label_zattrs(self, label_name: str):
+        return OMEZarrAttrs.parse_obj(self.get_label_group()[label_name].attrs)
 
-    def get_multiscale(self):
+    def get_image_multiscale(self):
         """Only the first multiscale"""
         # NOTE: can be multiple multiscales, here picking just 1st
-        return self.get_root_zattrs_wrapper().multiscales[0]
+        return self.get_image_zattrs().multiscales[0]
+    
+    def get_label_multiscale(self, label_name: str):
+        """Only the first multiscale"""
+        # NOTE: can be multiple multiscales, here picking just 1st
+        return self.get_label_zattrs(label_name).multiscales[0]
 
     def get_axes(self):
         """Root level axes, not present in majority of used OMEZarrs"""
         raise NotImplementedError()
 
     def get_omero_channels(self):
-        return self.get_root_zattrs_wrapper().omero.channels
+        return self.get_image_zattrs().omero.channels
 
     def get_time_units(self):
-        m = self.get_multiscale()
+        m = self.get_image_multiscale()
         axes = m.axes
         t_axis = axes[0]
         # change to ax
@@ -67,12 +72,12 @@ class OMEZarrWrapper:
         return TimeAxisUnit.millisecond
 
     def set_zattrs(self, new_zattrs: dict[str, Any]):
-        root = self.get_zarr_root()
+        root = self.get_image_group()
         root.attrs.put(new_zattrs)
         print(f"New zattrs: {root.attrs}")
 
     def add_defaults_to_ome_zarr_attrs(self):
-        zattrs = self.get_root_zattrs_wrapper()
+        zattrs = self.get_image_zattrs()
         axes = zattrs.multiscales[0].axes
         for axis in axes:
             if axis.unit is None:
@@ -87,7 +92,7 @@ class OMEZarrWrapper:
     def process_time_transformations(self):
         # NOTE: can be multiple multiscales, here picking just 1st
         time_transformations_list: list[TimeTransformation] = []
-        multiscales = self.get_multiscale()
+        multiscales = self.get_image_multiscale()
         axes = multiscales.axes
         datasets_meta = multiscales.datasets
         first_axis = axes[0]

@@ -20,10 +20,10 @@ def omezarr_volume_preprocessing(v: InternalVolume):
     # PROCESSING VOLUME
     volume_data_gr: zarr.Group = root.create_group(VOLUME_DATA_GROUPNAME)
 
-    multiscale = w.get_multiscale()
+    multiscale = w.get_image_multiscale()
     axes = multiscale.axes
 
-    omezarr_root = w.get_zarr_root()
+    omezarr_root = w.get_image_group()
     for volume_arr_resolution, volume_arr in omezarr_root.arrays():
         size_of_data_for_lvl = 0
         volume_channels_annotations = v.set_volume_channel_annotations()

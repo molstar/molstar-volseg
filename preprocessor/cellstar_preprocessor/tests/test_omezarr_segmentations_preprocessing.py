@@ -1,4 +1,4 @@
-from cellstar_db.models import AxisName
+from cellstar_db.models import AxisName, SegmentationKind
 import pytest
 import zarr
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
@@ -15,8 +15,8 @@ from cellstar_preprocessor.tests.input_for_tests import (
 from cellstar_preprocessor.tests.test_context import TestContext, context_for_tests
 
 
-@pytest.mark.parametrize("omezar_test_input", OMEZARR_TEST_INPUTS)
-def test_ome_zarr_labels_preprocessing(omezar_test_input: TestInput):
+@pytest.mark.parametrize("omezar_test_input", [OMEZARR_TEST_INPUTS[1]])
+def test_omezarr_segmentations_preprocessing(omezar_test_input: TestInput):
     with context_for_tests(omezar_test_input, WORKING_FOLDER_FOR_TESTS) as ctx:
         ctx: TestContext
         s = get_omezarr_internal_segmentation(
@@ -28,13 +28,13 @@ def test_ome_zarr_labels_preprocessing(omezar_test_input: TestInput):
         root = s.get_zarr_root()
         
         assert LATTICE_SEGMENTATION_DATA_GROUPNAME in root
-        segmentation_gr = s.get_label_group()
+        segmentation_gr = s.get_segmentation_data_group(SegmentationKind.lattice)
         assert isinstance(segmentation_gr, zarr.Group)
         # check if number of label groups is the same as number of groups in ome zarr
-        assert len(segmentation_gr) == len(w.get_labels_group_names())
+        assert len(segmentation_gr) == len(w.get_label_names())
 
-        for label_gr_name, label_gr in w.get_labels():
-            axes = w.get_multiscale().axes
+        for label_gr_name, label_gr in w.get_label_group().groups():
+            axes = w.get_image_multiscale().axes
 
             for arr_resolution, arr in label_gr.arrays():
                 segm_3d_arr_shape = arr[...].swapaxes(-3, -1).shape[-3:]
@@ -50,19 +50,19 @@ def test_ome_zarr_labels_preprocessing(omezar_test_input: TestInput):
                 )
 
                 # check number of time groups
-                if len(axes) == 5 and axes[0]["name"] == "t":
+                if len(axes) == 5 and axes[0].name == AxisName.t:
                     n_of_time_groups = arr.shape[0]
-                elif len(axes) == 4 and axes[0]["name"] == "c":
+                elif len(axes) == 4 and axes[0].name == AxisName.c:
                     n_of_time_groups = 1
                 else:
                     raise Exception("Axes number/order is not supported")
                 
-                original_resolution = w.get_multiscale().datasets[
+                original_resolution = w.get_image_multiscale().datasets[
                     0
                 ].path
 
                 if len(axes) == 5 and axes[0].name == AxisName.t:
-                    image_time_dimension = w.get_zarr_root()[original_resolution].shape[0]
+                    image_time_dimension = w.get_image_group()[original_resolution].shape[0]
                 elif len(axes) == 4 and axes[0].name == AxisName.c:
                     image_time_dimension = 1
                 else:

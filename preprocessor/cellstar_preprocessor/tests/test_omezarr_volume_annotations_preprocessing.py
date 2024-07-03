@@ -53,7 +53,7 @@ def test_omezarr_volume_annotations_preprocessing(omezar_test_input: TestInput):
         list(d.descriptions.items())
 
         w = v.get_omezarr_wrapper()
-        omero_channels = w.get_root_zattrs_wrapper().omero.channels
+        omero_channels = w.get_image_zattrs().omero.channels
         for c in omero_channels:
             assert list(
                 filter(

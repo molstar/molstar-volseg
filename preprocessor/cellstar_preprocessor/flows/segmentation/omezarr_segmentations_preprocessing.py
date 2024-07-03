@@ -1,5 +1,6 @@
 import gc
 
+from cellstar_db.models import AxisName
 import numcodecs
 import numpy as np
 import zarr
@@ -9,11 +10,14 @@ from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 
 def omezarr_segmentations_preprocessing(s: InternalSegmentation):
-    ome_zarr_root = zarr.open_group(s.input_path)
+    root = s.get_zarr_root()
+    s.set_segmentation_custom_data()
+    w = s.get_omezarr_wrapper()
+    multiscale = w.get_image_multiscale()
+    axes = multiscale.axes
 
-    our_zarr_structure = open_zarr(s.path)
-
-    segmentation_data_gr = our_zarr_structure.create_group(
+    omezarr_root = w.get_image_group()
+    segmentation_data_gr = root.create_group(
         LATTICE_SEGMENTATION_DATA_GROUPNAME
     )
 
@@ -23,19 +27,18 @@ def omezarr_segmentations_preprocessing(s: InternalSegmentation):
     # axes = multiscales[0]["axes"]
 
     # NOTE: hack to support NGFFs where image has time dimension > 1 and label has time dimension = 1
-    original_resolution = ome_zarr_root.attrs["multiscales"][0]["datasets"][0]["path"]
-
-    for label_gr_name, label_gr in ome_zarr_root.labels.groups():
-        label_gr_zattrs = label_gr.attrs
-        label_gr_multiscales = label_gr_zattrs["multiscales"]
+    original_resolution = w.get_image_resolutions()[0]
+    
+    for label_name, label_gr in w.get_label_group().groups():
+        multiscale = w.get_label_multiscale(label_name)
         # NOTE: can be multiple multiscales, here picking just 1st
-        axes = label_gr_multiscales[0]["axes"]
-        lattice_id_gr: zarr.Group = segmentation_data_gr.create_group(label_gr_name)
+        axes = multiscale.axes
+        lattice_gr: zarr.Group = segmentation_data_gr.create_group(label_name)
         # arr_name is resolution
         for arr_name, arr in label_gr.arrays():
             size_of_data_for_lvl = 0
-            our_resolution_gr = lattice_id_gr.create_group(arr_name)
-            if len(axes) == 5 and axes[0]["name"] == "t":
+            our_resolution_gr = lattice_gr.create_group(arr_name)
+            if len(axes) == 5 and axes[0].name == AxisName.t:
                 # NOTE: hack to support NGFFs where image has time dimension > 1 and label has time dimension = 1
                 # there are two cases
                 # 1. Label has time dimension 1, image 18
@@ -46,7 +49,7 @@ def omezarr_segmentations_preprocessing(s: InternalSegmentation):
                 # if time dimension of label is < that of image, we do not
                 # check anything, but just copy the first frame for all frames
                 # of label
-                image_time_dimension = ome_zarr_root[original_resolution].shape[0]
+                image_time_dimension = omezarr_root[original_resolution].shape[0]
                 label_time_dimension = arr.shape[0]
 
                 wrong_time_dimension = False
@@ -101,14 +104,14 @@ def omezarr_segmentations_preprocessing(s: InternalSegmentation):
                     # NOTE: here check size of both arr and set_table
                     size_of_data_for_lvl = (
                         size_of_data_for_lvl
-                        + our_zarr_structure.store.getsize(our_set_table.path)
-                        + our_zarr_structure.store.getsize(our_arr.path)
+                        + root.store.getsize(our_set_table.path)
+                        + root.store.getsize(our_arr.path)
                     )
 
                     del corrected_arr_data
                     gc.collect()
 
-            elif len(axes) == 4 and axes[0]["name"] == "c":
+            elif len(axes) == 4 and axes[0].name == AxisName.c:
                 time_group: zarr.Group = our_resolution_gr.create_group("0")
                 channel_dimension = arr.shape[0]
                 assert (
@@ -139,8 +142,8 @@ def omezarr_segmentations_preprocessing(s: InternalSegmentation):
                 # NOTE: here check size of both arr and set_table
                 size_of_data_for_lvl = (
                     size_of_data_for_lvl
-                    + our_zarr_structure.store.getsize(our_set_table.path)
-                    + our_zarr_structure.store.getsize(our_arr.path)
+                    + root.store.getsize(our_set_table.path)
+                    + root.store.getsize(our_arr.path)
                 )
 
                 del corrected_arr_data
@@ -192,24 +195,26 @@ def omezarr_segmentations_preprocessing(s: InternalSegmentation):
                 > s.downsampling_parameters.max_size_per_downsampling_lvl_mb
             ):
                 print(f"Data for resolution {arr_name} removed for segmentation")
-                del lattice_id_gr[arr_name]
-
+                del lattice_gr[arr_name]
+        
+        
+        w.get_label_resolutions(label_name)
         all_resolutions = sorted(label_gr.array_keys())
         original_resolution = all_resolutions[0]
         if s.downsampling_parameters.remove_original_resolution:
-            del lattice_id_gr[original_resolution]
+            del lattice_gr[original_resolution]
             print("Original resolution data removed for segmentation")
 
         if (
             s.downsampling_parameters.max_downsampling_level
             is not None
         ):
-            for downsampling, downsampling_gr in lattice_id_gr.groups():
+            for downsampling, downsampling_gr in lattice_gr.groups():
                 if (
                     int(downsampling)
                     > s.downsampling_parameters.max_downsampling_level
                 ):
-                    del lattice_id_gr[downsampling]
+                    del lattice_gr[downsampling]
                     print(
                         f"Data for downsampling {downsampling} removed for segmentation"
                     )
@@ -218,18 +223,18 @@ def omezarr_segmentations_preprocessing(s: InternalSegmentation):
             s.downsampling_parameters.min_downsampling_level
             is not None
         ):
-            for downsampling, downsampling_gr in lattice_id_gr.groups():
+            for downsampling, downsampling_gr in lattice_gr.groups():
                 if (
                     int(downsampling)
                     < s.downsampling_parameters.min_downsampling_level
                     and downsampling != original_resolution
                 ):
-                    del lattice_id_gr[downsampling]
+                    del lattice_gr[downsampling]
                     print(
                         f"Data for downsampling {downsampling} removed for segmentation"
                     )
 
-        if len(sorted(lattice_id_gr.group_keys())) == 0:
+        if len(sorted(lattice_gr.group_keys())) == 0:
             raise Exception(
                 f"No downsamplings will be saved: max_size_per_downsampling_lvl_mb {s.downsampling_parameters.max_size_per_downsampling_lvl_mb} is too low"
             )
