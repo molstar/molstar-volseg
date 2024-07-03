@@ -1,3 +1,4 @@
+from cellstar_preprocessor.flows.omezarr import OMEZarrWrapper
 import pytest
 from cellstar_db.models import AnnotationsMetadata, VolumeChannelAnnotation
 from cellstar_preprocessor.flows.segmentation.omezarr_segmentations_preprocessing import (
@@ -41,9 +42,6 @@ def test_omezarr_volume_annotations_preprocessing(omezar_test_input: TestInput):
         )
         # d = omezarr
 
-        ome_zarr_root = open_zarr(internal_volume.input_path)
-        ome_zarr_attrs = ome_zarr_root.attrs
-
         # root = open_zarr_structure_from_path(
         #     internal_volume.intermediate_zarr_structure_path
         # )
@@ -54,24 +52,21 @@ def test_omezarr_volume_annotations_preprocessing(omezar_test_input: TestInput):
 
         list(d.descriptions.items())
 
-        for channel_id, channel in enumerate(ome_zarr_attrs["omero"]["channels"]):
-            # PLAN
-            # for each channel in omero channels
-            # check if in volume channel annotations exist object with that channel_id
-            # that its color is equal to channel color
-            # that its label is equal to channel label
+        w = OMEZarrWrapper(internal_volume.input_path)
+        omero_channels = w.get_root_zattrs_wrapper().omero.channels
+        for c in omero_channels:
             assert list(
                 filter(
-                    lambda v: v.channel_id == str(channel_id),
+                    lambda v: v.channel_id == str(c.label),
                     d.volume_channels_annotations,
                 )
             )[0]
             vol_ch_annotation: VolumeChannelAnnotation = list(
                 filter(
-                    lambda v: v.channel_id == str(channel_id),
+                    lambda v: v.channel_id == str(c.label),
                     d.volume_channels_annotations,
                 )
             )[0]
 
-            assert vol_ch_annotation.color == hex_to_rgba_normalized(channel["color"])
-            assert vol_ch_annotation.label == channel["label"]
+            assert vol_ch_annotation.color == hex_to_rgba_normalized(c.color)
+            assert vol_ch_annotation.label == c.label
