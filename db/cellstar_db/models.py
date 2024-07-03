@@ -141,12 +141,12 @@ class OMEZarrAttrs(ModelExtra):
     class Config:
         alias_generator = hyphenize
 
-    axes: list[OMEZarrAxisInfo]
-    datasets: list[OMEZarrDatasetsMetadata]
+    axes: list[OMEZarrAxisInfo] | None
+    datasets: list[OMEZarrDatasetsMetadata] | None
     coordinateTransformations: list[OMEZarrCoordinateTransformations] | None
-    multiscales: list[OMEZarrMultiscales]
-    omero: OMEZarrOmeroMetadata
-    image_label: OMEZarrImageLabelMetadata
+    multiscales: list[OMEZarrMultiscales] | None
+    omero: OMEZarrOmeroMetadata | None
+    image_label: OMEZarrImageLabelMetadata | None
 
 
 class PreprocessorMode(str, Enum):
