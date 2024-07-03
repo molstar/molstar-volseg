@@ -41,8 +41,8 @@ from cellstar_preprocessor.flows.constants import (
 from cellstar_preprocessor.flows.segmentation.custom_annotations_preprocessing import (
     custom_annotations_preprocessing,
 )
-from cellstar_preprocessor.flows.segmentation.extract_tiff_segmentation_stack_dir_metadata import (
-    extract_tiff_segmentation_stack_dir_metadata,
+from cellstar_preprocessor.flows.segmentation.tiff_segmentation_stack_dir_metadata_preprocessing import (
+    tiff_segmentation_stack_dir_metadata_preprocessing,
 )
 from cellstar_preprocessor.flows.segmentation.geometric_segmentation_annotations_preprocessing import (
     geometric_segmentation_annotations_preprocessing,
@@ -104,11 +104,11 @@ from cellstar_preprocessor.flows.segmentation.sff_segmentation_metadata_preproce
 from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing import (
     sff_segmentation_preprocessing,
 )
-from cellstar_preprocessor.flows.segmentation.tiff_segmentation_stack_dir_processing import (
-    tiff_segmentation_stack_dir_processing,
+from cellstar_preprocessor.flows.segmentation.tiff_stack_dir_segmentation_preprocessing import (
+    tiff_stack_dir_segmentation_preprocessing,
 )
-from cellstar_preprocessor.flows.volume.extract_tiff_image_stack_dir_metadata import (
-    extract_tiff_image_stack_dir_metadata,
+from cellstar_preprocessor.flows.volume.tiff_image_stack_dir_metadata_preprocessing import (
+    tiff_image_stack_dir_metadata_preprocessing,
 )
 from cellstar_preprocessor.flows.volume.map_volume_metadata_preprocessing import (
     map_volume_metadata_preprocessing,
@@ -261,82 +261,6 @@ SEGMENTATION_INPUT_TYPES = (
     OMEZARRInput,
     TIFFSegmentationStackDirInput,
 )
-
-
-class SFFAnnotationCollectionTask(TaskBase):
-    def __init__(self, internal_segmentation: InternalSegmentation):
-        self.internal_segmentation = internal_segmentation
-
-    def execute(self) -> None:
-        annotations_dict = sff_segmentation_annotations_preprocessing(
-            internal_segmentation=self.internal_segmentation
-        )
-
-
-class MaskAnnotationCreationTask(TaskBase):
-    def __init__(self, internal_segmentation: InternalSegmentation):
-        self.internal_segmentation = internal_segmentation
-
-    def execute(self) -> None:
-        # annotations_dict = extract_annotations_from_sff_segmentation(
-        #     internal_segmentation=self.internal_segmentation
-        # )
-        mask_segmentation_annotations_preprocessing(
-            internal_segmentation=self.internal_segmentation
-        )
-
-
-class NIIMetadataCollectionTask(TaskBase):
-    def __init__(self, internal_volume: InternalVolume):
-        self.internal_volume = internal_volume
-
-    def execute(self) -> None:
-        volume = self.internal_volume
-        metadata_dict = nii_volume_metadata_preprocessing(internal_volume=volume)
-
-
-class MAPMetadataCollectionTask(TaskBase):
-    def __init__(self, internal_volume: InternalVolume):
-        self.internal_volume = internal_volume
-
-    def execute(self) -> None:
-        volume = self.internal_volume
-        metadata_dict = map_volume_metadata_preprocessing(v=volume)
-
-
-class OMEZARRAnnotationsCollectionTask(TaskBase):
-    def __init__(self, internal_volume: InternalVolume):
-        self.internal_volume = internal_volume
-
-    def execute(self) -> None:
-        annotations_dict = omezarr_volume_annotations_preprocessing(
-            v=self.internal_volume
-        )
-
-
-class OMEZARRMetadataCollectionTask(TaskBase):
-    def __init__(self, internal_volume: InternalVolume):
-        self.internal_volume = internal_volume
-
-    def execute(self) -> None:
-        metadata_dict = omezarr_volume_metadata_preprocessing(v=self.internal_volume)
-
-
-class OMEZARRImageProcessTask(TaskBase):
-    def __init__(self, internal_volume: InternalVolume):
-        self.internal_volume = internal_volume
-
-    def execute(self) -> None:
-        omezarr_volume_preprocessing(self.internal_volume)
-
-
-class OMEZARRLabelsProcessTask(TaskBase):
-    def __init__(self, internal_segmentation: InternalSegmentation):
-        self.internal_segmentation = internal_segmentation
-
-    def execute(self) -> None:
-        omezarr_segmentations_preprocessing(s=self.internal_segmentation)
-
 
 class SFFMetadataCollectionTask(TaskBase):
     def __init__(self, internal_segmentation: InternalSegmentation):
@@ -529,7 +453,7 @@ class TIFFSegmentationStackDirProcessingTask(TaskBase):
 
     def execute(self) -> None:
         internal_segmentation = self.internal_segmentation
-        tiff_segmentation_stack_dir_processing(internal_segmentation)
+        tiff_stack_dir_segmentation_preprocessing(internal_segmentation)
         segmentation_downsampling(internal_segmentation)
 
 
@@ -539,7 +463,7 @@ class TIFFImageStackDirMetadataExtractionTask(TaskBase):
 
     def execute(self) -> None:
         volume = self.internal_volume
-        extract_tiff_image_stack_dir_metadata(internal_volume=volume)
+        tiff_image_stack_dir_metadata_preprocessing(v=volume)
 
 
 class TIFFSegmentationStackDirMetadataExtractionTask(TaskBase):
@@ -547,7 +471,7 @@ class TIFFSegmentationStackDirMetadataExtractionTask(TaskBase):
         self.internal_segmentation = internal_segmentation
 
     def execute(self) -> None:
-        extract_tiff_segmentation_stack_dir_metadata(self.internal_segmentation)
+        tiff_segmentation_stack_dir_metadata_preprocessing(self.internal_segmentation)
 
 
 class TIFFSegmentationStackDirAnnotationCreationTask(TaskBase):
@@ -1329,7 +1253,8 @@ def main(
     # # add_custom_annotations: bool = typer.Option(default=False),
 ):
     json_path = Path(arguments_json)
-    arguments: PreprocessorArguments = read_json(json_path)
+    arguments_dict: object = read_json(json_path)
+    arguments = PreprocessorArguments.parse_obj(arguments_dict)
     # TODO: unpack to variables
     asyncio.run(
         main_preprocessor(

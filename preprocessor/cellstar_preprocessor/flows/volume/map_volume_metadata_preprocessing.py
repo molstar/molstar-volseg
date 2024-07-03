@@ -149,7 +149,7 @@ def map_volume_metadata_preprocessing(v: InternalVolume):
 
     # NOTE: remove original level resolution data
     if v.downsampling_parameters.remove_original_resolution:
-        del v.get_volume_data_group["1"]
+        del v.get_volume_data_group()["1"]
         print("Original resolution volume data removed")
 
         current_levels: list[DownsamplingLevelInfo] = (

@@ -8,6 +8,7 @@ dependencies:
   - python==3.10.0
   - pip
   - asgiref==3.5.0
+  - pyvips
   - dask==2022.2.1
   - fastapi==0.73.0
   - gemmi==0.5.3
@@ -58,4 +59,4 @@ dependencies:
     - h5py
     - vedo
     - mkdocs-material
-    - munch
+    - pymeshlab

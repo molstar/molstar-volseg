@@ -66,8 +66,10 @@ class InternalSegmentation(InternalData):
         m = self.get_metadata()
         if self.input_kind == InputKind.sff:
             original_axis_order = [AxisName.x, AxisName.y, AxisName.z]
-        elif self.input_kind == InputKind.omezarr:
+        elif self.input_kind in [InputKind.omezarr, InputKind.tiff_segmentation_stack_dir]:
             original_axis_order = m.volumes.sampling_info.original_axis_order
+        else:
+            raise Exception(f"{self.input_kind} is not supported")
 
         # m.segmentation_lattices.ids = []
         for lattice_id, lattice_gr in data_gr.groups():

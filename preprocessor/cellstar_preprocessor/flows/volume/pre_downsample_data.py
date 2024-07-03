@@ -7,7 +7,7 @@ from cellstar_preprocessor.flows.constants import DOWNSAMPLING_KERNEL
 from cellstar_preprocessor.flows.volume.helper_methods import generate_kernel_3d_arr
 from cellstar_preprocessor.tools.downsample_map.downsample_map import downsample_map
 from cellstar_preprocessor.tools.downsample_stl.downsample_stl import downsample_stl
-from cellstar_preprocessor.tools.downsize_tiff.downsize_tiff import downsize_tiff
+# from cellstar_preprocessor.tools.downsize_tiff.downsize_tiff import downsize_tiff
 
 # from cellstar_preprocessor.model.input import InputKind
 # from cellstar_preprocessor.tools.downsample_map.downsample_map import downsample_map
@@ -49,10 +49,10 @@ def pre_downsample_data(
                     (input_tiff, output_tiff, pre_downsample_data_factor)
                 )
 
-            with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
-                p.starmap(downsize_tiff, downsize_args)
+            # with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
+            #     # p.starmap(downsize_tiff, downsize_args)
 
-            p.join()
+            # p.join()
 
         elif inputs[idx].kind == InputKind.map:
             kernel = generate_kernel_3d_arr(list(DOWNSAMPLING_KERNEL))

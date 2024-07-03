@@ -1,8 +1,4 @@
 import zarr
-from cellstar_preprocessor.flows.common import (
-    open_zarr_structure_from_path,
-    set_volume_custom_data,
-)
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
 from cellstar_preprocessor.flows.volume.helper_methods import (
     store_volume_data_in_zarr_stucture,
