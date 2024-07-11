@@ -16,4 +16,4 @@ if __name__ == '__main__':
     dir = Path('C:/Users/chere/OneDrive - MUNI/Figures/PNG')
     outdir = Path('C:/Users/chere/OneDrive - MUNI/Figures/JPEG')
     for p in dir.glob("*.png"):
-        convert_image(p, outdir / p.stem + '.jpeg')
+        convert_image(p, outdir / (p.stem + '.jpeg'))
