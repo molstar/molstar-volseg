@@ -26,7 +26,7 @@
             ]
         },
         {
-            "name": "emd_1832_pre_downsample",
+            "name": "emd_1832",
             "type": "debugpy",
             "justMyCode": false,
             "request": "launch",
@@ -35,26 +35,8 @@
             // /mnt/data_backup_ceph/datasets_from_alessio/empiar-12017/obese_lacz
             "args": [
                 "preprocess",
-                "--mode",
-                "add",
-                "--input-path",
-                "test-data/preprocessor/sample_volumes/emdb/EMD-1832.map",
-                "--input-kind",
-                "map",
-                "--entry-id",
-                "emd-1832-pre-downsampled",
-                "--source-db",
-                "emdb",
-                "--source-db-id",
-                "emd-1832-pre-downsampled",
-                "--source-db-name",
-                "emdb",
-                "--working-folder",
-                "/mnt/data_backup_ceph/temp/temp_zarr_hierarchy_storage",
-                "--db-path",
-                "/mnt/data_backup_ceph/temp/test_db",
-                "--pre-downsample-data-factor",
-                "2"
+                "--arguments-json",
+                "preprocessor/cellstar_preprocessor/model/sample_preprocessor_params.json",
             ]
         },
         {
@@ -97,6 +79,20 @@
                 "u1",
                 "--pre-downsample-data-factor",
                 "8"
+            ]
+        },
+        {
+            "name": "actin",
+            "type": "debugpy",
+            "justMyCode": false,
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            // /mnt/data_backup_ceph/datasets_from_alessio/empiar-12017/obese_lacz
+            "args": [
+                "preprocess",
+                "--arguments-json",
+                "preprocessor/cellstar_preprocessor/model/actin_params.json"
             ]
         },
         {
