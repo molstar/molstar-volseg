@@ -13,6 +13,7 @@ def convert_image(inp: Path, out: Path):
     print(1)
     
 if __name__ == '__main__':
-    dir = Path('preprocessor/cellstar_preprocessor/tools/png_to_tiff/figures')
+    dir = Path('C:/Users/chere/OneDrive - MUNI/Figures/PNG')
+    outdir = Path('C:/Users/chere/OneDrive - MUNI/Figures/JPEG')
     for p in dir.glob("*.png"):
-        convert_image(p, p.with_suffix('.jpeg'))
+        convert_image(p, outdir / p.stem + '.jpeg')
