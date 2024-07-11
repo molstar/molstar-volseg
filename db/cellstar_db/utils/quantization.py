@@ -69,7 +69,7 @@ def decode_quantized_data(data_dict: dict) -> Union[da.Array, np.ndarray]:
     # this will decode back to log data
     delta = (data_dict["max"] - data_dict["min"]) / (data_dict["num_steps"] - 1)
     log_data = data_dict["data"].astype(dtype=data_dict["src_type"])
-    if log_data.dtype in [np.float32, np.float64]:
+    if log_data.dtype in {np.float32, np.float64}:
         da.multiply(log_data, delta, out=log_data)
     else:
         log_data = da.multiply(log_data, delta)

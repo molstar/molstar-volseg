@@ -9,8 +9,9 @@ dependencies:
   - pip
   - asgiref==3.5.0
   - pyvips
-  - dask==2022.2.1
-  - fastapi==0.73.0
+  - dask
+  - dask-image
+  - fastapi
   - gemmi==0.5.3
   - matplotlib==3.5.1
   - mrcfile==1.4.0
@@ -35,12 +36,13 @@ dependencies:
   - ome-zarr
   - jupyterlab
   - mkdocs
+  - pydantic-settings
 
   - pip:
     # - -r requirements.txt
     - git+https://github.com/molstar/ciftools-python.git@b074526a8b418bc68d83ae5556a627d2d6ceabdb#egg=ciftools
-    - sfftk==0.5.5.dev1
-    - sfftk-rw==0.7.1
+    - sfftk1
+    - sfftk-rw
     - SimpleParse @ git+https://github.com/mcfletch/simpleparse.git@57c8d734bdc165581fbacfeecabe25a66c3452a4
     - tensorstore==0.1.18
     - killport
@@ -60,3 +62,5 @@ dependencies:
     - vedo
     - mkdocs-material
     - pymeshlab
+    - numpydantic
+    - numpydantic[dask]

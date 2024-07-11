@@ -10,7 +10,7 @@ from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
 def omezarr_segmentations_preprocessing(s: InternalSegmentation):
     root = s.get_zarr_root()
-    s.set_segmentation_custom_data()
+    s.set_custom_data()
     w = s.get_omezarr_wrapper()
     multiscale = w.get_image_multiscale()
     axes = multiscale.axes
@@ -26,7 +26,7 @@ def omezarr_segmentations_preprocessing(s: InternalSegmentation):
     # NOTE: hack to support NGFFs where image has time dimension > 1 and label has time dimension = 1
     original_resolution = w.get_image_resolutions()[0]
 
-    for label_name, label_gr in w.get_label_group().groups():
+    for label_name, label_gr in w.get_labels_group().groups():
         multiscale = w.get_label_multiscale(label_name)
         # NOTE: can be multiple multiscales, here picking just 1st
         axes = multiscale.axes

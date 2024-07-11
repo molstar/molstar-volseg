@@ -9,6 +9,7 @@ from cellstar_db.models import (
     VolumesMetadata,
 )
 from cellstar_preprocessor.flows.constants import (
+    METADATA_DICT_NAME,
     QUANTIZATION_DATA_DICT_ATTR_NAME,
     VOLUME_DATA_GROUPNAME,
 )
@@ -120,7 +121,7 @@ def nii_volume_metadata_preprocessing(internal_volume: InternalVolume):
     volume_downsamplings = get_downsamplings(data_group=root[VOLUME_DATA_GROUPNAME])
 
     source_axes_units = _get_source_axes_units(nii_header=internal_volume.map_header)
-    metadata_dict = root.attrs["metadata_dict"]
+    metadata_dict = root.attrs[METADATA_DICT_NAME]
     metadata_dict.entry_id.source_db_name = source_db_name
     metadata_dict.entry_id.source_db_id = source_db_id
     metadata_dict.volumes = VolumesMetadata(
@@ -144,5 +145,5 @@ def nii_volume_metadata_preprocessing(internal_volume: InternalVolume):
         volume_downsamplings=volume_downsamplings,
     )
 
-    root.attrs["metadata_dict"] = metadata_dict
+    root.attrs[METADATA_DICT_NAME] = metadata_dict
     return metadata_dict

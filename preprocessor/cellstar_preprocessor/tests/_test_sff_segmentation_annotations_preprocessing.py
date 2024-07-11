@@ -18,7 +18,7 @@ from cellstar_preprocessor.flows.segmentation.sff_segmentation_annotations_prepr
 from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing import (
     sff_segmentation_preprocessing,
 )
-from cellstar_preprocessor.tests.helper_methods import get_sff_internal_segmentation
+from cellstar_preprocessor.tests.helper_methods import get_internal_segmentation
 from cellstar_preprocessor.tests.input_for_tests import (
     SFF_TEST_INPUTS,
     WORKING_FOLDER_FOR_TESTS,
@@ -31,12 +31,12 @@ from cellstar_preprocessor.tests.test_context import TestContext, context_for_te
 def test_sff_segmentation_annotations_preprocessing(test_input: TestInput):
     with context_for_tests(test_input, WORKING_FOLDER_FOR_TESTS) as ctx:
         ctx: TestContext
-        internal_segmentation = get_sff_internal_segmentation(
-            test_input, ctx.test_file_path, ctx.intermediate_zarr_structure_path
+        internal_segmentation = get_internal_segmentation(
+            test_input, ctx.test_input_asset_path, ctx.working_folder
         )
         sff_segmentation_preprocessing(internal_segmentation=internal_segmentation)
         d = sff_segmentation_annotations_preprocessing(
-            internal_segmentation=internal_segmentation
+            s=internal_segmentation
         )
 
         r = extract_raw_annotations_from_sff(internal_segmentation.input_path)

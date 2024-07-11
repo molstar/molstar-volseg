@@ -2,6 +2,7 @@ import dask.array as da
 import numpy as np
 import zarr
 from cellstar_preprocessor.flows.constants import (
+    NON_QUANTIZED_DATA_TYPES_STR,
     QUANTIZATION_DATA_DICT_ATTR_NAME,
     VOLUME_DATA_GROUPNAME,
     VOLUME_DATA_GROUPNAME_COPY,
@@ -30,7 +31,7 @@ def quantize_internal_volume(internal_volume: InternalVolume):
         or (
             (internal_volume.volume_force_dtype in (np.uint16, np.int16))
             and (
-                internal_volume.quantize_dtype_str.value in ["u2", "|u2", ">u2", "<u2"]
+                internal_volume.quantize_dtype_str.value in NON_QUANTIZED_DATA_TYPES_STR
             )
         )
     ):

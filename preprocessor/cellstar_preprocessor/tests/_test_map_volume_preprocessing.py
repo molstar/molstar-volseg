@@ -14,16 +14,6 @@ from cellstar_preprocessor.tests.helper_methods import (
     initialize_intermediate_zarr_structure_for_tests,
     remove_intermediate_zarr_structure_for_tests,
 )
-from cellstar_preprocessor.tests.input_for_tests import (
-    INTERNAL_VOLUME_FOR_TESTING_XYZ_ORDER,
-    INTERNAL_VOLUME_FOR_TESTING_ZYX_ORDER,
-)
-
-INTERNAL_VOLUMES = [
-    INTERNAL_VOLUME_FOR_TESTING_ZYX_ORDER,
-    INTERNAL_VOLUME_FOR_TESTING_XYZ_ORDER,
-]
-
 
 # artificial maps do not need
 

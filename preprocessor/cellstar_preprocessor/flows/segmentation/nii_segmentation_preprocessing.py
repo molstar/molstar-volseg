@@ -1,9 +1,9 @@
 import nibabel as nib
 import numpy as np
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
-from cellstar_preprocessor.flows.segmentation.helper_methods import (
-    store_segmentation_data_in_zarr_structure,
-)
+# from cellstar_preprocessor.model.segmentation import (
+#     store_segmentation_data,
+# )
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
@@ -38,11 +38,11 @@ def nii_segmentation_preprocessing(internal_segmentation: InternalSegmentation):
         lattice_gr = segmentation_data_gr.create_group(str(index))
         params_for_storing = internal_segmentation.params_for_storing
 
-        store_segmentation_data_in_zarr_structure(
-            original_data=data,
-            lattice_data_group=lattice_gr,
-            value_to_segment_id_dict_for_specific_lattice_id=internal_segmentation.value_to_segment_id_dict[
-                index
-            ],
-            params_for_storing=params_for_storing,
-        )
+        # store_segmentation_data(
+        #     prepared_data=data,
+        #     segmentation_gr=lattice_gr,
+        #     value_to_segment_id_dict_for_specific_segmentation_id=internal_segmentation.value_to_segment_id_dict[
+        #         index
+        #     ],
+        #     params_for_storing=params_for_storing,
+        # )

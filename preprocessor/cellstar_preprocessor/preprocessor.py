@@ -5,36 +5,44 @@ import typing
 from argparse import ArgumentError
 from pathlib import Path
 
+from cellstar_preprocessor.commands.delete_entry import delete_entry
+from cellstar_preprocessor.commands.edit_descriptions import edit_descriptions
+from cellstar_preprocessor.commands.edit_segment_annotations import edit_segment_annotations
+from cellstar_preprocessor.commands.remove_descriptions import remove_descriptions
+from cellstar_preprocessor.commands.remove_segment_annotations import remove_segment_annotations
+from cellstar_preprocessor.commands.remove_segmentation import remove_segmentation
+from cellstar_preprocessor.commands.remove_volume import remove_volume
+from cellstar_preprocessor.flows.volume.pre_downsample_data import pre_downsample_data
+from cellstar_preprocessor.tools.wrl_to_stl.wrl_to_stl import wrl_to_stl
 import typer
 import zarr
-from cellstar_db.file_system.annotations_context import AnnnotationsEditContext
 from cellstar_db.file_system.db import FileSystemVolumeServerDB
 from cellstar_db.file_system.volume_and_segmentation_context import (
     VolumeAndSegmentationContext,
 )
 from cellstar_db.models import (
-    DescriptionData,
     DownsamplingParams,
     EntryData,
     ExtraMetadata,
     GeometricSegmentationData,
-    InputKind,
+    AssetKind,
+    GeneralPreprocessorParameters,
     Inputs,
-    PreprocessorArguments,
     PreprocessorInput,
     PreprocessorMode,
     RawInput,
-    SegmentAnnotationData,
     StoringParams,
     VolumeParams,
 )
 from cellstar_preprocessor.flows.common import process_extra_data, read_json
 from cellstar_preprocessor.flows.constants import (
+    ANNOTATIONS_DICT_NAME,
     GEOMETRIC_SEGMENTATIONS_ZATTRS,
     INIT_ANNOTATIONS_MODEL,
     INIT_METADATA_MODEL,
     LATTICE_SEGMENTATION_DATA_GROUPNAME,
     MESH_SEGMENTATION_DATA_GROUPNAME,
+    METADATA_DICT_NAME,
     RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS,
     VOLUME_DATA_GROUPNAME,
 )
@@ -140,7 +148,6 @@ from cellstar_preprocessor.flows.volume.omezarr_volume_metadata_preprocessing im
 from cellstar_preprocessor.flows.volume.omezarr_volume_preprocessing import (
     omezarr_volume_preprocessing,
 )
-from cellstar_preprocessor.flows.volume.pre_downsample_data import pre_downsample_data
 from cellstar_preprocessor.flows.volume.process_allencel_metadata_csv import (
     process_allencell_metadata_csv,
 )
@@ -154,7 +161,7 @@ from cellstar_preprocessor.flows.volume.process_volume_metadata import (
 from cellstar_preprocessor.flows.volume.quantize_internal_volume import (
     quantize_internal_volume,
 )
-from cellstar_preprocessor.flows.volume.tiff_image_processing import (
+from cellstar_preprocessor.flows.volume.tiff_image_stack_dir_processing import (
     tiff_image_stack_dir_processing,
 )
 from cellstar_preprocessor.flows.volume.volume_downsampling import volume_downsampling
@@ -169,7 +176,7 @@ from pydantic import BaseModel
 
 class InputT(BaseModel):
     path: Path | list[Path]
-    kind: InputKind
+    kind: AssetKind
 
 
 class TIFFImageStackDirInput(InputT):
@@ -179,6 +186,8 @@ class TIFFImageStackDirInput(InputT):
 class TIFFSegmentationStackDirInput(InputT):
     pass
 
+class STLSegmentationInput(InputT):
+    pass
 
 class OMETIFFImageInput(InputT):
     pass
@@ -260,50 +269,8 @@ SEGMENTATION_INPUT_TYPES = (
     OMETIFFSegmentationInput,
     OMEZARRInput,
     TIFFSegmentationStackDirInput,
+    STLSegmentationInput
 )
-
-class SFFMetadataCollectionTask(TaskBase):
-    def __init__(self, internal_segmentation: InternalSegmentation):
-        self.internal_segmentation = internal_segmentation
-
-    def execute(self) -> None:
-        metadata_dict = sff_segmentation_metadata_preprocessing(
-            s=self.internal_segmentation
-        )
-
-
-class MaskMetadataCollectionTask(TaskBase):
-    def __init__(self, internal_segmentation: InternalSegmentation):
-        self.internal_segmentation = internal_segmentation
-
-    def execute(self) -> None:
-        # metadata_dict = extract_metadata_from_sff_segmentation(
-        #     internal_segmentation=self.internal_segmentation
-        # )
-        metadata_dict = mask_segmentation_metadata_preprocessing(
-            s=self.internal_segmentation
-        )
-
-
-class GeometricSegmentationMetadataCollectionTask(TaskBase):
-    def __init__(self, internal_segmentation: InternalSegmentation):
-        self.internal_segmentation = internal_segmentation
-
-    def execute(self) -> None:
-        metadata_dict = geometric_segmentation_metadata_preprocessing(
-            s=self.internal_segmentation
-        )
-
-
-class NIISegmentationMetadataCollectionTask(TaskBase):
-    def __init__(self, internal_segmentation: InternalSegmentation):
-        self.internal_segmentation = internal_segmentation
-
-    def execute(self) -> None:
-        metadata_dict = nii_segmentation_metadata_preprocessing(
-            internal_segmentation=self.internal_segmentation
-        )
-
 
 class ProcessVolumeTask(TaskBase):
     def __init__(self, internal_volume: InternalVolume):
@@ -403,7 +370,7 @@ class OMETIFFImageMetadataExtractionTask(TaskBase):
 
     def execute(self) -> None:
         volume = self.internal_volume
-        ometiff_volume_metadata_preprocessing(internal_volume=volume)
+        ometiff_volume_metadata_preprocessing(v=volume)
 
 
 class OMETIFFSegmentationMetadataExtractionTask(TaskBase):
@@ -423,7 +390,7 @@ class OMETIFFImageAnnotationsExtractionTask(TaskBase):
 
     def execute(self) -> None:
         volume = self.internal_volume
-        ometiff_volume_annotations_preprocessing(internal_volume=volume)
+        ometiff_volume_annotations_preprocessing(v=volume)
 
 
 class OMETIFFSegmentationAnnotationsExtractionTask(TaskBase):
@@ -443,7 +410,7 @@ class TIFFImageStackDirProcessingTask(TaskBase):
 
     def execute(self) -> None:
         volume = self.internal_volume
-        tiff_image_stack_dir_processing(internal_volume=volume)
+        tiff_image_stack_dir_processing(i=volume)
         volume_downsampling(internal_volume=volume)
 
 
@@ -480,7 +447,7 @@ class TIFFSegmentationStackDirAnnotationCreationTask(TaskBase):
 
     def execute(self) -> None:
         mask_segmentation_annotations_preprocessing(
-            internal_segmentation=self.internal_segmentation
+            s=self.internal_segmentation
         )
 
 
@@ -564,8 +531,6 @@ class GeometricSegmentationAnnotationsCollectionTask(TaskBase):
 
 class Preprocessor:
     def __init__(self, preprocessor_input: PreprocessorInput):
-        if not preprocessor_input:
-            raise ArgumentError("No input parameters are provided")
         self.preprocessor_input = preprocessor_input
         self.intermediate_zarr_structure = None
         self.internal_volume = None
@@ -651,193 +616,7 @@ class Preprocessor:
                 tasks.append(ProcessSegmentationTask(segmentation))
                 tasks.append(ProcessSegmentationMetadataTask(segmentation))
                 tasks.append(ProcessSegmentationAnnotationsTask(segmentation))
-
-            # elif isinstance(i, MAPInput):
-            #     self.store_internal_volume(
-            #         internal_volume=InternalVolume(
-            #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-            #             volume_input_path=i.input_path,
-            #             params_for_storing=self.preprocessor_input.storing_params,
-            #             volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
-            #             quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
-            #             downsampling_parameters=self.preprocessor_input.downsampling,
-            #             entry_data=self.preprocessor_input.entry_data,
-            #             quantize_downsampling_levels=self.preprocessor_input.volume.quantize_downsampling_levels,
-            #         )
-            #     )
-            #     tasks.append(
-            #         MAPProcessVolumeTask(internal_volume=self.get_internal_volume())
-            #     )
-            #     tasks.append(
-            #         MAPMetadataCollectionTask(
-            #             internal_volume=self.get_internal_volume()
-            #         )
-            #     )
-            # elif isinstance(i, SFFInput):
-            #     self.store_internal_segmentation(
-            #         internal_segmentation=InternalSegmentation(
-            #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-            #             segmentation_input_path=i.input_path,
-            #             params_for_storing=self.preprocessor_input.storing_params,
-            #             downsampling_parameters=self.preprocessor_input.downsampling,
-            #             entry_data=self.preprocessor_input.entry_data,
-            #         )
-            #     )
-            #     tasks.append(
-            #         SFFProcessSegmentationTask(
-            #             internal_segmentation=self.get_internal_segmentation()
-            #         )
-            #     )
-            #     tasks.append(
-            #         SFFMetadataCollectionTask(
-            #             internal_segmentation=self.get_internal_segmentation()
-            #         )
-            #     )
-            #     tasks.append(
-            #         SFFAnnotationCollectionTask(
-            #             internal_segmentation=self.get_internal_segmentation()
-            #         )
-            #     )
-
-            # elif isinstance(i, MaskInput):
-            #     mask_segmentation_inputs.append(i)
-
-            # elif isinstance(i, OMEZARRInput):
-            #     self.store_internal_volume(
-            #         internal_volume=InternalVolume(
-            #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-            #             volume_input_path=i.input_path,
-            #             params_for_storing=self.preprocessor_input.storing_params,
-            #             volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
-            #             quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
-            #             downsampling_parameters=self.preprocessor_input.downsampling,
-            #             entry_data=self.preprocessor_input.entry_data,
-            #             quantize_downsampling_levels=self.preprocessor_input.volume.quantize_downsampling_levels,
-            #         )
-            #     )
-            #     tasks.append(OMEZARRImageProcessTask(self.get_internal_volume()))
-            #     if check_if_omezarr_has_labels(
-            #         internal_volume=self.get_internal_volume()
-            #     ):
-            #         self.store_internal_segmentation(
-            #             internal_segmentation=InternalSegmentation(
-            #                 intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-            #                 segmentation_input_path=i.input_path,
-            #                 params_for_storing=self.preprocessor_input.storing_params,
-            #                 downsampling_parameters=self.preprocessor_input.downsampling,
-            #                 entry_data=self.preprocessor_input.entry_data,
-            #             )
-            #         )
-            #         tasks.append(
-            #             OMEZARRLabelsProcessTask(self.get_internal_segmentation())
-            #         )
-
-            #     tasks.append(
-            #         OMEZARRMetadataCollectionTask(
-            #             internal_volume=self.get_internal_volume()
-            #         )
-            #     )
-            #     tasks.append(
-            #         OMEZARRAnnotationsCollectionTask(self.get_internal_volume())
-            #     )
-
-            # elif isinstance(i, GeometricSegmentationInput):
-            #     self.store_internal_segmentation(
-            #         internal_segmentation=InternalSegmentation(
-            #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-            #             segmentation_input_path=i.input_path,
-            #             params_for_storing=self.preprocessor_input.storing_params,
-            #             downsampling_parameters=self.preprocessor_input.downsampling,
-            #             entry_data=self.preprocessor_input.entry_data,
-            #         )
-            #     )
-            #     tasks.append(
-            #         ProcessGeometricSegmentationTask(self.get_internal_segmentation())
-            #     )
-            # elif isinstance(i, OMETIFFImageInput):
-            #     self.store_internal_volume(
-            #         internal_volume=InternalVolume(
-            #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-            #             volume_input_path=i.input_path,
-            #             params_for_storing=self.preprocessor_input.storing_params,
-            #             volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
-            #             quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
-            #             downsampling_parameters=self.preprocessor_input.downsampling,
-            #             entry_data=self.preprocessor_input.entry_data,
-            #             quantize_downsampling_levels=self.preprocessor_input.volume.quantize_downsampling_levels,
-            #         )
-            #     )
-            #     tasks.append(
-            #         OMETIFFImageProcessingTask(
-            #             internal_volume=self.get_internal_volume()
-            #         )
-            #     )
-            #     tasks.append(
-            #         OMETIFFImageMetadataExtractionTask(
-            #             internal_volume=self.get_internal_volume()
-            #         )
-            #     )
-            #     # TODO: remove - after processing segmentation
-            #     tasks.append(
-            #         OMETIFFImageAnnotationsExtractionTask(
-            #             internal_volume=self.get_internal_volume()
-            #         )
-            #     )
-            # elif isinstance(i, OMETIFFSegmentationInput):
-            #     self.store_internal_segmentation(
-            #         internal_segmentation=InternalSegmentation(
-            #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-            #             segmentation_input_path=i.input_path,
-            #             params_for_storing=self.preprocessor_input.storing_params,
-            #             downsampling_parameters=self.preprocessor_input.downsampling,
-            #             entry_data=self.preprocessor_input.entry_data,
-            #         )
-            #     )
-            #     tasks.append(
-            #         OMETIFFSegmentationProcessingTask(self.get_internal_segmentation())
-            #     )
-            #     tasks.append(
-            #         OMETIFFSegmentationMetadataExtractionTask(
-            #             internal_segmentation=self.get_internal_segmentation()
-            #         )
-            #     )
-            #     tasks.append(
-            #         OMETIFFSegmentationAnnotationsExtractionTask(
-            #             internal_segmentation=self.get_internal_segmentation()
-            #         )
-            #     )
-            # elif isinstance(i, NIIVolumeInput):
-            #     self.store_internal_volume(
-            #         internal_volume=InternalVolume(
-            #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-            #             volume_input_path=i.input_path,
-            #             params_for_storing=self.preprocessor_input.storing_params,
-            #             volume_force_dtype=self.preprocessor_input.volume.force_volume_dtype,
-            #             quantize_dtype_str=self.preprocessor_input.volume.quantize_dtype_str,
-            #             downsampling_parameters=self.preprocessor_input.downsampling,
-            #             entry_data=self.preprocessor_input.entry_data,
-            #             quantize_downsampling_levels=self.preprocessor_input.volume.quantize_downsampling_levels,
-            #         )
-            #     )
-            #     tasks.append(
-            #         NIIProcessVolumeTask(internal_volume=self.get_internal_volume())
-            #     )
-            #     tasks.append(
-            #         NIIMetadataCollectionTask(
-            #             internal_volume=self.get_internal_volume()
-            #         )
-            #     )
-
-            # elif isinstance(i, NIISegmentationInput):
-            #     nii_segmentation_inputs.append(i)
-            # elif isinstance(i, CustomAnnotationsInput):
-            #     tasks.append(
-            #         CustomAnnotationsCollectionTask(
-            #             input_path=i.input_path,
-            #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-            #         )
-            #     )
-
+                
         if (
             self.get_internal_volume()
             and self.preprocessor_input.volume.quantize_dtype_str
@@ -937,29 +716,29 @@ class Preprocessor:
         analyzed: list[InputT] = []
 
         extra_data = list(
-            filter(lambda i: i.kind == InputKind.extra_data, raw_inputs_list)
+            filter(lambda i: i.kind == AssetKind.extra_data, raw_inputs_list)
         )
         assert len(extra_data) <= 1, "There must be no more than one extra data input"
         if len(extra_data) == 1:
             analyzed.append(extra_data[0])
 
-        if any(i.kind == InputKind.mask for i in raw_inputs_list):
+        if any(i.kind == AssetKind.mask for i in raw_inputs_list):
             all_mask_input_pathes = [
-                i.path for i in raw_inputs_list if i.kind == InputKind.mask
+                i.path for i in raw_inputs_list if i.kind == AssetKind.mask
             ]
             joint_mask_input = MaskInput(
-                path=all_mask_input_pathes, kind=InputKind.mask
+                path=all_mask_input_pathes, kind=AssetKind.mask
             )
             analyzed.append(joint_mask_input)
 
-        if any(i.kind == InputKind.geometric_segmentation for i in raw_inputs_list):
+        if any(i.kind == AssetKind.geometric_segmentation for i in raw_inputs_list):
             all_gs_pathes = [
                 i.path
                 for i in raw_inputs_list
-                if i.kind == InputKind.geometric_segmentation
+                if i.kind == AssetKind.geometric_segmentation
             ]
             joint_geometric_segmentation_input = GeometricSegmentationInput(
-                all_gs_pathes, InputKind.geometric_segmentation
+                all_gs_pathes, AssetKind.geometric_segmentation
             )
             analyzed.append(joint_geometric_segmentation_input)
 
@@ -968,36 +747,37 @@ class Preprocessor:
         for i in raw_inputs_list:
             k = i.kind
             p = i.path
-            if k == InputKind.extra_data:
-                analyzed.append(ExtraDataInput(path=p, kind=k))
-            elif k == InputKind.map:
-                analyzed.append(MAPInput(path=p, kind=k))
-            elif k == InputKind.sff:
-                analyzed.append(SFFInput(path=p, kind=k))
-            elif k == InputKind.omezarr:
-                analyzed.append(OMEZARRInput(path=p, kind=k))
-            elif k == InputKind.mask:
-                analyzed.append(MaskInput(path=p, kind=k))
-            elif k == InputKind.geometric_segmentation:
-                analyzed.append(GeometricSegmentationInput(path=p, kind=k))
-            elif k == InputKind.custom_annotations:
-                analyzed.append(CustomAnnotationsInput(path=p, kind=k))
-            elif k == InputKind.application_specific_segmentation:
-                sff_path = convert_app_specific_segm_to_sff(i.path)
-                analyzed.append(SFFInput(path=sff_path, kind=InputKind.sff))
-                # TODO: remove app specific segm file?
-            elif k == InputKind.ometiff_image:
-                analyzed.append(OMETIFFImageInput(path=p, kind=k))
-            elif k == InputKind.ometiff_segmentation:
-                analyzed.append(OMETIFFSegmentationInput(path=p, kind=k))
-            elif k == InputKind.tiff_image_stack_dir:
-                analyzed.append(TIFFImageStackDirInput(path=p, kind=k))
-            elif k == InputKind.tiff_segmentation_stack_dir:
-                analyzed.append(TIFFSegmentationStackDirInput(path=p, kind=k))
-            else:
-                raise Exception(f"Input kind is not recognized. Input item: {i}")
+            match k:
+                case AssetKind.extra_data:
+                    analyzed.append(ExtraDataInput(path=p, kind=k))
+                case AssetKind.map:
+                    analyzed.append(MAPInput(path=p, kind=k))
+                case AssetKind.sff:
+                    analyzed.append(SFFInput(path=p, kind=k))
+                case AssetKind.omezarr:
+                    analyzed.append(OMEZARRInput(path=p, kind=k))
+                case AssetKind.mask:
+                    analyzed.append(MaskInput(path=p, kind=k))
+                case AssetKind.geometric_segmentation:
+                    analyzed.append(GeometricSegmentationInput(path=p, kind=k))
+                case AssetKind.custom_annotations:
+                    analyzed.append(CustomAnnotationsInput(path=p, kind=k))
+                case AssetKind.stl | AssetKind.seg | AssetKind.am:
+                    sff_path = convert_app_specific_segm_to_sff(i.path)
+                    analyzed.append(SFFInput(path=sff_path, kind=AssetKind.sff))
+                    # TODO: remove app specific segm file?
+                case AssetKind.ometiff_image:
+                    analyzed.append(OMETIFFImageInput(path=p, kind=k))
+                case AssetKind.ometiff_segmentation:
+                    analyzed.append(OMETIFFSegmentationInput(path=p, kind=k))
+                case AssetKind.tiff_image_stack_dir:
+                    analyzed.append(TIFFImageStackDirInput(path=p, kind=k))
+                case AssetKind.tiff_segmentation_stack_dir:
+                    analyzed.append(TIFFSegmentationStackDirInput(path=p, kind=k))
+                case _:
+                    raise Exception(f"Input kind is not recognized. Input item: {i}")
 
-        print(f"pre_analyzed_inputs_list: {analyzed}")
+        # print(f"pre_analyzed_inputs_list: {analyzed}")
         return analyzed
 
     async def entry_exists(self):
@@ -1034,30 +814,31 @@ class Preprocessor:
 
             # first initialize metadata and annotations dicts as empty
             # or as dicts read from db if mode is "extend"
-            if mode == PreprocessorMode.extend:
-                new_db_path = Path(self.preprocessor_input.db_path)
-                db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
-                volume_metadata = await db.read_metadata(
-                    self.preprocessor_input.entry_data.source_db,
-                    self.preprocessor_input.entry_data.entry_id,
-                )
-                root.attrs["metadata_dict"] = volume_metadata.dict()
-                root.attrs["annotations_dict"] = await db.read_annotations(
-                    self.preprocessor_input.entry_data.source_db,
-                    self.preprocessor_input.entry_data.entry_id,
-                )
+            match mode:
+                case PreprocessorMode.extend:
+                    new_db_path = Path(self.preprocessor_input.db_path)
+                    db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
+                    volume_metadata = await db.read_metadata(
+                        self.preprocessor_input.entry_data.source_db,
+                        self.preprocessor_input.entry_data.entry_id,
+                    )
+                    root.attrs[METADATA_DICT_NAME] = volume_metadata.model_dump()
+                    root.attrs[ANNOTATIONS_DICT_NAME] = await db.read_annotations(
+                        self.preprocessor_input.entry_data.source_db,
+                        self.preprocessor_input.entry_data.entry_id,
+                    )
 
-            elif mode == PreprocessorMode.add:
-                init_metadata_model = INIT_METADATA_MODEL.copy()
-                init_annotations_model = INIT_ANNOTATIONS_MODEL.copy()
-                if extra_metadata is not None:
-                    init_metadata_model.extra_metadata = extra_metadata
+                case PreprocessorMode.add:
+                    init_metadata_model = INIT_METADATA_MODEL.model_copy()
+                    init_annotations_model = INIT_ANNOTATIONS_MODEL.model_copy()
+                    if extra_metadata is not None:
+                        init_metadata_model.extra_metadata = extra_metadata
 
-                root.attrs["metadata_dict"] = init_metadata_model.dict()
+                    root.attrs[METADATA_DICT_NAME] = init_metadata_model.model_dump()
 
-                root.attrs["annotations_dict"] = init_annotations_model.dict()
-            else:
-                raise Exception("Preprocessor mode is not supported")
+                    root.attrs[ANNOTATIONS_DICT_NAME] = init_annotations_model.model_dump()
+                case _:
+                    raise Exception("Preprocessor mode is not supported")
             # init GeometricSegmentationData in zattrs
             root.attrs[GEOMETRIC_SEGMENTATIONS_ZATTRS] = []
             root.attrs[RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS] = {}
@@ -1131,36 +912,61 @@ class Preprocessor:
                 f"Entry {self.preprocessor_input.entry_data.entry_id} in the database was expanded"
             )
 
+def fix_inputs(a: GeneralPreprocessorParameters):
+    for i in a.inputs:
+        if i.kind == AssetKind.wrl:
+            # convert wrl to stl
+            stl_path = wrl_to_stl(Path(i.path), Path(a.working_folder) / Path(i.path).with_suffix('.stl')  )
+            i.kind = AssetKind.stl
+            i.path = stl_path
+    return a
+
+app = typer.Typer()
+
+@app.command("preprocess")
+def preprocess(
+    arguments_json: str = typer.Option(default=...),
+    ):
+    json_path = Path(arguments_json)
+    arguments_dict: object = read_json(json_path)
+    arguments = GeneralPreprocessorParameters.model_validate(arguments_dict)
+    # TODO: unpack to variables
+    asyncio.run(
+        main_preprocessor(
+            a=arguments
+        )
+    )
+
+
+
+app.command()(preprocess)
+
+app.command(delete_entry)
+
+app.command(remove_volume)
+
+app.command(remove_segmentation)
+
+app.command(remove_segment_annotations)
+
+app.command(remove_descriptions)
+
+app.command(edit_segment_annotations)
+
+app.command(edit_descriptions)
+
 
 async def main_preprocessor(
-    a: PreprocessorArguments,
-    # mode: PreprocessorMode,
-    # quantize_dtype_str: typing.Optional[QuantizationDtype],
-    # quantize_downsampling_levels: typing.Optional[str],
-    # force_volume_dtype: typing.Optional[str],
-    # max_size_per_downsampling_lvl_mb: typing.Optional[float],
-    # min_downsampling_level: typing.Optional[int],
-    # max_downsampling_level: typing.Optional[int],
-    # remove_original_resolution: bool,
-    # entry_id: str,
-    # source_db: str,
-    # source_db_id: str,
-    # source_db_name: str,
-    # working_folder: str,
-    # db_path: str,
-    # input_paths: list[str],
-    # input_kinds: list[InputKind],
-    # min_size_per_downsampling_lvl_mb: typing.Optional[float] = 5.0,
-):
-    # for k, v in arguments.items():
-    #     setattr(args, k, v)
+    a: GeneralPreprocessorParameters):
+
+    a = fix_inputs(a)
 
     extra_metadata = ExtraMetadata()
     if a.pre_downsampling_factor:
         extra_metadata.pre_downsampling_factor = int(a.pre_downsampling_factor)
         # should not exclude extra data a
         inputs = pre_downsample_data(
-            a.inputs, extra_metadata.pre_downsampling_factor, a.working_folder
+            a.inputs, a.working_folder
         )
         a.inputs = inputs
 
@@ -1212,244 +1018,10 @@ async def main_preprocessor(
     await preprocessor.initialization(mode=a.mode, extra_metadata=extra_metadata)
     preprocessor.preprocessing()
     preprocessor.store_to_db(mode=a.mode)
-
-
-app = typer.Typer()
-
-
-# NOTE: works as adding, i.e. if entry already has volume/segmentation
-# it will not add anything, throwing error instead (group exists in destination)
-@app.command("preprocess")
-def main(
-    arguments_json: str = typer.Option(default=...),
-    # mode: PreprocessorMode = PreprocessorMode.add.value,
-    # quantize_dtype_str: Annotated[
-    #     typing.Optional[QuantizationDtype], typer.Option(None)
-    # ] = None,
-    # quantize_downsampling_levels: Annotated[
-    #     typing.Optional[str], typer.Option(None, help="Space-separated list of numbers")
-    # ] = None,
-    # force_volume_dtype: Annotated[typing.Optional[str], typer.Option(None)] = None,
-    # max_size_per_downsampling_lvl_mb: Annotated[
-    #     typing.Optional[float], typer.Option(None)
-    # ] = None,
-    # min_size_per_downsampling_lvl_mb: Annotated[
-    #     typing.Optional[float], typer.Option(None)
-    # ] = 5.0,
-    # min_downsampling_level: Annotated[typing.Optional[int], typer.Option(None)] = None,
-    # max_downsampling_level: Annotated[typing.Optional[int], typer.Option(None)] = None,
-    # remove_original_resolution: Annotated[
-    #     typing.Optional[bool], typer.Option(None)
-    # ] = False,
-    # entry_id: str = typer.Option(default=...),
-    # source_db: str = typer.Option(default=...),
-    # source_db_id: str = typer.Option(default=...),
-    # source_db_name: str = typer.Option(default=...),
-    # working_folder: str = typer.Option(default=...),
-    # db_path: str = typer.Option(default=...),
-    # input_path: list[str] = typer.Option(default=...),
-    # input_kind: list[InputKind] = typer.Option(default=...),
-    # # add_segmentation_to_entry: bool = typer.Option(default=False),
-    # # add_custom_annotations: bool = typer.Option(default=False),
-):
-    json_path = Path(arguments_json)
-    arguments_dict: object = read_json(json_path)
-    arguments = PreprocessorArguments.parse_obj(arguments_dict)
-    # TODO: unpack to variables
-    asyncio.run(
-        main_preprocessor(
-            a=arguments
-            # mode=mode,
-            # entry_id=entry_id,
-            # source_db=source_db,
-            # source_db_id=source_db_id,
-            # source_db_name=source_db_name,
-            # working_folder=working_folder,
-            # db_path=db_path,
-            # input_paths=input_path,
-            # input_kinds=input_kind,
-            # quantize_dtype_str=quantize_dtype_str,
-            # quantize_downsampling_levels=quantize_downsampling_levels,
-            # force_volume_dtype=force_volume_dtype,
-            # max_size_per_downsampling_lvl_mb=max_size_per_downsampling_lvl_mb,
-            # min_size_per_downsampling_lvl_mb=min_size_per_downsampling_lvl_mb,
-            # min_downsampling_level=min_downsampling_level,
-            # max_downsampling_level=max_downsampling_level,
-            # remove_original_resolution=remove_original_resolution,
-            # # add_segmentation_to_entry=add_segmentation_to_entry,
-            # # add_custom_annotations=add_custom_annotations
-        )
-    )
-
-
-@app.command("delete")
-def delete_entry(
-    entry_id: str = typer.Option(default=...),
-    source_db: str = typer.Option(default=...),
-    db_path: str = typer.Option(default=...),
-):
-    print(f"Deleting db entry: {entry_id} {source_db}")
-    new_db_path = Path(db_path)
-    if new_db_path.is_dir() == False:
-        new_db_path.mkdir()
-
-    db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
-    asyncio.run(db.delete(namespace=source_db, key=entry_id))
-
-
-@app.command("remove-volume")
-def remove_volume(
-    entry_id: str = typer.Option(default=...),
-    source_db: str = typer.Option(default=...),
-    db_path: str = typer.Option(default=...),
-    working_folder: str = typer.Option(default=...),
-):
-    print(f"Deleting volumes for entry: {entry_id} {source_db}")
-    new_db_path = Path(db_path)
-    if new_db_path.is_dir() == False:
-        new_db_path.mkdir()
-
-    db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
-
-    with db.edit_data(
-        namespace=source_db, key=entry_id, working_folder=Path(working_folder)
-    ) as db_edit_context:
-        db_edit_context: VolumeAndSegmentationContext
-        db_edit_context.remove_volume()
-
-
-@app.command("remove-segmentation")
-def remove_segmentation(
-    entry_id: str = typer.Option(default=...),
-    source_db: str = typer.Option(default=...),
-    id: str = typer.Option(default=...),
-    kind: str = typer.Option(default=...),
-    db_path: str = typer.Option(default=...),
-    working_folder: str = typer.Option(default=...),
-):
-    print(f"Deleting segmentation for entry: {entry_id} {source_db}")
-    new_db_path = Path(db_path)
-    if new_db_path.is_dir() == False:
-        new_db_path.mkdir()
-
-    db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
-
-    with db.edit_data(
-        namespace=source_db, key=entry_id, working_folder=Path(working_folder)
-    ) as db_edit_context:
-        db_edit_context: VolumeAndSegmentationContext
-        db_edit_context.remove_segmentation(id=id, kind=kind)
-
-
-@app.command("remove-segment-annotations")
-def remove_segment_annotations(
-    entry_id: str = typer.Option(default=...),
-    source_db: str = typer.Option(default=...),
-    id: list[str] = typer.Option(default=...),
-    db_path: str = typer.Option(default=...),
-):
-    print(f"Deleting annotation for entry: {entry_id} {source_db}")
-    new_db_path = Path(db_path)
-    if new_db_path.is_dir() == False:
-        new_db_path.mkdir()
-
-    db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
-
-    with db.edit_annotations(
-        namespace=source_db, key=entry_id
-    ) as db_edit_annotations_context:
-        db_edit_annotations_context: AnnnotationsEditContext
-        asyncio.run(db_edit_annotations_context.remove_segment_annotations(ids=id))
-
-
-@app.command("remove-descriptions")
-def remove_descriptions(
-    entry_id: str = typer.Option(default=...),
-    source_db: str = typer.Option(default=...),
-    id: list[str] = typer.Option(default=...),
-    db_path: str = typer.Option(default=...),
-):
-    print(f"Deleting descriptions for entry: {entry_id} {source_db}")
-    new_db_path = Path(db_path)
-    if new_db_path.is_dir() == False:
-        new_db_path.mkdir()
-
-    db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
-
-    with db.edit_annotations(
-        namespace=source_db, key=entry_id
-    ) as db_edit_annotations_context:
-        db_edit_annotations_context: AnnnotationsEditContext
-        asyncio.run(db_edit_annotations_context.remove_descriptions(ids=id))
-
-
-@app.command("edit-segment-annotations")
-def edit_segment_annotations(
-    entry_id: str = typer.Option(default=...),
-    source_db: str = typer.Option(default=...),
-    # id: list[str] = typer.Option(default=...),
-    data_json_path: str = typer.Option(default=...),
-    db_path: str = typer.Option(default=...),
-):
-    # print(f"Deleting descriptions for entry: {entry_id} {source_db}")
-    new_db_path = Path(db_path)
-    if new_db_path.is_dir() == False:
-        new_db_path.mkdir()
-
-    db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
-
-    parsedSegmentAnnotations: list[SegmentAnnotationData] = read_json(
-        Path(data_json_path)
-    )
-
-    with db.edit_annotations(
-        namespace=source_db, key=entry_id
-    ) as db_edit_annotations_context:
-        db_edit_annotations_context: AnnnotationsEditContext
-        asyncio.run(
-            db_edit_annotations_context.add_or_modify_segment_annotations(
-                parsedSegmentAnnotations
-            )
-        )
-
-
-@app.command("edit-descriptions")
-def edit_descriptions(
-    entry_id: str = typer.Option(default=...),
-    source_db: str = typer.Option(default=...),
-    # id: list[str] = typer.Option(default=...),
-    data_json_path: str = typer.Option(default=...),
-    db_path: str = typer.Option(default=...),
-):
-    # print(f"Deleting descriptions for entry: {entry_id} {source_db}")
-    new_db_path = Path(db_path)
-    if new_db_path.is_dir() == False:
-        new_db_path.mkdir()
-
-    db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
-
-    parsedDescriptionData: list[DescriptionData] = read_json(Path(data_json_path))
-
-    with db.edit_annotations(
-        namespace=source_db, key=entry_id
-    ) as db_edit_annotations_context:
-        db_edit_annotations_context: AnnnotationsEditContext
-        asyncio.run(
-            db_edit_annotations_context.add_or_modify_descriptions(
-                parsedDescriptionData
-            )
-        )
+    
+    
+    
 
 
 if __name__ == "__main__":
-    # solutions how to run it async - two last https://github.com/tiangolo/typer/issues/85
-    # currently using last one
-    # typer.run(main)
-
-    # could try https://github.com/tiangolo/typer/issues/88#issuecomment-1732469681
     app()
-
-
-# NOTE: for testing:
-# python preprocessor/preprocessor/preprocess.py --input-path temp/v2_temp_static_entry_files_dir/idr/idr-6001247/6001247.zarr --input-kind omezarr
-# python preprocessor/preprocessor/preprocess.py --input-path test-data/preprocessor/sample_volumes/emdb_sff/EMD-1832.map --input-kind map --input-path test-data/preprocessor/sample_segmentations/emdb_sff/emd_1832.hff --input-kind sff

@@ -28,10 +28,10 @@ def test_omezarr_volume_annotations_preprocessing(omezar_test_input: TestInput):
         # initialize_intermediate_zarr_structure_for_tests()
 
         v = get_internal_volume_from_input(
-            omezar_test_input, ctx.test_file_path, ctx.intermediate_zarr_structure_path
+            omezar_test_input, ctx.test_input_asset_path, ctx.working_folder
         )
         internal_segmentation = get_omezarr_internal_segmentation(
-            omezar_test_input, ctx.test_file_path, ctx.intermediate_zarr_structure_path
+            omezar_test_input, ctx.test_input_asset_path, ctx.working_folder
         )
 
         omezarr_segmentations_preprocessing(s=internal_segmentation)

@@ -88,7 +88,7 @@ def main(args: argparse.Namespace):
         segmentation_id=args.segmentation_id,
     )
     with (geometric_segmentation_input_file_path).open("w") as fp:
-        json.dump(lst.dict(), fp, indent=4)
+        json.dump(lst.model_dump(), fp, indent=4)
 
 
 if __name__ == "__main__":

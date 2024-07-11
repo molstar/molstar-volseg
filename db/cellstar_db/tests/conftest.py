@@ -9,30 +9,30 @@ from cellstar_db.models import (
     AnnotationsMetadata,
     DescriptionData,
     ExternalReference,
-    InputKind,
-    PreprocessorArguments,
+    AssetKind,
+    GeneralPreprocessorParameters,
     PreprocessorMode,
     RawInput,
     SegmentAnnotationData,
     SegmentationKind,
     TargetId,
 )
-from cellstar_preprocessor.preprocess import main_preprocessor
+from cellstar_preprocessor.preprocessor import main_preprocessor
 
 TEST_DB_FOLDER = "db/cellstar_db/tests/test_data/testing_db"
 
 TEST_ENTRY_INPUTS = [
     RawInput(
         path="test-data/preprocessor/sample_volumes/emdb/EMD-1832.map",
-        kind=InputKind.map,
+        kind=AssetKind.map,
     ),
     RawInput(
         path="test-data/preprocessor/sample_segmentations/emdb_sff/emd_1832.hff",
-        kind=InputKind.sff,
+        kind=AssetKind.sff,
     ),
 ]
 
-TEST_ENTRY_PREPROCESSOR_ARGUMENTS = PreprocessorArguments(
+TEST_ENTRY_PREPROCESSOR_ARGUMENTS = GeneralPreprocessorParameters(
     mode=PreprocessorMode.add,
     entry_id="emd-1832",
     source_db="emdb",
@@ -43,11 +43,11 @@ TEST_ENTRY_PREPROCESSOR_ARGUMENTS = PreprocessorArguments(
     inputs=[
         RawInput(
             path="test-data/preprocessor/sample_volumes/emdb/EMD-1832.map",
-            kind=InputKind.map,
+            kind=AssetKind.map,
         ),
         RawInput(
             path="test-data/preprocessor/sample_segmentations/emdb_sff/emd_1832.hff",
-            kind=InputKind.sff,
+            kind=AssetKind.sff,
         ),
     ],
     quantize_dtype_str=None,
@@ -99,7 +99,7 @@ FAKE_SEGMENT_ANNOTATIONS: list[SegmentAnnotationData] = [
         id="whatever_1",
         segment_kind=SegmentationKind.lattice,
         segment_id=999999,
-        segmentation_id=99999999,
+        segmentation_id='99999999',
         time=2222222,
         color=[0.0, 0.0, 0.0, 1.0],
     ),
@@ -107,7 +107,7 @@ FAKE_SEGMENT_ANNOTATIONS: list[SegmentAnnotationData] = [
         id="whatever_2",
         segment_kind=SegmentationKind.lattice,
         segment_id=888888888,
-        segmentation_id=888888888,
+        segmentation_id='888888888',
         time=888888888,
         color=[1.0, 1.0, 1.0, 1.0],
     ),
@@ -116,40 +116,40 @@ FAKE_SEGMENT_ANNOTATIONS: list[SegmentAnnotationData] = [
 FAKE_EXTERNAL_REFERENCES_1 = [
     ExternalReference(
         accession="GO_0006260",
-        details="FAKE TO BE REPLACED",
-        id=51,
+        description="FAKE TO BE REPLACED",
+        id="51",
         label="DNA replication",
         resource="go",
         url="http://purl.obolibrary.org/obo/GO_0006260",
     ),
     ExternalReference(
         accession="GO_0030174",
-        details="Any process that modulates the frequency, rate or extent of initiation of DNA-dependent DNA replication; the process in which DNA becomes competent to replicate. In eukaryotes, replication competence is established in early G1 and lost during the ensuing S phase.",
-        id=52,
+        description="Any process that modulates the frequency, rate or extent of initiation of DNA-dependent DNA replication; the process in which DNA becomes competent to replicate. In eukaryotes, replication competence is established in early G1 and lost during the ensuing S phase.",
+        id="52",
         label="regulation of DNA-dependent DNA replication initiation",
         resource="go",
         url="http://purl.obolibrary.org/obo/GO_0030174",
     ),
     ExternalReference(
         accession="PR_000010246",
-        details="A protein that is a translation product of the human MCM4 gene or a 1:1 ortholog thereof.",
-        id=53,
+        description="A protein that is a translation product of the human MCM4 gene or a 1:1 ortholog thereof.",
+        id="53",
         label="DNA replication licensing factor MCM4",
         resource="pr",
         url="http://purl.obolibrary.org/obo/PR_000010246",
     ),
     ExternalReference(
         accession="NCIT_C33909",
-        details="DNA replication licensing factor MCM4 (863 aa, ~97 kDa) is encoded by the human MCM4 gene. This protein is involved in the initiation of DNA replication.",
-        id=54,
+        description="DNA replication licensing factor MCM4 (863 aa, ~97 kDa) is encoded by the human MCM4 gene. This protein is involved in the initiation of DNA replication.",
+        id="54",
         label="DNA Replication Licensing Factor MCM4",
         resource="ncit",
         url="http://purl.obolibrary.org/obo/NCIT_C33909",
     ),
     ExternalReference(
         accession="Q26454",
-        details="undefined (Drosophila melanogaster (Fruit fly))",
-        id=55,
+        description="undefined (Drosophila melanogaster (Fruit fly))",
+        id="55",
         label="MCM4_DROME",
         resource="UniProt",
         url="https://www.uniprot.org/uniprot/Q26454",
@@ -159,40 +159,40 @@ FAKE_EXTERNAL_REFERENCES_1 = [
 FAKE_EXTERNAL_REFERENCES_2 = [
     ExternalReference(
         accession="GO_0006260",
-        details="The cellular metabolic process in which a cell duplicates one or more molecules of DNA. DNA replication begins when specific sequences, known as origins of replication, are recognized and bound by initiation proteins, and ends when the original DNA molecule has been completely duplicated and the copies topologically separated. The unit of replication usually corresponds to the genome of the cell, an organelle, or a virus. The template for replication can either be an existing DNA molecule or RNA.",
-        id=41,
+        description="The cellular metabolic process in which a cell duplicates one or more molecules of DNA. DNA replication begins when specific sequences, known as origins of replication, are recognized and bound by initiation proteins, and ends when the original DNA molecule has been completely duplicated and the copies topologically separated. The unit of replication usually corresponds to the genome of the cell, an organelle, or a virus. The template for replication can either be an existing DNA molecule or RNA.",
+        id="41",
         label="DNA replication",
         resource="go",
         url="http://purl.obolibrary.org/obo/GO_0006260",
     ),
     ExternalReference(
         accession="GO_0030174",
-        details="Any process that modulates the frequency, rate or extent of initiation of DNA-dependent DNA replication; the process in which DNA becomes competent to replicate. In eukaryotes, replication competence is established in early G1 and lost during the ensuing S phase.",
-        id=42,
+        description="Any process that modulates the frequency, rate or extent of initiation of DNA-dependent DNA replication; the process in which DNA becomes competent to replicate. In eukaryotes, replication competence is established in early G1 and lost during the ensuing S phase.",
+        id="42",
         label="regulation of DNA-dependent DNA replication initiation",
         resource="go",
         url="http://purl.obolibrary.org/obo/GO_0030174",
     ),
     ExternalReference(
         accession="PR_000010242",
-        details="A protein that is a translation product of the human MCM2 gene or a 1:1 ortholog thereof.",
-        id=43,
+        description="A protein that is a translation product of the human MCM2 gene or a 1:1 ortholog thereof.",
+        id="43",
         label="DNA replication licensing factor MCM2",
         resource="pr",
         url="http://purl.obolibrary.org/obo/PR_000010242",
     ),
     ExternalReference(
         accession="NCIT_C28642",
-        details="DNA replication licensing factor MCM2 (904 aa, ~102 kDa) is encoded by the human MCM2 gene. This protein plays a role in cell cycle regulation.",
-        id=44,
+        description="DNA replication licensing factor MCM2 (904 aa, ~102 kDa) is encoded by the human MCM2 gene. This protein plays a role in cell cycle regulation.",
+        id="44",
         label="DNA Replication Licensing Factor MCM2",
         resource="ncit",
         url="http://purl.obolibrary.org/obo/NCIT_C28642",
     ),
     ExternalReference(
         accession="P49735",
-        details="undefined (Drosophila melanogaster (Fruit fly))",
-        id=45,
+        description="undefined (Drosophila melanogaster (Fruit fly))",
+        id="45",
         label="MCM2_DROME",
         resource="UniProt",
         url="https://www.uniprot.org/uniprot/P49735",

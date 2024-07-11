@@ -1,0 +1,23 @@
+{   
+    "$schema": "preprocessor_params.schema.json",
+    "db_path": "preprocessor/temp/test_db",
+    "entry_id": "actin",
+    "source_db": "custom",
+    "inputs": [
+        {
+            "kind": "ometiff_image",
+            "path": "PC-3_control_F01.tif"
+        },
+        {
+            "kind": "wrl",
+            "path": "actin.wrl",
+            "parameters": {
+                "pre_downsampling_factor": 32
+            }
+        }
+    ],
+    "mode": "add",
+    "source_db_id": "actin",
+    "source_db_name": "custom",
+    "working_folder": "preprocessor/temp/working_folder"
+}

@@ -5,13 +5,14 @@ import multiprocessing
 import shutil
 from pathlib import Path
 
-from cellstar_db.models import InputForBuildingDatabase, PreprocessorArguments
+from cellstar_db.models import InputForBuildingDatabase, GeneralPreprocessorParameters
+from cellstar_preprocessor.preprocessor import main_preprocessor
 from cellstar_preprocessor.flows.constants import (
     DB_BUILDING_PARAMETERS_JSON,
     DEFAULT_DB_PATH,
     WORKING_FOLDER_PATH,
 )
-from cellstar_preprocessor.preprocess import PreprocessorMode, main_preprocessor
+from cellstar_preprocessor.preprocessor import PreprocessorMode
 from cellstar_preprocessor.tools.deploy_db.deploy_process_helper import (
     clean_up_processes,
 )
@@ -63,7 +64,7 @@ def _preprocessor_internal_wrapper(
         quantize_downsampling_levels = " ".join(
             str(item) for item in input_for_building["quantize_downsampling_levels"]
         )
-    preprocessor_args: PreprocessorArguments = PreprocessorArguments(
+    preprocessor_args: GeneralPreprocessorParameters = GeneralPreprocessorParameters(
         mode=PreprocessorMode.add,
         quantize_dtype_str=input_for_building.get("quantize_dtype_str"),
         quantize_downsampling_levels=quantize_downsampling_levels,

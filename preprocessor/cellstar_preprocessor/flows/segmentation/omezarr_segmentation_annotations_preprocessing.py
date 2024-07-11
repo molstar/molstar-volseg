@@ -48,12 +48,7 @@ def omezarr_segmentation_annotations_preprocessing(
     # TODO: use wrapper here
     w = s.get_omezarr_wrapper()
     a = s.get_annotations()
-    if not a.entry_id.source_db_id and not a.entry_id.source_db_name:
-        a.entry_id = EntryId(
-            source_db_id=s.entry_data.source_db_id,
-            source_db_name=s.entry_data.source_db_name,
-        )
-
+    s.set_entry_id_in_annotations()
     for label_gr_name in w.get_label_names():
         label_zattrs = w.get_label_zattrs(label_gr_name)
         colors_meta = label_zattrs.image_label.colors

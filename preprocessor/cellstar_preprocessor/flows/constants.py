@@ -15,6 +15,8 @@ from cellstar_db.models import (
     VolumesMetadata,
 )
 
+TIFF_EXTENSIONS = {'.tiff', '.tif'}
+
 CSV_WITH_ENTRY_IDS_FILE = Path(
     "test-data/preprocessor/db_building_parameters_custom_entries.csv"
 )
@@ -53,7 +55,34 @@ MESH_VERTEX_DENSITY_THRESHOLD = {
     # 'area': 0.02,
     # 'volume': 0.0015,
 }
-DEFAULT_ORIGINAL_AXIS_ORDER = [
+
+MIN_SIZE_PER_DOWNSAMPLING_LEVEL_MB = 5.0
+
+NON_QUANTIZED_DATA_TYPES_STR = {
+    "u2", "|u2", ">u2", "<u2"
+}
+
+METADATA_DICT_NAME = "metadata_dict"
+
+ANNOTATIONS_DICT_NAME = "annotations_dict"
+
+MESH_ZATTRS_NAME = "mesh_zattrs"
+
+DEFAULT_ORIGIN = [
+    0.0,
+    0.0,
+    0.0
+]
+
+DEFAULT_AXIS_ORDER_5D = {
+    AxisName.x,
+    AxisName.y,
+    AxisName.z,
+    AxisName.c,
+    AxisName.t
+}
+
+DEFAULT_ORIGINAL_AXIS_ORDER_3D = [
     AxisName.x,
     AxisName.y,
     AxisName.z,
@@ -103,7 +132,7 @@ INIT_METADATA_MODEL = Metadata(
             time_transformations=[],
             source_axes_units={},
             original_axis_order=[],
-            descriptive_statistics=[],
+            descriptive_statistics={},
         ),
     ),
     geometric_segmentation=GeometricSegmentationsMetadata(ids=[], time_info_mapping={}),
@@ -113,9 +142,15 @@ INIT_METADATA_MODEL = Metadata(
     segmentation_meshes=MeshSegmentationsMetadata(
         ids=[], metadata={}, time_info_mapping={}
     ),
-    entry_metadata=None,
     extra_metadata=None,
 )
+
+DEFAULT_CHANNEL_IDS_MAPPING: dict[str, str] = {
+    "0": "0"
+}
+
+DEFAULT_CHANNEL_ID = "0"
+
 DEFAULT_TIME_UNITS = "millisecond"
 GEOMETRIC_SEGMENTATIONS_ZATTRS = "geometric_segmentations"
 RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS = "raw_geometric_segmentation_input"

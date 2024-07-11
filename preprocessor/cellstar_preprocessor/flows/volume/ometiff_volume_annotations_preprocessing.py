@@ -1,6 +1,5 @@
 import seaborn as sns
 from cellstar_db.models import AnnotationsMetadata, EntryId, VolumeChannelAnnotation
-from cellstar_preprocessor.flows.common import _get_ome_tiff_channel_ids_dict
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.volume import InternalVolume
 
@@ -22,25 +21,22 @@ def _get_ome_tiff_channel_annotations(
         )
 
 
-def ometiff_volume_annotations_preprocessing(internal_volume: InternalVolume):
-    root = open_zarr(internal_volume.path)
+def ometiff_volume_annotations_preprocessing(v: InternalVolume):
+    root = open_zarr(v.path)
 
-    internal_volume.custom_data["dataset_specific_data"]["ometiff"][
+    v.custom_data["dataset_specific_data"]["ometiff"][
         "ometiff_source_metadata"
     ]
 
-    channel_ids_dict = _get_ome_tiff_channel_ids_dict(root, internal_volume)
+    # channel_ids_dict = _get_ome_tiff_channel_ids_dict(root, v)
 
-    d: AnnotationsMetadata = root.attrs["annotations_dict"]
-    _get_ome_tiff_channel_annotations(
-        volume_channels_annotations=d.volume_channels_annotations,
-        channel_ids_dict=channel_ids_dict,
-    )
+    d: AnnotationsMetadata = root.attrs[ANNOTATIONS_DICT_NAME]
+    # _get_ome_tiff_channel_annotations(
+    #     volume_channels_annotations=d.volume_channels_annotations,
+    #     channel_ids_dict=channel_ids_dict,
+    # )
 
-    d.entry_id = EntryId(
-        source_db_id=internal_volume.entry_data.source_db_id,
-        source_db_name=internal_volume.entry_data.source_db_name,
-    )
+    v.set_entry_id_in_annotations()
 
-    root.attrs["annotations_dict"] = d
+    root.attrs[ANNOTATIONS_DICT_NAME] = d
     return d

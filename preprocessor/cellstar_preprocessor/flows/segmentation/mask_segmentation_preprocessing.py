@@ -4,9 +4,7 @@ import mrcfile
 import numpy as np
 from cellstar_db.models import SegmentationPrimaryDescriptor
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
-from cellstar_preprocessor.flows.segmentation.helper_methods import (
-    store_segmentation_data_in_zarr_structure,
-)
+
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 
@@ -43,7 +41,7 @@ def mask_segmentation_preprocessing(s: InternalSegmentation):
     # artificially create value_to_segment_id_dict
     s.value_to_segment_id_dict = {}
 
-    s.set_segmentation_custom_data()
+    s.set_custom_data()
 
     # should be dict str to str with all channel ids
     if "segmentation_ids_mapping" not in s.custom_data:
@@ -76,14 +74,14 @@ def mask_segmentation_preprocessing(s: InternalSegmentation):
             lattice_gr = segmentation_data_gr.create_group(lattice_id)
             params_for_storing = s.params_for_storing
 
-            store_segmentation_data_in_zarr_structure(
-                original_data=data,
-                lattice_data_group=lattice_gr,
-                value_to_segment_id_dict_for_specific_lattice_id=s.value_to_segment_id_dict[
-                    lattice_id
-                ],
-                params_for_storing=params_for_storing,
-            )
+            # store_segmentation_data(
+            #     prepared_data=data,
+            #     segmentation_gr=lattice_gr,
+            #     value_to_segment_id_dict_for_specific_segmentation_id=s.value_to_segment_id_dict[
+            #         lattice_id
+            #     ],
+            #     params_for_storing=params_for_storing,
+            # )
 
     print("Mask segmentation processed")
     print(f"Mask headers: {s.map_headers}")

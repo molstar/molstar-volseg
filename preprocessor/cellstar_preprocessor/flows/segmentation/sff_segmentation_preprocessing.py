@@ -12,7 +12,6 @@ from cellstar_preprocessor.flows.segmentation.helper_methods import (
     lattice_data_to_np_arr,
     make_simplification_curve,
     map_value_to_segment_id,
-    store_segmentation_data_in_zarr_structure,
     write_mesh_component_data_to_zarr_arr,
 )
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
@@ -22,6 +21,11 @@ from vedo import Mesh
 
 def sff_segmentation_preprocessing(internal_segmentation: InternalSegmentation):
     hdf5_to_zarr(internal_segmentation=internal_segmentation)
+    # can instead open if bfio?
+    # sfftk we use anyway
+    
+    
+    
 
     zarr_structure: zarr.Group = open_zarr(internal_segmentation.path)
 
@@ -86,14 +90,14 @@ def _process_three_d_volume_segmentation_data(
         value_to_segment_id_dict = internal_segmentation.value_to_segment_id_dict
         params_for_storing = internal_segmentation.params_for_storing
 
-        store_segmentation_data_in_zarr_structure(
-            original_data=segm_arr,
-            lattice_data_group=lattice_gr,
-            value_to_segment_id_dict_for_specific_lattice_id=value_to_segment_id_dict[
-                lattice_id
-            ],
-            params_for_storing=params_for_storing,
-        )
+        # store_segmentation_data(
+        #     prepared_data=segm_arr,
+        #     segmentation_gr=lattice_gr,
+        #     value_to_segment_id_dict_for_specific_segmentation_id=value_to_segment_id_dict[
+        #         lattice_id
+        #     ],
+        #     params_for_storing=params_for_storing,
+        # )
 
 
 def _process_mesh_segmentation_data(

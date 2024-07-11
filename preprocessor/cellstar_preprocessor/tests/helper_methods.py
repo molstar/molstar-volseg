@@ -9,13 +9,16 @@ import zarr
 from cellstar_db.models import (
     DownsamplingParams,
     EntryData,
-    InputKind,
+    AssetKind,
     QuantizationDtype,
+    AssetSourceInfo,
     StoringParams,
 )
 from cellstar_preprocessor.flows.constants import (
+    ANNOTATIONS_DICT_NAME,
     INIT_ANNOTATIONS_MODEL,
     INIT_METADATA_MODEL,
+    METADATA_DICT_NAME,
 )
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from cellstar_preprocessor.model.volume import InternalVolume
@@ -26,7 +29,7 @@ from cellstar_preprocessor.tests.input_for_tests import (
     WORKING_FOLDER_FOR_TESTS,
     TestInput,
 )
-from cellstar_preprocessor.tools.gunzip.gunzip import gunzip
+from cellstar_preprocessor.tools._gunzip._gunzip import gunzip
 
 
 def remove_intermediate_zarr_structure_for_tests(p: Path):
@@ -50,7 +53,7 @@ def get_internal_XYZ_volume(intermediate_zarr_structure_for_tests: Path):
         ),
         quantize_dtype_str=QuantizationDtype.u1,
         quantize_downsampling_levels=(1,),
-        input_kind=InputKind.map,
+        input_kind=AssetKind.map,
     )
 
 
@@ -69,7 +72,7 @@ def get_internal_ZYX_volume(intermediate_zarr_structure_for_tests: Path):
         ),
         quantize_dtype_str=QuantizationDtype.u1,
         quantize_downsampling_levels=(1,),
-        input_kind=InputKind.map,
+        input_kind=AssetKind.map,
     )
 
 
@@ -81,15 +84,14 @@ def initialize_intermediate_zarr_structure_for_tests(unique_folder_name: str):
     store: zarr.storage.DirectoryStore = zarr.DirectoryStore(str(p))
     root = zarr.group(store=store)
 
-    root.attrs["metadata_dict"] = INIT_METADATA_MODEL.dict()
-    root.attrs["annotations_dict"] = INIT_ANNOTATIONS_MODEL.dict()
+    root.attrs[METADATA_DICT_NAME] = INIT_METADATA_MODEL.model_dump()
+    root.attrs[ANNOTATIONS_DICT_NAME] = INIT_ANNOTATIONS_MODEL.model_dump()
     return p
 
 
-def get_sff_internal_segmentation(
+def get_internal_segmentation(
     t: TestInput, segmentation_path: Path, intermediate_zarr_structure: Path
 ):
-    # p = _download_sff_for_tests(test_input['url'])
     internal_segmentation = InternalSegmentation(
         path=intermediate_zarr_structure,
         input_path=segmentation_path,
@@ -101,14 +103,34 @@ def get_sff_internal_segmentation(
             source_db_id=t.entry_id,
             source_db_name=t.source_db,
         ),
-        input_kind=InputKind.sff,
+        input_kind=t.asset_info.kind,
     )
     return internal_segmentation
+
+# def get_internal_segmentation(
+#     t: TestInput, segmentation_path: Path, intermediate_zarr_structure: Path
+# ):
+#     # p = _download_sff_for_tests(test_input['url'])
+#     internal_segmentation = InternalSegmentation(
+#         path=intermediate_zarr_structure,
+#         input_path=segmentation_path,
+#         params_for_storing=StoringParams(),
+#         downsampling_parameters=DownsamplingParams(),
+#         entry_data=EntryData(
+#             entry_id=t.entry_id,
+#             source_db=t.source_db,
+#             source_db_id=t.entry_id,
+#             source_db_name=t.source_db,
+#         ),
+#         input_kind=AssetKind.sff,
+#     )
+#     return internal_segmentation
 
 
 def get_internal_volume_from_input(
     test_input: TestInput, volume_path: Path, intermediate_zarr_structure: Path
 ):
+    # if test_input.asset_info.kind in [AssetKind.ometiff_image, AssetKind.]
     # p = download_omezarr_for_tests(omezar_test_input['url'])
     internal_volume = InternalVolume(
         path=intermediate_zarr_structure,
@@ -124,76 +146,76 @@ def get_internal_volume_from_input(
         ),
         quantize_dtype_str=None,
         quantize_downsampling_levels=None,
-        input_kind=test_input.kind,
+        input_kind=test_input.asset_info.kind,
     )
     return internal_volume
 
 
-def get_omezarr_internal_segmentation(
-    omezar_test_input: TestInput,
-    segmentation_path: Path,
-    intermediate_zarr_structure: Path,
-):
-    # p = download_omezarr_for_tests(omezar_test_input['url'])
-    internal_segmentation = InternalSegmentation(
-        path=intermediate_zarr_structure,
-        input_path=segmentation_path,
-        params_for_storing=StoringParams(),
-        downsampling_parameters=DownsamplingParams(),
-        entry_data=EntryData(
-            entry_id=omezar_test_input.entry_id,
-            source_db=omezar_test_input.source_db,
-            source_db_id=omezar_test_input.entry_id,
-            source_db_name=omezar_test_input.source_db,
-        ),
-        input_kind=InputKind.omezarr,
-    )
-    return internal_segmentation
+# def get_omezarr_internal_segmentation(
+#     omezar_test_input: TestInput,
+#     segmentation_path: Path,
+#     intermediate_zarr_structure: Path,
+# ):
+#     # p = download_omezarr_for_tests(omezar_test_input['url'])
+#     internal_segmentation = InternalSegmentation(
+#         path=intermediate_zarr_structure,
+#         input_path=segmentation_path,
+#         params_for_storing=StoringParams(),
+#         downsampling_parameters=DownsamplingParams(),
+#         entry_data=EntryData(
+#             entry_id=omezar_test_input.entry_id,
+#             source_db=omezar_test_input.source_db,
+#             source_db_id=omezar_test_input.entry_id,
+#             source_db_name=omezar_test_input.source_db,
+#         ),
+#         input_kind=AssetKind.omezarr,
+#     )
+#     return internal_segmentation
 
 
-def download_sff_for_tests(url: str):
-    sff_gz_name = url.split("/")[-1]
-    # gunzip
-    unique_name = str(uuid4())
-    unique_dir = PATH_TO_INPUTS_FOR_TESTS / unique_name
-    if unique_dir.exists():
-        shutil.rmtree(unique_dir)
-    unique_dir.mkdir(parents=True)
+# def get_sff_for_tests(resource: AssetResourceInfo):
+#     sff_gz_name = url.split("/")[-1]
+#     # gunzip
+#     unique_name = str(uuid4())
+#     unique_dir = PATH_TO_INPUTS_FOR_TESTS / unique_name
+#     if unique_dir.exists():
+#         shutil.rmtree(unique_dir)
+#     unique_dir.mkdir(parents=True)
 
-    sff_gz_path = unique_dir / sff_gz_name
+#     sff_gz_path = unique_dir / sff_gz_name
 
-    urllib.request.urlretrieve(url, str(sff_gz_path.resolve()))
-    sff_path = gunzip(sff_gz_path)
-    return sff_path
-
-
-def download_map_for_tests(url: str):
-    map_gz_name = url.split("/")[-1]
-    # gunzip
-    unique_name = str(uuid4())
-    unique_dir = PATH_TO_INPUTS_FOR_TESTS / unique_name
-    if unique_dir.exists():
-        shutil.rmtree(unique_dir)
-    unique_dir.mkdir(parents=True)
-
-    map_gz_path = unique_dir / map_gz_name
-    urllib.request.urlretrieve(url, str(map_gz_path.resolve()))
-    map_path = gunzip(map_gz_path)
-    return map_path
+#     urllib.request.urlretrieve(url, str(sff_gz_path.resolve()))
+#     sff_path = gunzip(sff_gz_path)
+#     return sff_path
 
 
-def download_omezarr_for_tests(url: str):
-    # wrong
-    omezarr_name = url.split("/")[-1]
-    unique_name = str(uuid4())
-    # omezarr_unique_subfolder = PATH_TO_TEST_DATA_DIR / unique_subfolder
-    unique_dir = PATH_TO_INPUTS_FOR_TESTS / unique_name
-    if unique_dir.exists():
-        shutil.rmtree(unique_dir)
-    unique_dir.mkdir(parents=True)
-    omezarr_path = unique_dir / omezarr_name
-    if not omezarr_path.exists():
-        # shutil.rmtree(omezarr_path)
-        # get omezarr_path here
-        ome_zarr.utils.download(url, str(unique_dir.resolve()))
-    return omezarr_path
+# def get_map_for_tests(resource: AssetResourceInfo):
+#     map_gz_name = url.split("/")[-1]
+#     # gunzip
+#     unique_name = str(uuid4())
+#     unique_dir = PATH_TO_INPUTS_FOR_TESTS / unique_name
+#     if unique_dir.exists():
+#         shutil.rmtree(unique_dir)
+#     unique_dir.mkdir(parents=True)
+
+#     map_gz_path = unique_dir / map_gz_name
+#     urllib.request.urlretrieve(url, str(map_gz_path.resolve()))
+#     map_path = gunzip(map_gz_path)
+#     return map_path
+
+
+# def get_omezarr_for_tests(resource: AssetResourceInfo):
+#     # wrong
+#     omezarr_name = url.split("/")[-1]
+#     unique_name = str(uuid4())
+#     # omezarr_unique_subfolder = PATH_TO_TEST_DATA_DIR / unique_subfolder
+#     unique_dir = PATH_TO_INPUTS_FOR_TESTS / unique_name
+#     if unique_dir.exists():
+#         shutil.rmtree(unique_dir)
+#     unique_dir.mkdir(parents=True)
+#     omezarr_path = unique_dir / omezarr_name
+#     if not omezarr_path.exists():
+#         # shutil.rmtree(omezarr_path)
+#         # get omezarr_path here
+#         ome_zarr.utils.download(url, str(unique_dir.resolve()))
+#     return omezarr_path

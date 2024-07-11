@@ -12,7 +12,7 @@ from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing imp
     sff_segmentation_preprocessing,
 )
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
-from cellstar_preprocessor.tests.helper_methods import get_sff_internal_segmentation
+from cellstar_preprocessor.tests.helper_methods import get_internal_segmentation
 from cellstar_preprocessor.tests.input_for_tests import (
     INTERNAL_MESH_SEGMENTATION_FOR_TESTING,
     INTERNAL_SEGMENTATION_FOR_TESTING,
@@ -29,12 +29,12 @@ SEGMENTATIONS = [
 
 
 @pytest.mark.parametrize("test_input", SFF_TEST_INPUTS)
-def test_sff_segmentation_preprocessing(test_input: TestInput):
+def test_process_segmentation(test_input: TestInput):
     with context_for_tests(test_input, WORKING_FOLDER_FOR_TESTS) as ctx:
         ctx: TestContext
 
-        internal_segmentation = get_sff_internal_segmentation(
-            test_input, ctx.test_file_path, ctx.intermediate_zarr_structure_path
+        internal_segmentation = get_internal_segmentation(
+            test_input, ctx.test_input_asset_path, ctx.working_folder
         )
         sff_segm_obj = open_hdf5_as_segmentation_object(
             internal_segmentation.input_path

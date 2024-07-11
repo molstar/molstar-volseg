@@ -19,7 +19,7 @@ def test_omezarr_volume_preprocessing(omezar_test_input: TestInput):
     with context_for_tests(omezar_test_input, WORKING_FOLDER_FOR_TESTS) as ctx:
         ctx: TestContext
         v = get_internal_volume_from_input(
-            omezar_test_input, ctx.test_file_path, ctx.intermediate_zarr_structure_path
+            omezar_test_input, ctx.test_input_asset_path, ctx.working_folder
         )
 
         omezarr_volume_preprocessing(v=v)

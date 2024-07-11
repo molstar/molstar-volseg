@@ -66,7 +66,7 @@ def _process_geometric_segmentation_data(data: GeometricSegmentationInputData):
                         kind=kind,
                         translation=params.translation,
                         scaling=params.scaling,
-                        rotation=params.rotation.dict(),
+                        rotation=params.rotation.model_dump(),
                         id=segment_id,
                     )
                 )
@@ -89,7 +89,7 @@ def _process_geometric_segmentation_data(data: GeometricSegmentationInputData):
                         kind=kind,
                         translation=params.translation,
                         scaling=params.scaling,
-                        rotation=params.rotation.dict(),
+                        rotation=params.rotation.model_dump(),
                         id=segment_id,
                     )
                 )
@@ -113,7 +113,7 @@ def geometric_segmentation_preprocessing(s: InternalSegmentation):
         else:
             raise Exception("Geometric segmentation input is not supported")
 
-        raw_input_data = GeometricSegmentationInputData.parse_obj(json_data)
+        raw_input_data = GeometricSegmentationInputData.model_validate(json_data)
         custom_segmentation_id, primitives = _process_geometric_segmentation_data(
             data=raw_input_data
         )

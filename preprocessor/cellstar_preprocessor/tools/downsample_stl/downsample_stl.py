@@ -17,15 +17,19 @@ def downsample_stl(input: Path, output: Path, rate: float):
     print("input mesh has", m.vertex_number(), "vertex and", m.face_number(), "faces")
 
     # Target number of vertex
-    TARGET: float = ms.current_mesh().vertex_number() * rate
+    TARGET = int(ms.current_mesh().vertex_number() * rate)
 
     # Estimate number of faces to have 100+10000 vertex using Euler
     numFaces = 100 + 2 * TARGET
 
     # Simplify the mesh. Only first simplification will be agressive
+    # TODO: for list of filters MeshSet.print_filter_list function
     while ms.current_mesh().vertex_number() > TARGET:
         ms.apply_filter(
-            "simplification_quadric_edge_collapse_decimation",
+            # TODO: try other filters?
+            # "simplification_edge_collapse_for_marching_cube_meshes",
+            # "simplification_quadric_edge_collapse_decimation",
+            "meshing_decimation_quadric_edge_collapse",
             targetfacenum=numFaces,
             preservenormal=True,
         )

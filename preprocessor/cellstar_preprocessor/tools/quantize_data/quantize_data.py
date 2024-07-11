@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Union
 
+from cellstar_db.models import QuantizationInfo
 import dask.array as da
 import mrcfile
 import numpy as np
@@ -45,11 +46,11 @@ def quantize_data(
 
     if isinstance(output_dtype, str):
         output_dtype = np.dtype(output_dtype)
-        bits_in_dtype = output_dtype.itemsize * 8
+        bits_in_dtype: int = output_dtype.itemsize * 8
     else:
-        bits_in_dtype = output_dtype().itemsize * 8
+        bits_in_dtype: int = output_dtype().itemsize * 8
 
-    num_steps = 2**bits_in_dtype - 1
+    num_steps: int = 2**bits_in_dtype - 1
     src_data_type = data.dtype.str
     original_min = data.min()
     to_remove_negatives = original_min
@@ -87,14 +88,15 @@ def quantize_data(
     # 2. if x.dtype was float32: float(x')
     # if x.dtype was uint8: int(x')
 
-    d = {
-        "min": min_value,
-        "max": max_value,
-        "num_steps": num_steps,
-        "src_type": src_data_type,
-        "data": quantized,
-        "to_remove_negatives": to_remove_negatives,
-    }
+    d = QuantizationInfo(
+        
+    min=min_value,
+        max=max_value,
+        num_steps=num_steps,
+        src_type=src_data_type,
+        data=quantized,
+        to_remove_negatives=to_remove_negatives
+        )
 
     d = _convert_data_dict_to_python_dtypes(d)
 

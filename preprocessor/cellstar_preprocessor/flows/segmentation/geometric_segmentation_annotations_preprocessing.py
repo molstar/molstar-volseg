@@ -16,10 +16,7 @@ def geometric_segmentation_annotations_preprocessing(
 ):
     a = s.get_annotations()
 
-    a.entry_id = EntryId(
-        source_db_id=s.entry_data.source_db_id,
-        source_db_name=s.entry_data.source_db_name,
-    )
+    s.set_entry_id_in_annotations()
 
     # segmentation is in zattrs
     geometric_segmentation_data = s.get_geometric_segmentation_data()

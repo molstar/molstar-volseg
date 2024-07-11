@@ -1,5 +1,4 @@
 import collections.abc
-import gc
 import json
 import math
 import re
@@ -7,23 +6,26 @@ from pathlib import Path
 from typing import Union
 
 import dask.array as da
+
 import numpy as np
 import zarr
 from cellstar_db.models import (
+    DatasetSpecificExtraData,
     DownsamplingLevelInfo,
+    DownsamplingParams,
+    Endianness,
     ExtraData,
     Metadata,
+    ModeSFFDataType,
     OMETIFFSpecificExtraData,
     convert_to_angstroms,
 )
-from cellstar_preprocessor.flows.constants import SHORT_UNIT_NAMES_TO_LONG
+from cellstar_preprocessor.flows.constants import METADATA_DICT_NAME, MIN_SIZE_PER_DOWNSAMPLING_LEVEL_MB, SHORT_UNIT_NAMES_TO_LONG
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
 
 # from cellstar_db.file_system.constants import VOLUME_DATA_GROUPNAME
-from cellstar_preprocessor.model.common import PreparedOMETIFFData
-from cellstar_preprocessor.model.segmentation import InternalSegmentation
-from cellstar_preprocessor.model.volume import InternalVolume
-from pyometiff import OMETIFFReader
+# from cellstar_preprocessor.model.segmentation import InternalSegmentation
+# from cellstar_preprocessor.model.volume import InternalVolume
 
 
 def _is_channels_correct(source_ometiff_metadata):
@@ -35,52 +37,47 @@ def _is_channels_correct(source_ometiff_metadata):
         return True
 
 
-def _get_ome_tiff_channel_ids_dict(root: zarr.Group, internal_volume: InternalVolume):
-    return internal_volume.custom_data["channel_ids_mapping"]
-
 
 def _parse_ome_tiff_channel_id(ometiff_channel_id: str):
     channel_id = re.sub(r"\W+", "", ometiff_channel_id)
     return channel_id
 
 
-def set_ometiff_source_metadata(
-    int_vol_or_seg: InternalVolume | InternalSegmentation, metadata
-):
-    if "dataset_specific_data" in int_vol_or_seg.custom_data:
-        if "ometiff" in int_vol_or_seg.custom_data["dataset_specific_data"]:
-            c: OMETIFFSpecificExtraData = int_vol_or_seg.custom_data[
-                "dataset_specific_data"
-            ]["ometiff"]
-            c["ometiff_source_metadata"] = metadata
-            int_vol_or_seg.custom_data["dataset_specific_data"]["ometiff"] = c
-    else:
-        c: OMETIFFSpecificExtraData = {"ometiff_source_metadata": metadata}
-        # if 'dataset_specific_data' in int_vol_or_seg.custom_data
-        try:
-            int_vol_or_seg.custom_data["dataset_specific_data"]["ometiff"] = c
-        except KeyError:
-            int_vol_or_seg.custom_data["dataset_specific_data"] = {"ometiff": c}
+# def set_ometiff_source_metadata(
+#     int_vol_or_seg: InternalVolume | InternalSegmentation, metadata
+# ):
+#     if int_vol_or_seg.custom_data.dataset_specific_data is None:
+#     #     if "ometiff" in int_vol_or_seg.custom_data["dataset_specific_data"]:
+#     #         c: OMETIFFSpecificExtraData = int_vol_or_seg.custom_data[
+#     #             "dataset_specific_data"
+#     #         ]["ometiff"]
+#     #         c["ometiff_source_metadata"] = metadata
+#     #         int_vol_or_seg.custom_data["dataset_specific_data"]["ometiff"] = c
+#     # else:
+#         c = OMETIFFSpecificExtraData(ometiff_source_metadata=metadata)
+#         # if 'dataset_specific_data' in int_vol_or_seg.custom_data
+#         int_vol_or_seg.custom_data.dataset_specific_data = DatasetSpecificExtraData(ometiff=c
+#         )
 
 
-def get_ometiff_source_metadata(int_vol_or_seg: InternalVolume | InternalSegmentation):
-    return int_vol_or_seg.custom_data["dataset_specific_data"]["ometiff"][
-        "ometiff_source_metadata"
-    ]
+# def get_ometiff_source_metadata(int_vol_or_seg: InternalVolume | InternalSegmentation):
+#     return int_vol_or_seg.custom_data["dataset_specific_data"]["ometiff"][
+#         "ometiff_source_metadata"
+#     ]
 
 
 # for maps
 def process_extra_data(path: Path, intermediate_zarr_structure: Path):
     data: ExtraData = read_json(path)
     zarr_structure: zarr.Group = open_zarr(intermediate_zarr_structure)
-    zarr_structure.attrs["extra_data"] = data.dict()
+    zarr_structure.attrs["extra_data"] = data.model_dump()
     # NOTE: entry_metadata
     if data.entry_metadata is not None:
-        metadata_dict: Metadata = Metadata.parse_obj(
-            zarr_structure.attrs["metadata_dict"]
+        metadata_dict: Metadata = Metadata.model_validate(
+            zarr_structure.attrs[METADATA_DICT_NAME]
         )
         metadata_dict.entry_metadata = data.entry_metadata
-        zarr_structure.attrs["metadata_dict"] = metadata_dict
+        zarr_structure.attrs[METADATA_DICT_NAME] = metadata_dict
 
 
 def update_dict(orig_dict, new_dict: dict):
@@ -119,7 +116,7 @@ def read_json(path: Path):
 
 def compute_downsamplings_to_be_stored(
     *,
-    int_vol_or_seg: Union[InternalVolume, InternalSegmentation],
+    downsampling_parameters: DownsamplingParams,
     number_of_downsampling_steps: int,
     input_grid_size: int,
     dtype: np.dtype,
@@ -128,26 +125,26 @@ def compute_downsamplings_to_be_stored(
     # if min_downsampling_level and max_downsampling_level are provided,
     # list between those two numbers
     lst = [2**i for i in range(1, number_of_downsampling_steps + 1)]
-    if int_vol_or_seg.downsampling_parameters.max_downsampling_level:
+    if downsampling_parameters.max_downsampling_level:
         lst = [
             x
             for x in lst
-            if x <= int_vol_or_seg.downsampling_parameters.max_downsampling_level
+            if x <= downsampling_parameters.max_downsampling_level
         ]
-    if int_vol_or_seg.downsampling_parameters.min_downsampling_level:
+    if downsampling_parameters.min_downsampling_level:
         lst = [
             x
             for x in lst
-            if x >= int_vol_or_seg.downsampling_parameters.min_downsampling_level
+            if x >= downsampling_parameters.min_downsampling_level
         ]
-    if int_vol_or_seg.downsampling_parameters.max_size_per_downsampling_lvl_mb:
+    if downsampling_parameters.max_size_per_downsampling_lvl_mb:
         x1_filesize_bytes: int = input_grid_size * dtype.itemsize
         # num_of_downsampling_step_to_start_saving_from
         n = math.ceil(
             math.log(
                 x1_filesize_bytes
                 / (
-                    int_vol_or_seg.downsampling_parameters.max_size_per_downsampling_lvl_mb
+                    downsampling_parameters.max_size_per_downsampling_lvl_mb
                     * 1024**2
                 ),
                 factor,
@@ -156,7 +153,7 @@ def compute_downsamplings_to_be_stored(
         lst = [x for x in lst if x >= 2**n]
         if len(lst) == 0:
             raise Exception(
-                f"No downsamplings will be saved: max size per channel {int_vol_or_seg.downsampling_parameters.max_size_per_downsampling_lvl_mb} is too low"
+                f"No downsamplings will be saved: max size per channel {downsampling_parameters.max_size_per_downsampling_lvl_mb} is too low"
             )
 
     return lst
@@ -165,7 +162,7 @@ def compute_downsamplings_to_be_stored(
 # TODO: should validate if min number of steps <= max number of steps
 def compute_number_of_downsampling_steps(
     *,
-    int_vol_or_seg: Union[InternalVolume, InternalSegmentation],
+    downsampling_parameters: DownsamplingParams,
     min_grid_size: int,
     input_grid_size: int,
     force_dtype: np.dtype,
@@ -173,20 +170,20 @@ def compute_number_of_downsampling_steps(
 ) -> int:
     num_of_downsampling_steps = 1
     # if this is set, set it to min
-    if int_vol_or_seg.downsampling_parameters.min_downsampling_level:
+    if downsampling_parameters.min_downsampling_level is not None:
         num_of_downsampling_steps = int(
-            math.log2(int_vol_or_seg.downsampling_parameters.min_downsampling_level)
+            math.log2(downsampling_parameters.min_downsampling_level)
         )
     # if this is set as well, set it to max
-    if int_vol_or_seg.downsampling_parameters.max_downsampling_level:
+    if downsampling_parameters.max_downsampling_level is not None:
         num_of_downsampling_steps = int(
-            math.log2(int_vol_or_seg.downsampling_parameters.max_downsampling_level)
+            math.log2(downsampling_parameters.max_downsampling_level)
         )
 
     # if neither of this set - calculate
     if (
-        not int_vol_or_seg.downsampling_parameters.max_downsampling_level
-        and not int_vol_or_seg.downsampling_parameters.min_downsampling_level
+        downsampling_parameters.max_downsampling_level is None
+        and downsampling_parameters.min_downsampling_level is None
     ):
         if input_grid_size <= min_grid_size:
             return 1
@@ -196,7 +193,7 @@ def compute_number_of_downsampling_steps(
             math.log(
                 x1_filesize_bytes
                 / (
-                    int_vol_or_seg.downsampling_parameters.min_size_per_downsampling_lvl_mb
+                    MIN_SIZE_PER_DOWNSAMPLING_LEVEL_MB
                     * 10**6
                 ),
                 factor,
@@ -208,37 +205,20 @@ def compute_number_of_downsampling_steps(
     return num_of_downsampling_steps
 
 
-def decide_np_dtype(mode: str, endianness: str):
+def decide_np_dtype(mode: ModeSFFDataType, endianness: Endianness):
     """decides np dtype based on mode (e.g. float32) and endianness (e.g. little) provided in SFF"""
-    dt = np.dtype(mode)
-    dt = dt.newbyteorder(endianness)
+    dt = np.dtype(mode.value)
+    dt = dt.newbyteorder(endianness.value)
     return dt
 
 
-def chunk_numpy_arr(arr, chunk_size):
+def chunk_numpy_arr(arr: np.ndarray, chunk_size: int):
     lst = np.split(arr, np.arange(chunk_size, len(arr), chunk_size))
     return np.stack(lst, axis=0)
 
-
-def _get_ometiff_physical_size(ome_tiff_metadata):
-    d = {}
-    if "PhysicalSizeX" in ome_tiff_metadata:
-        d["x"] = ome_tiff_metadata["PhysicalSizeX"]
-    else:
-        d["x"] = 1.0
-
-    if "PhysicalSizeY" in ome_tiff_metadata:
-        d["y"] = ome_tiff_metadata["PhysicalSizeY"]
-    else:
-        d["y"] = 1.0
-
-    if "PhysicalSizeZ" in ome_tiff_metadata:
-        d["z"] = ome_tiff_metadata["PhysicalSizeZ"]
-    else:
-        d["z"] = 1.0
-
-    return d
-
+# def chunk_dask_arr(arr: da.Array, chunk_size: int):
+#     lst = np.split(arr, np.arange(chunk_size, len(arr), chunk_size))
+#     return np.stack(lst, axis=0)
 
 def _convert_short_units_to_long(short_unit_name: str):
     # TODO: support conversion of other axes units (currently only µm to micrometer).
@@ -276,75 +256,62 @@ def _get_ometiff_axes_units(ome_tiff_metadata):
     return axes_units
 
 
-def _get_ome_tiff_voxel_sizes_in_downsamplings(
-    internal_volume_or_segmentation: InternalVolume | InternalSegmentation,
-    boxes_dict,
-    downsamplings: list[DownsamplingLevelInfo],
-    ometiff_metadata,
-):
-    ometiff_physical_size_dict: dict[str, str] = {}
+# def _get_ome_tiff_voxel_sizes_in_downsamplings(
+#     internal_volume_or_segmentation: InternalVolume | InternalSegmentation,
+#     boxes_dict,
+#     downsamplings: list[DownsamplingLevelInfo],
+#     ometiff_metadata,
+# ):
+#     ometiff_physical_size_dict: dict[str, str] = {}
 
-    # TODO: here check if internal_volume contains voxel_sizes
-    if "voxel_size" in internal_volume_or_segmentation.custom_data:
-        l = internal_volume_or_segmentation.custom_data.voxel_size
-        # if 'extra_data' in root.attrs:
-        #     # TODO: this is in micrometers
-        #     # we anyway do not support other units
-        #     l = root.attrs['extra_data']['scale_micron']
-        ometiff_physical_size_dict["x"] = l[0]
-        ometiff_physical_size_dict["y"] = l[1]
-        ometiff_physical_size_dict["z"] = l[2]
-    else:
-        # TODO: try to get from ometiff itself
-        ometiff_physical_size_dict = _get_ometiff_physical_size(ometiff_metadata)
+#     # TODO: here check if internal_volume contains voxel_sizes
+#     if "voxel_size" in internal_volume_or_segmentation.custom_data:
+#         l = internal_volume_or_segmentation.custom_data.voxel_size
+#         # if 'extra_data' in root.attrs:
+#         #     # TODO: this is in micrometers
+#         #     # we anyway do not support other units
+#         #     l = root.attrs['extra_data']['scale_micron']
+#         ometiff_physical_size_dict["x"] = l[0]
+#         ometiff_physical_size_dict["y"] = l[1]
+#         ometiff_physical_size_dict["z"] = l[2]
+#     else:
+#         # TODO: try to get from ometiff itself
+#         ometiff_physical_size_dict = _get_ometiff_physical_size(ometiff_metadata)
 
-    ometiff_axes_units_dict = _get_ometiff_axes_units(ometiff_metadata)
-    # ometiff_physical_size_dict = _get_ometiff_physical_size(ometiff_metadata)
+#     ometiff_axes_units_dict = _get_ometiff_axes_units(ometiff_metadata)
+#     # ometiff_physical_size_dict = _get_ometiff_physical_size(ometiff_metadata)
 
-    for info in downsamplings:
-        level = info["level"]
-        downsampling_level = str(level)
-        if downsampling_level == "1":
-            boxes_dict[downsampling_level].voxel_size = [
-                convert_to_angstroms(
-                    ometiff_physical_size_dict["x"], ometiff_axes_units_dict["x"]
-                ),
-                convert_to_angstroms(
-                    ometiff_physical_size_dict["y"], ometiff_axes_units_dict["y"]
-                ),
-                convert_to_angstroms(
-                    ometiff_physical_size_dict["z"], ometiff_axes_units_dict["z"]
-                ),
-            ]
-        else:
-            # NOTE: rounding error - if one of dimensions in original data is odd
-            boxes_dict[downsampling_level].voxel_size = [
-                convert_to_angstroms(
-                    ometiff_physical_size_dict["x"] * int(downsampling_level),
-                    ometiff_axes_units_dict["x"],
-                ),
-                convert_to_angstroms(
-                    ometiff_physical_size_dict["y"] * int(downsampling_level),
-                    ometiff_axes_units_dict["y"],
-                ),
-                convert_to_angstroms(
-                    ometiff_physical_size_dict["z"] * int(downsampling_level),
-                    ometiff_axes_units_dict["z"],
-                ),
-            ]
-
-
-def read_ometiff_to_dask(int_vol_or_seg: InternalVolume | InternalSegmentation):
-    if isinstance(int_vol_or_seg, InternalVolume):
-        fpath = int_vol_or_seg.input_path
-    else:
-        fpath = int_vol_or_seg.input_path
-    reader = OMETIFFReader(fpath=fpath)
-    img_array_np, metadata, xml_metadata = reader.read()
-    img_array = da.from_array(img_array_np)
-    del img_array_np
-    gc.collect()
-    return img_array, metadata, xml_metadata
+#     for info in downsamplings:
+#         level = info["level"]
+#         downsampling_level = str(level)
+#         if downsampling_level == "1":
+#             boxes_dict[downsampling_level].voxel_size = [
+#                 convert_to_angstroms(
+#                     ometiff_physical_size_dict["x"], ometiff_axes_units_dict["x"]
+#                 ),
+#                 convert_to_angstroms(
+#                     ometiff_physical_size_dict["y"], ometiff_axes_units_dict["y"]
+#                 ),
+#                 convert_to_angstroms(
+#                     ometiff_physical_size_dict["z"], ometiff_axes_units_dict["z"]
+#                 ),
+#             ]
+#         else:
+#             # NOTE: rounding error - if one of dimensions in original data is odd
+#             boxes_dict[downsampling_level].voxel_size = [
+#                 convert_to_angstroms(
+#                     ometiff_physical_size_dict["x"] * int(downsampling_level),
+#                     ometiff_axes_units_dict["x"],
+#                 ),
+#                 convert_to_angstroms(
+#                     ometiff_physical_size_dict["y"] * int(downsampling_level),
+#                     ometiff_axes_units_dict["y"],
+#                 ),
+#                 convert_to_angstroms(
+#                     ometiff_physical_size_dict["z"] * int(downsampling_level),
+#                     ometiff_axes_units_dict["z"],
+#                 ),
+#             ]
 
 
 def _create_reorder_tuple(d: dict, correct_order: str):
@@ -363,50 +330,50 @@ def _get_missing_dims(sizesBF: list[int]):
     return missing
 
 
-def prepare_ometiff_for_writing(
-    img_array: da.Array, metadata, int_vol_or_seg: InternalVolume | InternalSegmentation
-):
-    prepared_data: list[PreparedOMETIFFData] = []
+# def prepare_ometiff_for_writing(
+#     img_array: da.Array, metadata, i: InternalVolume | InternalSegmentation
+# ):
+#     prepared_data: list[PreparedOMETIFFData] = []
 
-    d = {}
-    order = metadata["DimOrder BF Array"]
-    for letter in order:
-        d[str(letter)] = order.index(str(letter))
+#     d = {}
+#     order = metadata["DimOrder BF Array"]
+#     for letter in order:
+#         d[str(letter)] = order.index(str(letter))
 
-    missing_dims = []
+#     missing_dims = []
 
-    if len(img_array.shape) != 5:
-        missing_dims = _get_missing_dims(metadata["Sizes BF"])
-        for missing_dim in missing_dims:
-            img_array = da.expand_dims(img_array, axis=d[missing_dim])
+#     if len(img_array.shape) != 5:
+#         missing_dims = _get_missing_dims(metadata["Sizes BF"])
+#         for missing_dim in missing_dims:
+#             img_array = da.expand_dims(img_array, axis=d[missing_dim])
 
-    CORRECT_ORDER = "TCXYZ"
-    reorder_tuple = _create_reorder_tuple(d, CORRECT_ORDER)
-    # NOTE: assumes correct order is TCXYZ
+#     CORRECT_ORDER = "TCXYZ"
+#     reorder_tuple = _create_reorder_tuple(d, CORRECT_ORDER)
+#     # NOTE: assumes correct order is TCXYZ
 
-    int_vol_or_seg.custom_data
+#     i.custom_data
 
-    rearranged_arr = img_array.transpose(*reorder_tuple)
+#     rearranged_arr = img_array.transpose(*reorder_tuple)
 
-    artificial_channel_ids = list(range(rearranged_arr.shape[1]))
-    artificial_channel_ids = [str(x) for x in artificial_channel_ids]
-    # TODO: prepare list of of PreparedOMETIFFData
-    # for each time and channel
-    for time in range(rearranged_arr.shape[0]):
-        time_arr = rearranged_arr[time]
-        for channel_number in range(time_arr.shape[0]):
-            three_d_arr = time_arr[channel_number]
-            p = PreparedOMETIFFData(
-                channel_number=channel_number,
-                time=time,
-                data=three_d_arr,
-            )
-            prepared_data.append(p)
+#     artificial_channel_ids = list(range(rearranged_arr.shape[1]))
+#     artificial_channel_ids = [str(x) for x in artificial_channel_ids]
+#     # TODO: prepare list of of PreparedOMETIFFData
+#     # for each time and channel
+#     for time in range(rearranged_arr.shape[0]):
+#         time_arr = rearranged_arr[time]
+#         for channel_number in range(time_arr.shape[0]):
+#             three_d_arr = time_arr[channel_number]
+#             p = PreparedOMETIFFData(
+#                 channel_number=channel_number,
+#                 timeframe_index=time,
+#                 data=three_d_arr,
+#             )
+#             prepared_data.append(p)
 
-    artificial_channel_ids_dict = dict(
-        zip(artificial_channel_ids, artificial_channel_ids)
-    )
-    return prepared_data, artificial_channel_ids_dict
+#     artificial_channel_ids_dict = dict(
+#         zip(artificial_channel_ids, artificial_channel_ids)
+#     )
+#     return prepared_data, artificial_channel_ids_dict
 
 
 def get_ome_tiff_origins(boxes_dict: dict, downsamplings: list[DownsamplingLevelInfo]):

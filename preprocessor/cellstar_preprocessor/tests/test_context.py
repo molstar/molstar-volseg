@@ -1,66 +1,111 @@
 import shutil
 from pathlib import Path
+from uuid import uuid4
 
+from cellstar_preprocessor.tools.asset_getter.asset_getter import AssetGetter
+from cellstar_preprocessor.tools.remove_path.remove_path import remove_path
 import zarr
-from cellstar_db.models import InputKind
+from cellstar_db.models import AssetKind
 from cellstar_preprocessor.flows.constants import (
+    ANNOTATIONS_DICT_NAME,
     INIT_ANNOTATIONS_MODEL,
     INIT_METADATA_MODEL,
+    METADATA_DICT_NAME,
 )
-from cellstar_preprocessor.tests.helper_methods import (
-    download_map_for_tests,
-    download_omezarr_for_tests,
-    download_sff_for_tests,
-)
-from cellstar_preprocessor.tests.input_for_tests import TestInput
+from cellstar_preprocessor.tests.input_for_tests import PATH_TO_INPUTS_FOR_TESTS, TestInput
 
 
 class TestContext:
+    def __init__(
+        self,
+        test_input: TestInput,
+        working_folder: Path,
+    ):
+        self.test_input = test_input
+        self.working_folder: Path = working_folder
+        self.test_input_asset_path: Path | None = None
+        self.root: zarr.Group | None = None
+        self.store: zarr.DirectoryStore | None = None
+        
     __test__ = False
+    
+    
+    # TODO: look at it again
+    def __create_input_path(self):
+        # create unique name
+        unique_dir_name = str(uuid4())
+        unique_dir = PATH_TO_INPUTS_FOR_TESTS / unique_dir_name
+        if unique_dir.exists():
+            shutil.rmtree(unique_dir)
+        unique_dir.mkdir(parents=True)
+        # get if from asset, e.g. resource name 
+        name = self.test_input.asset_info.source.name
+        if self.test_input.asset_info.source.compression is not None:
+            name = self.test_input.asset_info.source.stem
+            
+        output_path = unique_dir / name
+        return output_path
+        # as a result create dir with unique name for input
+    
+    def _get_input(self):
+        self.test_input_asset_path = self.__create_input_path()
+        # asset getter should take in destination
+        # which is folder, that is correct, so that it knows
+        # where to get asset "zipped ometiff"
+        # but get get_asset should return path to actual file
+        # ometiff in that case 
+        # would bfio be able to open multi file ometiff?
+        # another option is to merge them into a single one
+        # TODO: merge tiffs instead after commits
+        g = AssetGetter(self.test_input.asset_info, self.test_input_asset_path)
+        target_path = g.get_asset()
+        if target_path.resolve() != self.test_input_asset_path.resolve():
+            print(f'test_input_asset_path set to target_path ')
+            # exists at that point
+            self.test_input_asset_path = target_path
+        
+        # if self.test_input.kind == AssetKind.sff:
+        #     p = get_sff_for_tests(self.test_input.resource)
+        # elif self.test_input.kind == AssetKind.omezarr:
+        #     p = get_omezarr_for_tests(self.test_input.resource)
+        # elif self.test_input.kind == AssetKind.map:
+        #     p = get_map_for_tests(self.test_input.resource)
 
-    def _download_input(self):
-        # TODO: extract omezarr annotations require segmentations
-        p: Path
-        if self.test_input.kind == InputKind.sff:
-            p = download_sff_for_tests(self.test_input.url)
-        elif self.test_input.kind == InputKind.omezarr:
-            p = download_omezarr_for_tests(self.test_input.url)
-        elif self.test_input.kind == InputKind.map:
-            p = download_map_for_tests(self.test_input.url)
+        # self.test_file_path = p
 
-        self.test_file_path = p
-
-    def _remove_input(self):
-        if self.test_file_path.exists():
-            # if self.test_file_path.is_file():
-            #     self.test_file_path.unlink()
-            # else:
-            shutil.rmtree(self.test_file_path.parent)
+    def _remove_test_input_asset(self):
+        '''Remove folder in which test input file is stored'''
+        remove_path(self.test_input_asset_path.parent)
+        # if self.test_file_path.exists():
+        #     # if self.test_file_path.is_file():
+        #     #     self.test_file_path.unlink()
+        #     # else:
+        #     shutil.rmtree(self.test_file_path.parent)
 
     def _init_zarr_structure(self):
         # if self.working_folder.exists():
         #     shutil.rmtree(self.working_folder, ignore_errors=True)
-        self.intermediate_zarr_structure_path = (
+        self.working_folder = (
             self.working_folder / self.test_input.entry_id
         )
         store: zarr.storage.DirectoryStore = zarr.DirectoryStore(
-            str(self.intermediate_zarr_structure_path)
+            str(self.working_folder)
         )
         root = zarr.group(store=store)
 
-        root.attrs["metadata_dict"] = INIT_METADATA_MODEL.dict()
-        root.attrs["annotations_dict"] = INIT_ANNOTATIONS_MODEL.dict()
+        root.attrs[METADATA_DICT_NAME] = INIT_METADATA_MODEL.model_dump()
+        root.attrs[ANNOTATIONS_DICT_NAME] = INIT_ANNOTATIONS_MODEL.model_dump()
         self.root = root
         self.store = store
 
     def _remove_zarr_structure(self):
-        if self.intermediate_zarr_structure_path.exists():
-            shutil.rmtree(self.intermediate_zarr_structure_path)
+        if self.working_folder.exists():
+            shutil.rmtree(self.working_folder)
 
     def __enter__(self):
         # init zarr structure
         self._init_zarr_structure()
-        self._download_input()
+        self._get_input()
 
         return self
 
@@ -70,7 +115,7 @@ class TestContext:
         else:
             pass
 
-        self._remove_input()
+        self._remove_test_input_asset()
         self._remove_zarr_structure()
 
     async def __aenter__(self):
@@ -85,21 +130,8 @@ class TestContext:
         else:
             pass
 
-        self._remove_input()
+        self._remove_test_input_asset()
         self._remove_zarr_structure()
-
-    def __init__(
-        self,
-        test_input: TestInput,
-        working_folder: Path,
-    ):
-        self.test_input = test_input
-        self.working_folder = working_folder
-        self.intermediate_zarr_structure_path: Path | None = None
-        self.test_file_path: Path | None = None
-        self.root: zarr.Group | None = None
-        self.store: zarr.DirectoryStore | None = None
-
 
 def context_for_tests(test_input: TestInput, working_folder: Path) -> TestContext:
     return TestContext(test_input, working_folder)

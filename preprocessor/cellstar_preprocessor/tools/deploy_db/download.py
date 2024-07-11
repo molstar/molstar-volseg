@@ -10,7 +10,7 @@ import zipfile
 from pathlib import Path
 from typing import TypedDict
 
-from cellstar_db.models import PreprocessorParameters, RawInput
+from cellstar_db.models import PreprocessorParametersPerEntry, RawInput
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -20,9 +20,9 @@ import ome_zarr.utils
 # from _old.input_data_model import QuantizationDtype
 from cellstar_db.models import (
     InputForBuildingDatabase,
-    InputKind,
-    RawInputFileInfo,
-    RawInputFilesDownloadParams,
+    AssetKind,
+    AssetInfo,
+    AssetDownloadParams,
 )
 from cellstar_preprocessor.flows.common import save_dict_to_json_file
 from cellstar_preprocessor.flows.constants import (
@@ -30,7 +30,7 @@ from cellstar_preprocessor.flows.constants import (
     RAW_INPUT_DOWNLOAD_PARAMS_JSON,
     RAW_INPUT_FILES_DIR,
 )
-from cellstar_preprocessor.tools.gunzip.gunzip import gunzip
+from cellstar_preprocessor.tools._gunzip._gunzip import gunzip
 
 
 def parse_script_args():
@@ -66,7 +66,7 @@ def parse_script_args():
 def _parse_raw_input_download_params_file(path: Path):
     with open(path.resolve(), "r", encoding="utf-8") as f:
         # reads into dict
-        json_params: list[RawInputFilesDownloadParams] = json.load(f)
+        json_params: list[AssetDownloadParams] = json.load(f)
 
     return json_params
 
@@ -78,10 +78,10 @@ def _get_filename_from_uri(uri: str):
     return filename
 
 
-def _download(uri: str, final_path: Path, kind: InputKind):
+def _download(uri: str, final_path: Path, kind: AssetKind):
     filename = _get_filename_from_uri(uri)
     # difference is that it should use final_path
-    if kind == InputKind.omezarr:
+    if kind == AssetKind.omezarr:
         complete_path = final_path / filename
         if complete_path.exists():
             shutil.rmtree(complete_path, ignore_errors=True)
@@ -109,7 +109,7 @@ def _download(uri: str, final_path: Path, kind: InputKind):
             print(f"uri: {uri}, final_path: {final_path}, kind: {kind}")
 
 
-def _copy_file(uri: str, final_path: Path, kind: InputKind):
+def _copy_file(uri: str, final_path: Path, kind: AssetKind):
     filename = _get_filename_from_uri(uri)
     if not final_path.exists():
         #     shutil.rmtree(final_path)
@@ -117,7 +117,7 @@ def _copy_file(uri: str, final_path: Path, kind: InputKind):
     complete_path = final_path / filename
     # if omezarr - copy_tree
     # TODO: check if that would work for local omezarr
-    if kind == InputKind.omezarr:
+    if kind == AssetKind.omezarr:
         shutil.copytree(uri, complete_path)
     else:
         shutil.copy2(uri, complete_path)
@@ -126,7 +126,7 @@ def _copy_file(uri: str, final_path: Path, kind: InputKind):
 
 
 # TODO: should return path to the first ometiff image
-def _unzip_multiseries_ometiff_zip(zip_path: Path, kind: InputKind):
+def _unzip_multiseries_ometiff_zip(zip_path: Path, kind: AssetKind):
     directory_to_extract_to = zip_path.parent
     with zipfile.ZipFile(str(zip_path.resolve()), "r") as zip_ref:
         # where to extract
@@ -147,7 +147,7 @@ def _unzip_multiseries_ometiff_zip(zip_path: Path, kind: InputKind):
 
 
 # it should download file and copy file
-def _get_file(input_file_info: RawInputFileInfo, final_path: Path) -> Path:
+def _get_file(input_file_info: AssetInfo, final_path: Path) -> Path:
     resource = input_file_info["resource"]
     uri = resource["uri"]
     if resource["kind"] == "external":
@@ -165,11 +165,11 @@ def _get_file(input_file_info: RawInputFileInfo, final_path: Path) -> Path:
 
 class InputItemParams(TypedDict):
     # entry_folder_path: Path
-    raw_input_file_info: RawInputFileInfo
+    raw_input_file_info: AssetInfo
     final_path: Path | None
     complete_path: Path | None
-    raw_input_files_download_params: RawInputFilesDownloadParams
-    preprocessor_parameters: PreprocessorParameters | None
+    raw_input_files_download_params: AssetDownloadParams
+    preprocessor_parameters: PreprocessorParametersPerEntry | None = None
 
 
 def _get_file_pool_wrapper(params: InputItemParams):
@@ -289,4 +289,4 @@ def store_db_building_params_to_json(
 ):
     filename = Path(args.db_building_parameters_json).name
     folder = Path(args.db_building_parameters_json).parent
-    save_dict_to_json_file([d.dict() for d in db_building_params], filename, folder)
+    save_dict_to_json_file([d.model_dump() for d in db_building_params], filename, folder)

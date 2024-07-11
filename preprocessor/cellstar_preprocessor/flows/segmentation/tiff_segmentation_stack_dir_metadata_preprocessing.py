@@ -228,7 +228,7 @@ def tiff_segmentation_stack_dir_metadata_preprocessing(
     s.set_segmentation_lattices_metadata()
     # root = open_zarr(i.intermediate_zarr_structure_path)
     # # TODO: no metadata dict
-    # metadata_dict: Metadata = root.attrs["metadata_dict"]
+    # metadata_dict: Metadata = root.attrs[METADATA_DICT_NAME]
 
     # time_info = TIME_INFO_STANDARD.copy()
 
@@ -270,7 +270,7 @@ def tiff_segmentation_stack_dir_metadata_preprocessing(
     # segmentation_lattices_metadata["segmentation_ids"] = lattice_ids
     # metadata_dict["segmentation_lattices"] = segmentation_lattices_metadata
 
-    # root.attrs["metadata_dict"] = metadata_dict
+    # root.attrs[METADATA_DICT_NAME] = metadata_dict
 
     # return metadata_dict
 
@@ -290,7 +290,7 @@ def tiff_segmentation_stack_dir_metadata_preprocessing(
     # # # TODO:
     # # source_axes_units = {}
 
-    # # metadata_dict = root.attrs["metadata_dict"]
+    # # metadata_dict = root.attrs[METADATA_DICT_NAME]
     # # metadata_dict["entry_id"]["source_db_name"] = source_db_name
     # # metadata_dict["entry_id"]["source_db_id"] = source_db_id
 
@@ -321,5 +321,5 @@ def tiff_segmentation_stack_dir_metadata_preprocessing(
     # #     internal_volume=internal_volume
     # # )
 
-    # # root.attrs["metadata_dict"] = metadata_dict
+    # # root.attrs[METADATA_DICT_NAME] = metadata_dict
     # # return metadata_dict

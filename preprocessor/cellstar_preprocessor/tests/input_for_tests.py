@@ -2,10 +2,13 @@ from pathlib import Path
 
 from attr import dataclass
 from cellstar_db.models import (
+    CompressionFormat,
     DownsamplingParams,
     EntryData,
-    InputKind,
+    AssetKind,
     QuantizationDtype,
+    AssetInfo,
+    AssetSourceInfo,
     StoringParams,
 )
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
@@ -35,88 +38,92 @@ TEST_MAP_PATH_XYZ_ORDER = Path(
 
 @dataclass
 class TestInput:
-    kind: InputKind
-    url: str
+    asset_info: AssetInfo
+    # output_path
     entry_id: str
     source_db: str
     __test__ = False
 
+# TODO: TRY to somehow unify with database downloading functions
 
 MAP_TEST_INPUTS = [
     TestInput(
-        kind=InputKind.map,
-        url="https://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-1832/map/emd_1832.map.gz",
-        entry_id="emd-1832",
-        source_db="emdb",
+        asset_info=AssetInfo(
+            kind=AssetKind.map,
+            source=AssetSourceInfo(kind="local", uri=str(TEST_MAP_PATH_XYZ_ORDER.resolve()))
+            ),
+        entry_id="custom-XYZ",
+        source_db="custom",
+    ),
+    TestInput(
+        asset_info=AssetInfo(
+            kind=AssetKind.map,
+            source=AssetSourceInfo(kind="local", uri=str(TEST_MAP_PATH_ZYX_ORDER.resolve()))
+            ),
+        entry_id="custom-ZYX",
+        source_db="custom",
     )
 ]
 
 SFF_TEST_INPUTS = [
     TestInput(
-        kind=InputKind.sff,
-        url="https://www.ebi.ac.uk/em_static/emdb_sff/empiar_10070_b3talongmusc20130301/empiar_10070_b3talongmusc20130301.hff.gz",
+        asset_info=AssetInfo(
+            kind=AssetKind.sff,
+            source=AssetSourceInfo(kind="external", uri="https://www.ebi.ac.uk/em_static/emdb_sff/empiar_10070_b3talongmusc20130301/empiar_10070_b3talongmusc20130301.hff.gz")
+            ),
         entry_id="empiar-10070",
         source_db="empiar",
     ),
     TestInput(
-        kind=InputKind.sff,
-        url="https://www.ebi.ac.uk/em_static/emdb_sff/18/1832/emd_1832.hff.gz",
+        asset_info=AssetInfo(
+            kind=AssetKind.sff,
+            source=AssetSourceInfo(kind="external", uri="https://www.ebi.ac.uk/em_static/emdb_sff/18/1832/emd_1832.hff.gz")
+            ),
         entry_id="emd-1832",
         source_db="emdb",
     ),
 ]
 
+OMETIFF_IMAGE_TEST_INPUTS = [
+    TestInput(
+        asset_info=AssetInfo(
+            kind=AssetKind.ometiff_image,
+            # source=AssetSourceInfo(kind="external", uri="https://allencell.s3.amazonaws.com/aics/hipsc_single_cell_image_dataset/crop_raw/00011451c65b106cf9889bbf78cb4aa2cf2f9ec56c681e50fafc9635c3abf752_raw.ome.tif?versionId=T5RJhnjG9tczKyxKVkc_GpcF7sLkg4bm")
+            source=AssetSourceInfo(kind="external", uri="https://allencell.s3.amazonaws.com/aics/hipsc_single_cell_image_dataset/crop_raw/00011451c65b106cf9889bbf78cb4aa2cf2f9ec56c681e50fafc9635c3abf752_raw.ome.tif")
+            ),
+        entry_id="custom-tubhiswt",
+        source_db="custom",
+    )
+    # TestInput(
+    #     asset_info=AssetInfo(
+    #         kind=AssetKind.ometiff_image,
+    #         source=AssetSourceInfo(kind="external", compression=CompressionFormat.zip_archive, uri="https://downloads.openmicroscopy.org/images/OME-TIFF/2016-06/tubhiswt-4D.zip")
+    #         ),
+    #     entry_id="custom-tubhiswt",
+    #     source_db="custom",
+    # ),
+]
+
 OMEZARR_TEST_INPUTS = [
     TestInput(
-        kind=InputKind.omezarr,
-        url="https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0062A/6001240.zarr",
+        asset_info=AssetInfo(
+            kind=AssetKind.omezarr,
+            source=AssetSourceInfo(kind="external", uri="https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0062A/6001240.zarr")
+            ),
         entry_id="idr-6001240",
         source_db="idr",
     ),
     TestInput(
-        kind=InputKind.omezarr,
-        url="https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0101A/13457537.zarr",
+        asset_info=AssetInfo(
+            kind=AssetKind.omezarr,
+            source=AssetSourceInfo(kind="external", uri="https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0101A/13457537.zarr")
+            ),
         entry_id="idr-13457537",
         source_db="idr",
     ),
 ]
 
 MAP_INPUTS_FOR_AXES_TESTING = []
-
-INTERNAL_VOLUME_FOR_TESTING_XYZ_ORDER = InternalVolume(
-    path=WORKING_FOLDER_FOR_TESTS,
-    input_path=TEST_MAP_PATH_XYZ_ORDER,
-    params_for_storing=StoringParams(),
-    volume_force_dtype="f2",
-    downsampling_parameters=DownsamplingParams(),
-    entry_data=EntryData(
-        entry_id="emd-555555",
-        source_db="emdb",
-        source_db_id="emd-555555",
-        source_db_name="emdb",
-    ),
-    quantize_dtype_str=QuantizationDtype.u1,
-    quantize_downsampling_levels=(1,),
-    input_kind=InputKind.map,
-)
-
-INTERNAL_VOLUME_FOR_TESTING_ZYX_ORDER = InternalVolume(
-    path=WORKING_FOLDER_FOR_TESTS,
-    input_path=TEST_MAP_PATH_ZYX_ORDER,
-    params_for_storing=StoringParams(),
-    volume_force_dtype="f2",
-    downsampling_parameters=DownsamplingParams(),
-    entry_data=EntryData(
-        entry_id="emd-555555",
-        source_db="emdb",
-        source_db_id="emd-555555",
-        source_db_name="emdb",
-    ),
-    quantize_dtype_str=QuantizationDtype.u1,
-    quantize_downsampling_levels=(1,),
-    input_kind=InputKind.map,
-)
-
 
 INTERNAL_SEGMENTATION_FOR_TESTING = InternalSegmentation(
     path=WORKING_FOLDER_FOR_TESTS,
@@ -129,7 +136,7 @@ INTERNAL_SEGMENTATION_FOR_TESTING = InternalSegmentation(
         source_db_id="emd-1832",
         source_db_name="emdb",
     ),
-    input_kind=InputKind.sff,
+    input_kind=AssetKind.sff,
 )
 
 INTERNAL_MESH_SEGMENTATION_FOR_TESTING = InternalSegmentation(
@@ -143,5 +150,5 @@ INTERNAL_MESH_SEGMENTATION_FOR_TESTING = InternalSegmentation(
         source_db_id="empiar-10070",
         source_db_name="empiar",
     ),
-    input_kind=InputKind.sff,
+    input_kind=AssetKind.sff,
 )

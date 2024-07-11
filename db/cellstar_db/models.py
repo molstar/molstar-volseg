@@ -1,42 +1,199 @@
-from enum import Enum
-from functools import partial
+import copy
+from enum import Enum, EnumMeta
+from functools import partial, reduce
 from pathlib import Path
-from typing import Any, List, Literal, Optional, Protocol, TypedDict, Union
+from typing import Annotated, Any, Dict, List, Literal, Optional, Protocol, Set, Tuple, TypedDict, Union
+import dask.array as da
+from imagecodecs import NoneError
+from numpydantic import NDArray, Shape
+
+# from numpydantic.interface.zarr import ZarrArrayPath
 
 import numpy as np
+from pydantic_compat import field_validator
 import zarr
 from numcodecs import Blosc
-from pydantic import BaseModel, Extra, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field, conlist
+
+
+class SegmentationSetTable:
+    def __init__(self, grid: da.Array, value_to_segment_id_dict_for_specific_lattice_id: dict[int, int]):
+        self.value_to_segment_id_dict = value_to_segment_id_dict_for_specific_lattice_id
+        self.entries: dict = self.__lattice_to_dict_of_sets(grid)
+
+    def get_serializable_repr(self) -> Dict:
+        """
+        Converts sets in self.entries to lists, and returns the whole table as a dict
+        """
+        d: Dict = copy.deepcopy(self.entries)
+        for i in d:
+            d[i] = list(d[i])
+
+        return d
+
+    def __lattice_to_dict_of_sets(self, grid: da.Array) -> dict:
+        """
+        Converts original latice to dict of singletons.
+        Each singleton should contain segment ID rather than value
+         used to represent that segment in grid
+        """
+
+        u = da.unique(grid)
+        # value 0 is not assigned to any segment, it is just nothing
+        no_zero = u[u != 0]
+        # TODO: simplify
+        # you have unique_values
+        # should return dict of them 1: 1, 2: 2 etc.
+        # no for loop
+        return { i: i for i in no_zero }
+
+        # d = {}
+        # for grid_value_of_segment in unique_values:
+        #     if grid_value_of_segment == 0:
+        #         d[grid_value_of_segment] = {0}
+        #     else:
+        #         d[grid_value_of_segment] = {
+        #             self.value_to_segment_id_dict[grid_value_of_segment]
+        #         }
+        #     # here we need a way to access zarr data (segment_list)
+        #     # and find segment id for each value (traverse dict backwards)
+        #     # and set d[segment_value] = to the found segment id
+
+        # # should return dict without 
+
+        # return d
+
+    def get_categories(self, ids: Tuple) -> Tuple:
+        """
+        Returns sets from the dict of sets (entries) based on provided IDs
+        """
+        return tuple([self.entries[i] for i in ids])
+
+    def __find_category(self, target_category: Set) -> Union[int, None]:
+        """
+        Looks up a category (set) in entries dict, returns its id or None if not found
+        """
+        for category_id, category in self.entries.items():
+            if category == target_category:
+                return category_id
+        return None
+
+    def __add_category(self, target_category: Set) -> int:
+        """
+        Adds new category to entries and returns its id
+        """
+        new_id: int = max(self.entries.keys()) + 1
+        self.entries[new_id] = target_category
+        return new_id
+
+    def resolve_category(self, target_category: Set):
+        """
+        Looks up a category (set) in entries dict, returns its id
+        If not found, adds new category to entries and returns its id
+        """
+        category_id = self.__find_category(target_category)
+        if category_id != None:
+            return category_id
+        else:
+            return self.__add_category(target_category)
+
+
+
+
+
+class MetaEnum(EnumMeta):
+    def __contains__(cls, item):
+        try:
+            cls(item)
+        except ValueError:
+            return False
+        return True
+    
+    @property
+    def value(self):
+        return self.value
+
+
+class BaseEnum(Enum, metaclass=MetaEnum):
+    pass
+
+
+
+class SegmentationPrimaryDescriptor(str, BaseEnum):
+    three_d_volume = "three_d_volume"
+    mesh_list = "mesh_list"
+    shape_primitive_list = "shape_primitive_list"
+
+ConlistInt2 = Annotated[list[int], conlist(int, min_length=2, max_length=2)]
+ConlistInt3 = Annotated[list[int], conlist(int, min_length=3, max_length=3)]
+
+ConlistFloat3 = Annotated[list[float], conlist(float, min_length=3, max_length=3)]
+ConlistFloat4 = Annotated[list[float], conlist(float, min_length=4, max_length=4)]
 
 
 def hyphenize(field: str):
     return field.replace("_", "-")
 
 
-class ModelExtra(BaseModel, extra=Extra.allow):
-    pass
+# Files:
+# NOTE: saved as JSON/Msgpack directly, without temporary storing in .zattrs
+
+# DaskOrNumpyArrayField = partial(Field, default_factory=lambda: np.zeros(10))
+# DaskArrayField = partial(Field, default_factory=lambda: da.from_array(np.zeros(10)))
+
+DaskOrNumpyArrayField = NDArray[Shape["* x, * y, * z"], Any]
+
+class ModelArbitraryTypes(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+class ModelExtra(BaseModel):
+    model_config = ConfigDict(extra='allow')
+
+class ModelNoneToDefault(BaseModel):
+    @field_validator("*", mode="before")
+    @classmethod
+    def not_none(cls, v, val_info):
+        """
+        Convert None to Default on optional fields.
+        Why doesn't Pydantic have this option?
+        """
+        field = cls.model_fields[val_info.field_name]
+        if v is None and (default := field.get_default(call_default_factory=True)) is not None:
+            return default
+        return v
 
 
-class OMEZarrAxesType(str, Enum):
-    space = ("space",)
-    time = ("time",)
+    
+
+
+
+class VolumeChannelAnnotation(BaseModel):
+    # uuid
+    channel_id: str
+    # with transparency
+    color: tuple[float, float, float, float] | None = None
+    label: Optional[str]
+
+class OMEZarrAxesType(str, BaseEnum):
+    space = "space"
+    time = "time"
     channel = "channel"
 
 
-class SpatialAxisUnit(str, Enum):
+class SpatialAxisUnit(str, BaseEnum):
     micrometer = "micrometer"
     angstrom = "angstrom"
     # TODO: other
 
 
-class TimeAxisUnit(str, Enum):
+class TimeAxisUnit(str, BaseEnum):
     millisecond = "millisecond"
 
 
 class OMEZarrAxisInfo(ModelExtra):
     name: str
-    type: OMEZarrAxesType | None
-    unit: SpatialAxisUnit | TimeAxisUnit | None
+    type: OMEZarrAxesType | None = None
+    unit: SpatialAxisUnit | TimeAxisUnit | None = None
 
 
 def convert_to_angstroms(value: float, input_unit: SpatialAxisUnit):
@@ -51,14 +208,42 @@ def convert_to_angstroms(value: float, input_unit: SpatialAxisUnit):
     else:
         raise Exception(f"{input_unit} spatial unit is not supported")
 
+class OMETIFFChannelMetadata(ModelExtra):
+    Name : str
+    SamplesPerPixel: int
+    ExcitationWavelength: float
+    ExcitationWavelengthUnit: str
+
+# TODO: develop custom parser instead of pyometiff?
+class OMETIFFMetadata(ModelExtra):
+    model_config = ConfigDict(populate_by_name=True)
+    # TODO: check types
+    Directory: str
+    Filename: str
+    Extension: str
+    ImageType: str
+    AcqDate: str
+    TotalSeries: str
+    # TODO: other props
+    PhysicalSizeX: str
+    PhysicalSizeXUnit: str
+    PhysicalSizeY: str
+    PhysicalSizeYUnit: str
+    PhysicalSizeZ : str
+    PhysicalSizeZUnit : str
+    SizesBF: str = Field(alias='Sizes BF')
+    DimOrderBF: str = Field(alias='DimOrder BF')
+    DimOrderBFArray: str = Field(alias='DimOrder BF Array')
+    Channels : dict[str, OMETIFFChannelMetadata]
+
 
 class OMEZarrCoordinateTransformations(ModelExtra):
     type: Literal["scale", "identity", "translation"]
-    scale: list[float] | None
-    translation: list[float] | None
-    path: str | None
+    scale: list[float] | None = None
+    translation: list[float] | None = None
+    path: str | None = None
 
-    def get_normalized_space_scale_arr(self) -> list[float, float, float]:
+    def get_normalized_space_scale_arr(self) -> ConlistFloat3:
         """Normalizes axes order to XYZ and units to Angstroms"""
         # Order
         assert self.type == "scale"
@@ -70,9 +255,9 @@ class OMEZarrCoordinateTransformations(ModelExtra):
         else:
             raise Exception("Length of scale arr is not supported")
 
-        normalized_space_scale_arr: list[float] = [s[2], s[1], s[0]]
+        normalized_space_scale_arr: ConlistFloat3 = [s[2], s[1], s[0]]
         # to angstroms
-        angstroms_scale_arr: list[float] = [
+        angstroms_scale_arr: ConlistFloat3 = [
             convert_to_angstroms(v) for v in normalized_space_scale_arr
         ]
 
@@ -88,15 +273,15 @@ class OMEZarrCoordinateTransformations(ModelExtra):
         else:
             raise Exception("Length of translation arr is not supported")
 
-        n: list[float] = [t[2], t[1], t[0]]
+        n: ConlistFloat3 = [t[2], t[1], t[0]]
         # to angstroms
-        a: list[float] = [convert_to_angstroms(v) for v in n]
+        a: ConlistFloat3 = [convert_to_angstroms(v) for v in n]
 
         return a
 
 
 class OMEZarrDatasetsMetadata(ModelExtra):
-    coordinateTransformations: list[OMEZarrCoordinateTransformations]
+    coordinateTransformations: list[OMEZarrCoordinateTransformations] 
     path: str
 
 
@@ -108,91 +293,98 @@ class OmeroChannelMetadata(ModelExtra):
 
 
 class OMEZarrOmeroMetadata(ModelExtra):
-    id: int | None
-    name: str | None
-    version: str | None
-    channels: list[OmeroChannelMetadata]
+    id: int | None  = None
+    name: str | None  = None
+    version: str | None = None
+    channels: list[OmeroChannelMetadata] | None  = None
 
 
 class OMEZarrMultiscales(ModelExtra):
     axes: list[OMEZarrAxisInfo]
     datasets: list[OMEZarrDatasetsMetadata]
-    coordinateTransformations: list[OMEZarrCoordinateTransformations] | None
-    name: str | None
-    type: str | None
+    coordinateTransformations: list[OMEZarrCoordinateTransformations] | None = None
+    name: str | None = None
+    type: str | None = None
 
 
 class OMEZarrColorsMetadata(ModelExtra):
-    class Config:
-        alias_generator = hyphenize
-
     label_value: int
-    rgba: list[int, int, int, int]
+    rgba: ConlistInt3
+    
+    model_config = ConfigDict(
+        alias_generator=hyphenize
+    )
+
+
+
 
 
 class OMEZarrImageLabelMetadata(ModelExtra):
-    colors: list[OMEZarrColorsMetadata] | None
-    properties: list[object] | None
-    source: object | None
-    version: str | None
+    colors: list[OMEZarrColorsMetadata] | None  = None
+    properties: list[object] | None = None
+    source: object | None = None
+    version: str | None = None
 
 
 class OMEZarrAttrs(ModelExtra):
-    class Config:
-        alias_generator = hyphenize
+    model_config = ConfigDict(
+        alias_generator=hyphenize
+    )
 
-    axes: list[OMEZarrAxisInfo] | None
-    datasets: list[OMEZarrDatasetsMetadata] | None
-    coordinateTransformations: list[OMEZarrCoordinateTransformations] | None
+    # axes: list[OMEZarrAxisInfo] | None  = None
+    # datasets: list[OMEZarrDatasetsMetadata] | None  = None
+    # coordinateTransformations: list[OMEZarrCoordinateTransformations] | None
     multiscales: list[OMEZarrMultiscales] | None
-    omero: OMEZarrOmeroMetadata | None
-    image_label: OMEZarrImageLabelMetadata | None
+    omero: OMEZarrOmeroMetadata | None = None
+    image_label: OMEZarrImageLabelMetadata | None  = None
 
 
-class PreprocessorMode(str, Enum):
+class PreprocessorMode(str, BaseEnum):
     add = "add"
     extend = "extend"
 
 
 class EntryMetadata(BaseModel):
-    description: str | None
-    url: str | None
+    description: str | None  = None
+    url: str | None = None
 
 
-class QuantizationDtype(str, Enum):
+class QuantizationDtype(str, BaseEnum):
     u1 = "u1"
     u2 = "u2"
 
 
-class PreprocessorParameters(BaseModel):
+class PreprocessorParametersPerEntry(BaseModel):
     """
     Preprocessor parameters for the purpose of
     building database. No working folder, db_path
     """
+    quantize_dtype_str: QuantizationDtype | None = None
+    quantize_downsampling_levels: list[int] | None = None 
+    force_volume_dtype: str | None = None
+    max_size_per_downsampling_lvl_mb: float | None = None
+    min_size_per_downsampling_lvl_mb: float | None = None
+    min_downsampling_level: int | None = None
+    max_downsampling_level: int | None = None
+    remove_original_resolution: bool | None = None
+    pre_downsampling_factor: int | None = None
 
-    quantize_dtype_str: QuantizationDtype | None
-    quantize_downsampling_levels: list[int] | None
-    force_volume_dtype: str | None
-    max_size_per_downsampling_lvl_mb: float | None
-    min_size_per_downsampling_lvl_mb: float | None
-    min_downsampling_level: int | None
-    max_downsampling_level: int | None
-    remove_original_resolution: bool | None
-    pre_downsampling_factor: int | None
 
-
-class SegmentationKind(str, Enum):
+class SegmentationKind(str, BaseEnum):
     lattice = "lattice"
     mesh = "mesh"
     primitve = "primitive"
 
 
-class InputKind(str, Enum):
+class AssetKind(str, BaseEnum):
     map = "map"
     sff = "sff"
     omezarr = "omezarr"
     mask = "mask"
-    application_specific_segmentation = "application_specific_segmentation"
+    wrl = "wrl"
+    stl = "stl"
+    seg = "seg"
+    am = "am"
     custom_annotations = "custom_annotations"
     nii_volume = "nii_volume"
     nii_segmentation = "nii_segmentation"
@@ -206,10 +398,11 @@ class InputKind(str, Enum):
 
 class RawInput(BaseModel):
     path: str | Path
-    kind: InputKind
+    kind: AssetKind
+    parameters: PreprocessorParametersPerEntry | None = None
 
 
-class PreprocessorArguments(PreprocessorParameters):
+class GeneralPreprocessorParameters(PreprocessorParametersPerEntry):
     """
     Full list of preprocessor arguments
     """
@@ -224,23 +417,54 @@ class PreprocessorArguments(PreprocessorParameters):
     inputs: list[RawInput]
 
 
-class RawInputFileResourceInfo(BaseModel):
+class QuantizationInfo(BaseModel):
+    min: DaskOrNumpyArrayField
+    max: DaskOrNumpyArrayField
+    num_steps: int
+    src_type: str
+    data: DaskOrNumpyArrayField
+    to_remove_negatives: DaskOrNumpyArrayField
+    
+class CompressionFormat(str, BaseEnum):
+    zip_archive = "zip"
+    gzip_archive = "gz"
+
+class AssetSourceInfo(BaseModel):
     kind: Literal["local", "external"]
     uri: str
+    compression: CompressionFormat | None = None
+    
+    @computed_field
+    @property
+    def name(self) -> str:
+        '''Last component after the last slash'''
+        return self.uri.split("/")[-1]
+    
+    @computed_field
+    @property
+    def stem(self) -> str:
+        '''First component before period'''
+        return self.name.split(".")[0]
+    
+    @computed_field
+    @property
+    def extension(self) -> str:
+        '''Last extension'''
+        return '.' + self.name.split(".")[-1]
 
 
-class RawInputFileInfo(BaseModel):
-    kind: InputKind
-    resource: RawInputFileResourceInfo
-    preprocessor_parameters: PreprocessorParameters | None
+class AssetInfo(BaseModel):
+    kind: AssetKind
+    source: AssetSourceInfo
+    preprocessor_parameters: PreprocessorParametersPerEntry | None = None
 
 
-class RawInputFilesDownloadParams(BaseModel):
+class AssetDownloadParams(BaseModel):
     entry_id: str
     source_db: str
     source_db_id: str
     source_db_name: str
-    inputs: list[RawInputFileInfo]
+    inputs: list[AssetInfo]
 
 
 # JSON - list of InputForBuildingDatabase
@@ -252,13 +476,13 @@ class RawInputFilesDownloadParams(BaseModel):
 
 
 class InputForBuildingDatabase(BaseModel):
-    quantize_dtype_str: QuantizationDtype | None
-    quantize_downsampling_levels: list[int] | None
-    force_volume_dtype: str | None
-    max_size_per_downsampling_lvl_mb: float | None
-    min_size_per_downsampling_lvl_mb: float | None
-    min_downsampling_level: int | None
-    max_downsampling_level: int | None
+    quantize_dtype_str: QuantizationDtype | None = None
+    quantize_downsampling_levels: list[int] | None = None
+    force_volume_dtype: str | None = None
+    max_size_per_downsampling_lvl_mb: float | None = None
+    min_size_per_downsampling_lvl_mb: float | None = None
+    min_downsampling_level: int | None = None
+    max_downsampling_level: int | None = None
     remove_original_resolution: bool | None
     entry_id: str
     source_db: str
@@ -276,27 +500,107 @@ class OMETIFFSpecificExtraData(BaseModel):
 
 
 class DatasetSpecificExtraData(BaseModel):
-    omezarr: OMEZarrAttrs | None
+    ometiff: OMETIFFSpecificExtraData
+    
+class BaseExtraData(BaseModel):
+    dataset_specific_data: DatasetSpecificExtraData | None = None
+    voxel_size: ConlistFloat3 | None = None
 
 
-class ExtraData(BaseModel):
-    dataset_specific_data: DatasetSpecificExtraData | None
-    voxel_size: list[float, float, float] | None
+class PreparedData(ModelArbitraryTypes):
+    timeframe_index: int
+    resolution: int
+    size: float | int | None = None
 
 
-class VolumeExtraData(ExtraData):
+class PreparedVolumeData(PreparedData):
+    channel_num: int
+    channel_id: str | None = None
+    data: da.Array = DaskOrNumpyArrayField
+
+class PreparedMetadata(BaseModel):
+    timeframe_indices: list[int]
+    resolutions: list[int]
+
+class PreparedVolumeMetadata(PreparedMetadata):
+    channel_nums: list[int]
+    channel_ids: list[str] | None = None
+
+class MeshElementName(BaseEnum):
+    vertices = "vertices"
+    triangles = "triangles"
+    normals = "normals"
+
+# TODO: mapping
+class PreparedSegmentationMetadata(PreparedMetadata):
+    segmentation_nums: list[int]
+    segmentation_ids: list[str] | None = None
+
+class PreparedMeshData(ModelArbitraryTypes):
+    vertices: da.Array = DaskOrNumpyArrayField
+    triangles: da.Array = DaskOrNumpyArrayField
+    normals: da.Array | None = None
+    area: float
+    segment_id: int
+    mesh_id: int
+    # num* will be computed on the fly (vertices.size etc.)
+
+class PreparedMeshSegmentationData(PreparedData):
+    segmentation_id: str
+    mesh_list: list[PreparedMeshData]
+    
+class PreparedLatticeSegmentationData(PreparedData):
+    segmentation_id: str
+    data: da.Array = DaskOrNumpyArrayField
+
+class Prepared(BaseModel):
+    data: list[PreparedLatticeSegmentationData ] | list[PreparedMeshSegmentationData] | list[PreparedVolumeData]
+    def compute_size_for_downsampling_level(self, level: int):
+        # resolution is 1 everywhere in data
+        # fix this
+        d = list(filter(lambda i: i.resolution == level, self.data))
+        sizes = [i.data.nbytes for i in d]
+        r = sum(sizes)
+        # r is 0
+        r_in_mb = r / 1024**2
+        print(f"Size of data for resolution {level} in mb: {r_in_mb}")
+        return r_in_mb
+        # r = reduce(lambda idx, item: item.data.size, d, 0) 
+
+    
+class PreparedVolume(Prepared):
+    data: list[PreparedVolumeData]
+    metadata: PreparedVolumeMetadata
+    
+    
+class DownsamplingLevelDict(ModelArbitraryTypes):
+    ratio: int
+    grid: da.Array = DaskOrNumpyArrayField
+    set_table: SegmentationSetTable
+
+class PreparedLatticeSegmentationData(PreparedData):
+    segmentation_id: str
+    data: da.Array = DaskOrNumpyArrayField
+
+class PreparedSegmentation(Prepared):
+    data: list[PreparedLatticeSegmentationData ] | list[PreparedMeshSegmentationData]
+    metadata: PreparedSegmentationMetadata
+
+    
+class VolumeExtraData(BaseExtraData):
     # map sequential channel ID (e.g. "1" as string)
     # to biologically meaningfull channel id (string)
-    channel_ids_mapping: dict[str, str] | None
+    channel_ids_mapping: dict[str, str] | None = None
+    custom_volume_channel_annotations: list[VolumeChannelAnnotation] | None = None 
 
 
-class SegmentationExtraData(ExtraData):
+class SegmentationExtraData(BaseExtraData):
     # map segmentation number (dimension) in case of >3D array (e.g. OMETIFF)
     # or in case segmentation ids are given as numbers by default
     # to segmentation id (string)
-    segmentation_ids_mapping: dict[str, str] | None
+    segmentation_ids_mapping: dict[str, str] | None = None
     # CURRENTLY IS A KEY THAT IS PROVIDED IN SEGMENTATION_IDS_MAPPING
-    segment_ids_to_segment_names_mapping: dict[str, dict[str, str]] | None
+    segment_ids_to_segment_names_mapping: dict[str, dict[str, str]] | None = None
 
 
 class ExtraData(BaseModel):
@@ -312,9 +616,9 @@ class ExtraData(BaseModel):
 
 
 class SamplingBox(BaseModel):
-    origin: tuple[int, int, int]
-    voxel_size: tuple[float, float, float]
-    grid_dimensions: list[int, int, int]
+    origin: ConlistInt3
+    voxel_size: ConlistFloat3
+    grid_dimensions: ConlistInt3
 
 
 class TimeTransformation(BaseModel):
@@ -322,19 +626,32 @@ class TimeTransformation(BaseModel):
     downsampling_level: Union[int, Literal["all"]]
     factor: float
 
+class DimensionSizes(BaseModel):
+    X: int
+    Y: int
+    Z: int
+    T: int
+    C: int
+    
 
-class DownsamplingLevelInfo(BaseModel):
-    level: int
-    available: bool
-
-
-class AxisName(str, Enum):
+class AxisName(str, BaseEnum):
     x = "x"
     y = "y"
     z = "z"
     t = "t"
     c = "c"
+    
+class DownsamplingLevelInfo(BaseModel):
+    level: int
+    available: bool
+    ratio_per_dimension: dict[AxisName, float] | None = None
 
+
+class MeshZattrs(BaseModel):
+    num_vertices: int
+    num_triangles: int
+    num_normals: int
+    area: float
 
 class SamplingInfo(BaseModel):
     # Info about "downsampling dimension"
@@ -369,7 +686,7 @@ class GeometricSegmentationsMetadata(BaseModel):
 class MeshMetadata(BaseModel):
     num_vertices: int
     num_triangles: int
-    num_normals: Optional[int]
+    num_normals: int | None = None
 
 
 class MeshListMetadata(BaseModel):
@@ -407,8 +724,8 @@ class VolumeDescriptiveStatistics(BaseModel):
 
 class VolumeSamplingInfo(SamplingInfo):
     # resolution -> time -> channel_id
-    source_axes_units: dict[AxisName, SpatialAxisUnit | TimeAxisUnit]
-    descriptive_statistics: dict[int, dict[int, dict[str, VolumeDescriptiveStatistics]]]
+    source_axes_units: dict[AxisName, SpatialAxisUnit | TimeAxisUnit] = Field(default_factory=dict)
+    descriptive_statistics: dict[int, dict[int, dict[str, VolumeDescriptiveStatistics]]] = Field(default_factory=dict)
 
 
 class VolumesMetadata(BaseModel):
@@ -419,7 +736,8 @@ class VolumesMetadata(BaseModel):
 
 
 class ExtraMetadata(BaseModel):
-    pre_downsampling_factor: int | None
+    pass
+    # pre_downsampling_factor: int | None = None
 
 
 class EntryId(BaseModel):
@@ -429,25 +747,11 @@ class EntryId(BaseModel):
 
 class Metadata(BaseModel):
     entry_id: EntryId
-    volumes: VolumesMetadata | None
+    volumes: VolumesMetadata | None = None
     segmentation_lattices: Optional[SegmentationLatticesMetadata]
     segmentation_meshes: Optional[MeshSegmentationsMetadata]
     geometric_segmentation: Optional[GeometricSegmentationsMetadata]
-    entry_metadata: EntryMetadata | None
-    extra_metadata: ExtraMetadata | None
-
-
-# END METADATA DATA MODEL
-
-# ANNOTATIONS DATA MODEL
-
-
-class VolumeChannelAnnotation(BaseModel):
-    # uuid
-    channel_id: str
-    # with transparency
-    color: tuple[float, float, float, float]
-    label: Optional[str]
+    extra_metadata: ExtraMetadata | None = None
 
 
 class SegmentAnnotationData(BaseModel):
@@ -457,8 +761,8 @@ class SegmentAnnotationData(BaseModel):
     segment_kind: SegmentationKind
     segment_id: int
     segmentation_id: str
-    color: Optional[list[float, float, float, float]]
-    time: Optional[int | list[int | tuple[int, int]]]
+    color: ConlistFloat4
+    time: Optional[int | list[int | ConlistInt2]]
     # other props added later if needed
 
 
@@ -490,7 +794,7 @@ class DescriptionData(BaseModel):
     name: Optional[str]
     external_references: Optional[list[ExternalReference]]
     is_hidden: Optional[bool]
-    time: Optional[int | list[int | tuple[int, int]]]
+    time: Optional[int | list[int | ConlistInt2]]
 
     details: Optional[DetailsText]
     metadata: Union[dict[str, Any], None]
@@ -514,29 +818,28 @@ class AnnotationsMetadata(BaseModel):
 # "DATA" DATA MODEL
 
 
-class LatticeSegmentationData(TypedDict):
-    grid: zarr.Array
+class LatticeSegmentationData(ModelArbitraryTypes):
+    grid: zarr.Array = DaskOrNumpyArrayField
     # NOTE: single item in the array which is a Dict
-    set_table: zarr.Array
+    # TODO: should be dask zatts or whatever
+    set_table: zarr.Array = DaskOrNumpyArrayField
 
-
-class SingleMeshZattrs(TypedDict):
+class SingleMeshZattrs(BaseModel):
     num_vertices: int
     area: float
-    # TODO: add these two
     num_triangles: int
     num_normals: int
 
 
-class SingleMeshSegmentationData(TypedDict):
+class SingleMeshSegmentationData(ModelArbitraryTypes):
     mesh_id: str
-    vertices: zarr.Array
-    triangles: zarr.Array
-    normals: zarr.Array
+    vertices: zarr.Array = DaskOrNumpyArrayField
+    triangles: zarr.Array = DaskOrNumpyArrayField
+    normals: zarr.Array | None = None
     attrs: SingleMeshZattrs
 
 
-class ShapePrimitiveKind(str, Enum):
+class ShapePrimitiveKind(str, BaseEnum):
     sphere = "sphere"
     tube = "tube"
     cylinder = "cylinder"
@@ -553,43 +856,43 @@ class ShapePrimitiveBase(BaseModel):
 
 
 class RotationParameters(BaseModel):
-    axis: tuple[float, float, float]
+    axis: ConlistFloat3
     radians: float
 
 
 class Sphere(ShapePrimitiveBase):
     # in angstroms
-    center: tuple[float, float, float]
+    center: ConlistFloat3
     radius: float
 
 
 class Box(ShapePrimitiveBase):
     # with respect to origin 0, 0, 0
-    translation: tuple[float, float, float]
+    translation: ConlistFloat3
     # default size 2, 2, 2 in angstroms for pdbe-1.rec
-    scaling: tuple[float, float, float]
+    scaling: ConlistFloat3
     rotation: RotationParameters
 
 
 class Cylinder(ShapePrimitiveBase):
-    start: tuple[float, float, float]
-    end: tuple[float, float, float]
+    start: ConlistFloat3
+    end: ConlistFloat3
     radius_bottom: float
     radius_top: float  # =0 <=> cone
 
 
 class Ellipsoid(ShapePrimitiveBase):
-    dir_major: tuple[float, float, float]
-    dir_minor: tuple[float, float, float]
-    center: tuple[float, float, float]
-    radius_scale: tuple[float, float, float]
+    dir_major: ConlistFloat3
+    dir_minor: ConlistFloat3
+    center: ConlistFloat3
+    radius_scale: ConlistFloat3
 
 
 class Pyramid(ShapePrimitiveBase):
     # with respect to origin 0, 0, 0
-    translation: tuple[float, float, float]
+    translation: ConlistFloat3
     # default size 2, 2, 2 in angstroms for pdbe-1.rec
-    scaling: tuple[float, float, float]
+    scaling: ConlistFloat3
     rotation: RotationParameters
 
 
@@ -622,50 +925,29 @@ class ZarrRoot(TypedDict):
     ]
 
 
-# Files:
-# NOTE: saved as JSON/Msgpack directly, without temporary storing in .zattrs
-GeometricSegmentationJson = list[GeometricSegmentationData]
-
-# END "DATA" DATA MODEL
 
 
-# SERVER OUTPUT DATA MODEL (MESHES, SEGMENTATION LATTICES, VOLUMES)
-
-NumpyField = partial(Field, default_factory=lambda: np.zeros(10))
-
-
-class MeshData(BaseModel):
+class MeshData(ModelArbitraryTypes):
     mesh_id: int
-    vertices: np.ndarray = NumpyField  # shape = (n_vertices, 3)
-    triangles: np.ndarray = NumpyField  # shape = (n_triangles, 3)
-    normals: Optional[np.ndarray] = NumpyField
-
-    class Config:
-        arbitrary_types_allowed = True
-
+    vertices: DaskOrNumpyArrayField  # shape = (n_vertices, 3)
+    triangles: DaskOrNumpyArrayField  # shape = (n_triangles, 3)
+    normals: DaskOrNumpyArrayField | None  = None
 
 MeshesData = list[MeshData]
 
 
-class LatticeSegmentationSliceData(BaseModel):
+class LatticeSegmentationSliceData(ModelArbitraryTypes):
     # array with set ids
     category_set_ids: np.ndarray = Field(default_factory=lambda: np.zeros(10))
     # dict mapping set ids to the actual segment ids (e.g. for set id=1, there may be several segment ids)
     category_set_dict: dict
     lattice_id: int
 
-    class Config:
-        arbitrary_types_allowed = True
-
-
-class SliceData(BaseModel):
+class SliceData(ModelArbitraryTypes):
     segmentation_slice: Optional[LatticeSegmentationSliceData]
     volume_slice: Optional[np.ndarray] = Field(default_factory=lambda: np.zeros(10))
     channel_id: Optional[str]
     time: int
-
-    class Config:
-        arbitrary_types_allowed = True
 
 
 # END SERVER OUTPUT DATA MODEL
@@ -675,46 +957,46 @@ class SliceData(BaseModel):
 
 class ShapePrimitiveInputParams(BaseModel):
     id: int
-    color: list[float, float, float, float]
+    color: ConlistFloat4
 
 
 class RotationInputParameters(BaseModel):
-    axis: tuple[float, float, float]
+    axis: ConlistFloat3
     radians: float
 
 
 class SphereInputParams(ShapePrimitiveInputParams):
-    center: tuple[float, float, float]
+    center: ConlistFloat3
     radius: float
 
 
 class BoxInputParams(ShapePrimitiveInputParams):
     # with respect to origin 0, 0, 0
-    translation: tuple[float, float, float]
+    translation: ConlistFloat3
     # default size 2, 2, 2 in angstroms for pdbe-1.rec
-    scaling: tuple[float, float, float]
+    scaling: ConlistFloat3
     rotation: RotationInputParameters
 
 
 class CylinderInputParams(ShapePrimitiveInputParams):
-    start: tuple[float, float, float]
-    end: tuple[float, float, float]
+    start: ConlistFloat3
+    end: ConlistFloat3
     radius_bottom: float
     radius_top: float  # =0 <=> cone
 
 
 class EllipsoidInputParams(ShapePrimitiveInputParams):
-    dir_major: tuple[float, float, float]
-    dir_minor: tuple[float, float, float]
-    center: tuple[float, float, float]
-    radius_scale: tuple[float, float, float]
+    dir_major: ConlistFloat3
+    dir_minor: ConlistFloat3
+    center: ConlistFloat3
+    radius_scale: ConlistFloat3
 
 
 class PyramidInputParams(ShapePrimitiveInputParams):
     # with respect to origin 0, 0, 0
-    translation: tuple[float, float, float]
+    translation: ConlistFloat3
     # default size 2, 2, 2 in angstroms for pdbe-1.rec
-    scaling: tuple[float, float, float]
+    scaling: ConlistFloat3
     rotation: RotationInputParameters
 
 
@@ -737,6 +1019,9 @@ class GeometricSegmentationInputData(BaseModel):
     # maps timeframe index to list of ShapePrimitiveInputData
     shape_primitives_input: dict[int, list[ShapePrimitiveInputData]]
     time_units: Optional[str]
+    
+    
+GeometricSegmentationJson = list[GeometricSegmentationData]
 
 
 # END INPUT DATA MODEL
@@ -821,12 +1106,8 @@ class VolumeMetadata(Protocol):
         ...
 
 
-class SegmentationPrimaryDescriptor(str, Enum):
-    three_d_volume = "three_d_volume"
-    mesh_list = "mesh_list"
 
-
-class InputCase(str, Enum):
+class InputCase(str, BaseEnum):
     map_only = "map_only"
     map_and_sff = "map_and_sff"
     omezarr = "omezarr"
@@ -847,18 +1128,35 @@ class VolumeParams(BaseModel):
     force_volume_dtype: Optional[str]
 
 
-class DownsamplingParams(BaseModel):
-    max_size_per_downsampling_lvl_mb: Optional[float]
-    min_size_per_downsampling_lvl_mb: Optional[float] = 5
-    min_downsampling_level: Optional[int]
-    max_downsampling_level: Optional[int]
+class DownsamplingParams(ModelNoneToDefault):
+    max_size_per_downsampling_lvl_mb: Optional[float] = None
+    min_size_per_downsampling_lvl_mb: Optional[float] = None
+    min_downsampling_level: Optional[int] = None
+    max_downsampling_level: Optional[int] = None
     remove_original_resolution: Optional[bool] = False
+    
+    # class Config:
+    #     validate_assignment = True
+
+    # @validator('min_size_per_downsampling_lvl_mb')
+    # def set_min_size_per_downsampling_lvl_mb(cls, min_size_per_downsampling_lvl_mb):
+    #     return min_size_per_downsampling_lvl_mb or 5.0
+    
+    # @validator('remove_original_resolution')
+    # def set_remove_original_resolution(cls, remove_original_resolution):
+    #     return remove_original_resolution or False
 
 
-class StoringParams(BaseModel):
+
+class ChunkingMode(MetaEnum):
+    auto = "auto"
+    custom_function = "custom_function"
+    false = "false"
+
+class StoringParams(ModelArbitraryTypes):
     #  params_for_storing
     # 'auto'
-    chunking_mode: str = "auto"
+    chunking_mode: ChunkingMode = ChunkingMode.auto
     # Blosc(cname='lz4', clevel=5, shuffle=Blosc.SHUFFLE, blocksize=0)
     # TODO: figure out how to pass it
     compressor: object = Blosc(
@@ -883,7 +1181,7 @@ class PreprocessorInput(BaseModel):
     inputs: Inputs
     volume: VolumeParams
     # optional - we may not need them (for OME Zarr there are already downsamplings)
-    downsampling: Optional[DownsamplingParams]
+    downsampling: DownsamplingParams
     entry_data: EntryData
     # for intermediate data
     working_folder: Path
@@ -894,4 +1192,156 @@ class PreprocessorInput(BaseModel):
     storing_params: StoringParams
     # add_segmentation_to_entry: bool = False
     # add_custom_annotations: bool = False
-    custom_data: Optional[dict[str, Any]]
+    custom_data: dict[str, Any] | None = None
+
+
+
+class Software(BaseModel):
+    name: str | None = None
+    version: str | None = None
+    processing_details: str | None = None
+
+class TransformationMatrix(BaseModel):
+    id: int
+    rows: int
+    cols: int
+    data: str
+
+class BoundingBox(BaseModel):
+    xmin: object
+    xmax: object
+    ymin: object
+    ymax: object
+    zmin: object
+    zmax: object
+
+class BiologicalAnnotation(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    number_of_instances: int = None
+    external_references: list[ExternalReference] = []
+
+class ShapePrimitiveBaseSFF(BaseModel):
+    pass
+
+class ConeSFF(ShapePrimitiveBaseSFF):
+    height: object
+    bottom_radius: object
+    transform_id: int
+    attribute: float
+    
+class CuboidSFF(ShapePrimitiveBaseSFF):
+    x: object
+    y: object
+    z: object
+    transform_id: object
+    attribute: float
+
+class CylinderSFF(ShapePrimitiveBaseSFF):
+    height: object
+    diameter: object
+    transform_id: int
+    attribute: float
+
+class EllipsoidSFF(ShapePrimitiveBaseSFF):
+    x: object
+    y: object
+    z: object
+    transform_id: object
+    attribute: float
+
+
+    
+
+
+class ThreeDVolume(BaseModel):
+    lattice_id: int
+    value: float
+    transform_id: int | None = None
+    # TODO: typecast "value" to int in separate function
+
+
+
+class VolumeIndexType(BaseModel):
+    rows: int
+    cols: int
+    sections: int
+
+class VolumeStructureType(BaseModel):
+    rows: int
+    cols: int
+    sections: int
+
+    def to_tuple(self):
+        return (self.cols, self.rows, self.sections)
+
+class Endianness(BaseEnum):
+    little = "little"
+    big = "big"
+
+class ModeSFFDataType(BaseEnum):
+    int8 = "int8"
+    uint8 = "uint8"
+    int16 = "int16"
+    uint16 = "uint16"
+    int32 = "int32"
+    uint32 = "uint32"
+    int64 = "uint64"
+    uint64 = "uint64"
+    float32 = "float32"
+    float64 = "float64"
+    
+class LatticeSFF(BaseModel):
+    id: int
+    mode: ModeSFFDataType
+    endianness: Endianness
+    size: VolumeStructureType
+    start: VolumeIndexType
+    data: str
+
+class MeshElementBaseSFF(BaseModel):
+    mode: ModeSFFDataType
+    endianness: Endianness
+    data: str
+
+class VertexSFF(MeshElementBaseSFF):
+    num_vertices: int
+
+class NormalSFF(MeshElementBaseSFF):
+    num_normals: int
+    
+class TrianglesSFF(MeshElementBaseSFF):
+    num_triangles: int
+
+class MeshSFF(BaseModel):
+    # in mesh list, usually a single one in mesh list
+    id: int
+    vertices: VertexSFF
+    normals: NormalSFF | None = None
+    triangles: TrianglesSFF
+    transform_id: int | None = None
+
+class StoreType(BaseEnum):
+    dir = "dir"
+    zip = "zip"
+
+class Segment(BaseModel):
+    id: int
+    parent_id: int
+    biological_annotation: BiologicalAnnotation | None
+    colour: ConlistFloat4
+    mesh_list: list[MeshSFF]  = []
+    three_d_volume: ThreeDVolume | None = None
+    shape_primitive_list: list[ShapePrimitiveBaseSFF] = []
+    
+class SFFSegmentationModel(BaseModel):
+    version: str | None = None
+    name: str | None = None
+    software_list: list[Software] = []
+    transfrom_list: list[TransformationMatrix] = []
+    primary_descriptor: SegmentationPrimaryDescriptor
+    bounding_box: BoundingBox | None = None
+    global_external_references: list[ExternalReference] = []
+    segment_list: list[Segment] = []
+    lattice_list: list[LatticeSFF] = [] 
+    details: str | None = None

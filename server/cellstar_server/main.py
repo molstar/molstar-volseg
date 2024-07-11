@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
-print("Server Settings: ", settings.dict())
+print("Server Settings: ", settings.model_dump())
 
 description = f"""
 GIT TAG: {settings.GIT_TAG}

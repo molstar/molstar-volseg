@@ -14,10 +14,10 @@ from cellstar_preprocessor.flows.segmentation.category_set_downsampling_methods 
     downsample_categorical_data,
     store_downsampling_levels_in_zarr,
 )
-from cellstar_preprocessor.flows.segmentation.downsampling_level_dict import (
-    DownsamplingLevelDict,
-)
-from cellstar_preprocessor.flows.segmentation.segmentation_set_table import (
+# from cellstar_preprocessor.flows.segmentation.downsampling_level_dict import (
+#     DownsamplingLevelDict,
+# )
+from cellstar_db.models import (
     SegmentationSetTable,
 )
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
@@ -89,11 +89,11 @@ def _create_category_set_downsamplings(
     )
 
     # for now contains just x1 downsampling lvl dict, in loop new dicts for new levels are appended
-    levels = [
-        DownsamplingLevelDict(
-            {"ratio": 1, "grid": original_data, "set_table": initial_set_table}
-        )
-    ]
+    # levels = [
+    #     DownsamplingLevelDict(
+    #         {"ratio": 1, "grid": original_data, "set_table": initial_set_table}
+    #     )
+    # ]
     for i in range(downsampling_steps):
         current_set_table = SegmentationSetTable(
             original_data, value_to_segment_id_dict_for_specific_lattice_id

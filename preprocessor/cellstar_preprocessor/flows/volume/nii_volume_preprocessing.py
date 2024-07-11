@@ -4,7 +4,7 @@ import numpy as np
 import zarr
 from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
 from cellstar_preprocessor.flows.volume.helper_methods import (
-    store_volume_data_in_zarr_stucture,
+    store_volume_data_in_zarr,
 )
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.volume import InternalVolume
@@ -40,14 +40,14 @@ def nii_volume_preprocessing(internal_volume: InternalVolume):
         )
         internal_volume.quantize_dtype_str = None
 
-    store_volume_data_in_zarr_stucture(
+    store_volume_data_in_zarr(
         data=dask_arr,
         volume_data_group=volume_data_group,
         params_for_storing=internal_volume.params_for_storing,
         force_dtype=internal_volume.volume_force_dtype,
         resolution="1",
-        time_frame="0",
-        channel="0",
+        timeframe_index="0",
+        channel_id="0",
     )
 
     internal_volume.map_header = img.header

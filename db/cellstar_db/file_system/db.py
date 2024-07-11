@@ -19,7 +19,7 @@ from cellstar_db.file_system.read_context import FileSystemDBReadContext
 from cellstar_db.file_system.volume_and_segmentation_context import (
     VolumeAndSegmentationContext,
 )
-from cellstar_db.models import AnnotationsMetadata, Metadata, VolumeMetadata
+from cellstar_db.models import AnnotationsMetadata, Metadata, StoreType, VolumeMetadata
 from cellstar_db.protocol import DBReadContext, VolumeServerDB
 
 
@@ -51,7 +51,7 @@ class FileSystemVolumeServerDB(VolumeServerDB):
 
         return entries
 
-    def __init__(self, folder: Path, store_type: str = "zip"):
+    def __init__(self, folder: Path, store_type: StoreType = StoreType.zip):
         # either create of say it doesn't exist
         if not folder.is_dir():
             folder.mkdir(parents=True, exist_ok=True)
@@ -63,7 +63,7 @@ class FileSystemVolumeServerDB(VolumeServerDB):
             GEOMETRIC_SEGMENTATION_FILENAME,
         ]
 
-        if not store_type in ["directory", "zip"]:
+        if not store_type in StoreType:
             raise ArgumentError(f"store type is not supported: {store_type}")
 
         self.store_type = store_type
@@ -312,7 +312,7 @@ class FileSystemVolumeServerDB(VolumeServerDB):
         )
         with open(path.resolve(), "r", encoding="utf-8") as f:
             # reads into dict
-            read_json_of_metadata: Metadata = Metadata.parse_file(f)
+            read_json_of_metadata: Metadata = Metadata.model_validate_json(f)
         return FileSystemVolumeMedatada(read_json_of_metadata)
 
     async def read_annotations(self, namespace: str, key: str) -> AnnotationsMetadata:

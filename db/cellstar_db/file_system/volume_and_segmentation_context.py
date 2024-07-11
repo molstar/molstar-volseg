@@ -9,6 +9,7 @@ from argparse import ArgumentError
 from pathlib import Path
 from typing import Literal
 
+from cellstar_preprocessor.flows.constants import ANNOTATIONS_DICT_NAME, METADATA_DICT_NAME
 import zarr
 from cellstar_db.file_system.constants import (
     ANNOTATION_METADATA_FILENAME,
@@ -139,7 +140,7 @@ class VolumeAndSegmentationContext:
             d.append(target_geometric_segmentation)
             # save back to file
             save_dict_to_json_file(
-                [i.dict() for i in d],
+                [i.model_dump() for i in d],
                 GEOMETRIC_SEGMENTATION_FILENAME,
                 self.path_to_entry,
             )
@@ -186,7 +187,7 @@ class VolumeAndSegmentationContext:
 
             # save back to file
             save_dict_to_json_file(
-                [i.dict() for i in d],
+                [i.model_dump() for i in d],
                 GEOMETRIC_SEGMENTATION_FILENAME,
                 self.path_to_entry,
             )
@@ -214,8 +215,8 @@ class VolumeAndSegmentationContext:
     def __save_annotations_and_metadata(self):
         zarr.DirectoryStore(str(self.intermediate_zarr_structure))
         root: zarr.Group = open_zarr(self.intermediate_zarr_structure)
-        a = root.attrs["annotations_dict"]
-        m = root.attrs["metadata_dict"]
+        a = root.attrs[ANNOTATIONS_DICT_NAME]
+        m = root.attrs[METADATA_DICT_NAME]
         save_dict_to_json_file(
             a,
             ANNOTATION_METADATA_FILENAME,

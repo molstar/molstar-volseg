@@ -300,7 +300,7 @@ def omezarr_segmentation_metadata_preprocessing(s: InternalSegmentation):
     open_zarr(s.path)
     s.set_segmentation_lattices_metadata()
 
-    # m: Metadata = root.attrs["metadata_dict"]
+    # m: Metadata = root.attrs[METADATA_DICT_NAME]
     # lattice_ids = []
     # assert LATTICE_SEGMENTATION_DATA_GROUPNAME, "No segmentation data available"
     # m.segmentation_lattices = {
@@ -384,5 +384,5 @@ def omezarr_segmentation_metadata_preprocessing(s: InternalSegmentation):
 
     # m.segmentation_lattices.ids = lattice_ids
 
-    # root.attrs["metadata_dict"] = m
+    # root.attrs[METADATA_DICT_NAME] = m
     # return m

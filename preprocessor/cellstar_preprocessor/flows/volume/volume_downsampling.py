@@ -14,7 +14,7 @@ from cellstar_preprocessor.flows.constants import (
 )
 from cellstar_preprocessor.flows.volume.helper_methods import (
     generate_kernel_3d_arr,
-    store_volume_data_in_zarr_stucture,
+    store_volume_data_in_zarr,
 )
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.volume import InternalVolume
@@ -93,14 +93,14 @@ def volume_downsampling(internal_volume: InternalVolume):
                 downsampled_data = downsampled_data[::2, ::2, ::2]
 
                 if current_ratio in ratios_to_be_stored:
-                    store_volume_data_in_zarr_stucture(
+                    store_volume_data_in_zarr(
                         data=downsampled_data,
                         volume_data_group=zarr_structure[VOLUME_DATA_GROUPNAME],
                         params_for_storing=internal_volume.params_for_storing,
                         force_dtype=internal_volume.volume_force_dtype,
                         resolution=current_ratio,
-                        time_frame=time,
-                        channel=channel_id,
+                        timeframe_index=time,
+                        channel_id=channel_id,
                     )
 
                 current_level_data = downsampled_data

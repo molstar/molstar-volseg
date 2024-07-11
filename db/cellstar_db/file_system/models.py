@@ -13,7 +13,7 @@ class FileSystemVolumeMedatada(VolumeMetadata):
         return self.raw_metadata
 
     def dict(self):
-        return self.raw_metadata.dict()
+        return self.raw_metadata.model_dump()
 
     def db_name(self) -> str:
         return self.raw_metadata.entry_id.source_db_name

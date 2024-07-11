@@ -13,7 +13,7 @@ def custom_annotations_preprocessing(
     with open(str(input_path.absolute()), "r", encoding="utf-8") as f:
         d: AnnotationsMetadata = json.load(f)
         # TODO: check if conforms to datamodel
-        current_d: AnnotationsMetadata = root.attrs["annotations_dict"]
+        current_d: AnnotationsMetadata = root.attrs[ANNOTATIONS_DICT_NAME]
         # 1. Updating segment list
         if "segmentation_lattices" in d:
             # if there are annotations already
@@ -93,6 +93,6 @@ def custom_annotations_preprocessing(
 
             current_d.volume_channels_annotations = updated_vol_ch_ann_list
 
-        root.attrs["annotations_dict"] = current_d
+        root.attrs[ANNOTATIONS_DICT_NAME] = current_d
 
     print("Annotations updated")

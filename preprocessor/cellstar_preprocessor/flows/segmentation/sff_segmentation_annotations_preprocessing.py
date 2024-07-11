@@ -98,37 +98,34 @@ def _processs_raw_sff_annotations(
 
 
 def sff_segmentation_annotations_preprocessing(
-    internal_segmentation: InternalSegmentation,
+    s: InternalSegmentation,
 ):
-    root = open_zarr(internal_segmentation.path)
-    d: AnnotationsMetadata = AnnotationsMetadata.parse_obj(
-        root.attrs["annotations_dict"]
+    root = open_zarr(s.path)
+    d: AnnotationsMetadata = AnnotationsMetadata.model_validate(
+        root.attrs[ANNOTATIONS_DICT_NAME]
     )
 
-    d.entry_id = EntryId(
-        source_db_id=internal_segmentation.entry_data.source_db_id,
-        source_db_name=internal_segmentation.entry_data.source_db_name,
-    )
-    d.details = internal_segmentation.raw_sff_annotations["details"]
-    d.name = internal_segmentation.raw_sff_annotations["name"]
+    s.set_entry_id_in_annotations()
+    d.details = s.raw_sff_annotations["details"]
+    d.name = s.raw_sff_annotations["name"]
 
     # NOTE: no volume channel annotations (no color, no labels)
-    root = open_zarr(internal_segmentation.path)
+    root = open_zarr(s.path)
 
     if (
-        internal_segmentation.primary_descriptor
+        s.primary_descriptor
         == SegmentationPrimaryDescriptor.three_d_volume
     ):
         for lattice_id, lattice_gr in root[
             LATTICE_SEGMENTATION_DATA_GROUPNAME
         ].groups():
-            d = _processs_raw_sff_annotations(internal_segmentation, d, lattice_id)
+            d = _processs_raw_sff_annotations(s, d, lattice_id)
     elif (
-        internal_segmentation.primary_descriptor
+        s.primary_descriptor
         == SegmentationPrimaryDescriptor.mesh_list
     ):
         for set_id, set_gr in root[MESH_SEGMENTATION_DATA_GROUPNAME].groups():
-            d = _processs_raw_sff_annotations(internal_segmentation, d, set_id)
-    root.attrs["annotations_dict"] = d.dict()
+            d = _processs_raw_sff_annotations(s, d, set_id)
+    root.attrs[ANNOTATIONS_DICT_NAME] = d.model_dump()
     print("Annotations extracted")
     return d

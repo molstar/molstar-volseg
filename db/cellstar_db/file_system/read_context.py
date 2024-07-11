@@ -2,7 +2,7 @@ import json
 import logging
 from pathlib import Path
 from timeit import default_timer as timer
-from typing import Tuple, Union
+from typing import Literal, Tuple, Union
 
 import dask.array as da
 import numpy as np
@@ -283,25 +283,26 @@ class FileSystemDBReadContext(DBReadContext):
         self,
         arr: zarr.Array,
         box: Tuple[Tuple[int, int, int], Tuple[int, int, int]],
-        mode: str,
+        mode: Literal["zarr_colon", "zarr_gbs", "dask", "dask_from_zarr", "tensorstore"],
     ) -> np.ndarray:
-        if mode == "zarr_colon":
-            # 2: zarr slicing via : notation
-            arr_slice = self.__get_slice_from_zarr_three_d_arr(arr=arr, box=box)
-        elif mode == "zarr_gbs":
-            arr_slice = self.__get_slice_from_zarr_three_d_arr_gbs(arr=arr, box=box)
-        elif mode == "dask":
-            arr_slice = self.__get_slice_from_zarr_three_d_arr_dask(arr=arr, box=box)
-        elif mode == "dask_from_zarr":
-            arr_slice = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(
-                arr=arr, box=box
-            )
-        elif mode == "tensorstore":
-            arr_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(
-                arr=arr, box=box
-            )
-        else:
-            raise Exception(f"Slicing mode is not supported: {mode}")
+        match mode:
+            case "zarr_colon":
+                # 2: zarr slicing via : notation
+                arr_slice = self.__get_slice_from_zarr_three_d_arr(arr=arr, box=box)
+            case "zarr_gbs":
+                arr_slice = self.__get_slice_from_zarr_three_d_arr_gbs(arr=arr, box=box)
+            case "dask":
+                arr_slice = self.__get_slice_from_zarr_three_d_arr_dask(arr=arr, box=box)
+            case "dask_from_zarr":
+                arr_slice = self.__get_slice_from_zarr_three_d_arr_dask_from_zarr(
+                    arr=arr, box=box
+                )
+            case "tensorstore":
+                arr_slice = self.__get_slice_from_zarr_three_d_arr_tensorstore(
+                    arr=arr, box=box
+                )
+            case _:
+                raise Exception(f"Slicing mode is not supported: {mode}")
 
         return arr_slice
 

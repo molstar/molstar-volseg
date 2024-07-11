@@ -227,46 +227,10 @@ def _get_source_axes_units(ome_zarr_root_attrs: zarr.Group):
 
 
 def omezarr_volume_metadata_preprocessing(v: InternalVolume):
-    root = open_zarr(v.path)
-    open_zarr(v.input_path)
     w = v.get_omezarr_wrapper()
-
-    # TODO: refactor
     w.add_defaults_to_ome_zarr_attrs()
-
-    volume_downsamplings = get_downsamplings(data_group=root[VOLUME_DATA_GROUPNAME])
-
-    channel_ids = v.get_channel_ids()
-    start_time, end_time = v.get_start_end_time(v.get_volume_data_group())
-
-    m = v.get_metadata()
     v.set_entry_id_in_metadata()
-
-    m.volumes = VolumesMetadata(
-        channel_ids=channel_ids,
-        time_info=TimeInfo(
-            kind="range",
-            start=start_time,
-            end=end_time,
-            # omezarr wrapper
-            units=w.get_time_units(),
-        ),
-        sampling_info=VolumeSamplingInfo(
-            spatial_downsampling_levels=volume_downsamplings,
-            boxes={},
-            descriptive_statistics={},
-            time_transformations=[],
-            source_axes_units=v.get_source_axes_units(),
-            original_axis_order=v.get_original_axis_order(),
-        ),
-    )
-
+    v.set_volumes_metadata()
     time_transformations = w.process_time_transformations()
     v.set_time_transformations(time_transformations)
-
-    sampling_info = v.get_volume_sampling_info()
-    m.volumes.sampling_info = sampling_info
-
-    v.get_volume_sampling_info()
-    v.set_metadata(m)
-    return m
+    v.set_boxes_and_descriptive_statistics()

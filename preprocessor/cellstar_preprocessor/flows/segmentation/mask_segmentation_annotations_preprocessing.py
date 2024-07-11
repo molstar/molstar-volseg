@@ -28,23 +28,20 @@ def _get_segment_name_from_mapping(
 
 
 def mask_segmentation_annotations_preprocessing(
-    internal_segmentation: InternalSegmentation,
+    s: InternalSegmentation,
 ):
     # segm_arr = root[SEGMENTATION_DATA_GROUPNAME][0][0][0][0]
 
-    root = open_zarr(internal_segmentation.path)
-    d: AnnotationsMetadata = root.attrs["annotations_dict"]
+    root = open_zarr(s.path)
+    d: AnnotationsMetadata = root.attrs[ANNOTATIONS_DICT_NAME]
 
-    d.entry_id = EntryId(
-        source_db_id=internal_segmentation.entry_data.source_db_id,
-        source_db_name=internal_segmentation.entry_data.source_db_name,
-    )
+    s.set_entry_id_in_annotations()
 
     d["details"] = (
-        f"Segmentation of {internal_segmentation.entry_data.source_db_id} based on EMDB mask(s)"
+        f"Segmentation of {s.entry_data.source_db_id} based on EMDB mask(s)"
     )
     d["name"] = (
-        f"Segmentation of {internal_segmentation.entry_data.source_db_id} based on EMDB mask(s)"
+        f"Segmentation of {s.entry_data.source_db_id} based on EMDB mask(s)"
     )
 
     # create palette of length = lattices x segments
@@ -52,9 +49,9 @@ def mask_segmentation_annotations_preprocessing(
     # each time you take color palette you take 'count' and then increment count
     # by 1
     palette_length = 0
-    for lattice_id in internal_segmentation.value_to_segment_id_dict:
+    for lattice_id in s.value_to_segment_id_dict:
         value_to_segment_id_dict_for_lat: dict = (
-            internal_segmentation.value_to_segment_id_dict[lattice_id]
+            s.value_to_segment_id_dict[lattice_id]
         )
         palette_length = palette_length + len(
             list(value_to_segment_id_dict_for_lat.keys())
@@ -65,36 +62,36 @@ def mask_segmentation_annotations_preprocessing(
     palette = sns.color_palette(None, palette_length)
 
     # should create this mapping for all lattices not mentioned in
-    if "custom_segment_ids_mapping" not in internal_segmentation.custom_data:
+    if "custom_segment_ids_mapping" not in s.custom_data:
         # list_of_sesgmentation_pathes: list[Path] = internal_segmentation.segmentation_input_path
         # internal_segmentation.custom_data['segmentation_ids_mapping'] = {s.stem : s.stem for s in list_of_sesgmentation_pathes}
         # TODO: create from internal_segmentation.value_to_segment_id_dict[lattice_id]
-        internal_segmentation.custom_data["custom_segment_ids_mapping"] = {}
-        for lattice_id in internal_segmentation.value_to_segment_id_dict:
+        s.custom_data["custom_segment_ids_mapping"] = {}
+        for lattice_id in s.value_to_segment_id_dict:
             # str to int?
             # e.g. "1": 1
             # need to make "1": "Segment 1"
             # {k: '_'+ v for k,v in signames.items()}
             value_to_segment_id_dict: dict[int, int] = (
-                internal_segmentation.value_to_segment_id_dict[lattice_id]
+                s.value_to_segment_id_dict[lattice_id]
             )
             mapping_for_lattice: dict[str, str] = {
                 str(k): "Segment " + str(v) for k, v in value_to_segment_id_dict.items()
             }
 
-            internal_segmentation.custom_data["custom_segment_ids_mapping"][
+            s.custom_data["custom_segment_ids_mapping"][
                 str(lattice_id)
             ] = mapping_for_lattice
 
     custom_segment_ids_mapping: dict[str, dict[str, str]] = (
-        internal_segmentation.custom_data["custom_segment_ids_mapping"]
+        s.custom_data["custom_segment_ids_mapping"]
     )
     # segmentation_ids_mapping: dict[str, str] = internal_segmentation.custom_data['segmentation_ids_mapping']
 
     count = 0
     for lattice_id, lattice_gr in root[LATTICE_SEGMENTATION_DATA_GROUPNAME].groups():
         # int to int dict
-        value_to_segment_id_dict = internal_segmentation.value_to_segment_id_dict[
+        value_to_segment_id_dict = s.value_to_segment_id_dict[
             lattice_id
         ]
         # TODO: check if 0
@@ -113,7 +110,7 @@ def mask_segmentation_annotations_preprocessing(
                 # or if segmentation not in the mapping
                 # get default segment name
                 segment_name = _get_segment_name_from_mapping(
-                    internal_segmentation.custom_data["custom_segment_ids_mapping"],
+                    s.custom_data["custom_segment_ids_mapping"],
                     str(lattice_id),
                     str(segment_id),
                 )
@@ -149,6 +146,6 @@ def mask_segmentation_annotations_preprocessing(
                 d["descriptions"][description_id] = description
                 d["segment_annotations"].append(segment_annotation)
 
-    root.attrs["annotations_dict"] = d
+    root.attrs[ANNOTATIONS_DICT_NAME] = d
     print("Annotations extracted")
     return d

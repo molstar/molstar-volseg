@@ -27,15 +27,15 @@ def convert_app_specific_segm_to_sff(input_file: Path) -> Path:
         app_spec_seg = AmiraHyperSurfaceSegmentation(filepath_str)
     else:
         raise Exception(
-            "application specific segmentation file extension is not supported"
+            f"application specific segmentation file extension {extension} is not supported"
         )
 
     # temp fix from Paul Korir
-    args = Namespace()
-    args.details = None
-    args.verbose = None
+    # args = Namespace()
+    # args.details = None
+    # args.verbose = None
 
-    sff_seg = app_spec_seg.convert(args=args)
+    sff_seg = app_spec_seg.convert()
     try:
         sff_seg.export(fn=sff_filepath_str)
     except AttributeError:

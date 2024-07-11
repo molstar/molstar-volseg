@@ -1,3 +1,4 @@
+from cellstar_preprocessor.flows.volume.map_volume_metadata_preprocessing import map_volume_metadata_preprocessing
 import dask.array as da
 import zarr
 from cellstar_db.models import (
@@ -6,12 +7,7 @@ from cellstar_db.models import (
     VolumeSamplingInfo,
     VolumesMetadata,
 )
-from cellstar_preprocessor.flows.common import (
-    _get_ome_tiff_channel_ids_dict,
-    _get_ome_tiff_voxel_sizes_in_downsamplings,
-    get_ome_tiff_origins,
-)
-from cellstar_preprocessor.flows.constants import VOLUME_DATA_GROUPNAME
+from cellstar_preprocessor.flows.constants import DEFAULT_TIME_UNITS, VOLUME_DATA_GROUPNAME
 from cellstar_preprocessor.flows.zarr_methods import get_downsamplings, open_zarr
 from cellstar_preprocessor.model.volume import InternalVolume
 
@@ -119,72 +115,5 @@ def _get_allencell_voxel_size(root: zarr.Group) -> list[float, float, float]:
     return root.attrs["extra_data"]["scale_micron"]
 
 
-def ometiff_volume_metadata_preprocessing(internal_volume: InternalVolume):
-    root = open_zarr(internal_volume.path)
-    ometiff_custom_data: OMETIFFSpecificExtraData = internal_volume.custom_data[
-        "dataset_specific_data"
-    ]["ometiff"]
-    ometiff_metadata = ometiff_custom_data["ometiff_source_metadata"]
-
-    source_db_name = internal_volume.entry_data.source_db_name
-    source_db_id = internal_volume.entry_data.source_db_id
-
-    # NOTE: sample ometiff has no time
-    # TODO: get channel ids same way as in preprocessor_old
-    # channel_ids = _get_allencell_image_channel_ids(root)
-    channel_ids_dict = _get_ome_tiff_channel_ids_dict(root, internal_volume)
-    # channel_ids = channel_ids
-    # time and and should be determined correctly based on zarr structure
-    # could add attributes to custom_data
-    # or do metadata sizeT
-
-    start_time = 0
-    end_time = ometiff_metadata["SizeT"] - 1
-    time_units = "millisecond"
-
-    volume_downsamplings = get_downsamplings(data_group=root[VOLUME_DATA_GROUPNAME])
-
-    source_axes_units = _get_source_axes_units()
-    metadata_dict = root.attrs["metadata_dict"]
-    metadata_dict.entry_id.source_db_name = source_db_name
-    metadata_dict.entry_id.source_db_id = source_db_id
-    channel_ids = list(channel_ids_dict.values())
-    metadata_dict.volumes = VolumesMetadata(
-        channel_ids=channel_ids,
-        time_info=TimeInfo(
-            kind="range", start=start_time, end=end_time, units=time_units
-        ),
-        sampling_info=VolumeSamplingInfo(
-            spatial_downsampling_levels=volume_downsamplings,
-            boxes={},
-            descriptive_statistics={},
-            time_transformations=[],
-            source_axes_units=source_axes_units,
-            # TODO: get it from metadata
-            original_axis_order=(0, 1, 2),
-        ),
-    )
-    _get_volume_sampling_info(
-        root_data_group=root[VOLUME_DATA_GROUPNAME],
-        sampling_info_dict=metadata_dict.volumes.sampling_info,
-    )
-
-    _get_ome_tiff_voxel_sizes_in_downsamplings(
-        internal_volume_or_segmentation=internal_volume,
-        boxes_dict=metadata_dict.volumes.sampling_info.boxes,
-        downsamplings=volume_downsamplings,
-        ometiff_metadata=ometiff_metadata,
-    )
-    # _get_allencell_voxel_sizes_in_downsamplings(
-    #     boxes_dict=metadata_dict['volumes']['volume_sampling_info']['boxes'],
-    #     downsamplings=volume_downsamplings,
-    #     original_voxel_size_in_micrometers=original_voxel_size_in_micrometers
-    # )
-
-    get_ome_tiff_origins(
-        boxes_dict=metadata_dict.volumes.sampling_info.boxes,
-        downsamplings=volume_downsamplings,
-    )
-
-    root.attrs["metadata_dict"] = metadata_dict
-    return metadata_dict
+def ometiff_volume_metadata_preprocessing(v: InternalVolume):
+    map_volume_metadata_preprocessing(v)

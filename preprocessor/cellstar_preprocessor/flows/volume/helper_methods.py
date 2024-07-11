@@ -115,29 +115,30 @@ def normalize_axis_order_mrcfile(dask_arr: da.Array, mrc_header: object) -> da.A
     return dask_arr
 
 
-def store_volume_data_in_zarr_stucture(
+def store_volume_data_in_zarr(
     data: da.Array,
     volume_data_group: zarr.Group,
     params_for_storing: dict,
     force_dtype: np.dtype,
     resolution: str,
-    time_frame: str,
-    channel: str,
+    timeframe_index: str,
+    channel_id: str,
 ):
+    assert channel_id is not None
     resolution_data_group: zarr.Group = volume_data_group.require_group(resolution)
-    time_frame_data_group = resolution_data_group.require_group(time_frame)
+    time_frame_data_group = resolution_data_group.require_group(timeframe_index)
 
     zarr_arr = create_dataset_wrapper(
         zarr_group=time_frame_data_group,
-        data=None,
-        name=str(channel),
+        data=data,
+        name=str(channel_id),
         shape=data.shape,
         dtype=force_dtype,
         params_for_storing=params_for_storing,
         is_empty=True,
     )
 
-    da.to_zarr(arr=data, url=zarr_arr, overwrite=True, compute=True)
+    # da.to_zarr(arr=data, url=zarr_arr, overwrite=True, compute=True)
 
 
 # could be method of internal volume?

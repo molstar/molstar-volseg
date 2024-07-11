@@ -11,7 +11,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     print("Mol* Volume Server")
-    print(settings.dict())
+    print(settings.model_dump())
     if args.ssl_certfile and args.ssl_keyfile:
         uvicorn.run(
             app="main:app",

@@ -19,7 +19,7 @@ def test_omezarr_segmentations_preprocessing(omezar_test_input: TestInput):
     with context_for_tests(omezar_test_input, WORKING_FOLDER_FOR_TESTS) as ctx:
         ctx: TestContext
         s = get_omezarr_internal_segmentation(
-            omezar_test_input, ctx.test_file_path, ctx.intermediate_zarr_structure_path
+            omezar_test_input, ctx.test_input_asset_path, ctx.working_folder
         )
 
         omezarr_segmentations_preprocessing(s=s)
@@ -32,7 +32,7 @@ def test_omezarr_segmentations_preprocessing(omezar_test_input: TestInput):
         # check if number of label groups is the same as number of groups in ome zarr
         assert len(segmentation_gr) == len(w.get_label_names())
 
-        for label_gr_name, label_gr in w.get_label_group().groups():
+        for label_gr_name, label_gr in w.get_labels_group().groups():
             axes = w.get_image_multiscale().axes
 
             for arr_resolution, arr in label_gr.arrays():

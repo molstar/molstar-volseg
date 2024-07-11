@@ -37,7 +37,7 @@ def nii_segmentation_metadata_preprocessing(
     # takes prefilled metadata dict from nii metadata
     # takes internal segmentation
     root = open_zarr(internal_segmentation.path)
-    metadata_dict = root.attrs["metadata_dict"]
+    metadata_dict = root.attrs[METADATA_DICT_NAME]
 
     # nii has one channel
     channel_ids = [0]
@@ -79,5 +79,5 @@ def nii_segmentation_metadata_preprocessing(
 
     metadata_dict.segmentation_lattices.ids = lattice_ids
 
-    root.attrs["metadata_dict"] = metadata_dict
+    root.attrs[METADATA_DICT_NAME] = metadata_dict
     return metadata_dict

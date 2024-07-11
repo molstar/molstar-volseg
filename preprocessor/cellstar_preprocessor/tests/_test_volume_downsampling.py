@@ -5,7 +5,7 @@ import zarr
 from cellstar_db.models import (
     DownsamplingParams,
     EntryData,
-    InputKind,
+    AssetKind,
     QuantizationDtype,
     StoringParams,
 )
@@ -37,7 +37,7 @@ def test_volume_downsampling():
         ),
         quantize_dtype_str=QuantizationDtype.u1,
         quantize_downsampling_levels=(1,),
-        input_kind=InputKind.map,
+        input_kind=AssetKind.map,
     )
 
     zarr_structure: zarr.Group = open_zarr(internal_volume.path)

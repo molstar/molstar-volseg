@@ -26,7 +26,7 @@ def test_omezarr_segmentation_annotations_preprocessing(omezar_test_input: TestI
     with context_for_tests(omezar_test_input, WORKING_FOLDER_FOR_TESTS) as ctx:
         ctx: TestContext
         internal_segmentation = get_omezarr_internal_segmentation(
-            omezar_test_input, ctx.test_file_path, ctx.intermediate_zarr_structure_path
+            omezar_test_input, ctx.test_input_asset_path, ctx.working_folder
         )
 
         omezarr_segmentations_preprocessing(s=internal_segmentation)

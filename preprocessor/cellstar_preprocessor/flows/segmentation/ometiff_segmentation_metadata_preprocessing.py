@@ -1,7 +1,6 @@
 import zarr
 from cellstar_db.models import OMETIFFSpecificExtraData
 from cellstar_preprocessor.flows.common import (
-    _get_ome_tiff_voxel_sizes_in_downsamplings,
     get_ome_tiff_origins,
 )
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
@@ -50,20 +49,20 @@ def _get_source_axes_units():
 #     return d
 
 
-def _get_segmentation_sampling_info(root_data_group, sampling_info_dict):
-    for res_gr_name, res_gr in root_data_group.groups():
-        # create layers (time gr, channel gr)
-        sampling_info_dict.boxes[res_gr_name] = {
-            "origin": None,
-            "voxel_size": None,
-            "grid_dimensions": None,
-            # 'force_dtype': None
-        }
+# def _get_segmentation_sampling_info(root_data_group, sampling_info_dict):
+#     for res_gr_name, res_gr in root_data_group.groups():
+#         # create layers (time gr, channel gr)
+#         sampling_info_dict.boxes[res_gr_name] = {
+#             "origin": None,
+#             "voxel_size": None,
+#             "grid_dimensions": None,
+#             # 'force_dtype': None
+#         }
 
-        for time_gr_name, time_gr in res_gr.groups():
-            sampling_info_dict.boxes[res_gr_name][
-                "grid_dimensions"
-            ] = time_gr.grid.shape
+#         for time_gr_name, time_gr in res_gr.groups():
+#             sampling_info_dict.boxes[res_gr_name][
+#                 "grid_dimensions"
+#             ] = time_gr.grid.shape
 
 
 # def _get_ometiff_axes_units(ome_tiff_metadata):
@@ -121,88 +120,89 @@ def _get_allencell_voxel_size(root: zarr.Group) -> list[float, float, float]:
 def ometiff_segmentation_metadata_preprocessing(
     internal_segmentation: InternalSegmentation,
 ):
-    root = open_zarr(internal_segmentation.path)
-    # TODO: same as with volume metadata
-    metadata_dict = root.attrs["metadata_dict"]
-    ometiff_custom_data: OMETIFFSpecificExtraData = internal_segmentation.custom_data[
-        "dataset_specific_data"
-    ]["ometiff"]
-    ometiff_metadata = ometiff_custom_data["ometiff_source_metadata"]
+    # root = open_zarr(internal_segmentation.path)
+    # # TODO: same as with volume metadata
+    # metadata_dict = root.attrs[METADATA_DICT_NAME]
+    # ometiff_custom_data: OMETIFFSpecificExtraData = internal_segmentation.custom_data[
+    #     "dataset_specific_data"
+    # ]["ometiff"]
+    # ometiff_metadata = ometiff_custom_data["ometiff_source_metadata"]
 
-    # ometiff_metadata = internal_segmentation.custom_data['ometiff_metadata']
-    # NOTE: sample ometiff has no time
-    # channel_ids = _get_allencell_segmentation_channel_ids(root)
-    ometiff_metadata["SizeT"] - 1
+    # # ometiff_metadata = internal_segmentation.custom_data['ometiff_metadata']
+    # # NOTE: sample ometiff has no time
+    # # channel_ids = _get_allencell_segmentation_channel_ids(root)
+    # ometiff_metadata["SizeT"] - 1
 
-    # original_voxel_size_in_micrometers = _get_allencell_voxel_size(root)
+    # # original_voxel_size_in_micrometers = _get_allencell_voxel_size(root)
 
-    if LATTICE_SEGMENTATION_DATA_GROUPNAME in root:
-        lattice_ids = []
+    # if LATTICE_SEGMENTATION_DATA_GROUPNAME in root:
+    #     lattice_ids = []
 
-        metadata_dict.segmentation_lattices = {
-            "segmentation_ids": [],
-            "segmentation_sampling_info": {},
-            "time_info": {},
-        }
-        for label_gr_name, label_gr in root[
-            LATTICE_SEGMENTATION_DATA_GROUPNAME
-        ].groups():
-            # each label group is lattice id
-            lattice_id = label_gr_name
+    #     metadata_dict.segmentation_lattices = {
+    #         "segmentation_ids": [],
+    #         "segmentation_sampling_info": {},
+    #         "time_info": {},
+    #     }
+    #     for label_gr_name, label_gr in root[
+    #         LATTICE_SEGMENTATION_DATA_GROUPNAME
+    #     ].groups():
+    #         # each label group is lattice id
+    #         lattice_id = label_gr_name
 
-            # segm_downsamplings = sorted(label_gr.group_keys())
-            # # convert to ints
-            # segm_downsamplings = sorted([int(x) for x in segm_downsamplings])
-            # lattice_dict[str(lattice_id)] = segm_downsamplings
+    #         # segm_downsamplings = sorted(label_gr.group_keys())
+    #         # # convert to ints
+    #         # segm_downsamplings = sorted([int(x) for x in segm_downsamplings])
+    #         # lattice_dict[str(lattice_id)] = segm_downsamplings
 
-            lattice_ids.append(lattice_id)
+    #         lattice_ids.append(lattice_id)
 
-            segmentation_downsamplings = get_downsamplings(data_group=label_gr)
+    #         segmentation_downsamplings = get_downsamplings(data_group=label_gr)
 
-            metadata_dict.segmentation_lattices["segmentation_sampling_info"][
-                str(lattice_id)
-            ] = {
-                # Info about "downsampling dimension"
-                "spatial_downsampling_levels": segmentation_downsamplings,
-                # the only thing with changes with SPATIAL downsampling is box!
-                "boxes": {},
-                "time_transformations": [],
-                "source_axes_units": _get_source_axes_units(),
-                "original_axis_order": (0, 1, 2),
-            }
+    #         metadata_dict.segmentation_lattices["segmentation_sampling_info"][
+    #             str(lattice_id)
+    #         ] = {
+    #             # Info about "downsampling dimension"
+    #             "spatial_downsampling_levels": segmentation_downsamplings,
+    #             # the only thing with changes with SPATIAL downsampling is box!
+    #             "boxes": {},
+    #             "time_transformations": [],
+    #             "source_axes_units": _get_source_axes_units(),
+    #             "original_axis_order": (0, 1, 2),
+    #         }
 
-            _get_segmentation_sampling_info(
-                root_data_group=label_gr,
-                sampling_info_dict=metadata_dict.segmentation_lattices.sampling_info[
-                    str(lattice_id)
-                ],
-            )
+    #         _get_segmentation_sampling_info(
+    #             root_data_group=label_gr,
+    #             sampling_info_dict=metadata_dict.segmentation_lattices.sampling_info[
+    #                 str(lattice_id)
+    #             ],
+    #         )
 
-            get_ome_tiff_origins(
-                boxes_dict=metadata_dict.segmentation_lattices.sampling_info[
-                    str(lattice_id)
-                ].boxes,
-                downsamplings=segmentation_downsamplings,
-            )
+    #         get_ome_tiff_origins(
+    #             boxes_dict=metadata_dict.segmentation_lattices.sampling_info[
+    #                 str(lattice_id)
+    #             ].boxes,
+    #             downsamplings=segmentation_downsamplings,
+    #         )
 
-            _get_ome_tiff_voxel_sizes_in_downsamplings(
-                internal_volume_or_segmentation=internal_segmentation,
-                boxes_dict=metadata_dict.segmentation_lattices.sampling_info[
-                    str(lattice_id)
-                ].boxes,
-                downsamplings=segmentation_downsamplings,
-                ometiff_metadata=ometiff_metadata,
-            )
+    #         _get_ome_tiff_voxel_sizes_in_downsamplings(
+    #             internal_volume_or_segmentation=internal_segmentation,
+    #             boxes_dict=metadata_dict.segmentation_lattices.sampling_info[
+    #                 str(lattice_id)
+    #             ].boxes,
+    #             downsamplings=segmentation_downsamplings,
+    #             ometiff_metadata=ometiff_metadata,
+    #         )
 
-            # NOTE: for now time 0
-            # metadata_dict.segmentation_lattices["time_info"][label_gr_name] = {
-            #     kind="range",
-            #     start=start_time,
-            #     end=end_time,
-            #     units=time_units,
-            # }
+    #         # NOTE: for now time 0
+    #         # metadata_dict.segmentation_lattices["time_info"][label_gr_name] = {
+    #         #     kind="range",
+    #         #     start=start_time,
+    #         #     end=end_time,
+    #         #     units=time_units,
+    #         # }
 
-        metadata_dict.segmentation_lattices.ids = lattice_ids
+    #     metadata_dict.segmentation_lattices.ids = lattice_ids
 
-    root.attrs["metadata_dict"] = metadata_dict
-    return metadata_dict
+    # root.attrs[METADATA_DICT_NAME] = metadata_dict
+    # return metadata_dict
+    pass

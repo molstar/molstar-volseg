@@ -98,15 +98,28 @@
                             "sff",
                             "omezarr",
                             "mask",
-                            "application_specific_segmentation",
+                            "wrl",
+                            "stl",
+                            "seg",
+                            "am",
                             "custom_annotations",
                             "nii_volume",
                             "nii_segmentation",
                             "geometric_segmentation",
                             "ometiff_image",
                             "ometiff_segmentation",
-                            "extra_data"
+                            "extra_data",
+                            "tiff_image_stack_dir",
+                            "tiff_segmentation_stack_dir"
                         ]
+                    },
+                    "parameters": {
+                        "type": ["object", "null"],
+                        "properties": {
+                            "pre_downsampling_factor": {
+                                "type": "integer"
+                            }
+                        }
                     }
                 }
             },

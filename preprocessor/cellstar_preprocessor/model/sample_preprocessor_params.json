@@ -1,4 +1,5 @@
 {
+    "$schema": "preprocessor_params.schema.json",
     "db_path": "preprocessor/temp/test_db",
     "entry_id": "emd-1832",
     "source_db": "emdb",

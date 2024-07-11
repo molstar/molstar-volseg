@@ -14,7 +14,7 @@ class AnnnotationsEditContext:
     async def update_annotations_json(self, annotations_json: AnnotationsMetadata):
         path = self.db._path_to_object(namespace=self.namespace, key=self.key)
         save_dict_to_json_file(
-            annotations_json.dict(), ANNOTATION_METADATA_FILENAME, path
+            annotations_json.model_dump(), ANNOTATION_METADATA_FILENAME, path
         )
 
     async def remove_descriptions(self, ids: list[str]):
@@ -27,7 +27,7 @@ class AnnnotationsEditContext:
                 del d["descriptions"][id]
         # 4. write d back to annotations.json
         path = self.db._path_to_object(namespace=self.namespace, key=self.key)
-        save_dict_to_json_file(d.dict(), ANNOTATION_METADATA_FILENAME, path)
+        save_dict_to_json_file(d.model_dump(), ANNOTATION_METADATA_FILENAME, path)
 
     async def add_or_modify_descriptions(self, xs: list[DescriptionData]):
         # 1. read annotations.json file using existing read_annotations function to AnnotationsMetadata TypedDict in d variable
@@ -78,7 +78,7 @@ class AnnnotationsEditContext:
                 d["descriptions"][descr_id] = x
         # 4. write d back to annotations.json
         path = self.db._path_to_object(namespace=self.namespace, key=self.key)
-        save_dict_to_json_file(d.dict(), ANNOTATION_METADATA_FILENAME, path)
+        save_dict_to_json_file(d.model_dump(), ANNOTATION_METADATA_FILENAME, path)
 
     async def remove_segment_annotations(self, ids: list[str]):
         """
@@ -93,7 +93,7 @@ class AnnnotationsEditContext:
         )
         d["segment_annotations"] = new_annotations_list
         path = self.db._path_to_object(namespace=self.namespace, key=self.key)
-        save_dict_to_json_file(d.dict(), ANNOTATION_METADATA_FILENAME, path)
+        save_dict_to_json_file(d.model_dump(), ANNOTATION_METADATA_FILENAME, path)
 
     async def add_or_modify_segment_annotations(self, xs: list[SegmentAnnotationData]):
         # 1. read annotations.json file using existing read_annotations function to AnnotationsMetadata TypedDict in d variable
@@ -122,7 +122,7 @@ class AnnnotationsEditContext:
                 print(f"Annotation with id {annotation_id} was added")
 
         path = self.db._path_to_object(namespace=self.namespace, key=self.key)
-        save_dict_to_json_file(d.dict(), ANNOTATION_METADATA_FILENAME, path)
+        save_dict_to_json_file(d.model_dump(), ANNOTATION_METADATA_FILENAME, path)
 
     def __enter__(self):
         return self
