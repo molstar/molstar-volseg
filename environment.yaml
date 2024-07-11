@@ -1,4 +1,4 @@
-name: cellstar-volume-server
+name: cvs-gen
 channels:
   - https://conda.anaconda.org/conda-forge
   - https://repo.anaconda.com/pkgs/main
@@ -7,47 +7,46 @@ channels:
 dependencies:
   - python==3.10.0
   - pip
-  - asgiref==3.5.0
+  - asgiref
   - pyvips
   - dask
   - dask-image
   - fastapi
-  - gemmi==0.5.3
-  - matplotlib==3.5.1
-  - mrcfile==1.4.0
-  - numcodecs==0.9.1
-  - numpy==1.23.5
-  - pytest==7.1.2
-  - pytest-asyncio==0.18.3
-  - pytest-benchmark==3.4.1
-  - scikit-image==0.19.1
+  - gemmi
+  - mrcfile
+  - numcodecs
+  - numpy
+  - pytest
+  - pytest-asyncio
+  - pytest-benchmark
+  - scikit-image
   - scipy
   - starfile
-  - starlette==0.17.1
-  - uvicorn==0.17.6
+  - starlette
+  - uvicorn
   # with 0.59.1 produces warning
   - numba==0.58.1
   # there were issues with version of this package
   # uncomment if without it it would not work
   # - vtk==9.0.3
-  - zarr==2.11.1
+  - zarr
   - dask-image
   - pydantic
   - ome-zarr
   - jupyterlab
   - mkdocs
   - pydantic-settings
-
+  - bfio
   - pip:
     # - -r requirements.txt
     - git+https://github.com/molstar/ciftools-python.git@b074526a8b418bc68d83ae5556a627d2d6ceabdb#egg=ciftools
-    - sfftk1
+    - sfftk
     - sfftk-rw
     - SimpleParse @ git+https://github.com/mcfletch/simpleparse.git@57c8d734bdc165581fbacfeecabe25a66c3452a4
-    - tensorstore==0.1.18
+    - tensorstore
     - killport
     - Pillow
-    - typer==0.7.0
+    - typer
     - autoflake
     - isort
     - black
@@ -62,5 +61,6 @@ dependencies:
     - vedo
     - mkdocs-material
     - pymeshlab
-    - numpydantic
+    - numpydantic[zarr]
+    - numpydantic[array]
     - numpydantic[dask]
