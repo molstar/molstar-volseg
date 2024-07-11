@@ -12,8 +12,3 @@ def convert_image(inp: Path, out: Path):
     # print(rgb_im.info['dpi'], 'OUTPUT DPI')
     print(1)
     
-if __name__ == '__main__':
-    dir = Path('C:/Users/chere/OneDrive - MUNI/Figures/raw')
-    outdir = Path('C:/Users/chere/OneDrive - MUNI/Figures/JPEG')
-    for p in dir.glob("*"):
-        convert_image(p, outdir / (p.stem + '.jpeg'))
