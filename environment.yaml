@@ -64,3 +64,5 @@ dependencies:
     - numpydantic[zarr]
     - numpydantic[array]
     - numpydantic[dask]
+    - opencv-python
+    - bfio
