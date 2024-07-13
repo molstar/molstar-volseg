@@ -136,6 +136,7 @@ In order to add an `empiar-10988` entry with lattice segmentations based on mask
     ```
 
 2. Prepare extra data
+
     By default, Preprocessor will use segment IDs based on grid values in mask file. It is possible to overwrite them using additional input file with extra data, mapping segment IDs used by default (e.g. "1", "2" etc.) to biologically meaningful segment IDs (e.g., "cytoplasm", "mitochondria" etc.).
     Create `extra_data_empiar_10988.json` file in root repository directory with the following content:
     ```json
