@@ -1,6 +1,6 @@
 {
   "name": "molstar-volseg",
-  "version": "0.0.13",
+  "version": "0.0.15",
   "type": "module",
   "description": "MolStar extension for visualizing volumetric and segmentation data",
   "repository": {
