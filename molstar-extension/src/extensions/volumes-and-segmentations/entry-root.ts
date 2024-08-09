@@ -694,7 +694,7 @@ export class VolsegEntryData extends PluginBehavior.WithSubscribers<VolsegEntryP
     async preloadVolumeTimeframesData() {
         const timeInfo = this.metadata.value!.raw.grid.volumes.time_info;
         const channelIds = this.metadata.value!.raw.grid.volumes.channel_ids;
-        this.loadRawChannelsData(timeInfo, channelIds);
+        await this.loadRawChannelsData(timeInfo, channelIds);
     }
 
     preloadSegmentationTimeframesDataFromFile() {
@@ -768,7 +768,7 @@ export class VolsegEntryData extends PluginBehavior.WithSubscribers<VolsegEntryP
         if (this.metadata.value!.raw.grid.segmentation_lattices) {
             const segmentationIds = this.metadata.value!.raw.grid.segmentation_lattices.segmentation_ids;
             const timeInfoMapping = this.metadata.value!.raw.grid.segmentation_lattices.time_info;
-            this.loadRawLatticeSegmentationData(timeInfoMapping, segmentationIds);
+            await this.loadRawLatticeSegmentationData(timeInfoMapping, segmentationIds);
         }
     }
 
@@ -776,7 +776,7 @@ export class VolsegEntryData extends PluginBehavior.WithSubscribers<VolsegEntryP
         if (this.metadata.value!.raw.grid.segmentation_meshes) {
             const segmentationIds = this.metadata.value!.raw.grid.segmentation_meshes.segmentation_ids;
             const timeInfoMapping = this.metadata.value!.raw.grid.segmentation_meshes.time_info;
-            this.loadRawMeshSegmentationData(timeInfoMapping, segmentationIds);
+            await this.loadRawMeshSegmentationData(timeInfoMapping, segmentationIds);
         }
     }
 
@@ -784,7 +784,7 @@ export class VolsegEntryData extends PluginBehavior.WithSubscribers<VolsegEntryP
         if (this.metadata.value!.raw.grid.geometric_segmentation) {
             const segmentationIds = this.metadata.value!.raw.grid.geometric_segmentation.segmentation_ids;
             const timeInfoMapping = this.metadata.value!.raw.grid.geometric_segmentation.time_info;
-            this.loadRawShapePrimitiveData(timeInfoMapping, segmentationIds);
+            await this.loadRawShapePrimitiveData(timeInfoMapping, segmentationIds);
         }
     }
 
