@@ -480,12 +480,9 @@ def prepare_ometiff_for_writing(
     missing_dims = []
 
     if len(img_array.shape) != 5:
-        local_d = {"T": 0, "Z": 1, "C": 2, "Y": 3, "X": 4}
         missing_dims = _get_missing_dims(metadata["Sizes BF"])
         for missing_dim in missing_dims:
-            img_array = da.expand_dims(img_array, axis=local_d[missing_dim])
-
-        d = local_d
+            img_array = da.expand_dims(img_array, axis=d[missing_dim])
 
     CORRECT_ORDER = "TCXYZ"
     reorder_tuple = _create_reorder_tuple(d, CORRECT_ORDER)

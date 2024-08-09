@@ -34,7 +34,9 @@ def sff_preprocessing(internal_segmentation: InternalSegmentation):
     # PLAN:
     # 1. Convert hff to intermediate zarr structure
     # 2. Process it with one of 2 methods (3d volume segmentation, mesh segmentation)
-    if zarr_structure.primary_descriptor[0] == b"three_d_volume":
+    # TODO: check primary d
+    primary_descriptor = zarr_structure.primary_descriptor[0]
+    if primary_descriptor == b"three_d_volume":
         segm_data_gr: zarr.Group = zarr_structure.create_group(
             LATTICE_SEGMENTATION_DATA_GROUPNAME
         )
@@ -47,7 +49,7 @@ def sff_preprocessing(internal_segmentation: InternalSegmentation):
         _process_three_d_volume_segmentation_data(
             segm_data_gr, zarr_structure, internal_segmentation=internal_segmentation
         )
-    elif zarr_structure.primary_descriptor[0] == b"mesh_list":
+    elif primary_descriptor == b"mesh_list":
         segm_data_gr: zarr.Group = zarr_structure.create_group(
             MESH_SEGMENTATION_DATA_GROUPNAME
         )
@@ -65,7 +67,8 @@ def sff_preprocessing(internal_segmentation: InternalSegmentation):
         _process_mesh_segmentation_data(
             timeframe_gr, zarr_structure, internal_segmentation=internal_segmentation
         )
-
+    else:
+        raise Exception(f"Primary descriptor {primary_descriptor} is not supported")
     print("Segmentation processed")
 
 
@@ -105,6 +108,7 @@ def _process_mesh_segmentation_data(
 ):
     params_for_storing = internal_segmentation.params_for_storing
 
+    # single segment for wrl
     for segment_name, segment in zarr_structure.segment_list.groups():
         segment_id = int(segment.id[...])
         single_segment_group = timeframe_gr.create_group(segment_id)
@@ -131,3 +135,5 @@ def _process_mesh_segmentation_data(
                 )
                 single_mesh_group.attrs["area"] = vedo_mesh_obj.area()
                 # single_mesh_group.attrs['volume'] = vedo_mesh_obj.volume()
+        else:
+            raise Exception(f"No mesh list is provided for segment with name: {segment_name}")
