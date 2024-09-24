@@ -1,0 +1,260 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "$defs": {
+        "Vec4Float": {
+            "type": "array",
+            "items": {
+                "type": "number"
+            },
+            "minItems": 4,
+            "maxItems": 4
+        },
+        "Vec3Float": {
+            "type": "array",
+            "items": {
+                "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+        },
+        "RotationInputParameters": {
+            "type": "object",
+            "properties": {
+                "axis": {
+                    "$ref": "#/$defs/Vec3Float"
+                },
+                "radians": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "axis",
+                "radians"
+            ]
+        },
+        "ShapePrimitiveInputParams": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "color": {
+                    "$ref": "#/$defs/Vec4Float"
+                }
+            },
+            "required": [
+                "id",
+                "color"
+            ]
+        },
+        "SphereInputData": {
+            "type": "object",
+            "properties": {
+                "kind": {
+                    "const": "sphere"
+                },
+                "parameters": {
+                    "$ref": "#/$defs/SphereInputParams"
+                }
+            }
+        },
+        "PyramidInputData": {
+            "type": "object",
+            "properties": {
+                "kind": {
+                    "const": "pyramid"
+                },
+                "parameters": {
+                    "$ref": "#/$defs/PyramidInputParams"
+                }
+            }
+        },
+        "EllipsoidInputData": {
+            "type": "object",
+            "properties": {
+                "kind": {
+                    "const": "ellipsoid"
+                },
+                "parameters": {
+                    "$ref": "#/$defs/EllipsoidInputParams"
+                }
+            }
+        },
+        "CylinderInputData": {
+            "type": "object",
+            "properties": {
+                "kind": {
+                    "const": "cylinder"
+                },
+                "parameters": {
+                    "$ref": "#/$defs/CylinderInputParams"
+                }
+            }
+        },
+        "BoxInputData": {
+            "type": "object",
+            "properties": {
+                "kind": {
+                    "const": "box"
+                },
+                "parameters": {
+                    "$ref": "#/$defs/BoxInputParams"
+                }
+            }
+        },
+        "SphereInputParams": {
+            "type": "object",
+            "$ref": "#/$defs/ShapePrimitiveInputParams",
+            "properties": {
+                "center": {
+                    "$ref": "#/$defs/Vec3Float"
+                },
+                "radius": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "center",
+                "radius"
+            ]
+        },
+        "PyramidInputParams": {
+            "type": "object",
+            "$ref": "#/$defs/ShapePrimitiveInputParams",
+            "properties": {
+                "translation": {
+                    "$ref": "#/$defs/Vec3Float"
+                },
+                "scaling": {
+                    "$ref": "#/$defs/Vec3Float"
+                },
+                "rotation": {
+                    "$ref": "#/$defs/RotationInputParameters"
+                }
+            },
+            "required": [
+                "translation",
+                "scaling",
+                "rotation"
+            ]
+        },
+        "EllipsoidInputParams": {
+            "type": "object",
+            "$ref": "#/$defs/ShapePrimitiveInputParams",
+            "properties": {
+                "dir_major": {
+                    "$ref": "#/$defs/Vec3Float"
+                },
+                "dir_minor": {
+                    "$ref": "#/$defs/Vec3Float"
+                },
+                "center": {
+                    "$ref": "#/$defs/Vec3Float"
+                },
+                "radius_scale": {
+                    "$ref": "#/$defs/Vec3Float"
+                }
+            },
+            "required": [
+                "dir_major",
+                "dir_minor",
+                "center",
+                "radius_scale"
+            ]
+        },
+        "CylinderInputParams": {
+            "type": "object",
+            "$ref": "#/$defs/ShapePrimitiveInputParams",
+            "properties": {
+                "start": {
+                    "$ref": "#/$defs/Vec3Float"
+                },
+                "end": {
+                    "$ref": "#/$defs/Vec3Float"
+                },
+                "radius_bottom": {
+                    "type": "number"
+                },
+                "radius_top": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "start",
+                "end",
+                "radius_bottom",
+                "radius_top"
+            ]
+        },
+        "BoxInputParams": {
+            "type": "object",
+            "$ref": "#/$defs/ShapePrimitiveInputParams",
+            "properties": {
+                "translation": {
+                    "$ref": "#/$defs/Vec3Float"
+                },
+                "scaling": {
+                    "$ref": "#/$defs/Vec3Float"
+                },
+                "rotation": {
+                    "$ref": "#/$defs/RotationInputParameters"
+                }
+            },
+            "required": [
+                "translation",
+                "scaling",
+                "rotation"
+            ]
+        },
+        "ShapePrimitiveInputData": {
+            "type": "object",
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/SphereInputData"
+                },
+                {
+                    "$ref": "#/$defs/PyramidInputData"
+                },
+                {
+                    "$ref": "#/$defs/EllipsoidInputData"
+                },
+                {
+                    "$ref": "#/$defs/CylinderInputData"
+                },
+                {
+                    "$ref": "#/$defs/BoxInputData"
+                }
+            ]
+        }
+    },
+    "properties": {
+        "segmentation_id": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "time_units": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "shape_primitives_input": {
+            "type": "object",
+            "propertyNames": {
+                "type": "string"
+            },
+            "additionalProperties": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/$defs/ShapePrimitiveInputData"
+                }
+            }
+        }
+    },
+    "required": [
+        "shape_primitives_input"
+    ]
+}
