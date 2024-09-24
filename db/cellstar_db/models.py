@@ -324,7 +324,6 @@ class SingleMeshSegmentationData(TypedDict):
 
 class ShapePrimitiveKind(str, Enum):
     sphere = "sphere"
-    tube = "tube"
     cylinder = "cylinder"
     box = "box"
     ellipsoid = "ellipsoid"
@@ -335,8 +334,6 @@ class ShapePrimitiveBase(TypedDict):
     # NOTE: to be able to refer to it in annotations
     id: int
     kind: ShapePrimitiveKind
-    # NOTE: color in annotations
-
 
 class RotationParameters(TypedDict):
     axis: tuple[float, float, float]
@@ -502,7 +499,6 @@ class ShapePrimitiveInputData(BaseModel):
         EllipsoidInputParams,
         CylinderInputParams,
         BoxInputParams,
-        SphereInputParams,
         ShapePrimitiveInputParams,
     ]
 
@@ -511,7 +507,7 @@ class GeometricSegmentationInputData(BaseModel):
     # provide id here as optional
     segmentation_id: Optional[str]
     # maps timeframe index to list of ShapePrimitiveInputData
-    shape_primitives_input: dict[int, list[ShapePrimitiveInputData]]
+    shape_primitives_input: dict[str, list[ShapePrimitiveInputData]]
     time_units: Optional[str]
 
 
