@@ -84,15 +84,9 @@ class VolumeExtraData(TypedDict):
 
 class SegmentationExtraData(TypedDict):
     voxel_size: list[float, float, float] | None
-    # map segmentation number (dimension) in case of >3D array (e.g. OMETIFF)
-    # or in case segmentation ids are given as numbers by default
-    # to segmentation id (string)
     segmentation_ids_mapping: dict[str, str] | None
-    # lattice_id (artificial, keys from segmentation_ids_mapping)
-    # to dict with keys = segment ids and values = segment names?
-    # could work, easier than modify descriptions via preprocessor command
-    # CURRENTLY IS A KEY THAT IS PROVIDED IN SEGMENTATION_IDS_MAPPING
-    segment_ids_to_segment_names_mapping: dict[str, dict[str, str]] | None
+    # NOTE: CURRENTLY IS A KEY THAT IS PROVIDED IN SEGMENTATION_IDS_MAPPING
+    custom_segment_ids_mapping: dict[str, dict[str, str]] | None
     # could have key = "ometiff"
     dataset_specific_data: object | None
 
@@ -101,10 +95,6 @@ class ExtraData(TypedDict):
     entry_metadata: Optional[EntryMetadata]
     volume: Optional[VolumeExtraData]
     segmentation: Optional[SegmentationExtraData]
-    # for custom things
-    # metadata: Optional[object]
-    # dataset_specific_data: Optional[object]
-
 
 # METADATA DATA MODEL
 
