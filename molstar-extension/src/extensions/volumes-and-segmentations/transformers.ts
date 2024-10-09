@@ -47,15 +47,14 @@ export type ProjectMeshSegmentationDataParamsValues = ParamDefinition.Values<typ
 export const ProjectVolumeData = CreateTransformer({
     name: 'project-volume-data',
     display: { name: 'Project Volume Data', description: 'Project Volume Data' },
-    from: PluginStateObject.Root,
+    from: VolsegEntry,
     to: PluginStateObject.Volume.Data,
     params: ProjectDataParams
 })({
-    apply({ a, params, spine }, plugin: PluginContext) {
+    apply({ a, params }, plugin: PluginContext) {
         return Task.create('Project Volume Data', async ctx => {
             const { timeframeIndex, channelId } = params;
-            const entry = spine.getAncestorOfType(VolsegEntry);
-            const entryData = entry!.data;
+            const entryData = a.data;
             const rawData = await entryData.getData(timeframeIndex, channelId, 'volume') as Uint8Array | string;
             let label = entryData.metadata.value!.getVolumeChannelLabel(channelId);
             if (!label) label = channelId.toString();
@@ -83,15 +82,14 @@ export const ProjectVolumeData = CreateTransformer({
 export const ProjectSegmentationData = CreateTransformer({
     name: 'project-segmentation-data',
     display: { name: 'Project Segmentation Data', description: 'Project Segmentation Data' },
-    from: PluginStateObject.Root,
+    from: VolsegEntry,
     to: PluginStateObject.Volume.Data,
     params: ProjectLatticeSegmentationDataParams
 })({
-    apply({ a, params, spine }, plugin: PluginContext) {
+    apply({ a, params }, plugin: PluginContext) {
         return Task.create('Project Volume Data', async ctx => {
             const { timeframeIndex, segmentationId } = params;
-            const entry = spine.getAncestorOfType(VolsegEntry);
-            const entryData = entry!.data;
+            const entryData = a.data;
             const rawData = await entryData.getData(timeframeIndex, segmentationId, 'segmentation') as Uint8Array | string;
 
             const label = segmentationId;
@@ -122,11 +120,10 @@ export const ProjectMeshData = CreateTransformer({
     to: VolsegMeshSegmentation,
     params: ProjectMeshSegmentationDataParams
 })({
-    apply({ a, params, spine }, plugin: PluginContext) {
+    apply({ a, params }, plugin: PluginContext) {
         return Task.create('Project Mesh Data', async ctx => {
             const { timeframeIndex, segmentationId } = params;
-            const entry = spine.getAncestorOfType(VolsegEntry);
-            const entryData = entry!.data;
+            const entryData = a.data
             const meshData: MeshData[] = [];
             const segmentsParams = params.meshSegmentParams;
             const rawDataArray: RawMeshSegmentData[] = await entryData.getData(timeframeIndex, segmentationId, 'mesh') as RawMeshSegmentData[];
@@ -163,11 +160,10 @@ export const ProjectGeometricSegmentationData = CreateTransformer({
     to: VolsegGeometricSegmentation,
     params: ProjectGeometricSegmentationDataParams
 })({
-    apply({ a, params, spine }, plugin: PluginContext) {
+    apply({ a, params }, plugin: PluginContext) {
         return Task.create('Project Geometric Segmentation Data', async ctx => {
             const { timeframeIndex, segmentationId } = params;
-            const entry = spine.getAncestorOfType(VolsegEntry);
-            const entryData = entry!.data;
+            const entryData = a.data;
             const shapePrimitiveData = await entryData.getData(timeframeIndex, segmentationId, 'primitive') as ShapePrimitiveData;
             return new VolsegGeometricSegmentation(new VolsegShapePrimitivesData(shapePrimitiveData), { label: `Segmentation ID: ${segmentationId}` });
         });
