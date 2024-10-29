@@ -8,7 +8,7 @@ from cellstar_query.requests import (
     VolumeRequestDataKind,
     VolumeRequestInfo,
 )
-from db.cellstar_db.models import Info
+from cellstar_db.models import Info
 
 HTTP_CODE_UNPROCESSABLE_ENTITY = 422
 

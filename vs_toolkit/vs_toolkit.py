@@ -5,7 +5,7 @@ import io
 import json
 from operator import attrgetter
 from cellstar_preprocessor.tools.brotli.brotli import brotli_bytes_to_file
-from db.cellstar_db.models import Info
+from cellstar_db.models import Info
 from pydantic.dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, Optional, Protocol, Union
