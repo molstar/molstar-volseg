@@ -1,4 +1,13 @@
 ### Custom
+Y/*
+*.tif
+*.hff
+*.json
+external_tools/*
+_dev/*
+test_db/*
+preprocessor/cellstar_preprocessor/tests/test_data/inputs_for_tests/*
+*.zarr
 molstar-extension/site/*
 molstar-extension/node_modules/
 molstar-extension/debug.log

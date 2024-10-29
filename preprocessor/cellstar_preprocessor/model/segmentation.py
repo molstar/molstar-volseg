@@ -709,7 +709,7 @@ class InternalSegmentation(InternalData):
         # 
         # should use just that segmentation id
         segmentation_ids: list[str] = []
-        for segmentation_id, segmentation_gr in self.groups():
+        for segmentation_id, segmentation_gr in s.groups():
             for timeframe_index, timeframe_gr in segmentation_gr.groups():
                 mesh_comp_num = MeshComponentNumbers(segment_ids={})
                 for segment_id, segment in timeframe_gr.groups():
