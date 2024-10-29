@@ -36,8 +36,17 @@ def create_dataset_wrapper(
                 raise ValueError(f"Chunking approach arg value is invalid: {chunking_mode}")
         if not is_empty:
             # go with to zarr
+            # breaks here, byteslike object, not Array?
+            print(
+                data,
+                name,
+                shape,
+                dtype,
+                compressor,
+                chunks,
+            )
             zarr_arr = zarr_group.create_dataset(
-                data=data,
+                data=data.compute(),
                 name=name,
                 shape=shape,
                 dtype=dtype,

@@ -1,5 +1,5 @@
 import pytest
-from cellstar_db.models import AnnotationsMetadata, VolumeChannelAnnotation
+from cellstar_db.models import Annotations, VolumeChannelAnnotation
 from cellstar_preprocessor.flows.segmentation.omezarr_segmentations_preprocessing import (
     omezarr_segmentations_preprocessing,
 )
@@ -35,7 +35,7 @@ def test_omezarr_volume_annotations_preprocessing(omezar_test_input: TestInput):
         )
 
         omezarr_segmentations_preprocessing(s=internal_segmentation)
-        d: AnnotationsMetadata = omezarr_volume_annotations_preprocessing(v=v)
+        d: Annotations = omezarr_volume_annotations_preprocessing(v=v)
         # d = omezarr
 
         # root = open_zarr_structure_from_path(

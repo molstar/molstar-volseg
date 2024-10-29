@@ -1,4 +1,6 @@
-from dataclasses import dataclass
+from cellstar_preprocessor.model.map import MapWrapper
+from cellstar_preprocessor.tools.parse_map.parse_map import parse_map
+from pydantic.dataclasses import dataclass
 import gc
 import math
 from cellstar_preprocessor.flows.common import compute_downsamplings_to_be_stored, compute_number_of_downsampling_steps
@@ -14,9 +16,14 @@ from dask_image.ndfilters import convolve as dask_convolve
 
 from cellstar_db.models import (
     AxisName,
+    ConlistFloat4,
+    DataKind,
     DownsamplingLevelInfo,
     ExtraData,
     AssetKind,
+    MapParameters,
+    Metadata,
+    PreparedLatticeSegmentationData,
     PreparedVolume,
     PreparedVolumeData,
     PreparedVolumeMetadata,
@@ -52,13 +59,16 @@ import dask.array as da
 
 @dataclass
 class InternalVolume(InternalData):
-    volume_force_dtype: str
-    quantize_dtype_str: QuantizationDtype
-    quantize_downsampling_levels: tuple
+    volume_force_dtype: str | None = None
+    quantize_dtype_str: QuantizationDtype | None = None
+    quantize_downsampling_levels: tuple | None = None
     custom_data: VolumeExtraData | None = None
     map_header: object | None = None
     prepared: PreparedVolume | None = None
 
+    def _generate_colors(self):
+        pass
+    
     def get_first_channel_array(self, data_group: zarr.Group) -> zarr.Array:
         first_time_gr = self.get_first_time_group(data_group)
         first_channel: str = sorted(first_time_gr.array_keys())[0]
@@ -67,78 +77,68 @@ class InternalVolume(InternalData):
     def downsample(self):
         match self.input_kind:
             case AssetKind.omezarr:
+                # further downsample omezarr if needed? there are cases
                 pass
             case _:
-                orig_res_gr: zarr.Group = self.get_first_resolution_group(self.get_volume_data_group())
-                for time, timegr in orig_res_gr.groups():
-                    timegr: zarr.Group
-                    for channel_id, channel_arr in timegr.arrays():
-                        # NOTE: skipping convolve if one of dimensions is 1
-                        if 1 in channel_arr.shape:
-                            print(
-                                f"Downsampling skipped for volume channel {channel_id}, timeframe {time} since one of the dimensions is equal to 1"
-                            )
-                            continue
-
-                        original_data_arr = orig_res_gr[str(time)][
-                            str(channel_id)
-                        ]
-                        if QUANTIZATION_DATA_DICT_ATTR_NAME in original_data_arr.attrs:
-                            data_dict = QuantizationInfo.model_validate(original_data_arr.attrs[QUANTIZATION_DATA_DICT_ATTR_NAME])
-                            data_dict.data = da.from_zarr(url=original_data_arr)
-                            dask_arr: da.Array = decode_quantized_data(data_dict)
-                        else:
-                            dask_arr = da.from_zarr(
-                                url=original_data_arr, chunks=original_data_arr.chunks
-                            )
-
-                        kernel = generate_kernel_3d_arr(list(DOWNSAMPLING_KERNEL))
-                        current_level_data = dask_arr
-
-                        # 1. compute number of downsampling steps based on internal_volume.downsampling
-                        # 2. compute list of ratios of downsamplings to be stored based on internal_volume.downsampling
-                        # 3. if ratio is in list, store it
-
-                        # downsampling_steps = 8
-                        downsampling_steps = compute_number_of_downsampling_steps(
-                            downsampling_parameters=self.downsampling_parameters,
-                            min_grid_size=MIN_GRID_SIZE,
-                            input_grid_size=math.prod(dask_arr.shape),
-                            factor=2**3,
-                            force_dtype=dask_arr.dtype,
+                for i in self.prepared.metadata.resolutions:
+                    assert i in [0, 1], 'Original prepared data must contain no downsamplings'
+                
+                prepared_downsamplings: list[PreparedVolumeData] = []
+                for idx, p in enumerate(self.prepared.data):
+                    # print(f'Iteration #{idx}: downsampling data - {p}')
+                    d = p.data
+                    channel_id = p.channel_id
+                    timeframe_index = p.timeframe_index
+                    channel_num = p.channel_num
+                    channel_id = p.channel_id
+                    if 1 in d.shape:
+                        print(
+                            f"Downsampling skipped for volume channel {channel_id}, timeframe {timeframe_index} since one of the dimensions is equal to 1"
                         )
+                        continue
 
-                        ratios_to_be_stored = compute_downsamplings_to_be_stored(
-                            downsampling_parameters=self.downsampling_parameters,
-                            number_of_downsampling_steps=downsampling_steps,
-                            input_grid_size=math.prod(dask_arr.shape),
-                            factor=2**3,
-                            dtype=dask_arr.dtype,
+                    kernel = generate_kernel_3d_arr(list(DOWNSAMPLING_KERNEL))
+                    current_level_data = d
+                    downsampling_steps = compute_number_of_downsampling_steps(
+                        downsampling_parameters=self.downsampling_parameters,
+                        min_grid_size=MIN_GRID_SIZE,
+                        input_grid_size=math.prod(d.shape),
+                        factor=2**3,
+                        force_dtype=d.dtype,
+                    )
+
+                    ratios_to_be_stored = compute_downsamplings_to_be_stored(
+                        downsampling_parameters=self.downsampling_parameters,
+                        number_of_downsampling_steps=downsampling_steps,
+                        input_grid_size=math.prod(d.shape),
+                        factor=2**3,
+                        dtype=d.dtype,
+                    )
+                    
+                    for i in range(downsampling_steps):
+                        current_resolution = 2 ** (i + 1)
+                        assert len(current_level_data.shape) == 3, 'Data must be 3D'
+                        downsampled_data: da.Array = dask_convolve(
+                            current_level_data, kernel, mode="mirror", cval=0.0
                         )
-                        for i in range(downsampling_steps):
-                            current_ratio = 2 ** (i + 1)
-                            assert len(current_level_data.shape) == 3, 'Data must be 3D'
-                            downsampled_data = dask_convolve(
-                                current_level_data, kernel, mode="mirror", cval=0.0
-                            )
-                            downsampled_data = downsampled_data[::2, ::2, ::2]
+                        downsampled_data: da.Array = downsampled_data[::2, ::2, ::2]
+                        prepared_volume_data = PreparedVolumeData(
+                            timeframe_index=timeframe_index,
+                            resolution=current_resolution,
+                            nbytes=downsampled_data.nbytes,
+                            channel_num=channel_num,
+                            channel_id=channel_id,
+                            data=downsampled_data
+                        )
+                        if current_resolution in ratios_to_be_stored:
+                            prepared_downsamplings.append(prepared_volume_data)
 
-                            if current_ratio in ratios_to_be_stored:
-                                store_volume_data_in_zarr(
-                                    data=downsampled_data,
-                                    volume_data_group=self.get_volume_data_group(),
-                                    params_for_storing=self.params_for_storing,
-                                    force_dtype=self.volume_force_dtype,
-                                    resolution=current_ratio,
-                                    timeframe_index=time,
-                                    channel_id=channel_id,
-                                )
-
-                            current_level_data = downsampled_data
-                        print("Volume downsampled")
-
+                        current_level_data = downsampled_data
+        
+                self.prepared.data = self.prepared.data + prepared_downsamplings
+                print("Volume downsampled")
     
-    def _prepare_ometiff(self):
+    def _prepare_ometiff_volume(self):
         # NOTE: just creates wrapper and calls wrapper methods
         w = self.get_ometiff_wrapper()
         return w.prepare_volume_data()
@@ -146,36 +146,53 @@ class InternalVolume(InternalData):
     def _prepare_omezarr(self):
         w = self.get_omezarr_wrapper()
         return w.prepare_volume_data()
-      
+    
+    def get_map_wrapper(self):
+        voxel_size = self.custom_data.voxel_size if self.custom_data.voxel_size is not None\
+            else None
+        dtype = self.volume_force_dtype if self.volume_force_dtype is not None\
+            else None
+        return MapWrapper(
+            path=self.input_path,
+            params=MapParameters(
+                voxel_size=voxel_size,
+                dtype=dtype
+            ),
+            kind=DataKind.volume
+        )
+    
+    def _prepare_tiff_image_stack(self):
+        w = self.get_tiff_stack_wrapper()
+        data = w.to_array
+        return PreparedVolume(
+            data=[PreparedVolumeData(
+                timeframe_index=0,
+                channel_num=0,
+                resolution=1,
+                data=data,
+                nbytes=data.nbytes
+            )],
+            metadata=PreparedVolumeMetadata(
+                channel_nums=[0],
+                timeframe_indices=[0],
+                resolutions=[1]
+            )
+        )
+    
     def _prepare_map(self):
-        # TODO: open map as memmap - separate helper function returning context
-        with mrcfile.mmap(str(self.input_path.resolve()), "r+") as mrc_original:
-            data: np.memmap = mrc_original.data
-            if self.volume_force_dtype is not None:
-                data = data.astype(self.volume_force_dtype)
-            else:
-                self.volume_force_dtype = data.dtype
-
-            # temp hack to process rec files with cella 0 0 0
-            # if mrc_original.header.cella.x == 0 and mrc_original.header.cella.y == 0 and mrc_original.header.cella.z == 0:
-            if self.custom_data.voxel_size is not None:
-                # TODO: this is probably wrong
-                mrc_original.voxel_size = 1 * self.custom_data.voxel_size
-
-            header = mrc_original.header
-            # single channel and timeframe
-
-            dask_arr = da.from_array(data)
-            dask_arr = normalize_axis_order_mrcfile(dask_arr=dask_arr, mrc_header=header)
-            self.map_header = header
+        w = self.get_map_wrapper()
+        parsed_map = w.parsed
+        self.volume_force_dtype = self.volume_force_dtype \
+            if self.volume_force_dtype else parsed_map.data.dtype
+        self.map_header = parsed_map.header
 
         return PreparedVolume(
             data=[PreparedVolumeData(
                 timeframe_index=0,
                 channel_num=0,
                 resolution=1,
-                data=dask_arr,
-                size=dask_arr.nbytes
+                data=parsed_map.data,
+                nbytes=parsed_map.data.nbytes
             )],
             metadata=PreparedVolumeMetadata(
                 channel_nums=[0],
@@ -189,9 +206,11 @@ class InternalVolume(InternalData):
             case AssetKind.omezarr:
                 self.prepared = self._prepare_omezarr()
             case AssetKind.ometiff_image: 
-                self.prepared = self._prepare_ometiff()
+                self.prepared = self._prepare_ometiff_volume()
             case AssetKind.map:
                 self.prepared = self._prepare_map()
+            case AssetKind.tiff_image_stack_dir:
+                self.prepared = self._prepare_tiff_image_stack()
             case _:
                 raise NotImplementedError(f'{self.input_kind} is not supported')
     
@@ -216,67 +235,35 @@ class InternalVolume(InternalData):
         if self.input_kind in [AssetKind.map, AssetKind.ometiff_image]:
             return DEFAULT_TIME_UNITS
     
-    def remove_downsamplings(self):
-        volume_data_gr = self.get_volume_data_group()
-        original_resolution = self.get_first_resolution_group(volume_data_gr)
-        for info in get_downsamplings(volume_data_gr):
-            if info.available:
-                res = info.level
-            size_of_data_for_lvl_mb = self.prepared.compute_size_for_downsampling_level(res)
-            print(f"size of data for lvl in mb: {size_of_data_for_lvl_mb}")
-            if (
-                (self.downsampling_parameters.max_size_per_downsampling_lvl_mb
-                and size_of_data_for_lvl_mb
-                > self.downsampling_parameters.max_size_per_downsampling_lvl_mb)
-                or
-                (
-                    self.downsampling_parameters.min_size_per_downsampling_lvl_mb
-                    and size_of_data_for_lvl_mb < self.downsampling_parameters.min_size_per_downsampling_lvl_mb
-                )
-            ):
-                print(f"Volume data for resolution {res} was removed")
-                del volume_data_gr[res]
-                gc.collect()
-            
-            if self.downsampling_parameters.max_downsampling_level is not None:
-                for downsampling, downsampling_gr in volume_data_gr.groups():
-                    if int(downsampling) > self.downsampling_parameters.max_downsampling_level:
-                        del volume_data_gr[downsampling]
-                        gc.collect()
-                        print(f"Data for downsampling {downsampling} removed for volume")
-
-            if self.downsampling_parameters.min_downsampling_level is not None:
-                for downsampling, downsampling_gr in volume_data_gr.groups():
-                    if (
-                        int(downsampling) < self.downsampling_parameters.min_downsampling_level
-                        and downsampling != original_resolution
-                    ):
-                        del volume_data_gr[downsampling]
-                        gc.collect()
-                        print(f"Data for downsampling {downsampling} removed for volume")
-
-            if len(sorted(volume_data_gr.group_keys())) == 0:
-                raise Exception(
-                    f"No downsamplings will be saved: max_size_per_downsampling_lvl_mb {self.downsampling_parameters.max_size_per_downsampling_lvl_mb} is too low"
-                )
-    
     def remove_original_resolution(self):
-        m = self.get_metadata()
         if self.downsampling_parameters.remove_original_resolution:
-            first_resolution = str(self.get_first_resolution_group(self.get_volume_data_group()).name)
-            del self.get_volume_data_group()[first_resolution]
-            print(f"Original resolution ({first_resolution}) for volume data removed")
-
+            m = self.get_metadata()
+            prepared = self.prepared
+            original_resolution = prepared.metadata.original_resolution
+            prepared.data = [i for i in prepared.data if i.resolution != original_resolution]
+                
+            
+            if not (len(prepared.metadata.resolutions) == 1 and original_resolution in prepared.metadata.resolutions):
+                try:
+                    prepared.metadata.resolutions.remove(original_resolution)
+                    print(f"Original resolution ({original_resolution}) for volume data was removed")
+                
+                except ValueError:
+                    raise Exception()
+            else:
+                print('Original resolution data cannot be removed since it is the only available resolution')
+                return
+            
             current_levels = m.volumes.sampling_info.spatial_downsampling_levels
-    
+            
             for i, item in enumerate(current_levels):
-                if item.level == first_resolution:
+                if item.level == original_resolution:
                     current_levels[i].available = False
             # fix metadata
             m.volumes.sampling_info.spatial_downsampling_levels = current_levels
             
-        self.set_metadata(m)
-    
+            self.set_metadata(m)
+        
     def set_volumes_metadata(self):
         # TODO: add options for different input kinds if necessary
         m = self.get_metadata()
@@ -295,8 +282,8 @@ class InternalVolume(InternalData):
                 original_axis_order=self.get_original_axis_order(),
             ),
         )
-        self.set_boxes_and_descriptive_statistics()
-        m = self.get_metadata()
+        m = self.set_boxes_and_descriptive_statistics(m)
+        # m = self.get_metadata()
         self.set_metadata(m)
 
     def get_original_axis_order(self) -> list[AxisName]:
@@ -388,8 +375,8 @@ class InternalVolume(InternalData):
     def get_grid_dimensions(self):
         return self.get_first_channel_array(self.get_volume_data_group()).shape
     
-    def set_boxes_and_descriptive_statistics(self):
-        m = self.get_metadata()
+    def set_boxes_and_descriptive_statistics(self, m: Metadata):
+        # m = self.get_metadata()
         volume_data_group = self.get_volume_data_group()
         origin = self.get_origin()
         voxel_sizes = self.get_voxel_sizes_in_downsamplings()
@@ -442,7 +429,7 @@ class InternalVolume(InternalData):
                         mean=mean_val, min=min_val, max=max_val, std=std_val
                     )
 
-        self.set_metadata(m)
+        return m
 
     def set_custom_data(self):
         r = self.get_zarr_root()
@@ -483,11 +470,21 @@ class InternalVolume(InternalData):
                 raise NotImplementedError(f"{self.input_kind} not supported")
     
     def create_artificial_channel_anntoations_from_data(self):
-        # no color just channel id and label
-        if self.input_kind == AssetKind.omezarr:
-            raise NotImplementedError(f'Support for input kind {self.input_kind} has not been implemented')
-        else:
-            raise NotImplementedError(f'Support for input kind {self.input_kind} has not been implemented')
+        a: list[VolumeChannelAnnotation] = []
+        # TODO: Generate color 
+        colors: ConlistFloat4 = self._generate_colors()
+        for d in self.prepared.data:
+            a.append(
+                VolumeChannelAnnotation(
+                    channel_id=d.channel_id,
+                    color=self._generate_color
+                )
+            )
+        return a
+        # if self.input_kind == AssetKind.omezarr:
+        #     raise NotImplementedError(f'Support for input kind {self.input_kind} has not been implemented')
+        # else:
+        #     raise NotImplementedError(f'Support for input kind {self.input_kind} has not been implemented')
     
     # TODO: use the same for other input types
     # should get channel ids from custom data if provided, if not - from data
@@ -517,7 +514,7 @@ class InternalVolume(InternalData):
                 
         elif kind == AssetKind.ometiff_image:
             w = self.get_ometiff_wrapper()
-            channels: list[str] = w.channels
+            channels: list[str] | None = w.channels
             if channels is not None:
                 for idx, channel_id in enumerate(channels):
                     volume_channels_annotations.append(
@@ -527,9 +524,13 @@ class InternalVolume(InternalData):
                             # color=hex_to_rgba_normalized(channel.color),
                             label=channel_id,
                         ))
+            else:
+                volume_channels_annotations = self.create_artificial_channel_anntoations_from_data()
 
                 
         else:
+            volume_channels_annotations = self.create_artificial_channel_anntoations_from_data()
+            
             raise NotImplementedError(f'Support for input kind {kind} has not been implemented')
 
         a.volume_channels_annotations = volume_channels_annotations

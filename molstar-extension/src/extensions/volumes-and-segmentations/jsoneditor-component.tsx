@@ -12,19 +12,19 @@ import { VolsegEntryData } from './entry-root';
 import { Button } from 'molstar/lib/mol-plugin-ui/controls/common';
 
 
-import { AnnotationMetadata } from './volseg-api/data';
+import { AnnotationsMetadata } from './volseg-api/data';
 
 interface JSONEditorComponentProps {
     jsonData: any;
     entryData: VolsegEntryData
 }
 
-async function updateJSON(jsonData: AnnotationMetadata, entryData: VolsegEntryData) {
+async function updateJSON(jsonData: AnnotationsMetadata, entryData: VolsegEntryData) {
     await entryData.api.updateAnnotationsJson(entryData.source, entryData.entryId, jsonData);
     await entryData.updateMetadata();
 }
 
-export const JSONEditorComponent: React.FC<JSONEditorComponentProps> = ({ jsonData, entryData }: { jsonData: AnnotationMetadata, entryData: VolsegEntryData }) => {
+export const JSONEditorComponent: React.FC<JSONEditorComponentProps> = ({ jsonData, entryData }: { jsonData: AnnotationsMetadata, entryData: VolsegEntryData }) => {
     const containerRef = useRef<HTMLDivElement | null>(null);
     let jsonEditor: JSONEditor | null = null;
     const jsonDataUpdated = useRef(jsonData);

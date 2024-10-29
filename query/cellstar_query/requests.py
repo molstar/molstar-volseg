@@ -67,6 +67,6 @@ class MeshRequest(BaseModel):
     time: int
 
 
-class MetadataRequest(BaseModel):
+class InfoRequest(BaseModel):
     source: str
     structure_id: str

@@ -1,7 +1,7 @@
 import typer
 from cellstar_db.file_system.annotations_context import AnnnotationsEditContext
 from cellstar_db.file_system.db import FileSystemVolumeServerDB
-from cellstar_db.models import SegmentAnnotationData
+from cellstar_db.models import SegmentAnnotationData, StoreType
 from cellstar_preprocessor.flows.common import read_json
 
 
@@ -21,7 +21,7 @@ def edit_segment_annotations(
     if new_db_path.is_dir() == False:
         new_db_path.mkdir()
 
-    db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
+    db = FileSystemVolumeServerDB(new_db_path, store_type=StoreType.zip)
 
     parsedSegmentAnnotations: list[SegmentAnnotationData] = read_json(
         Path(data_json_path)

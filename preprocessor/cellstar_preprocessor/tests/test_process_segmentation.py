@@ -1,6 +1,7 @@
+from cellstar_preprocessor.flows.segmentation.process_segmentation import process_segmentation
 import pytest
 import zarr
-from cellstar_db.models import SegmentationPrimaryDescriptor
+from cellstar_db.models import AssetKind, PrimaryDescriptor
 from cellstar_preprocessor.flows.constants import (
     LATTICE_SEGMENTATION_DATA_GROUPNAME,
     MESH_SEGMENTATION_DATA_GROUPNAME,
@@ -15,47 +16,62 @@ from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.tests.helper_methods import get_internal_segmentation
 from cellstar_preprocessor.tests.input_for_tests import (
     INTERNAL_MESH_SEGMENTATION_FOR_TESTING,
-    INTERNAL_SEGMENTATION_FOR_TESTING,
+    INTERNAL_LATTICE_SEGMENTATION_FOR_TESTING,
+    MASK_SEGMENTATION_TEST_INPUTS,
+    OMETIFF_SEGMENTATION_TEST_INPUTS,
     SFF_TEST_INPUTS,
     WORKING_FOLDER_FOR_TESTS,
     TestInput,
 )
 from cellstar_preprocessor.tests.test_context import TestContext, context_for_tests
 
-SEGMENTATIONS = [
-    INTERNAL_SEGMENTATION_FOR_TESTING,
-    INTERNAL_MESH_SEGMENTATION_FOR_TESTING,
-]
+SEGMENTATIONS = SFF_TEST_INPUTS + OMETIFF_SEGMENTATION_TEST_INPUTS + MASK_SEGMENTATION_TEST_INPUTS
 
-
-@pytest.mark.parametrize("test_input", SFF_TEST_INPUTS)
+@pytest.mark.parametrize("test_input", SEGMENTATIONS)
 def test_process_segmentation(test_input: TestInput):
     with context_for_tests(test_input, WORKING_FOLDER_FOR_TESTS) as ctx:
         ctx: TestContext
 
-        internal_segmentation = get_internal_segmentation(
+        s = get_internal_segmentation(
             test_input, ctx.test_input_asset_path, ctx.working_folder
         )
-        sff_segm_obj = open_hdf5_as_segmentation_object(
-            internal_segmentation.input_path
-        )
 
-        sff_segmentation_preprocessing(internal_segmentation=internal_segmentation)
+        if test_input.asset_info.kind == AssetKind.sff:
+            sff_segm_obj = open_hdf5_as_segmentation_object(
+                s.input_path
+            )
 
-        # check if zarr structure has right format
-        zarr_structure = open_zarr(internal_segmentation.path)
+        process_segmentation(s=s)
+        zarr_structure = open_zarr(s.path)
 
         # n of segments
 
+        # TODO: need to set primary descriptor in all segmentations that are lattice
         if (
-            internal_segmentation.primary_descriptor
-            == SegmentationPrimaryDescriptor.three_d_volume
+            s.primary_descriptor
+            == PrimaryDescriptor.three_d_volume
         ):
             assert LATTICE_SEGMENTATION_DATA_GROUPNAME in zarr_structure
             segmentation_gr = zarr_structure[LATTICE_SEGMENTATION_DATA_GROUPNAME]
             assert isinstance(segmentation_gr, zarr.Group)
-            assert len(segmentation_gr) == len(sff_segm_obj.lattice_list)
-
+            
+            number_of_source_segmentations = 1
+            match test_input.asset_info.kind: 
+                case AssetKind.sff:
+                    number_of_source_segmentations = len(sff_segm_obj.lattice_list)
+                case AssetKind.ometiff_segmentation:
+                    w = s.get_ometiff_wrapper()
+                    # get number of channels
+                    number_of_source_segmentations = len(w.channels)
+                case AssetKind.mask:
+                    # mask has single segmentation
+                    number_of_source_segmentations = 1
+                    # raise NotImplementedError("Input kind ", test_input.asset_info.kind, " is not supported")
+                case _:
+                    raise NotImplementedError("Input kind ", test_input.asset_info.kind, " is not supported")
+                
+            assert len(segmentation_gr) == number_of_source_segmentations
+            
             for lattice_id, lattice_gr in segmentation_gr.groups():
                 # single resolution group
                 assert len(lattice_gr) == 1
@@ -72,6 +88,7 @@ def test_process_segmentation(test_input: TestInput):
                 # grid and set table
                 assert len(timeframe_gr) == 2
                 assert "grid" in timeframe_gr
+                
                 lattice_from_sff = list(
                     filter(
                         lambda lat: str(lat.id) == lattice_id, sff_segm_obj.lattice_list
@@ -89,8 +106,8 @@ def test_process_segmentation(test_input: TestInput):
 
         # empiar-10070
         elif (
-            internal_segmentation.primary_descriptor
-            == SegmentationPrimaryDescriptor.mesh_list
+            s.primary_descriptor
+            == PrimaryDescriptor.mesh_list
         ):
             assert MESH_SEGMENTATION_DATA_GROUPNAME in zarr_structure
             segmentation_gr = zarr_structure[MESH_SEGMENTATION_DATA_GROUPNAME]

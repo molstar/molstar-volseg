@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from cellstar_db.models import (
-    AnnotationsMetadata,
+    Annotations,
     AxisName,
     EntryId,
     GeometricSegmentationsMetadata,
@@ -51,8 +51,8 @@ MESH_SIMPLIFICATION_CURVE_LINEAR = {
 MESH_SIMPLIFICATION_N_LEVELS = 10
 MESH_SIMPLIFICATION_LEVELS_PER_ORDER = 4
 MESH_VERTEX_DENSITY_THRESHOLD = {
-    "area": 0,  # 0 = unlimited
-    # 'area': 0.02,
+    # "area": 0,  # 0 = unlimited
+    'area': 0.02,
     # 'volume': 0.0015,
 }
 
@@ -104,7 +104,7 @@ TIME_INFO_STANDARD = TimeInfo(
     units="millisecond",
 )
 
-INIT_ANNOTATIONS_MODEL = AnnotationsMetadata(
+INIT_ANNOTATIONS_MODEL = Annotations(
     descriptions={},
     details=None,
     entry_id=BLANK_ENTRY_ID,

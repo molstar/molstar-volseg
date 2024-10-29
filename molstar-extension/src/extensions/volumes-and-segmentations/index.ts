@@ -98,7 +98,7 @@ export const LoadVolseg = StateAction.build({
         await state.build().to(entryNode).apply(VolsegStateFromEntry, {}, { state: { isGhost: !DEBUGGING } }).commit();
         if (entryNode.data) {
             const entryData = entryNode.data;
-            const hasVolumes = entryNode.data.metadata.value!.raw.grid.volumes.volume_sampling_info.spatial_downsampling_levels.length > 0;
+            const hasVolumes = entryNode.data.metadata.value!.raw.grid.volumes.sampling_info.spatial_downsampling_levels.length > 0;
             if (hasVolumes) {
                 const group = await entryNode.data.volumeData.createVolumeGroup();
                 const updatedChannelsData: any = [];
@@ -126,9 +126,9 @@ export const LoadVolseg = StateAction.build({
             }
 
             const hasLattices = entryNode.data.metadata.value!.raw.grid.segmentation_lattices;
-            if (hasLattices && hasLattices.segmentation_ids.length > 0) {
+            if (hasLattices && hasLattices.ids.length > 0) {
                 const group = await entryNode.data.latticeSegmentationData.createSegmentationGroup();
-                const segmentationIds = hasLattices.segmentation_ids;
+                const segmentationIds = hasLattices.ids;
                 for (const segmentationId of segmentationIds) {
                     const descriptionsForLattice = entryNode.data.metadata.value!.getDescriptions(
                         segmentationId,
@@ -148,9 +148,9 @@ export const LoadVolseg = StateAction.build({
             };
 
             const hasMeshes = entryNode.data.metadata.value!.raw.grid.segmentation_meshes;
-            if (hasMeshes && hasMeshes.segmentation_ids.length > 0) {
+            if (hasMeshes && hasMeshes.ids.length > 0) {
                 const group = await entryNode.data.meshSegmentationData.createMeshGroup();
-                const segmentationIds = hasMeshes.segmentation_ids;
+                const segmentationIds = hasMeshes.ids;
                 for (const segmentationId of segmentationIds) {
                     const timeframeIndex = 0;
                     const meshSegmentParams = entryData.meshSegmentationData.getMeshSegmentParams(segmentationId, timeframeIndex);
@@ -166,10 +166,10 @@ export const LoadVolseg = StateAction.build({
 
             }
             const hasGeometricSegmentation = entryData.metadata.value!.raw.grid.geometric_segmentation;
-            if (hasGeometricSegmentation && hasGeometricSegmentation.segmentation_ids.length > 0) {
+            if (hasGeometricSegmentation && hasGeometricSegmentation.ids.length > 0) {
                 const group = await entryNode.data.geometricSegmentationData.createGeometricSegmentationGroup();
                 // const timeInfo = this.entryData.metadata.value!.raw.grid.geometric_segmentation!.time_info;
-                for (const segmentationId of hasGeometricSegmentation.segmentation_ids) {
+                for (const segmentationId of hasGeometricSegmentation.ids) {
                     const timeframeIndex = 0;
                     const geometricSegmentationParams: ProjectGeometricSegmentationDataParamsValues = {
                         segmentationId: segmentationId,

@@ -7,7 +7,7 @@
 
 import { Color } from 'molstar/lib/mol-util/color';
 import { objectToArray } from '../helpers';
-import { DescriptionData, Metadata, ParsedSegmentKey, ShapePrimitiveData } from './data';
+import { DescriptionData, Meta, ParsedSegmentKey, ShapePrimitiveData } from './data';
 
 
 export function compareTwoObjects(object1: any, object2: any): boolean {
@@ -26,11 +26,11 @@ export function compareTwoObjects(object1: any, object2: any): boolean {
 }
 
 export class MetadataWrapper {
-    raw: Metadata;
+    raw: Meta;
     private segmentMap?: Map<string, DescriptionData[]>;
     private currentlyUsedVolumeDownsampling?: number;
 
-    constructor(rawMetadata: Metadata) {
+    constructor(rawMetadata: Meta) {
         this.raw = rawMetadata;
     }
 
@@ -45,7 +45,7 @@ export class MetadataWrapper {
 
     hasLatticeSegmentations() {
         const grid = this.raw.grid;
-        if (grid.segmentation_lattices && grid.segmentation_lattices.segmentation_ids.length > 0) {
+        if (grid.segmentation_lattices && grid.segmentation_lattices.ids.length > 0) {
             return grid.segmentation_lattices;
         }
         return false;
@@ -53,7 +53,7 @@ export class MetadataWrapper {
 
     hasMeshSegmentations() {
         const grid = this.raw.grid;
-        if (grid.segmentation_meshes && grid.segmentation_meshes.segmentation_ids.length > 0) {
+        if (grid.segmentation_meshes && grid.segmentation_meshes.ids.length > 0) {
             return grid.segmentation_meshes;
         }
         return false;
@@ -61,7 +61,7 @@ export class MetadataWrapper {
 
     hasGeometricSegmentations() {
         const grid = this.raw.grid;
-        if (grid.geometric_segmentation && grid.geometric_segmentation.segmentation_ids.length > 0) {
+        if (grid.geometric_segmentation && grid.geometric_segmentation.ids.length > 0) {
             return grid.geometric_segmentation;
         }
         return false;
@@ -69,13 +69,13 @@ export class MetadataWrapper {
 
     hasSegmentations() {
         const grid = this.raw.grid;
-        if (grid.geometric_segmentation && grid.geometric_segmentation.segmentation_ids.length > 0) {
+        if (grid.geometric_segmentation && grid.geometric_segmentation.ids.length > 0) {
             return true;
         }
-        if (grid.segmentation_lattices && grid.segmentation_lattices.segmentation_ids.length > 0) {
+        if (grid.segmentation_lattices && grid.segmentation_lattices.ids.length > 0) {
             return true;
         }
-        if (grid.segmentation_meshes && grid.segmentation_meshes.segmentation_ids.length > 0) {
+        if (grid.segmentation_meshes && grid.segmentation_meshes.ids.length > 0) {
             return true;
         }
         return false;
@@ -217,7 +217,7 @@ export class MetadataWrapper {
     /** Get the list of detail levels available for the given mesh segment. */
     getMeshDetailLevels(segmentationId: string, timeframe: number, segmentId: number): number[] {
         if (!this.raw.grid.segmentation_meshes) return [];
-        const meshComponentNumbers = this.raw.grid.segmentation_meshes.segmentation_metadata[segmentationId].mesh_timeframes[timeframe];
+        const meshComponentNumbers = this.raw.grid.segmentation_meshes.metadata[segmentationId].mesh_timeframes[timeframe];
         // const segmentIds = segmentationSetMetadata.
 
         const segmentIds = meshComponentNumbers.segment_ids;
@@ -245,7 +245,7 @@ export class MetadataWrapper {
     // make it work for multiple mesh sets?
     getMeshSegmentIdsForSegmentationIdAndTimeframe(segmentationId: string, timeframe: number) {
         // if (!this.raw.grid.segmentation_meshes) return;
-        const meshComponentNumbers = this.raw.grid.segmentation_meshes!.segmentation_metadata[segmentationId].mesh_timeframes[timeframe];
+        const meshComponentNumbers = this.raw.grid.segmentation_meshes!.metadata[segmentationId].mesh_timeframes[timeframe];
         // const segmentIds = segmentationSetMetadata.
 
         const segmentIds = meshComponentNumbers.segment_ids;
@@ -302,8 +302,8 @@ export class MetadataWrapper {
 
     get gridTotalVolume() {
         const currentVolumeDownsampling = this.currentVolumeDownsampling;
-        const [vx, vy, vz] = this.raw.grid.volumes.volume_sampling_info.boxes[currentVolumeDownsampling].voxel_size;
-        const [gx, gy, gz] = this.raw.grid.volumes.volume_sampling_info.boxes[currentVolumeDownsampling].grid_dimensions;
+        const [vx, vy, vz] = this.raw.grid.volumes.sampling_info.boxes[currentVolumeDownsampling].voxel_size;
+        const [gx, gy, gz] = this.raw.grid.volumes.sampling_info.boxes[currentVolumeDownsampling].grid_dimensions;
         return vx * vy * vz * gx * gy * gz;
     }
 

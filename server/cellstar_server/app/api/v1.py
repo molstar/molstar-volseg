@@ -3,7 +3,7 @@ from typing import Optional
 from cellstar_db.file_system.annotations_context import AnnnotationsEditContext
 from cellstar_db.file_system.db import FileSystemVolumeServerDB
 from cellstar_db.models import (
-    AnnotationsMetadata,
+    Annotations,
     DescriptionData,
     SegmentAnnotationData,
 )
@@ -15,7 +15,7 @@ from cellstar_query.query import (
     get_list_entries_query,
     get_meshes_bcif_query,
     get_meshes_query,
-    get_metadata_query,
+    get_info_query,
     get_segmentation_box_query,
     get_segmentation_cell_query,
     get_volume_box_query,
@@ -34,7 +34,7 @@ def configure_endpoints(app: FastAPI, volume_server: VolumeServerService):
     async def annotations_json_update(
         source: str,
         id: str,
-        annotations_json: AnnotationsMetadata = Body(..., embed=True),
+        annotations_json: Annotations = Body(..., embed=True),
     ) -> None:
         db: FileSystemVolumeServerDB = volume_server.db
         # TODO: how to post entire json?
@@ -227,7 +227,7 @@ def configure_endpoints(app: FastAPI, volume_server: VolumeServerService):
         source: str,
         id: str,
     ):
-        metadata = await get_metadata_query(
+        metadata = await get_info_query(
             volume_server=volume_server, source=source, id=id
         )
 

@@ -47,9 +47,9 @@ export async function actionToggleAllFilteredSegments(model: VolsegEntryData, se
 }
 
 export async function actionShowSegments(segmentKeys: string[], model: VolsegEntryData) {
-    const allExistingLatticeSegmentationIds = model.metadata.value!.raw.grid.segmentation_lattices!.segmentation_ids;
-    const allExistingMeshSegmentationIds = model.metadata.value!.raw.grid.segmentation_meshes!.segmentation_ids;
-    const allExistingGeometricSegmentationIds = model.metadata.value!.raw.grid.geometric_segmentation!.segmentation_ids;
+    const allExistingLatticeSegmentationIds = model.metadata.value!.raw.grid.segmentation_lattices!.ids;
+    const allExistingMeshSegmentationIds = model.metadata.value!.raw.grid.segmentation_meshes!.ids;
+    const allExistingGeometricSegmentationIds = model.metadata.value!.raw.grid.geometric_segmentation!.ids;
     if (segmentKeys.length === 0) {
         for (const id of allExistingLatticeSegmentationIds) {
             await showSegments({ segmentIds: [], segmentationId: id, kind: 'lattice' }, model);

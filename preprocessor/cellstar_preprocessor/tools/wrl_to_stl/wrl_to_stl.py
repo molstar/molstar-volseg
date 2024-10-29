@@ -4,7 +4,6 @@ import subprocess
 from cellstar_preprocessor.tools.convert_app_specific_segm_to_sff.convert_app_specific_segm_to_sff import convert_app_specific_segm_to_sff
 import numpy as np
 import pymeshlab
-import aspose.threed as a3d
 
 # NOTE: loads way too long
 def wrl_to_stl(input: Path, output: Path):
@@ -48,13 +47,14 @@ def wrl_to_stl(input: Path, output: Path):
 PATH_TO_CONVERTER = Path('external_tools/castle_model_converter/castle-model-converter')
 
 
-# NOTE: castle converter 
-def wrl_to_stl(i: Path, o: Path):
-    exe = str(PATH_TO_CONVERTER.resolve())
-    s = f"{exe} {str(i.resolve())} {str(o.resolve())}"
-    lst = s.split(" ")
-    p = subprocess.Popen(lst)
-    return o
+# # NOTE: castle converter 
+# def wrl_to_stl(i: Path, o: Path):
+#     exe = str(PATH_TO_CONVERTER.resolve())
+#     s = f"{exe} {str(i.resolve())} {str(o.resolve())}"
+#     lst = s.split(" ")
+#     p = subprocess.Popen(lst)
+#     # not able to convert?
+#     return o
 
 # import wrlparser
 # def wrl_to_stl(i: Path, o: Path):
@@ -63,3 +63,4 @@ def wrl_to_stl(i: Path, o: Path):
 #         f.close()
         
 #     scene = wrlparser.parse(l)
+#     print(scene)

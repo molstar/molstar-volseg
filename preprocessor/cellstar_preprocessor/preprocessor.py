@@ -1,9 +1,9 @@
 import asyncio
 import logging
 import shutil
-import typing
 from argparse import ArgumentError
 from pathlib import Path
+import typing
 
 from cellstar_preprocessor.commands.delete_entry import delete_entry
 from cellstar_preprocessor.commands.edit_descriptions import edit_descriptions
@@ -14,13 +14,38 @@ from cellstar_preprocessor.commands.remove_segmentation import remove_segmentati
 from cellstar_preprocessor.commands.remove_volume import remove_volume
 from cellstar_preprocessor.flows.volume.pre_downsample_data import pre_downsample_data
 from cellstar_preprocessor.tools.wrl_to_stl.wrl_to_stl import wrl_to_stl
+from cellstar_preprocessor.model.inputs import ExtraDataInput
+from cellstar_preprocessor.model.inputs import STLSegmentationInput, OMETIFFImageInput
+from cellstar_preprocessor.model.inputs import TIFFSegmentationStackDirInput
+from cellstar_preprocessor.model.inputs import OMETIFFSegmentationInput
+from cellstar_preprocessor.model.inputs import SFFInput
+from cellstar_preprocessor.model.inputs import OMEZARRInput
+from cellstar_preprocessor.model.inputs import MAPInput
+from cellstar_preprocessor.model.inputs import CustomAnnotationsInput
+from cellstar_preprocessor.model.inputs import MaskInput
+from cellstar_preprocessor.model.inputs import TIFFImageStackDirInput
+from cellstar_preprocessor.model.inputs import InputT
+from cellstar_preprocessor.model.inputs import GeometricSegmentationInput
 import typer
+from cellstar_preprocessor.flows.common import process_extra_data
+from cellstar_preprocessor.flows.segmentation.custom_annotations_preprocessing import custom_annotations_preprocessing
+from cellstar_preprocessor.flows.segmentation.process_segmentation import process_segmentation
+from cellstar_preprocessor.flows.segmentation.process_segmentation_annotations import process_segmentation_annotations
+from cellstar_preprocessor.flows.segmentation.process_segmentation_metadata import process_segmentation_metadata
+from cellstar_preprocessor.flows.volume.process_volume import process_volume
+from cellstar_preprocessor.flows.volume.process_volume_annotations import process_volume_annotations
+from cellstar_preprocessor.flows.volume.process_volume_metadata import process_volume_metadata
+from cellstar_preprocessor.flows.volume.quantize_internal_volume import quantize_internal_volume
+from cellstar_preprocessor.model.segmentation import InternalSegmentation
+from cellstar_preprocessor.model.volume import InternalVolume
+
 import zarr
 from cellstar_db.file_system.db import FileSystemVolumeServerDB
 from cellstar_db.file_system.volume_and_segmentation_context import (
     VolumeAndSegmentationContext,
 )
 from cellstar_db.models import (
+    DataKind,
     DownsamplingParams,
     EntryData,
     ExtraMetadata,
@@ -31,10 +56,11 @@ from cellstar_db.models import (
     PreprocessorInput,
     PreprocessorMode,
     RawInput,
+    StoreType,
     StoringParams,
     VolumeParams,
 )
-from cellstar_preprocessor.flows.common import process_extra_data, read_json
+from cellstar_preprocessor.flows.common import read_json
 from cellstar_preprocessor.flows.constants import (
     ANNOTATIONS_DICT_NAME,
     GEOMETRIC_SEGMENTATIONS_ZATTRS,
@@ -46,210 +72,16 @@ from cellstar_preprocessor.flows.constants import (
     RAW_GEOMETRIC_SEGMENTATION_INPUT_ZATTRS,
     VOLUME_DATA_GROUPNAME,
 )
-from cellstar_preprocessor.flows.segmentation.custom_annotations_preprocessing import (
-    custom_annotations_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.tiff_segmentation_stack_dir_metadata_preprocessing import (
-    tiff_segmentation_stack_dir_metadata_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.geometric_segmentation_annotations_preprocessing import (
-    geometric_segmentation_annotations_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.geometric_segmentation_metadata_preprocessing import (
-    geometric_segmentation_metadata_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.geometric_segmentation_preprocessing import (
-    geometric_segmentation_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.mask_segmentation_annotations_preprocessing import (
-    mask_segmentation_annotations_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.mask_segmentation_metadata_preprocessing import (
-    mask_segmentation_metadata_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.mask_segmentation_preprocessing import (
-    mask_segmentation_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.nii_segmentation_downsampling import (
-    nii_segmentation_downsampling,
-)
-from cellstar_preprocessor.flows.segmentation.nii_segmentation_metadata_preprocessing import (
-    nii_segmentation_metadata_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.nii_segmentation_preprocessing import (
-    nii_segmentation_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.ometiff_segmentation_annotations_preprocessing import (
-    ometiff_segmentation_annotations_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.ometiff_segmentation_metadata_preprocessing import (
-    ometiff_segmentation_metadata_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.ometiff_segmentation_processing import (
-    ometiff_segmentation_processing,
-)
-from cellstar_preprocessor.flows.segmentation.omezarr_segmentations_preprocessing import (
-    omezarr_segmentations_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.process_segmentation import (
-    process_segmentation,
-)
-from cellstar_preprocessor.flows.segmentation.process_segmentation_annotations import (
-    process_segmentation_annotations,
-)
-from cellstar_preprocessor.flows.segmentation.process_segmentation_metadata import (
-    process_segmentation_metadata,
-)
-from cellstar_preprocessor.flows.segmentation.segmentation_downsampling import (
-    segmentation_downsampling,
-)
-from cellstar_preprocessor.flows.segmentation.sff_segmentation_annotations_preprocessing import (
-    sff_segmentation_annotations_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.sff_segmentation_metadata_preprocessing import (
-    sff_segmentation_metadata_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.sff_segmentation_preprocessing import (
-    sff_segmentation_preprocessing,
-)
-from cellstar_preprocessor.flows.segmentation.tiff_stack_dir_segmentation_preprocessing import (
-    tiff_stack_dir_segmentation_preprocessing,
-)
-from cellstar_preprocessor.flows.volume.tiff_image_stack_dir_metadata_preprocessing import (
-    tiff_image_stack_dir_metadata_preprocessing,
-)
-from cellstar_preprocessor.flows.volume.map_volume_metadata_preprocessing import (
-    map_volume_metadata_preprocessing,
-)
-from cellstar_preprocessor.flows.volume.map_volume_preprocessing import (
-    map_volume_preprocessing,
-)
-from cellstar_preprocessor.flows.volume.nii_volume_metadata_preprocessing import (
-    nii_volume_metadata_preprocessing,
-)
-from cellstar_preprocessor.flows.volume.nii_volume_preprocessing import (
-    nii_volume_preprocessing,
-)
-from cellstar_preprocessor.flows.volume.ometiff_volume_annotations_preprocessing import (
-    ometiff_volume_annotations_preprocessing,
-)
-from cellstar_preprocessor.flows.volume.ometiff_volume_metadata_preprocessing import (
-    ometiff_volume_metadata_preprocessing,
-)
-from cellstar_preprocessor.flows.volume.ometiff_volume_preprocessing import (
-    ometiff_volume_preprocessing,
-)
-from cellstar_preprocessor.flows.volume.omezarr_volume_annotations_preprocessing import (
-    omezarr_volume_annotations_preprocessing,
-)
-from cellstar_preprocessor.flows.volume.omezarr_volume_metadata_preprocessing import (
-    omezarr_volume_metadata_preprocessing,
-)
-from cellstar_preprocessor.flows.volume.omezarr_volume_preprocessing import (
-    omezarr_volume_preprocessing,
-)
-from cellstar_preprocessor.flows.volume.process_allencel_metadata_csv import (
-    process_allencell_metadata_csv,
-)
-from cellstar_preprocessor.flows.volume.process_volume import process_volume
-from cellstar_preprocessor.flows.volume.process_volume_annotations import (
-    process_volume_annotations,
-)
-from cellstar_preprocessor.flows.volume.process_volume_metadata import (
-    process_volume_metadata,
-)
-from cellstar_preprocessor.flows.volume.quantize_internal_volume import (
-    quantize_internal_volume,
-)
-from cellstar_preprocessor.flows.volume.tiff_image_stack_dir_processing import (
-    tiff_image_stack_dir_processing,
-)
-from cellstar_preprocessor.flows.volume.volume_downsampling import volume_downsampling
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from cellstar_preprocessor.model.volume import InternalVolume
 from cellstar_preprocessor.tools.convert_app_specific_segm_to_sff.convert_app_specific_segm_to_sff import (
     convert_app_specific_segm_to_sff,
 )
-from pydantic import BaseModel
-
-
-class InputT(BaseModel):
-    path: Path | list[Path]
-    kind: AssetKind
-
-
-class TIFFImageStackDirInput(InputT):
-    pass
-
-
-class TIFFSegmentationStackDirInput(InputT):
-    pass
-
-class STLSegmentationInput(InputT):
-    pass
-
-class OMETIFFImageInput(InputT):
-    pass
-
-
-class OMETIFFSegmentationInput(InputT):
-    pass
-
-
-class ExtraDataInput(InputT):
-    pass
-
-
-class MAPInput(InputT):
-    pass
-
-
-class SFFInput(InputT):
-    pass
-
-
-class OMEZARRInput(InputT):
-    pass
-
-
-class CustomAnnotationsInput(InputT):
-    pass
-
-
-class NIIVolumeInput(InputT):
-    pass
-
-
-class NIISegmentationInput(InputT):
-    pass
-
-
-class MaskInput(InputT):
-    pass
-
-
-class GeometricSegmentationInput(InputT):
-    pass
 
 
 class TaskBase(typing.Protocol):
     def execute(self) -> None: ...
-
-
-class CustomAnnotationsCollectionTask(TaskBase):
-    # NOTE: for this to work, custom annotations json must contain only the keys that
-    # need to be updated
-    def __init__(
-        self, input_path: Path, intermediate_zarr_structure_path: Path
-    ) -> None:
-        self.input_path = input_path
-        self.intermediate_zarr_structure_path = intermediate_zarr_structure_path
-
-    def execute(self) -> None:
-        custom_annotations_preprocessing(
-            self.input_path, self.intermediate_zarr_structure_path
-        )
 
 
 class QuantizeInternalVolumeTask(TaskBase):
@@ -259,18 +91,6 @@ class QuantizeInternalVolumeTask(TaskBase):
     def execute(self) -> None:
         quantize_internal_volume(internal_volume=self.internal_volume)
 
-
-VOLUME_INPUT_TYPES = (MAPInput, OMETIFFImageInput, OMEZARRInput, TIFFImageStackDirInput)
-
-SEGMENTATION_INPUT_TYPES = (
-    SFFInput,
-    MaskInput,
-    GeometricSegmentationInput,
-    OMETIFFSegmentationInput,
-    OMEZARRInput,
-    TIFFSegmentationStackDirInput,
-    STLSegmentationInput
-)
 
 class ProcessVolumeTask(TaskBase):
     def __init__(self, internal_volume: InternalVolume):
@@ -320,137 +140,6 @@ class ProcessSegmentationAnnotationsTask(TaskBase):
         process_segmentation_annotations(self.internal_segmentation)
 
 
-class MAPProcessVolumeTask(TaskBase):
-    def __init__(self, internal_volume: InternalVolume):
-        self.internal_volume = internal_volume
-
-    def execute(self) -> None:
-        volume = self.internal_volume
-
-        map_volume_preprocessing(volume)
-        # in processing part do
-        volume_downsampling(volume)
-
-
-class NIIProcessVolumeTask(TaskBase):
-    def __init__(self, internal_volume: InternalVolume):
-        self.internal_volume = internal_volume
-
-    def execute(self) -> None:
-        volume = self.internal_volume
-
-        nii_volume_preprocessing(volume)
-        # in processing part do
-        volume_downsampling(volume)
-
-
-class OMETIFFImageProcessingTask(TaskBase):
-    def __init__(self, internal_volume: InternalVolume):
-        self.internal_volume = internal_volume
-
-    def execute(self) -> None:
-        volume = self.internal_volume
-        ometiff_volume_preprocessing(v=volume)
-        volume_downsampling(internal_volume=volume)
-
-
-class OMETIFFSegmentationProcessingTask(TaskBase):
-    def __init__(self, internal_segmentation: InternalSegmentation):
-        self.internal_segmentation = internal_segmentation
-
-    def execute(self) -> None:
-        segmentation = self.internal_segmentation
-        ometiff_segmentation_processing(s=segmentation)
-        segmentation_downsampling(segmentation)
-
-
-class OMETIFFImageMetadataExtractionTask(TaskBase):
-    def __init__(self, internal_volume: InternalVolume):
-        self.internal_volume = internal_volume
-
-    def execute(self) -> None:
-        volume = self.internal_volume
-        ometiff_volume_metadata_preprocessing(v=volume)
-
-
-class OMETIFFSegmentationMetadataExtractionTask(TaskBase):
-    def __init__(self, internal_segmentation: InternalSegmentation):
-        self.internal_segmentation = internal_segmentation
-
-    def execute(self) -> None:
-        internal_segmentation = self.internal_segmentation
-        ometiff_segmentation_metadata_preprocessing(
-            internal_segmentation=internal_segmentation
-        )
-
-
-class OMETIFFImageAnnotationsExtractionTask(TaskBase):
-    def __init__(self, internal_volume: InternalVolume):
-        self.internal_volume = internal_volume
-
-    def execute(self) -> None:
-        volume = self.internal_volume
-        ometiff_volume_annotations_preprocessing(v=volume)
-
-
-class OMETIFFSegmentationAnnotationsExtractionTask(TaskBase):
-    def __init__(self, internal_segmentation: InternalSegmentation):
-        self.internal_segmentation = internal_segmentation
-
-    def execute(self) -> None:
-        internal_segmentation = self.internal_segmentation
-        ometiff_segmentation_annotations_preprocessing(
-            internal_segmentation=internal_segmentation
-        )
-
-
-class TIFFImageStackDirProcessingTask(TaskBase):
-    def __init__(self, internal_volume: InternalVolume):
-        self.internal_volume = internal_volume
-
-    def execute(self) -> None:
-        volume = self.internal_volume
-        tiff_image_stack_dir_processing(i=volume)
-        volume_downsampling(internal_volume=volume)
-
-
-class TIFFSegmentationStackDirProcessingTask(TaskBase):
-    def __init__(self, internal_segmentation: InternalSegmentation):
-        self.internal_segmentation = internal_segmentation
-
-    def execute(self) -> None:
-        internal_segmentation = self.internal_segmentation
-        tiff_stack_dir_segmentation_preprocessing(internal_segmentation)
-        segmentation_downsampling(internal_segmentation)
-
-
-class TIFFImageStackDirMetadataExtractionTask(TaskBase):
-    def __init__(self, internal_volume: InternalVolume):
-        self.internal_volume = internal_volume
-
-    def execute(self) -> None:
-        volume = self.internal_volume
-        tiff_image_stack_dir_metadata_preprocessing(v=volume)
-
-
-class TIFFSegmentationStackDirMetadataExtractionTask(TaskBase):
-    def __init__(self, internal_segmentation: InternalSegmentation):
-        self.internal_segmentation = internal_segmentation
-
-    def execute(self) -> None:
-        tiff_segmentation_stack_dir_metadata_preprocessing(self.internal_segmentation)
-
-
-class TIFFSegmentationStackDirAnnotationCreationTask(TaskBase):
-    def __init__(self, internal_segmentation: InternalSegmentation):
-        self.internal_segmentation = internal_segmentation
-
-    def execute(self) -> None:
-        mask_segmentation_annotations_preprocessing(
-            s=self.internal_segmentation
-        )
-
-
 class ProcessExtraDataTask(TaskBase):
     def __init__(self, path: Path, intermediate_zarr_structure_path: Path):
         self.path = path
@@ -459,75 +148,17 @@ class ProcessExtraDataTask(TaskBase):
     def execute(self) -> None:
         process_extra_data(self.path, self.intermediate_zarr_structure)
 
+VOLUME_INPUT_TYPES = (MAPInput, OMETIFFImageInput, OMEZARRInput, TIFFImageStackDirInput)
 
-class AllencellMetadataCSVProcessingTask(TaskBase):
-    def __init__(
-        self, path: Path, cell_id: int, intermediate_zarr_structure_path: Path
-    ):
-        self.path = path
-        self.cell_id = cell_id
-        self.intermediate_zarr_structure = intermediate_zarr_structure_path
-
-    def execute(self) -> None:
-        process_allencell_metadata_csv(
-            self.path, self.cell_id, self.intermediate_zarr_structure
-        )
-
-
-class NIIProcessSegmentationTask(TaskBase):
-    def __init__(self, internal_segmentation: InternalSegmentation):
-        self.internal_segmentation = internal_segmentation
-
-    def execute(self) -> None:
-        segmentation = self.internal_segmentation
-
-        nii_segmentation_preprocessing(internal_segmentation=segmentation)
-
-        nii_segmentation_downsampling(internal_segmentation=segmentation)
-
-
-class SFFProcessSegmentationTask(TaskBase):
-    def __init__(self, internal_segmentation: InternalSegmentation):
-        self.internal_segmentation = internal_segmentation
-
-    def execute(self) -> None:
-        segmentation = self.internal_segmentation
-
-        sff_segmentation_preprocessing(segmentation)
-
-        segmentation_downsampling(segmentation)
-
-
-class MaskProcessSegmentationTask(TaskBase):
-    def __init__(self, internal_segmentation: InternalSegmentation):
-        self.internal_segmentation = internal_segmentation
-
-    def execute(self) -> None:
-        segmentation = self.internal_segmentation
-
-        mask_segmentation_preprocessing(s=segmentation)
-        segmentation_downsampling(segmentation)
-
-
-class ProcessGeometricSegmentationTask(TaskBase):
-    def __init__(self, internal_segmentation: InternalSegmentation):
-        self.internal_segmentation = internal_segmentation
-
-    def execute(self) -> None:
-        segmentation = self.internal_segmentation
-
-        geometric_segmentation_preprocessing(s=segmentation)
-
-
-class GeometricSegmentationAnnotationsCollectionTask(TaskBase):
-    def __init__(self, internal_segmentation: InternalSegmentation):
-        self.internal_segmentation = internal_segmentation
-
-    def execute(self) -> None:
-        segmentation = self.internal_segmentation
-
-        geometric_segmentation_annotations_preprocessing(s=segmentation)
-
+SEGMENTATION_INPUT_TYPES = (
+    SFFInput,
+    MaskInput,
+    GeometricSegmentationInput,
+    OMETIFFSegmentationInput,
+    OMEZARRInput,
+    TIFFSegmentationStackDirInput,
+    STLSegmentationInput
+)
 
 class Preprocessor:
     def __init__(self, preprocessor_input: PreprocessorInput):
@@ -587,6 +218,7 @@ class Preprocessor:
                         entry_data=self.preprocessor_input.entry_data,
                         quantize_downsampling_levels=self.preprocessor_input.volume.quantize_downsampling_levels,
                         input_kind=i.kind,
+                        data_kind=DataKind.volume
                     )
                 )
                 volume = self.get_internal_volume()
@@ -609,6 +241,7 @@ class Preprocessor:
                         downsampling_parameters=self.preprocessor_input.downsampling,
                         entry_data=self.preprocessor_input.entry_data,
                         input_kind=i.kind,
+                        data_kind=DataKind.segmentation
                     )
                 )
 
@@ -624,82 +257,11 @@ class Preprocessor:
             tasks.append(
                 QuantizeInternalVolumeTask(internal_volume=self.get_internal_volume())
             )
-
-        # if nii_segmentation_inputs:
-        #     nii_segmentation_input_paths = [
-        #         i.input_path for i in nii_segmentation_inputs
-        #     ]
-        #     self.store_internal_segmentation(
-        #         internal_segmentation=InternalSegmentation(
-        #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-        #             segmentation_input_path=nii_segmentation_input_paths,
-        #             params_for_storing=self.preprocessor_input.storing_params,
-        #             downsampling_parameters=self.preprocessor_input.downsampling,
-        #             entry_data=self.preprocessor_input.entry_data,
-        #         )
-        #     )
-        #     tasks.append(
-        #         NIIProcessSegmentationTask(
-        #             internal_segmentation=self.get_internal_segmentation()
-        #         )
-        #     )
-        #     tasks.append(
-        #         NIISegmentationMetadataCollectionTask(
-        #             internal_segmentation=self.get_internal_segmentation()
-        #         )
-        #     )
-
-        # masks
-        # if mask_segmentation_inputs:
-        #     mask_segmentation_input_paths = [
-        #         i.input_path for i in mask_segmentation_inputs
-        #     ]
-        #     self.store_internal_segmentation(
-        #         internal_segmentation=InternalSegmentation(
-        #             intermediate_zarr_structure_path=self.intermediate_zarr_structure,
-        #             segmentation_input_path=mask_segmentation_input_paths,
-        #             params_for_storing=self.preprocessor_input.storing_params,
-        #             downsampling_parameters=self.preprocessor_input.downsampling,
-        #             entry_data=self.preprocessor_input.entry_data,
-        #         )
-        #     )
-        #     tasks.append(
-        #         MaskProcessSegmentationTask(
-        #             internal_segmentation=self.get_internal_segmentation()
-        #         )
-        #     )
-        #     tasks.append(
-        #         MaskMetadataCollectionTask(
-        #             internal_segmentation=self.get_internal_segmentation()
-        #         )
-        #     )
-
-        #     tasks.append(
-        #         MaskAnnotationCreationTask(
-        #             internal_segmentation=self.get_internal_segmentation()
-        #         )
-        #     )
-
-        # if any(isinstance(i, GeometricSegmentationInput) for i in inputs):
-        #     # tasks.append(SaveGeometricSegmentationSets(self.intermediate_zarr_structure))
-        #     tasks.append(
-        #         GeometricSegmentationAnnotationsCollectionTask(
-        #             self.get_internal_segmentation()
-        #         )
-        #     )
-        #     tasks.append(
-        #         GeometricSegmentationMetadataCollectionTask(
-        #             self.get_internal_segmentation()
-        #         )
-        #     )
-
-        # tasks.append(SaveMetadataTask(self.intermediate_zarr_structure))
-        # tasks.append(SaveAnnotationsTask(self.intermediate_zarr_structure))
-
         return tasks
 
     def _execute_tasks(self, tasks: list[TaskBase]):
-        for task in tasks:
+        for idx, task in enumerate(tasks):
+            # print(f'Executing task # {idx}: {task}')
             task.execute()
 
     def __check_if_inputs_exists(self, raw_inputs_list: list[RawInput]):
@@ -763,6 +325,8 @@ class Preprocessor:
                 case AssetKind.custom_annotations:
                     analyzed.append(CustomAnnotationsInput(path=p, kind=k))
                 case AssetKind.stl | AssetKind.seg | AssetKind.am:
+                    # TODO: this means that for SFF there should be 
+                    # option to have multiple segmentation IDs
                     sff_path = convert_app_specific_segm_to_sff(i.path)
                     analyzed.append(SFFInput(path=sff_path, kind=AssetKind.sff))
                     # TODO: remove app specific segm file?
@@ -785,7 +349,7 @@ class Preprocessor:
         if new_db_path.is_dir() == False:
             new_db_path.mkdir(parents=True)
 
-        db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
+        db = FileSystemVolumeServerDB(new_db_path, store_type=StoreType.zip)
 
         exists = await db.contains(
             namespace=self.preprocessor_input.entry_data.source_db,
@@ -817,8 +381,8 @@ class Preprocessor:
             match mode:
                 case PreprocessorMode.extend:
                     new_db_path = Path(self.preprocessor_input.db_path)
-                    db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
-                    volume_metadata = await db.read_metadata(
+                    db = FileSystemVolumeServerDB(new_db_path, store_type=StoreType.zip)
+                    volume_metadata = await db.read_info(
                         self.preprocessor_input.entry_data.source_db,
                         self.preprocessor_input.entry_data.entry_id,
                     )
@@ -860,7 +424,7 @@ class Preprocessor:
         if new_db_path.is_dir() == False:
             new_db_path.mkdir()
 
-        db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
+        db = FileSystemVolumeServerDB(new_db_path, store_type=StoreType.zip)
 
         # call it once and get context
         # get segmentation_ids from metadata
@@ -930,7 +494,6 @@ def preprocess(
     json_path = Path(arguments_json)
     arguments_dict: object = read_json(json_path)
     arguments = GeneralPreprocessorParameters.model_validate(arguments_dict)
-    # TODO: unpack to variables
     asyncio.run(
         main_preprocessor(
             a=arguments
@@ -960,15 +523,19 @@ async def main_preprocessor(
     a: GeneralPreprocessorParameters):
 
     a = fix_inputs(a)
-
+    # resolve use case when common factor is provided
+    # should use it if not provided for individual once
     extra_metadata = ExtraMetadata()
-    if a.pre_downsampling_factor:
-        extra_metadata.pre_downsampling_factor = int(a.pre_downsampling_factor)
-        # should not exclude extra data a
-        inputs = pre_downsample_data(
-            a.inputs, a.working_folder
-        )
-        a.inputs = inputs
+    # for idx, i in enumerate(a.inputs):
+    inputs = pre_downsample_data(a.inputs, a.working_folder)
+    a.inputs = inputs
+    # if a.pre_downsampling_factor:
+    # extra_metadata.pre_downsampling_factor = int(a.pre_downsampling_factor)
+    #     # should not exclude extra data a
+    #     inputs = pre_downsample_data(
+    #         a.inputs, a.working_folder
+    #     )
+    #     a.inputs = inputs
 
     preprocessor_input = PreprocessorInput(
         inputs=Inputs(files=[]),
@@ -1011,7 +578,7 @@ async def main_preprocessor(
     else:
         if not await preprocessor.entry_exists():
             raise Exception(
-                f"Entry {preprocessor_input.entry_data.entry_id} from {preprocessor_input.entry_data.source_db} source does not exist in database {preprocessor_input.db_path}"
+                f"Entry {preprocessor_input.entry_data.entry_id} from {preprocessor_input.entry_data.source_db} source does not exist in database {preprocessor_input.db_path}, it cannot be extended"
             )
         assert a.mode == PreprocessorMode.extend, "Preprocessor mode is not supported"
 

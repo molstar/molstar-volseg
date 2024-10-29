@@ -6,15 +6,15 @@
 
 import { PluginContext } from 'molstar/lib/mol-plugin/context';
 import { Source, parseCVSXJSON } from '../../common';
-import { AnnotationMetadata, GridMetadata, ShapePrimitiveData } from '../volumes-and-segmentations/volseg-api/data';
+import { AnnotationsMetadata, Metadata, ShapePrimitiveData } from '../volumes-and-segmentations/volseg-api/data';
 
 export interface CVSXFilesData {
     volumes?: CVSXVolumeData[]
     latticeSegmentations?: CVSXLatticeSegmentationData[],
     geometricSegmentations?: CVSXGeometricSegmentationData[],
     meshSegmentations?: CVSXMeshSegmentationData[],
-    annotations?: AnnotationMetadata,
-    metadata?: GridMetadata,
+    annotations?: AnnotationsMetadata,
+    metadata?: Metadata,
     query: QueryArgs,
     index: CVSXFilesIndex
 };

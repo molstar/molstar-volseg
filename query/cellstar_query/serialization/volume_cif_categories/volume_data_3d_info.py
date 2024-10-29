@@ -15,7 +15,7 @@ class VolumeData3dInfoCategory(CIFCategoryDesc):
     def get_field_descriptors(ctx: VolumeInfo):
         byte_array = encoders.bytearray_encoder
         available_downsamplings = ctx.metadata.volume_downsamplings()
-        source_resolution = available_downsamplings[0]["level"]
+        source_resolution = available_downsamplings[0].level
         return [
             Field.strings(name="name", value=lambda d, i: ctx.name),
             # TODO: would be nice to use i as index of axis order instead of index in the

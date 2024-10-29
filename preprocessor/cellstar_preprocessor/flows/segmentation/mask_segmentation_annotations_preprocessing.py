@@ -2,7 +2,7 @@ from uuid import uuid4
 
 import seaborn as sns
 from cellstar_db.models import (
-    AnnotationsMetadata,
+    Annotations,
     DescriptionData,
     EntryId,
     SegmentAnnotationData,
@@ -33,7 +33,7 @@ def mask_segmentation_annotations_preprocessing(
     # segm_arr = root[SEGMENTATION_DATA_GROUPNAME][0][0][0][0]
 
     root = open_zarr(s.path)
-    d: AnnotationsMetadata = root.attrs[ANNOTATIONS_DICT_NAME]
+    d: Annotations = root.attrs[ANNOTATIONS_DICT_NAME]
 
     s.set_entry_id_in_annotations()
 

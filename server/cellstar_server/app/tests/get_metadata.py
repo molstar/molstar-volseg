@@ -72,9 +72,9 @@ class FetchMetadataTest(ServerTestBase):
                 # then check that each downsampling is in volume downsamplings
                 for downsampling_lvl_info in volume_downsamplings:
                     # downsamplings are dicts
-                    if downsampling_lvl_info["available"] == True:
+                    if downsampling_lvl_info.available == True:
                         self.assertTrue(
-                            str(downsampling_lvl_info["level"]) in boxes_dict.keys()
+                            str(downsampling_lvl_info.level) in boxes_dict.keys()
                         )
 
                 # assert origin exists for each box
@@ -107,9 +107,9 @@ class FetchMetadataTest(ServerTestBase):
 
                 for downsampling_lvl_info in volume_downsamplings:
                     # downsamplings are dicts
-                    if downsampling_lvl_info["available"] == True:
+                    if downsampling_lvl_info.available == True:
                         self.assertTrue(
-                            str(downsampling_lvl_info["level"])
+                            str(downsampling_lvl_info.level)
                             in descriptive_statistics.keys()
                         )
 

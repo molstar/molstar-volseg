@@ -19,7 +19,7 @@ from cellstar_db.file_system.read_context import FileSystemDBReadContext
 from cellstar_db.file_system.volume_and_segmentation_context import (
     VolumeAndSegmentationContext,
 )
-from cellstar_db.models import AnnotationsMetadata, Metadata, StoreType, VolumeMetadata
+from cellstar_db.models import Annotations, Metadata, StoreType, VolumeMetadata
 from cellstar_db.protocol import DBReadContext, VolumeServerDB
 
 
@@ -78,15 +78,16 @@ class FileSystemVolumeServerDB(VolumeServerDB):
         """
         Returns path to actual zarr structure root depending on store type
         """
-        if self.store_type == "directory":
+        s = self.store_type
+        if s == StoreType.dir:
             return self._path_to_object(namespace=namespace, key=key)
-        elif self.store_type == "zip":
+        elif s == StoreType.zip:
             return (
                 self._path_to_object(namespace=namespace, key=key)
                 / ZIP_STORE_DATA_ZIP_NAME
             )
         else:
-            raise ValueError(f"store type is not supported: {self.store_type}")
+            raise ValueError(f"store type is not supported: {s}")
 
     async def contains(self, namespace: str, key: str) -> bool:
         """
@@ -193,7 +194,7 @@ class FileSystemVolumeServerDB(VolumeServerDB):
         # open zip store again for writing
         # copy_store from temp store to perm zip store
 
-        if self.store_type == "zip":
+        if self.store_type == StoreType.zip:
             existing_store = zarr.ZipStore(
                 path=str(self.path_to_zarr_root_data(namespace, key)),
                 compression=0,
@@ -237,7 +238,7 @@ class FileSystemVolumeServerDB(VolumeServerDB):
             temp_store_path=temp_store_path, namespace=namespace, key=key
         )
 
-        if self.store_type == "zip":
+        if self.store_type == StoreType.zip:
             perm_store.close()
 
         temp_store.rmdir()
@@ -265,7 +266,7 @@ class FileSystemVolumeServerDB(VolumeServerDB):
         if self.store_type == "directory":
             perm_store = zarr.DirectoryStore(str(self._path_to_object(namespace, key)))
             zarr.copy_store(temp_store, perm_store)  # , log=stdout)
-        elif self.store_type == "zip":
+        elif self.store_type == StoreType.zip:
             entry_dir_path = self._path_to_object(namespace, key)
             entry_dir_path.mkdir(parents=True, exist_ok=True)
             perm_store = zarr.ZipStore(
@@ -286,7 +287,7 @@ class FileSystemVolumeServerDB(VolumeServerDB):
             temp_store_path=temp_store_path, namespace=namespace, key=key
         )
 
-        if self.store_type == "zip":
+        if self.store_type == StoreType.zip:
             perm_store.close()
 
         temp_store.rmdir()
@@ -306,21 +307,23 @@ class FileSystemVolumeServerDB(VolumeServerDB):
     def edit_annotations(self, namespace: str, key: str) -> AnnnotationsEditContext:
         return AnnnotationsEditContext(db=self, namespace=namespace, key=key)
 
-    async def read_metadata(self, namespace: str, key: str) -> VolumeMetadata:
+    async def read_info(self, namespace: str, key: str) -> VolumeMetadata:
         path: Path = (
             self._path_to_object(namespace=namespace, key=key) / GRID_METADATA_FILENAME
         )
         with open(path.resolve(), "r", encoding="utf-8") as f:
             # reads into dict
-            read_json_of_metadata: Metadata = Metadata.model_validate_json(f)
+            o = json.load(f)
+            read_json_of_metadata: Metadata = Metadata.model_validate(o)
         return FileSystemVolumeMedatada(read_json_of_metadata)
 
-    async def read_annotations(self, namespace: str, key: str) -> AnnotationsMetadata:
+    async def read_annotations(self, namespace: str, key: str) -> Annotations:
         path: Path = (
             self._path_to_object(namespace=namespace, key=key)
             / ANNOTATION_METADATA_FILENAME
         )
         with open(path.resolve(), "r", encoding="utf-8") as f:
             # reads into dict
-            read_json_of_metadata: AnnotationsMetadata = json.load(f)
-        return read_json_of_metadata
+            o = json.load(f)
+            j = Annotations.model_validate(o)
+        return j

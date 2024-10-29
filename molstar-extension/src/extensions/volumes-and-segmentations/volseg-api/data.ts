@@ -76,24 +76,29 @@ export type ParsedSegmentKey = {
     segmentId: number
 }
 
-export interface Metadata {
-    grid: GridMetadata,
-    annotation?: AnnotationMetadata
+export interface Meta {
+    grid: Metadata,
+    annotation?: AnnotationsMetadata
 }
 
-export interface GridMetadata {
+export interface Metadata {
     entry_id: EntryId
     volumes: VolumesMetadata
     segmentation_lattices?: SegmentationLatticesMetadata
-    segmentation_meshes?: MeshSegmentationSetsMetadata
+    segmentation_meshes?: MeshSegmentationsMetadata
     geometric_segmentation?: GeometricSegmentationSetsMetadata
+    extra_metadata?: ExtraMetadata
 }
 
-export interface MeshSegmentationSetsMetadata {
-    segmentation_ids: string[]
-    segmentation_metadata: { [segmentation_id: string]: MeshesMetadata }
+export interface ExtraMetadata {
+    
+}
+
+export interface MeshSegmentationsMetadata {
+    ids: string[]
+    metadata: { [segmentation_id: string]: MeshesMetadata }
     // maps set ids to time info
-    time_info: { [segmentation_id: string]: TimeInfo }
+    time_info_mapping: { [segmentation_id: string]: TimeInfo }
 }
 
 export interface MeshesMetadata {
@@ -123,7 +128,7 @@ export interface MeshComponentNumbers {
 }
 
 export interface GeometricSegmentationSetsMetadata {
-    segmentation_ids: string[]
+    ids: string[]
     // maps set ids to time info
     time_info: { [segmentation_id: string]: TimeInfo }
 }
@@ -132,7 +137,7 @@ export interface VolumesMetadata {
     channel_ids: string[]
     // Values of time dimension
     time_info: TimeInfo
-    volume_sampling_info: VolumeSamplingInfo
+    sampling_info: VolumeSamplingInfo
 }
 
 export interface DownsamplingLevelInfo {
@@ -188,17 +193,12 @@ export interface SamplingBox {
     grid_dimensions: Vector3
 }
 
-export interface SegmentationLattices {
-    segmentation_lattice_ids: number[],
-    segmentation_downsamplings: { [lattice: number]: number[] },
-}
-
 export interface SegmentationLatticesMetadata {
     // e.g. label groups (Cell, Chromosomes)
-    segmentation_ids: string[]
-    segmentation_sampling_info: { [lattice_id: string]: SamplingInfo }
+    ids: string[]
+    sampling_info: { [lattice_id: string]: SamplingInfo }
     // maps lattice id to TimeInfo
-    time_info: { [segmentation_id: string]: TimeInfo }
+    time_info_mapping: { [segmentation_id: string]: TimeInfo }
 }
 
 export interface EntryId {
@@ -206,19 +206,19 @@ export interface EntryId {
     source_db_id: string
 }
 
-export interface AnnotationMetadata {
+export interface AnnotationsMetadata {
     name?: string
     entry_id: EntryId
     // id => DescriptionData
     descriptions: { [id: string]: DescriptionData }
     segment_annotations: SegmentAnnotationData[]
     details?: string
-    volume_channels_annotations?: ChannelAnnotation[]
+    volume_channels_annotations?: VolumeChannelAnnotation[]
 }
 
-export interface ChannelAnnotation {
+export interface VolumeChannelAnnotation {
     channel_id: string
-    color: Vector4
+    color?: Vector4
     label?: string
 }
 

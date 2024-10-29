@@ -3,9 +3,10 @@ from pathlib import Path
 from uuid import uuid4
 
 from cellstar_preprocessor.tools.asset_getter.asset_getter import AssetGetter
+from cellstar_preprocessor.tools.clean_url.clean_url import clean_url
 from cellstar_preprocessor.tools.remove_path.remove_path import remove_path
 import zarr
-from cellstar_db.models import AssetKind
+from cellstar_db.models import AssetKind, CompressionFormat, SourceKind
 from cellstar_preprocessor.flows.constants import (
     ANNOTATIONS_DICT_NAME,
     INIT_ANNOTATIONS_MODEL,
@@ -29,9 +30,8 @@ class TestContext:
         
     __test__ = False
     
-    
-    # TODO: look at it again
     def __create_input_path(self):
+        # TODO: handle URLs with ? here
         # create unique name
         unique_dir_name = str(uuid4())
         unique_dir = PATH_TO_INPUTS_FOR_TESTS / unique_dir_name
@@ -40,23 +40,23 @@ class TestContext:
         unique_dir.mkdir(parents=True)
         # get if from asset, e.g. resource name 
         name = self.test_input.asset_info.source.name
-        if self.test_input.asset_info.source.compression is not None:
+        if self.test_input.asset_info.source.kind == SourceKind.external:
+            name = clean_url(name)
+        if self.test_input.asset_info.source.compression in {CompressionFormat.zip_dir, CompressionFormat.hff_gzipped_file, CompressionFormat.map_gzipped_file, CompressionFormat.gzipped_file}:            
+            # for zip - folder name
+            # for hff gz = .hff file name
+            # for map gz = .map file name
+            # for generic gz = .xxx file name
             name = self.test_input.asset_info.source.stem
             
+        
         output_path = unique_dir / name
         return output_path
         # as a result create dir with unique name for input
     
     def _get_input(self):
         self.test_input_asset_path = self.__create_input_path()
-        # asset getter should take in destination
-        # which is folder, that is correct, so that it knows
-        # where to get asset "zipped ometiff"
-        # but get get_asset should return path to actual file
-        # ometiff in that case 
-        # would bfio be able to open multi file ometiff?
-        # another option is to merge them into a single one
-        # TODO: merge tiffs instead after commits
+        # self.test_input_asset_path should be without gz suffix
         g = AssetGetter(self.test_input.asset_info, self.test_input_asset_path)
         target_path = g.get_asset()
         if target_path.resolve() != self.test_input_asset_path.resolve():

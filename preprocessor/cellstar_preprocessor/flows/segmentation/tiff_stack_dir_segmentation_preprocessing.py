@@ -1,5 +1,5 @@
 import numpy as np
-from cellstar_db.models import SegmentationPrimaryDescriptor
+from cellstar_db.models import PrimaryDescriptor
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
 # from cellstar_preprocessor.model.segmentation import (
 #     store_segmentation_data,
@@ -20,7 +20,7 @@ def tiff_stack_dir_segmentation_preprocessing(i: InternalSegmentation):
     img_array = tiff_stack_to_da_arr(i.input_path)
 
     i.primary_descriptor = (
-        SegmentationPrimaryDescriptor.three_d_volume
+        PrimaryDescriptor.three_d_volume
     )
 
     segmentation_data_gr = root.create_group(

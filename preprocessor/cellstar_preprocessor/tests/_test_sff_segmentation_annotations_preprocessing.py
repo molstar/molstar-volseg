@@ -6,7 +6,7 @@ from cellstar_db.models import (
     ExternalReference,
     SegmentAnnotationData,
     SegmentationKind,
-    SegmentationPrimaryDescriptor,
+    PrimaryDescriptor,
 )
 from cellstar_preprocessor.flows.segmentation.helper_methods import (
     extract_raw_annotations_from_sff,
@@ -52,14 +52,14 @@ def test_sff_segmentation_annotations_preprocessing(test_input: TestInput):
             # TODO: unify
             if (
                 internal_segmentation.primary_descriptor
-                == SegmentationPrimaryDescriptor.three_d_volume
+                == PrimaryDescriptor.three_d_volume
             ):
                 segmentation_id = str(segment["three_d_volume"]["lattice_id"])
                 kind = SegmentationKind.lattice
             else:
                 assert (
                     internal_segmentation.primary_descriptor
-                    == SegmentationPrimaryDescriptor.mesh_list
+                    == PrimaryDescriptor.mesh_list
                 ), "Primary descriptor not supported"
                 segmentation_id = "0"
                 kind = SegmentationKind.mesh

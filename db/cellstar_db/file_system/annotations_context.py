@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from cellstar_db.file_system.constants import ANNOTATION_METADATA_FILENAME
 from cellstar_db.models import (
-    AnnotationsMetadata,
+    Annotations,
     DescriptionData,
     SegmentAnnotationData,
 )
@@ -11,14 +11,14 @@ from cellstar_preprocessor.flows.common import save_dict_to_json_file
 
 
 class AnnnotationsEditContext:
-    async def update_annotations_json(self, annotations_json: AnnotationsMetadata):
+    async def update_annotations_json(self, annotations_json: Annotations):
         path = self.db._path_to_object(namespace=self.namespace, key=self.key)
         save_dict_to_json_file(
             annotations_json.model_dump(), ANNOTATION_METADATA_FILENAME, path
         )
 
     async def remove_descriptions(self, ids: list[str]):
-        # 1. read annotations.json file using existing read_annotations function to AnnotationsMetadata TypedDict in d variable
+        # 1. read annotations.json file using existing read_annotations function to Annotations TypedDict in d variable
         d = await self.db.read_annotations(namespace=self.namespace, key=self.key)
         # 2. for id in ids, if id exists in annotations.description.keys()
         for id in ids:
@@ -30,7 +30,7 @@ class AnnnotationsEditContext:
         save_dict_to_json_file(d.model_dump(), ANNOTATION_METADATA_FILENAME, path)
 
     async def add_or_modify_descriptions(self, xs: list[DescriptionData]):
-        # 1. read annotations.json file using existing read_annotations function to AnnotationsMetadata TypedDict in d variable
+        # 1. read annotations.json file using existing read_annotations function to Annotations TypedDict in d variable
         d = await self.db.read_annotations(namespace=self.namespace, key=self.key)
         # 2. loop over xs:
         for x in xs:
@@ -84,7 +84,7 @@ class AnnnotationsEditContext:
         """
         Removes (segment) annotations by annotation ids.
         """
-        # 1. read annotations.json file using existing read_annotations function to AnnotationsMetadata TypedDict in d variable
+        # 1. read annotations.json file using existing read_annotations function to Annotations TypedDict in d variable
         d = await self.db.read_annotations(namespace=self.namespace, key=self.key)
         # filter annotations list to leave only those which id is not in ids
         old_annotations_list: list[SegmentAnnotationData] = d["segment_annotations"]
@@ -96,7 +96,7 @@ class AnnnotationsEditContext:
         save_dict_to_json_file(d.model_dump(), ANNOTATION_METADATA_FILENAME, path)
 
     async def add_or_modify_segment_annotations(self, xs: list[SegmentAnnotationData]):
-        # 1. read annotations.json file using existing read_annotations function to AnnotationsMetadata TypedDict in d variable
+        # 1. read annotations.json file using existing read_annotations function to Annotations TypedDict in d variable
         d = await self.db.read_annotations(namespace=self.namespace, key=self.key)
         # 2. loop over xs:
         for x in xs:

@@ -7,6 +7,7 @@ import ome_zarr
 import ome_zarr.utils
 import zarr
 from cellstar_db.models import (
+    DataKind,
     DownsamplingParams,
     EntryData,
     AssetKind,
@@ -29,7 +30,7 @@ from cellstar_preprocessor.tests.input_for_tests import (
     WORKING_FOLDER_FOR_TESTS,
     TestInput,
 )
-from cellstar_preprocessor.tools._gunzip._gunzip import gunzip
+from cellstar_preprocessor.tools.gunzip.gunzip import gunzip
 
 
 def remove_intermediate_zarr_structure_for_tests(p: Path):
@@ -104,6 +105,7 @@ def get_internal_segmentation(
             source_db_name=t.source_db,
         ),
         input_kind=t.asset_info.kind,
+        data_kind=DataKind.segmentation
     )
     return internal_segmentation
 
@@ -147,6 +149,7 @@ def get_internal_volume_from_input(
         quantize_dtype_str=None,
         quantize_downsampling_levels=None,
         input_kind=test_input.asset_info.kind,
+        data_kind=DataKind.volume
     )
     return internal_volume
 

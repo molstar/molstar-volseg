@@ -2,16 +2,17 @@ from typing import Any
 from uuid import uuid4
 
 from cellstar_db.models import (
-    AnnotationsMetadata,
+    Annotations,
     DescriptionData,
     EntryId,
     ExternalReference,
     SegmentAnnotationData,
     SegmentationKind,
-    SegmentationPrimaryDescriptor,
+    PrimaryDescriptor,
     TargetId,
 )
 from cellstar_preprocessor.flows.constants import (
+    ANNOTATIONS_DICT_NAME,
     LATTICE_SEGMENTATION_DATA_GROUPNAME,
     MESH_SEGMENTATION_DATA_GROUPNAME,
 )
@@ -38,7 +39,7 @@ def _preprocess_raw_external_references(raw_external_references: list[dict[str, 
 def __process_raw_segment_data(
     time: int,
     segment: dict[str, Any],
-    d: AnnotationsMetadata,
+    d: Annotations,
     segmentation_id: str,
     segmentation_kind: SegmentationKind,
 ):
@@ -78,13 +79,13 @@ def __process_raw_segment_data(
 
 def _processs_raw_sff_annotations(
     internal_segmentation: InternalSegmentation,
-    d: AnnotationsMetadata,
+    d: Annotations,
     segmentation_id: str,
 ):
     time = 0
 
     for segment in internal_segmentation.raw_sff_annotations["segment_list"]:
-        if segment["three_d_volume"] == None:
+        if segment["three_d_volume"] is None:
             d = __process_raw_segment_data(
                 time, segment, d, segmentation_id, SegmentationKind.mesh
             )
@@ -101,7 +102,7 @@ def sff_segmentation_annotations_preprocessing(
     s: InternalSegmentation,
 ):
     root = open_zarr(s.path)
-    d: AnnotationsMetadata = AnnotationsMetadata.model_validate(
+    d: Annotations = Annotations.model_validate(
         root.attrs[ANNOTATIONS_DICT_NAME]
     )
 
@@ -114,7 +115,7 @@ def sff_segmentation_annotations_preprocessing(
 
     if (
         s.primary_descriptor
-        == SegmentationPrimaryDescriptor.three_d_volume
+        == PrimaryDescriptor.three_d_volume
     ):
         for lattice_id, lattice_gr in root[
             LATTICE_SEGMENTATION_DATA_GROUPNAME
@@ -122,7 +123,7 @@ def sff_segmentation_annotations_preprocessing(
             d = _processs_raw_sff_annotations(s, d, lattice_id)
     elif (
         s.primary_descriptor
-        == SegmentationPrimaryDescriptor.mesh_list
+        == PrimaryDescriptor.mesh_list
     ):
         for set_id, set_gr in root[MESH_SEGMENTATION_DATA_GROUPNAME].groups():
             d = _processs_raw_sff_annotations(s, d, set_id)

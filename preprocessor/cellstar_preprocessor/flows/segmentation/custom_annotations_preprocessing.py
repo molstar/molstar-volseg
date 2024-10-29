@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from cellstar_db.models import AnnotationsMetadata
+from cellstar_db.models import Annotations
 from cellstar_preprocessor.flows.common import update_dict
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
 
@@ -11,9 +11,9 @@ def custom_annotations_preprocessing(
 ):
     root = open_zarr(intermediate_zarr_structure_path)
     with open(str(input_path.absolute()), "r", encoding="utf-8") as f:
-        d: AnnotationsMetadata = json.load(f)
+        d: Annotations = json.load(f)
         # TODO: check if conforms to datamodel
-        current_d: AnnotationsMetadata = root.attrs[ANNOTATIONS_DICT_NAME]
+        current_d: Annotations = root.attrs[ANNOTATIONS_DICT_NAME]
         # 1. Updating segment list
         if "segmentation_lattices" in d:
             # if there are annotations already

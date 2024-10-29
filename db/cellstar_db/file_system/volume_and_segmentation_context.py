@@ -20,7 +20,7 @@ from cellstar_db.file_system.constants import (
     MESH_SEGMENTATION_DATA_GROUPNAME,
     VOLUME_DATA_GROUPNAME,
 )
-from cellstar_db.models import GeometricSegmentationData
+from cellstar_db.models import GeometricSegmentationData, StoreType
 from cellstar_db.protocol import VolumeServerDB
 from cellstar_preprocessor.flows.common import read_json, save_dict_to_json_file
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
@@ -44,7 +44,7 @@ class VolumeAndSegmentationContext:
             namespace, key
         )
 
-        if self.db.store_type == "zip":
+        if self.db.store_type == StoreType.zip:
             entry_dir_path: Path = self.db._path_to_object(namespace, key)
             if not entry_dir_path.exists():
                 entry_dir_path.mkdir(parents=True, exist_ok=True)

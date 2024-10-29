@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 import gc
 from pathlib import Path
 from typing import Any
@@ -10,9 +10,13 @@ from cellstar_db.models import (
     DimensionSizes,
     OMETIFFMetadata,
     OMEZarrAttrs,
+    PreparedLatticeSegmentationData,
+    PreparedSegmentation,
+    PreparedSegmentationMetadata,
     PreparedVolume,
     PreparedVolumeData,
     PreparedVolumeMetadata,
+    SegmentationKind,
     SpatialAxisUnit,
     TimeAxisUnit,
     TimeTransformation,
@@ -164,6 +168,15 @@ class OMETIFFWrapper:
         return list(range(0, self.dimensions.C))
 
     @property
+    def segmentation_numbers(self):
+        return self.channel_numbers
+    
+    @property
+    def segmentation_ids(self):
+        return [str(i) for i in self.segmentation_numbers]
+    
+    
+    @property
     def missing_dims(self):
         missing_dims: list[AxisName]  = []
         match self.raw_dimensionality:
@@ -189,6 +202,7 @@ class OMETIFFWrapper:
         # TODO: T = list from + 1
         # T=[0,0] works
         # return self.reader.read(T=[timeframe_index, timeframe_index + 1], C=[channel_number, channel_number + 1])
+        # NOTE: channel - lattice
         np_arr = self.reader[:,:,:, channel_number: (channel_number + 1), timeframe_index: (timeframe_index + 1)]
         dask_arr = da.from_array(np_arr)
         del np_arr
@@ -212,7 +226,7 @@ class OMETIFFWrapper:
     @property
     # can be not provided
     def channels(self):
-        actual = []
+        actual: list[str] = []
         cnames = self.reader.cnames
         for idx, channel_name in enumerate(cnames):
             # NOTE: assuming order of channels is the same as in data
@@ -249,35 +263,6 @@ class OMETIFFWrapper:
         
         resolution = 1
         resolutions.append(resolution)
-        # handle parsing 4D and 3D
-        # get axes
-        # get dims
-        # getter methods for each dimension
-        
-        
-        # finally set timeframe indices according to
-        # self.dimensions.X
-        # assert len(self.data.shape) == 5, 'Less then 5 OMETIFF dimensions is not supported'
-        # wrong
-        # depending on data shape still
-        
-        # actual_dimensionality = len(self.data.shape)
-        
-        # check bfio API if it is possible to get data for 1st channel, 2nd timeframe etc
-        # I = br.read(X=[0,100],Y=[0,100])
-        # try T = whatever C = whatever
-        
-        # match actual_dimensionality:
-        #     case 5:
-        #         pass
-        #     case 4:
-        #         pass
-        #     case 3:
-        #         pass
-        #     case _:
-        #         raise NotImplementedError(f"Data dimensionality of {actual_dimensionality} is not supported yet")
-        
-        
         for timeframe_index in self.timeframe_indices:
             # timeframe_indices.append(timeframe_index)
             for channel_number in self.channel_numbers:
@@ -290,7 +275,7 @@ class OMETIFFWrapper:
                         channel_num=channel_number,
                         data=data,
                         resolution=resolution,
-                        size=data.nbytes
+                        nbytes=data.nbytes
                     )
                 )
 
@@ -325,6 +310,67 @@ class OMETIFFWrapper:
         )
         return p
 
+    def prepare_segmentation_data(self) -> PreparedSegmentation:
+        value_to_segment_id_dict: dict[str, str] = {}
+        # channel_nums: list[int] = []
+        # local_timeframe_indices: list[int] = []
+        resolutions: list[int]= []
+        l: list[PreparedLatticeSegmentationData] = []
+        
+        resolution = 1
+        resolutions.append(resolution)
+        for timeframe_index in self.timeframe_indices:
+            # timeframe_indices.append(timeframe_index)
+            for segmentation_id in self.segmentation_ids:
+                value_to_segment_id_dict[segmentation_id] = {}
+                # segmentation_id = str(segmentation_id)
+                data = self.get_spatial_data(timeframe_index=timeframe_index, channel_number=int(segmentation_id))
+                # data = self.data[timeframe_index][channel_num]
+
+                l.append(
+                    PreparedLatticeSegmentationData(
+                        timeframe_index=timeframe_index,
+                        segmentation_id=segmentation_id,
+                        data=data,
+                        resolution=resolution,
+                        nbytes=data.nbytes
+                    )
+                )
+                for value in da.unique(data).compute():
+                    value_to_segment_id_dict[segmentation_id][int(value)] = int(value) 
+
+                # channel_nums.append(channel_num)
+                gc.collect()
+        # TODO: 4D case?
+            # elif len(axes) == 4 and axes[0].name == AxisName.c:
+            #     timeframe_indices.append(0)
+            #     for channel_num in range(self.data5D.shape[0]):
+            #         data = da.from_zarr(self.data5D)[channel_num].swapaxes(0, 2)
+            #         l.append(
+            #                 PreparedVolumeData(
+            #                     timeframe_index='0',
+            #                     channel_num=channel_num,
+            #                     data=data,
+            #                     resolution=resolution,
+            #                     size=data.nbytes
+            #                 )
+            #             )
+            #         channel_nums.append(channel_num)
+            #         gc.collect()
+            # else:
+            #     raise Exception(f"Axes number/order {axes} is not supported")
+        
+        p = PreparedSegmentation(
+            data=l,
+            metadata=PreparedSegmentationMetadata(
+                segmentation_ids=self.segmentation_ids,
+                timeframe_indices=self.timeframe_indices,
+                resolutions=resolutions,
+                value_to_segment_id_dict=value_to_segment_id_dict
+            ),
+            kind=SegmentationKind.lattice
+        )
+        return p
 
 def read_ometiff_pyometiff(path: Path):
     reader = OMETIFFReader(fpath=path)

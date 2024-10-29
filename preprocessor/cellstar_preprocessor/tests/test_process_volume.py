@@ -12,11 +12,12 @@ from cellstar_preprocessor.tests.input_for_tests import (
     MAP_TEST_INPUTS,
     OMETIFF_IMAGE_TEST_INPUTS,
     OMEZARR_TEST_INPUTS,
+    TIFF_IMAGE_STACK_DIR_TEST_INPUTS,
     WORKING_FOLDER_FOR_TESTS,
     TestInput,
 )
 
-VOLUME_TEST_INPUTS = OMEZARR_TEST_INPUTS + MAP_TEST_INPUTS + OMETIFF_IMAGE_TEST_INPUTS
+VOLUME_TEST_INPUTS = OMEZARR_TEST_INPUTS + MAP_TEST_INPUTS + OMETIFF_IMAGE_TEST_INPUTS + TIFF_IMAGE_STACK_DIR_TEST_INPUTS
 
 @pytest.mark.parametrize("volume_test_input", VOLUME_TEST_INPUTS)
 def test_process_volume(volume_test_input: TestInput):
@@ -35,8 +36,20 @@ def test_process_volume(volume_test_input: TestInput):
         volume_gr = v.get_volume_data_group()
         assert isinstance(volume_gr, zarr.Group)
         
+        # TODO:
+        # globally
+        # set number of channels base on asset kind
+        # for ometiff image use wrapper
+        # for tiffstack - 1
+        
+        number_of_channels = 1
+        data_shape = (2, 3, 4)
+        if v.input_kind == AssetKind.ometiff_image:
+            w = v.get_ometiff_wrapper()
+            number_of_channels = len(v.channels)
+            data_shape = w.data.shape
         match v.input_kind:
-            case AssetKind.map:
+            case AssetKind.map | AssetKind.ometiff_image | AssetKind.tiff_image_stack_dir:
                 r = v.get_first_resolution_group(volume_gr).name
                 t = v.get_first_time_group(volume_gr).name
                 c = v.get_first_channel_array(volume_gr).name
@@ -47,8 +60,8 @@ def test_process_volume(volume_test_input: TestInput):
 
                 assert r in volume_gr[r]
                 assert isinstance(volume_gr[r][t], zarr.Group)
-                assert len(volume_gr[r][t]) == 1
-
+                
+                assert len(volume_gr[r][t]) == number_of_channels
                 assert c in volume_gr[r][t]
                 assert isinstance(volume_gr[r][t][c], zarr.Array)
 
@@ -59,8 +72,10 @@ def test_process_volume(volume_test_input: TestInput):
                 # check the data shape
                 # checks also axis order since ZYX map has shape 4, 3, 2 and XYZ map has shape 2, 3, 4
                 # so normalizing ZYX map will give shape 2, 3, 4
-                assert volume_gr["1"]["0"]["0"].shape == (2, 3, 4)
+                assert volume_gr["1"]["0"]["0"].shape == data_shape
             
+            
+            # no ometiff and tiff stack cases
             case AssetKind.omezarr:
                 w = v.get_omezarr_wrapper()
                 axes = w.get_image_multiscale().axes
@@ -102,4 +117,5 @@ def test_process_volume(volume_test_input: TestInput):
                             assert channel_arr.dtype == volume_arr.dtype
 
 
-                    
+            case _:
+                raise NotImplementedError('Test code for input kind ', v.input_kind, " has not been implemented yet")

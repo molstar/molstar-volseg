@@ -3,6 +3,7 @@ from pathlib import Path
 from attr import dataclass
 from cellstar_db.models import (
     CompressionFormat,
+    DataKind,
     DownsamplingParams,
     EntryData,
     AssetKind,
@@ -69,7 +70,7 @@ SFF_TEST_INPUTS = [
     TestInput(
         asset_info=AssetInfo(
             kind=AssetKind.sff,
-            source=AssetSourceInfo(kind="external", uri="https://www.ebi.ac.uk/em_static/emdb_sff/empiar_10070_b3talongmusc20130301/empiar_10070_b3talongmusc20130301.hff.gz")
+            source=AssetSourceInfo(kind="external", uri="https://www.ebi.ac.uk/em_static/emdb_sff/empiar_10070_b3talongmusc20130301/empiar_10070_b3talongmusc20130301.hff.gz", compression=CompressionFormat.hff_gzipped_file),
             ),
         entry_id="empiar-10070",
         source_db="empiar",
@@ -77,19 +78,63 @@ SFF_TEST_INPUTS = [
     TestInput(
         asset_info=AssetInfo(
             kind=AssetKind.sff,
-            source=AssetSourceInfo(kind="external", uri="https://www.ebi.ac.uk/em_static/emdb_sff/18/1832/emd_1832.hff.gz")
+            source=AssetSourceInfo(kind="external", uri="https://www.ebi.ac.uk/em_static/emdb_sff/18/1832/emd_1832.hff.gz", compression=CompressionFormat.gzipped_file)
             ),
         entry_id="emd-1832",
         source_db="emdb",
     ),
 ]
 
+MASK_SEGMENTATION_TEST_INPUTS = [
+    TestInput(
+        asset_info=AssetInfo(
+            kind=AssetKind.ometiff_image,
+            source=AssetSourceInfo(kind="external", uri="https://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-1273/masks/emd_1273_msk_5.map")
+            ),
+        entry_id="emd-1273",
+        source_db="emdb",
+    )
+]
+
+TIFF_IMAGE_STACK_DIR_TEST_INPUTS = [
+    TestInput(
+        asset_info=AssetInfo(
+            kind=AssetKind.tiff_image_stack_dir,
+            source=AssetSourceInfo(kind="external", uri="https://ftp.ebi.ac.uk/empiar/world_availability/12017/data/Obese%20LacZ/ob_LacZ_2679_mitochondria-instance_32-bit.zip")
+            ),
+        entry_id="empiar-12017",
+        source_db="empiar",
+    )
+]
+
+# TODO: TIFF SEGMENTATION STACK DIR
+# TIFF_IMAGE_STACK_DIR_TEST_INPUTS = [
+#     TestInput(
+#         asset_info=AssetInfo(
+#             kind=AssetKind.tiff_image_stack_dir,
+#             source=AssetSourceInfo(kind="external", uri="https://ftp.ebi.ac.uk/empiar/world_availability/12017/data/Obese%20LacZ/ob_LacZ_2679_mitochondria-instance_32-bit.zip")
+#             ),
+#         entry_id="empiar-12017",
+#         source_db="empiar",
+#     )
+# ]
+
+OMETIFF_SEGMENTATION_TEST_INPUTS = [
+    TestInput(
+        asset_info=AssetInfo(
+            kind=AssetKind.ometiff_segmentation,
+            source=AssetSourceInfo(kind="external", uri="https://allencell.s3.amazonaws.com/aics/hipsc_single_cell_image_dataset/crop_seg/a9a2aa179450b1819f0dfc4d22411e6226f22e3c88f7a6c3f593d0c2599c2529_segmentation.ome.tif")
+            ),
+        entry_id="custom-tubhiswt",
+        source_db="custom",
+    )
+]
+
 OMETIFF_IMAGE_TEST_INPUTS = [
     TestInput(
         asset_info=AssetInfo(
             kind=AssetKind.ometiff_image,
-            # source=AssetSourceInfo(kind="external", uri="https://allencell.s3.amazonaws.com/aics/hipsc_single_cell_image_dataset/crop_raw/00011451c65b106cf9889bbf78cb4aa2cf2f9ec56c681e50fafc9635c3abf752_raw.ome.tif?versionId=T5RJhnjG9tczKyxKVkc_GpcF7sLkg4bm")
-            source=AssetSourceInfo(kind="external", uri="https://allencell.s3.amazonaws.com/aics/hipsc_single_cell_image_dataset/crop_raw/00011451c65b106cf9889bbf78cb4aa2cf2f9ec56c681e50fafc9635c3abf752_raw.ome.tif")
+            source=AssetSourceInfo(kind="external", uri="https://allencell.s3.amazonaws.com/aics/hipsc_single_cell_image_dataset/crop_raw/7922e74b69b77d6b51ea5f1627418397ab6007105a780913663ce1344905db5c_raw.ome.tif")
             ),
         entry_id="custom-tubhiswt",
         source_db="custom",
@@ -125,7 +170,7 @@ OMEZARR_TEST_INPUTS = [
 
 MAP_INPUTS_FOR_AXES_TESTING = []
 
-INTERNAL_SEGMENTATION_FOR_TESTING = InternalSegmentation(
+INTERNAL_LATTICE_SEGMENTATION_FOR_TESTING = InternalSegmentation(
     path=WORKING_FOLDER_FOR_TESTS,
     input_path=TEST_SFF_PATH,
     params_for_storing=StoringParams(),
@@ -137,6 +182,7 @@ INTERNAL_SEGMENTATION_FOR_TESTING = InternalSegmentation(
         source_db_name="emdb",
     ),
     input_kind=AssetKind.sff,
+    data_kind=DataKind.segmentation
 )
 
 INTERNAL_MESH_SEGMENTATION_FOR_TESTING = InternalSegmentation(
@@ -151,4 +197,5 @@ INTERNAL_MESH_SEGMENTATION_FOR_TESTING = InternalSegmentation(
         source_db_name="empiar",
     ),
     input_kind=AssetKind.sff,
+    data_kind=DataKind.segmentation
 )

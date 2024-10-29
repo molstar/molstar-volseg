@@ -121,7 +121,7 @@ def compute_downsamplings_to_be_stored(
     input_grid_size: int,
     dtype: np.dtype,
     factor: int,
-):
+) -> list[int]:
     # if min_downsampling_level and max_downsampling_level are provided,
     # list between those two numbers
     lst = [2**i for i in range(1, number_of_downsampling_steps + 1)]

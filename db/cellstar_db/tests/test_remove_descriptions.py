@@ -1,13 +1,13 @@
 import pytest
 from cellstar_db.file_system.annotations_context import AnnnotationsEditContext
-from cellstar_db.models import AnnotationsMetadata
+from cellstar_db.models import Annotations
 from cellstar_db.tests.conftest import TEST_ENTRY_PREPROCESSOR_ARGUMENTS
 
 
 @pytest.mark.asyncio
 async def test_remove_descriptions(generate_test_data):
     testing_db, test_data = generate_test_data
-    annotations_metadata_before_removing: AnnotationsMetadata = (
+    annotations_metadata_before_removing: Annotations = (
         await testing_db.read_annotations(
             TEST_ENTRY_PREPROCESSOR_ARGUMENTS.source_db,
             TEST_ENTRY_PREPROCESSOR_ARGUMENTS.entry_id,
@@ -24,7 +24,7 @@ async def test_remove_descriptions(generate_test_data):
 
         # check that annotations were removed
         # i.e. if length of annotations list decreased by length of test_data['remove_descriptions']
-        annotations_metadata_after_removing: AnnotationsMetadata = (
+        annotations_metadata_after_removing: Annotations = (
             await testing_db.read_annotations(
                 TEST_ENTRY_PREPROCESSOR_ARGUMENTS.source_db,
                 TEST_ENTRY_PREPROCESSOR_ARGUMENTS.entry_id,

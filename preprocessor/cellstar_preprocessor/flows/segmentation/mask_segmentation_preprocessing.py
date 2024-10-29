@@ -2,7 +2,7 @@ from pathlib import Path
 
 import mrcfile
 import numpy as np
-from cellstar_db.models import SegmentationPrimaryDescriptor
+from cellstar_db.models import PrimaryDescriptor
 from cellstar_preprocessor.flows.constants import LATTICE_SEGMENTATION_DATA_GROUPNAME
 
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
@@ -32,7 +32,7 @@ def _normalize_axis_order_mrcfile_numpy(
 def mask_segmentation_preprocessing(s: InternalSegmentation):
     our_zarr_structure = open_zarr(s.path)
 
-    s.primary_descriptor = SegmentationPrimaryDescriptor.three_d_volume
+    s.primary_descriptor = PrimaryDescriptor.three_d_volume
 
     segmentation_data_gr = our_zarr_structure.create_group(
         LATTICE_SEGMENTATION_DATA_GROUPNAME

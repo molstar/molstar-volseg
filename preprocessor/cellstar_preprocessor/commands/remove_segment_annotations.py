@@ -1,3 +1,4 @@
+from cellstar_db.models import StoreType
 import typer
 from cellstar_db.file_system.annotations_context import AnnnotationsEditContext
 from cellstar_db.file_system.db import FileSystemVolumeServerDB
@@ -18,7 +19,7 @@ def remove_segment_annotations(
     if new_db_path.is_dir() == False:
         new_db_path.mkdir()
 
-    db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
+    db = FileSystemVolumeServerDB(new_db_path, store_type=StoreType.zip)
 
     with db.edit_annotations(
         namespace=source_db, key=entry_id

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 import gc
 from pathlib import Path
 from typing import Any
@@ -57,7 +57,7 @@ class OMEZarrWrapper:
                                 channel_num=channel_num,
                                 data=data,
                                 resolution=resolution,
-                                size=data.nbytes
+                                nbytes=data.nbytes
                             )
                         )
 
@@ -74,7 +74,7 @@ class OMEZarrWrapper:
                                 channel_num=channel_num,
                                 data=data,
                                 resolution=resolution,
-                                size=data.nbytes
+                                nbytes=data.nbytes
                             )
                         )
                     channel_nums.append(channel_num)

@@ -1,7 +1,7 @@
 import typer
 from cellstar_db.file_system.annotations_context import AnnnotationsEditContext
 from cellstar_db.file_system.db import FileSystemVolumeServerDB
-from cellstar_db.models import DescriptionData
+from cellstar_db.models import DescriptionData, StoreType
 from cellstar_preprocessor.flows.common import read_json
 
 
@@ -20,7 +20,7 @@ def edit_descriptions(
     if new_db_path.is_dir() == False:
         new_db_path.mkdir()
 
-    db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
+    db = FileSystemVolumeServerDB(new_db_path, store_type=StoreType.zip)
 
     parsedDescriptionData: list[DescriptionData] = read_json(Path(data_json_path))
 

@@ -3,6 +3,7 @@ import logging
 import math
 import zlib
 from pathlib import Path
+from cellstar_db.models import PreparedMeshData, VedoMeshData
 from cellstar_preprocessor.tools.decode_base64_data.decode_base64_data import decode_base64_data
 import h5py
 import numcodecs
@@ -14,7 +15,7 @@ from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from cellstar_preprocessor.model.volume import InternalVolume
 from sfftkrw.schema.adapter_v0_8_0_dev1 import SFFSegmentation
 from vedo import Mesh
-
+import dask.array as da
 temp_zarr_structure_path = None
 
 
@@ -83,7 +84,7 @@ def __visitor_function(name: str, node: h5py.Dataset) -> None:
     """
     Helper function used to create zarr hierarchy based on hdf5 hierarchy from sff file
     Takes nodes one by one and depending of their nature (group/object dataset/non-object dataset)
-    creates the corresponding zarr hierarchy element (group/array)
+      creates the corresponding zarr hierarchy element (group/array)
     """
     global temp_zarr_structure_path
     # input hdf5 file may be too large for memory, so we save it in temp storage
@@ -216,42 +217,42 @@ def _round_to_significant_digits(number: float, digits: int) -> float:
     return round(number, first_digit + digits - 1)
 
 
-def compute_vertex_density(mesh_list_group: zarr.hierarchy.group, mode="area"):
+def compute_vertex_density(prepared_mesh_data: PreparedMeshData):
     """Takes as input mesh list group with stored original lvl meshes.
     Returns estimate of vertex_density for mesh list"""
-    mesh_list = []
-    total_vertex_count = 0
-    for mesh_name, mesh in mesh_list_group.groups():
-        mesh_list.append(mesh)
-        total_vertex_count = total_vertex_count + mesh.attrs["num_vertices"]
+    total_vertex_count = prepared_mesh_data.vertices.size
+    total_area = prepared_mesh_data.area
+    # for mesh in mesh_list:
+        # total_area = total_area + mesh.attrs["area"]
 
-    if mode == "area":
-        total_area = 0
-        for mesh in mesh_list:
-            total_area = total_area + mesh.attrs["area"]
-
-        return total_vertex_count / total_area
+    return total_vertex_count / total_area
 
         # elif mode == 'volume':
         #     total_volume = 0
         #     for mesh in mesh_list:
         #         total_volume = total_volume + mesh.attrs['volume']
 
-        return total_vertex_count / total_volume
 
-
-def _convert_mesh_to_vedo_obj(mesh_from_zarr):
-    vertices = mesh_from_zarr.vertices[...]
-    triangles = mesh_from_zarr.triangles[...]
-    vedo_mesh_obj = Mesh([vertices, triangles])
+def _convert_prepared_mesh_data_to_vedo_obj(prepared_mesh_data: PreparedMeshData):
+    # vertices = prepared_mesh_data.vertices.compute()
+    # triangles = mesh_from_zarr.triangles[...]
+    # TODO: if does not work do .compute()
+    vedo_mesh_obj = Mesh([prepared_mesh_data.vertices, prepared_mesh_data.triangles])
     return vedo_mesh_obj
 
 
-def _decimate_vedo_obj(vedo_obj, ratio):
+def _decimate_vedo_obj(vedo_obj: Mesh, ratio):
     return vedo_obj.decimate(fraction=ratio)
 
 
-def _get_mesh_data_from_vedo_obj(vedo_obj):
+def _get_mesh_data_from_vedo_obj(vedo_obj: Mesh):
+    # should get mesh data (verts, tr, norm) back
+    return VedoMeshData(
+        vertices=da.from_array(vedo_obj.vertices, dtype=np.float32),
+        triangles=da.from_array(vedo_obj.vertices, dtype=np.float32),
+        normals=da.from_array(vedo_obj.vertices, dtype=np.float32),
+        area=vedo_obj.area()
+    )
     d = {"arrays": {}, "attrs": {}}
     # NOTE: for old version of vedo
     # d["arrays"]["vertices"] = np.array(vedo_obj.points(), dtype=np.float32)
@@ -303,18 +304,19 @@ def store_mesh_data_in_zarr(
     return resolution_gr
 
 
-def simplify_meshes(
-    mesh_list_group: zarr.hierarchy.Group, ratio: float, segment_id: int
+def simplify_mesh(
+    prepared_mesh_data: PreparedMeshData, fraction: float
 ):
     """Returns dict with mesh data for each mesh in mesh list"""
-    # for each mesh
-    # construct vedo mesh object
-    # decimate it
-    # get vertices and triangles back
-    d = {}
-    for mesh_id, mesh in mesh_list_group.groups():
-        vedo_obj = _convert_mesh_to_vedo_obj(mesh)
-        decimated_vedo_obj = _decimate_vedo_obj(vedo_obj, ratio)
-        mesh_data = _get_mesh_data_from_vedo_obj(decimated_vedo_obj)
-        d[mesh_id] = mesh_data
-    return d
+    
+    vedo_obj = _convert_prepared_mesh_data_to_vedo_obj(prepared_mesh_data)
+    decimated_vedo_obj = _decimate_vedo_obj(vedo_obj, fraction)
+    ve = _get_mesh_data_from_vedo_obj(decimated_vedo_obj)
+    return PreparedMeshData(
+        vertices=ve.vertices,
+        triangels=ve.triangles,
+        normals=ve.normals,
+        area=ve.area,
+        segment_id=prepared_mesh_data.segment_id,
+        fraction=fraction
+    )

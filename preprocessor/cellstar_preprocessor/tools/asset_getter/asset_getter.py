@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from cellstar_preprocessor.tools.download_dir_ftp.download_dir_ftp import FTPWrapper
+from pydantic.dataclasses import dataclass
 import os
 from pathlib import Path
 import resource
@@ -6,10 +7,11 @@ import shutil
 import urllib.request
 from uuid import uuid4
 import zipfile
+from urllib.parse import urlparse
 
 from cellstar_db.models import AssetKind, AssetInfo, AssetSourceInfo, CompressionFormat
 from cellstar_preprocessor.tools.remove_path.remove_path import remove_path
-from cellstar_preprocessor.tools.uncompresser.uncompresser import Uncompresser
+from cellstar_preprocessor.tools.uncompresser.uncompresser import Uncompressor
 import ome_zarr.utils
 
 
@@ -19,30 +21,41 @@ class AssetGetter:
     destination: Path
     
     def __post_init__(self):
+        
+        
         if self.destination.exists():
             remove_path(self.destination)
         
         if not self.destination.parent.exists():
             self.destination.parent.mkdir(parents=True)
-            
-        format = self.source_extension[1:]
-        dest = self.destination
-        dest_suffix = dest.suffix
-        source_ext = self.source_extension
-        if format not in CompressionFormat:
-            assert dest_suffix == source_ext, \
-                f'Destination file format {format}, dest_suffix {dest_suffix}, source_ext {source_ext} '
-        else:
-            dest.mkdir()
-            assert dest.is_dir(), 'Destination for compressed file should be directory to uncompress to'
+        
+        
+        # 1. Destination format = list of suffixes
+        # 2. Need to be equal to the same list from asset
+        
+        
+        source_extensions = self.asset_info.extensions 
+        destination = self.destination
+        
+        assert self.destination_extension in source_extensions, \
+            f'Source and destination should have compatible extensions'
+            # f'Destination file format {format}, dest_suffix {dest_suffixes}, source_ext {source_ext} '
+        
+        # check if need to create dir
+        # in other way
+        if self.source_compression_format in {CompressionFormat.zip_dir, CompressionFormat.tar_gz_dir}:
+            destination.mkdir()
+            assert destination.is_dir(), 'Destination for compressed dir should be directory to uncompress to'
     
     @property
     def source_name(self):
         return self.asset_info.source.name
     
     @property
-    def source_extension(self):
-        return self.asset_info.source.extension
+    def source_format(self):
+        l = [i for i in self.asset_info.source.extensions]
+        s = "".join(l)[1:]
+        return s
     
     @property
     def asset_kind(self) -> AssetKind:
@@ -55,6 +68,10 @@ class AssetGetter:
     @property
     def soure_uri(self):
         return self.asset_info.source.uri
+    
+    @property
+    def destination_extension(self):
+        return "".join(self.destination.suffixes)
     
     @property
     def source_compression_format(self):
@@ -73,22 +90,26 @@ class AssetGetter:
     # we first download to that folder, not as folder
     # then uncompress
     # 
-    def _uncompress(self, path: Path, destination_dir: Path):
+    def _uncompress(self, path: Path, destination: Path):
         # uncompress
         # uncompressed_path = None
-        unc = Uncompresser(source=path, compression_format=self.source_compression_format, destination_dir=destination_dir)
-        unc.uncompress()
+        unc = Uncompressor(source=path, compression_format=self.source_compression_format, destination=destination)
+        uncompressed = unc.uncompress()
         unc.remove_compressed()
         kind = self.asset_kind
         if kind in [AssetKind.ometiff_image, AssetKind.ometiff_segmentation]:
+            assert destination.is_dir(), f"Destination {destination} should be directory"
             # TODO glob multiple resolutions
             # p: tuple[Path] = sorted()
             # (p.resolve() for p in Path(path).glob("**/*") if p.suffix in {".c", ".cc", ".cpp", ".hxx", ".h"})
-            p: list[Path] = sorted(list(destination_dir.glob("*")))
+            p: list[Path] = sorted(list(destination.glob("*")))
             first_ometiff = p[0]
             return first_ometiff
         else:
-            raise NotImplementedError(f"Support for {kind} was not implemented yet")
+            return uncompressed
+            # return 
+            # raise NotImplementedError(f"Support for {kind} was not implemented yet")
+            
             
         # delete compressed
         # assert uncompressed_path is not None, 'Uncompressed path is None'
@@ -101,14 +122,20 @@ class AssetGetter:
     #     pass 
     
     def _get_target_path(self):
-        if self.source_compression_format is None:
+        if self.source_compression_format:
+            if self.source_compression_format not in {CompressionFormat.zip_dir, CompressionFormat.tar_gz_dir}:
             # download to file
-            return self.destination
-        else:
+            # TODO: fix
+            # should return with all suffixes as in source
+                return self.source_name
+            else:
             # download to folder
+            # resolve separately
             # print("Debug", self.source_compression_format.value)
-            unique_archive_name = str(uuid4()) + '.' + str(self.source_compression_format.value)
-            return self.destination / unique_archive_name
+                unique_archive_name = str(uuid4()) + '.' + str(self.source_compression_format.value)
+                return self.destination / unique_archive_name
+        else:
+            return self.destination
         
     def _download(self, target_path: Path):
         # add here something to handle downloading zip TO self.destination
@@ -126,14 +153,24 @@ class AssetGetter:
                 downloaded_path = Path(self.destination.parent / self.source_name)
                 downloaded_path.rename(self.destination.resolve())
                 # return self.destination
+            case AssetKind.tiff_image_stack_dir | AssetKind.tiff_segmentation_stack_dir:
+                # from ftp
+                # uri - path to folder
+                parsed_url = urlparse(uri)
+                ftp_host = parsed_url.hostname
+                w = FTPWrapper(ftp_host)
+                print(parsed_url.path)
+                w.download_dir(parsed_url.path, self.destination)
             case _:
                 try:                
-                    urllib.request.urlretrieve(uri, str(target_path.resolve()))
+                    # wrong target path
+                    # and parent does not exist
+                    urllib.request.urlretrieve(uri, target_path)
                     # return self.destination
                 except Exception:
                     print(f"Failed to download, uri: {uri}")
             
-        return self.destination
+        return target_path
         
     def _get_local(self, target_path: Path):
         uri = self.soure_uri
@@ -148,10 +185,11 @@ class AssetGetter:
         return self.destination
                 
     def get_asset(self):
-        kind =self.source_kind 
+        kind = self.source_kind 
         dest = self.destination
         target_path = self._get_target_path()
-        out = None
+        # target path should be with gz and all extensions
+        # basically same to source uri last component 
         match kind:
             case "external":
                 self._download(target_path)            
@@ -161,15 +199,7 @@ class AssetGetter:
                 raise ValueError(f'source_kind {kind} not supported')
 
         if self.source_compression_format is not None:
-            assert dest.is_dir(), f"Destination {dest} should be directory" 
-            # target_path = zip file in folder
-            # will return path to first ometiff in theory
-            # wrong target_path
-            # 'preprocessor/cellstar_preprocessor/tests/test_data/inputs_for_tests/0eb3377b-afdd-4ec1-9125-9a93cb355aa5/tubhiswt-4D.zip/6ee65c60-ec2f-46d2-a9db-016d2a175f66.zip'
+            # dest should be without gz suffix
             target_path = self._uncompress(target_path, dest)
-        # assert dest is None, f'Was unable to get {path}'
         
-        # should return file always, not dir
-        # NOTE: tiff stack later
-        # wrong
         return target_path

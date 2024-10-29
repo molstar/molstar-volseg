@@ -6,7 +6,7 @@ from typing import TypedDict
 import pytest
 from cellstar_db.file_system.db import FileSystemVolumeServerDB
 from cellstar_db.models import (
-    AnnotationsMetadata,
+    Annotations,
     DescriptionData,
     ExternalReference,
     AssetKind,
@@ -15,7 +15,12 @@ from cellstar_db.models import (
     RawInput,
     SegmentAnnotationData,
     SegmentationKind,
+    StoreType,
     TargetId,
+)
+
+from cellstar_db.models import (
+    StoreType
 )
 from cellstar_preprocessor.preprocessor import main_preprocessor
 
@@ -68,7 +73,7 @@ def testing_db():
     if (test_db_path).is_dir() == False:
         test_db_path.mkdir(parents=True)
 
-    db = FileSystemVolumeServerDB(folder=test_db_path, store_type="zip")
+    db = FileSystemVolumeServerDB(folder=test_db_path, store_type=StoreType.zip)
 
     # remove previous test entry if it exists
     exists = asyncio.run(
@@ -238,7 +243,7 @@ class TestData(TypedDict):
 
 
 def __get_annotations(testing_db: FileSystemVolumeServerDB):
-    annotations: AnnotationsMetadata = asyncio.run(
+    annotations: Annotations = asyncio.run(
         testing_db.read_annotations(
             TEST_ENTRY_PREPROCESSOR_ARGUMENTS.source_db,
             TEST_ENTRY_PREPROCESSOR_ARGUMENTS.entry_id,
@@ -251,7 +256,7 @@ def _generate_test_data_for_modify_annotations(
     testing_db,
 ) -> list[SegmentAnnotationData]:
     # first get existing annotation ids from testing db
-    annotations: AnnotationsMetadata = __get_annotations(testing_db)
+    annotations: Annotations = __get_annotations(testing_db)
     fake_segment_annotations = copy.deepcopy(FAKE_SEGMENT_ANNOTATIONS)
     existing_annotation_ids = [a["id"] for a in annotations["segment_annotations"]]
     first_fake_segment_annotation = fake_segment_annotations[0]
@@ -268,14 +273,14 @@ def _generate_test_data_for_add_annotations() -> list[SegmentAnnotationData]:
 
 def _generate_test_data_for_remove_annotations(testing_db) -> list[str]:
     # get ids of exisiting annotations
-    annotations: AnnotationsMetadata = __get_annotations(testing_db)
+    annotations: Annotations = __get_annotations(testing_db)
     existing_annotation_ids = [a["id"] for a in annotations["segment_annotations"]]
     return [existing_annotation_ids[0], existing_annotation_ids[1]]
 
 
 def _generate_test_data_for_modify_descriptions(testing_db) -> list[DescriptionData]:
     # first get existing description ids from testing db
-    annotations: AnnotationsMetadata = __get_annotations(testing_db)
+    annotations: Annotations = __get_annotations(testing_db)
 
     fake_descriptions = copy.deepcopy(FAKE_DESCRIPTIONS)
     existing_description_ids = list(annotations["descriptions"].keys())
@@ -302,7 +307,7 @@ def _generate_test_data_for_add_descriptions():
 
 def _generate_test_data_for_remove_descriptions(testing_db):
     # get ids of exisiting descriptions
-    annotations: AnnotationsMetadata = __get_annotations(testing_db)
+    annotations: Annotations = __get_annotations(testing_db)
     existing_description_ids = list(annotations["descriptions"].keys())
     return [existing_description_ids[0], existing_description_ids[1]]
 

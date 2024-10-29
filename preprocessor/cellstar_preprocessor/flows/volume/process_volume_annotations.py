@@ -19,7 +19,7 @@ def process_volume_annotations(v: InternalVolume):
     # set
     # channel_ids_dict = _get_ome_tiff_channel_ids_dict(root, v)
 
-    # d: AnnotationsMetadata = root.attrs[ANNOTATIONS_DICT_NAME]
+    # d: Annotations = root.attrs[ANNOTATIONS_DICT_NAME]
     # _get_ome_tiff_channel_annotations(
     #     volume_channels_annotations=d.volume_channels_annotations,
     #     channel_ids_dict=channel_ids_dict,

@@ -2,7 +2,7 @@ import numcodecs
 import numpy as np
 import pytest
 import zarr
-from cellstar_db.models import SegmentationPrimaryDescriptor
+from cellstar_db.models import PrimaryDescriptor
 from cellstar_preprocessor.flows.constants import (
     LATTICE_SEGMENTATION_DATA_GROUPNAME,
     MESH_SEGMENTATION_DATA_GROUPNAME,
@@ -20,7 +20,7 @@ from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.tests.helper_methods import get_internal_segmentation
 from cellstar_preprocessor.tests.input_for_tests import (
     INTERNAL_MESH_SEGMENTATION_FOR_TESTING,
-    INTERNAL_SEGMENTATION_FOR_TESTING,
+    INTERNAL_LATTICE_SEGMENTATION_FOR_TESTING,
     SFF_TEST_INPUTS,
     WORKING_FOLDER_FOR_TESTS,
     TestInput,
@@ -28,7 +28,7 @@ from cellstar_preprocessor.tests.input_for_tests import (
 from cellstar_preprocessor.tests.test_context import TestContext, context_for_tests
 
 SEGMENTATIONS = [
-    INTERNAL_SEGMENTATION_FOR_TESTING,
+    INTERNAL_LATTICE_SEGMENTATION_FOR_TESTING,
     INTERNAL_MESH_SEGMENTATION_FOR_TESTING,
 ]
 
@@ -40,11 +40,11 @@ def test_segmentation_downsampling(test_input: TestInput):
     internal_segmentation = get_internal_segmentation(
         test_input, ctx.test_input_asset_path, ctx.working_folder
     )
-    if internal_segmentation == INTERNAL_SEGMENTATION_FOR_TESTING:
+    if internal_segmentation == INTERNAL_LATTICE_SEGMENTATION_FOR_TESTING:
         # initialize_intermediate_zarr_structure_for_tests()
-        internal_segmentation = INTERNAL_SEGMENTATION_FOR_TESTING
+        internal_segmentation = INTERNAL_LATTICE_SEGMENTATION_FOR_TESTING
         internal_segmentation.primary_descriptor = (
-            SegmentationPrimaryDescriptor.three_d_volume
+            PrimaryDescriptor.three_d_volume
         )
 
         zarr_structure: zarr.Group = open_zarr(internal_segmentation.path)

@@ -56,26 +56,26 @@ class FileSystemVolumeMedatada(VolumeMetadata):
 
     def origin(self, downsampling_rate: int) -> List[float]:
         return self.raw_metadata.volumes.sampling_info.boxes[
-            str(downsampling_rate)
+            downsampling_rate
         ].origin
 
     def voxel_size(self, downsampling_rate: int) -> List[float]:
         return self.raw_metadata.volumes.sampling_info.boxes[
-            str(downsampling_rate)
+            downsampling_rate
         ].voxel_size
 
     def grid_dimensions(self, downsampling_rate: int) -> List[int]:
         return self.raw_metadata.volumes.sampling_info.boxes[
-            str(downsampling_rate)
+            downsampling_rate
         ].grid_dimensions
 
     def sampled_grid_dimensions(self, level: int) -> List[int]:
-        return self.raw_metadata.volumes.sampling_info.boxes[str(level)].grid_dimensions
+        return self.raw_metadata.volumes.sampling_info.boxes[level].grid_dimensions
 
     def descriptive_statistics(self, level: int, time: int, channel_id: str):
         return self.raw_metadata.volumes.sampling_info.descriptive_statistics[
-            str(level)
-        ][str(time)][str(channel_id)]
+            level
+        ][time][channel_id]
 
     def mean(self, level: int, time: int, channel_id: str) -> np.float32:
         return np.float32(self.descriptive_statistics(level, time, channel_id).mean)

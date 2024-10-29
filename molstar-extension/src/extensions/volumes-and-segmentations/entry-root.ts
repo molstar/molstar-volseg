@@ -4,7 +4,8 @@
  * @author Adam Midlik <midlik@gmail.com>
  * @author Aliaksei Chareshneu <chareshneu.tech@gmail.com>
  */
-
+import fs from "fs";
+import { decompress } from 'brotli';
 import { BehaviorSubject, distinctUntilChanged, Subject, throttleTime } from 'rxjs';
 import { VolsegVolumeServerConfig } from '.';
 import { Loci } from 'molstar/lib/mol-model/loci';
@@ -22,7 +23,7 @@ import { ParamDefinition } from 'molstar/lib/mol-util/param-definition';
 import { isMeshlistData, MeshlistData, VolsegMeshSegmentation } from '../meshes/mesh-extension';
 
 import { DEFAULT_VOLSEG_SERVER, VolumeApiV2 } from './volseg-api/api';
-import { AnnotationMetadata, DescriptionData, GridMetadata, Metadata, SegmentAnnotationData, ShapePrimitiveData, TimeInfo } from './volseg-api/data';
+import { AnnotationsMetadata, DescriptionData, Metadata, Meta, SegmentAnnotationData, ShapePrimitiveData, TimeInfo } from './volseg-api/data';
 import { createSegmentKey, getSegmentLabelsFromDescriptions, instanceOfShapePrimitiveData, MetadataWrapper, parseSegmentKey } from './volseg-api/utils';
 import { DEFAULT_MESH_DETAIL, VolsegMeshSegmentationData } from './entry-meshes';
 import { VolsegModelData } from './entry-models';
@@ -287,7 +288,7 @@ export class VolsegEntryData extends PluginBehavior.WithSubscribers<VolsegEntryP
         await this.init();
     }
 
-    private async initializeFromFile(metadata?: Metadata) {
+    private async initializeFromFile(metadata?: Meta) {
         if (metadata) this.metadata.next(new MetadataWrapper(metadata));
         await this.initFromFile();
     }
@@ -335,10 +336,13 @@ export class VolsegEntryData extends PluginBehavior.WithSubscribers<VolsegEntryP
         }
         return rawMeshSegmentations;
     }
-    static async createFromFile(plugin: PluginContext, file: Uint8Array, runtimeCtx: RuntimeContext) {
-        const zippedFiles: { [path: string]: Uint8Array } = await unzip(runtimeCtx, file.buffer) as typeof zippedFiles;
-        const zf = Object.entries(zippedFiles);
+    static async createFromFile(plugin: PluginContext, file: Uint8Array) {
+        // here need to decompress brotli instead of unzip
+        // const zippedFiles: { [path: string]: Uint8Array } = await unzip(runtimeCtx, file.buffer) as typeof zippedFiles;
+        const brotliedFiles: Uint8Array = decompress(file.buffer as Buffer, file.byteLength);
+        const zf = Object.entries(brotliedFiles);
 
+        // need a way how to split it onto files
         const indexJsonEntry = zf.find(z => z[0] === 'index.json');
         if (!indexJsonEntry) {
             throw new Error('No index.json found, CVSX has wrong content');
@@ -370,8 +374,8 @@ export class VolsegEntryData extends PluginBehavior.WithSubscribers<VolsegEntryP
             source: parsedQueryJSON.source_db,
             entryId: parsedQueryJSON.entry_id,
         };
-        const parsedGridMetadata: GridMetadata = await parseCVSXJSON(metadataJSONEntry, plugin);
-        const parsedAnnotationMetadata: AnnotationMetadata = await parseCVSXJSON(annotationJSONEntry, plugin);
+        const parsedGridMetadata: Metadata = await parseCVSXJSON(metadataJSONEntry, plugin);
+        const parsedAnnotationMetadata: AnnotationsMetadata = await parseCVSXJSON(annotationJSONEntry, plugin);
         const source: Source = parsedGridMetadata.entry_id.source_db_name;
         const entryId = parsedGridMetadata.entry_id.source_db_id;
         params = {
@@ -379,7 +383,7 @@ export class VolsegEntryData extends PluginBehavior.WithSubscribers<VolsegEntryP
             source: source,
             entryId: entryId
         };
-        const metadata: Metadata = {
+        const metadata: Meta = {
             grid: parsedGridMetadata,
             annotation: parsedAnnotationMetadata
         };
@@ -428,7 +432,9 @@ export class VolsegEntryData extends PluginBehavior.WithSubscribers<VolsegEntryP
         this.subscribeObservable(this.plugin.state.data.events.changed, state => {
             this.sync();
         });
-        const hasVolumes = this.metadata.value!.raw.grid.volumes.volume_sampling_info.spatial_downsampling_levels.length > 0;
+        const m = this.metadata.value;
+        if (!m) throw Error();
+        const hasVolumes = this.metadata.value!.raw.grid.volumes.sampling_info.spatial_downsampling_levels.length > 0;
         if (hasVolumes) {
             await this.preloadVolumeTimeframesData();
         }
@@ -453,7 +459,7 @@ export class VolsegEntryData extends PluginBehavior.WithSubscribers<VolsegEntryP
         this.subscribeObservable(this.plugin.state.data.events.changed, state => {
             this.sync();
         });
-        const hasVolumes = this.metadata.value!.raw.grid.volumes.volume_sampling_info.spatial_downsampling_levels.length > 0;
+        const hasVolumes = this.metadata.value!.raw.grid.volumes.sampling_info.spatial_downsampling_levels.length > 0;
         if (hasVolumes) {
             this.preloadVolumeTimeframesDataFromFile();
         }
@@ -766,23 +772,23 @@ export class VolsegEntryData extends PluginBehavior.WithSubscribers<VolsegEntryP
 
     async preloadSegmentationTimeframesData() {
         if (this.metadata.value!.raw.grid.segmentation_lattices) {
-            const segmentationIds = this.metadata.value!.raw.grid.segmentation_lattices.segmentation_ids;
-            const timeInfoMapping = this.metadata.value!.raw.grid.segmentation_lattices.time_info;
+            const segmentationIds = this.metadata.value!.raw.grid.segmentation_lattices.ids;
+            const timeInfoMapping = this.metadata.value!.raw.grid.segmentation_lattices.time_info_mapping;
             this.loadRawLatticeSegmentationData(timeInfoMapping, segmentationIds);
         }
     }
 
     async preloadMeshesTimeframesData() {
         if (this.metadata.value!.raw.grid.segmentation_meshes) {
-            const segmentationIds = this.metadata.value!.raw.grid.segmentation_meshes.segmentation_ids;
-            const timeInfoMapping = this.metadata.value!.raw.grid.segmentation_meshes.time_info;
+            const segmentationIds = this.metadata.value!.raw.grid.segmentation_meshes.ids;
+            const timeInfoMapping = this.metadata.value!.raw.grid.segmentation_meshes.time_info_mapping;
             this.loadRawMeshSegmentationData(timeInfoMapping, segmentationIds);
         }
     }
 
     async preloadShapePrimitivesTimeframesData() {
         if (this.metadata.value!.raw.grid.geometric_segmentation) {
-            const segmentationIds = this.metadata.value!.raw.grid.geometric_segmentation.segmentation_ids;
+            const segmentationIds = this.metadata.value!.raw.grid.geometric_segmentation.ids;
             const timeInfoMapping = this.metadata.value!.raw.grid.geometric_segmentation.time_info;
             this.loadRawShapePrimitiveData(timeInfoMapping, segmentationIds);
         }

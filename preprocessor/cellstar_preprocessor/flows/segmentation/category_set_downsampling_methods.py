@@ -10,6 +10,7 @@ from cellstar_preprocessor.tools.magic_kernel_downsampling_3d.magic_kernel_downs
     MagicKernel3dDownsampler,
 )
 
+import dask.array as da
 
 def store_downsampling_levels_in_zarr(
     levels: list[DownsamplingLevelDict],
@@ -34,6 +35,7 @@ def store_downsampling_levels_in_zarr(
             params_for_storing=params_for_storing,
         )
 
+        # TODO: store as zattrs?
         table_obj_arr = time_frame_data_group.create_dataset(
             # be careful here, encoding JSON, sets need to be converted to lists
             name="set_table",
@@ -55,8 +57,8 @@ def downsample_categorical_data(
     """
     Downsample data returning a dict for that level containing new grid and a set table for that level
     """
-    previous_level_grid: np.ndarray = previous_level_dict.get_grid()
-    previous_level_set_table: SegmentationSetTable = previous_level_dict.get_set_table()
+    previous_level_grid: np.ndarray = previous_level_dict.grid
+    previous_level_set_table: SegmentationSetTable = previous_level_dict.set_table
     current_level_grid: np.ndarray = magic_kernel.create_x2_downsampled_grid(
         previous_level_grid.shape, np.nan, dtype=previous_level_grid.dtype
     )
@@ -117,7 +119,7 @@ def downsample_categorical_data(
 
 
 def downsample_2x2x2_block(
-    block: np.ndarray,
+    block: da.Array,
     current_table: SegmentationSetTable,
     previous_table: SegmentationSetTable,
 ) -> int:
@@ -131,10 +133,8 @@ def downsample_2x2x2_block(
     return category_id
 
 
-def compute_union(block: np.ndarray, previous_table: SegmentationSetTable) -> set:
-    # in general, where x y z are sets
-    # result = x.union(y, z)
-    block_values: tuple = tuple(block.flatten())
+def compute_union(block: da.Array, previous_table: SegmentationSetTable) -> set:
+    block_values: da.Array = da.unique(block)
     categories: tuple = previous_table.get_categories(block_values)
     union: set = set().union(*categories)
     return union

@@ -3,11 +3,12 @@ from cellstar_query.requests import (
     EntriesRequest,
     GeometricSegmentationRequest,
     MeshRequest,
-    MetadataRequest,
+    InfoRequest,
     VolumeRequestBox,
     VolumeRequestDataKind,
     VolumeRequestInfo,
 )
+from db.cellstar_db.models import Info
 
 HTTP_CODE_UNPROCESSABLE_ENTITY = 422
 
@@ -112,14 +113,14 @@ async def get_volume_cell_query(
     return response
 
 
-async def get_metadata_query(
+async def get_info_query(
     volume_server: VolumeServerService,
     id: str,
     source: str,
-):
-    request = MetadataRequest(source=source, structure_id=id)
-    metadata = await volume_server.get_metadata(request)
-    return metadata
+) -> Info:
+    request = InfoRequest(source=source, structure_id=id)
+    metadata = await volume_server.get_info(request)
+    return metadata.model_dump()
 
 
 async def get_volume_info_query(
@@ -127,7 +128,7 @@ async def get_volume_info_query(
     id: str,
     source: str,
 ):
-    request = MetadataRequest(source=source, structure_id=id)
+    request = InfoRequest(source=source, structure_id=id)
     response_bytes = await volume_server.get_volume_info(request)
 
     return response_bytes

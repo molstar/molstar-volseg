@@ -27,7 +27,6 @@ def process_segmentation_metadata(s: InternalSegmentation):
     elif kind == AssetKind.mask:
         mask_segmentation_metadata_preprocessing(s)
     elif kind == AssetKind.geometric_segmentation:
-
         geometric_segmentation_annotations_preprocessing(s)
     elif kind == AssetKind.ometiff_segmentation:
         ometiff_volume_metadata_preprocessing(s)

@@ -35,7 +35,7 @@ def test_process_volume_metadata(volume_test_inputs: TestInput):
         assert isinstance(volume_gr, zarr.Group)
         
         match v.input_kind:
-            case AssetKind.map:
+            case AssetKind.map | AssetKind.ometiff_image | AssetKind.tiff_segmentation_stack_dir:
                 r = v.get_first_resolution_group(volume_gr).name
                 t = v.get_first_time_group(volume_gr).name
                 c = v.get_first_channel_array(volume_gr).name

@@ -30,7 +30,7 @@ from cellstar_preprocessor.flows.constants import (
     RAW_INPUT_DOWNLOAD_PARAMS_JSON,
     RAW_INPUT_FILES_DIR,
 )
-from cellstar_preprocessor.tools._gunzip._gunzip import gunzip
+from cellstar_preprocessor.tools.gunzip.gunzip import gunzip
 
 
 def parse_script_args():
@@ -204,7 +204,7 @@ def _create_db_building_params(updated_download_items: list[InputItemParams]):
                 break
 
         single_input = RawInput(path=str(complete_path.resolve()), kind=kind)
-        if target_item_idx == None:
+        if target_item_idx is None:
             input_for_building_db: InputForBuildingDatabase = {
                 "entry_id": item.entry_id,
                 "source_db": item.source_db,

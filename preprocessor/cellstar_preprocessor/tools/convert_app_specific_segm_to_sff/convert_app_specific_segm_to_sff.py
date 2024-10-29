@@ -42,3 +42,7 @@ def convert_app_specific_segm_to_sff(input_file: Path) -> Path:
         pass
 
     return Path(sff_filepath_str)
+
+
+if __name__ == "__main__":
+    convert_app_specific_segm_to_sff(Path('preprocessor/temp/working_folder/tubulin.stl'))

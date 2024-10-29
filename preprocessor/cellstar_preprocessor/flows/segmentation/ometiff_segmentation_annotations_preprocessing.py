@@ -3,7 +3,7 @@ from uuid import uuid4
 import seaborn as sns
 import zarr
 from cellstar_db.models import (
-    AnnotationsMetadata,
+    Annotations,
     DescriptionData,
     SegmentAnnotationData,
     SegmentationKind,
@@ -25,7 +25,7 @@ def ometiff_segmentation_annotations_preprocessing(
     # # this is based on Channels which is wrong in many cases
 
     # get_ometiff_source_metadata(internal_segmentation)
-    # d: AnnotationsMetadata = root.attrs[ANNOTATIONS_DICT_NAME]
+    # d: Annotations = root.attrs[ANNOTATIONS_DICT_NAME]
 
     # # PLAN: iterate over lattices
     # # single value 255 - hardcoded (it is in specification)

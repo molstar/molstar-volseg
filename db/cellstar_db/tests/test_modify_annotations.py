@@ -1,6 +1,6 @@
 import pytest
 from cellstar_db.file_system.annotations_context import AnnnotationsEditContext
-from cellstar_db.models import AnnotationsMetadata
+from cellstar_db.models import Annotations
 from cellstar_db.tests.conftest import TEST_ENTRY_PREPROCESSOR_ARGUMENTS
 
 
@@ -16,7 +16,7 @@ async def test_modify_annotations(generate_test_data):
             test_data["modify_annotations"]
         )
 
-        annotations_metadata: AnnotationsMetadata = await testing_db.read_annotations(
+        annotations_metadata: Annotations = await testing_db.read_annotations(
             TEST_ENTRY_PREPROCESSOR_ARGUMENTS.source_db,
             TEST_ENTRY_PREPROCESSOR_ARGUMENTS.entry_id,
         )

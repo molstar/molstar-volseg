@@ -43,7 +43,7 @@ def serialize_volume_slice(
 
     channel_id = (
         slice.channel_id
-        if slice.channel_id != None
+        if slice.channel_id is not None
         else metadata.model().volumes.channel_ids[0]
     )
     volume_info = VolumeInfo(
@@ -68,7 +68,7 @@ def serialize_volume_slice(
 
         data_category = VolumeData3dCategory()
         writer.write_category(
-            data_category, [np.ravel(slice["volume_slice"], order="F")]
+            data_category, [np.ravel(slice.volume_slice, order="F")]
         )
 
     # segmentation

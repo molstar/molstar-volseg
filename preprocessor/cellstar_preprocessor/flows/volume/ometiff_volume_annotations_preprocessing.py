@@ -1,5 +1,5 @@
 import seaborn as sns
-from cellstar_db.models import AnnotationsMetadata, EntryId, VolumeChannelAnnotation
+from cellstar_db.models import Annotations, EntryId, VolumeChannelAnnotation
 from cellstar_preprocessor.flows.zarr_methods import open_zarr
 from cellstar_preprocessor.model.volume import InternalVolume
 
@@ -30,7 +30,7 @@ def ometiff_volume_annotations_preprocessing(v: InternalVolume):
 
     # channel_ids_dict = _get_ome_tiff_channel_ids_dict(root, v)
 
-    d: AnnotationsMetadata = root.attrs[ANNOTATIONS_DICT_NAME]
+    d: Annotations = root.attrs[ANNOTATIONS_DICT_NAME]
     # _get_ome_tiff_channel_annotations(
     #     volume_channels_annotations=d.volume_channels_annotations,
     #     channel_ids_dict=channel_ids_dict,

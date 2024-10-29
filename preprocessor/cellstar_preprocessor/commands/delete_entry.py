@@ -1,6 +1,9 @@
 import typer
 from cellstar_db.file_system.db import FileSystemVolumeServerDB
 
+from cellstar_db.models import (
+    StoreType
+)
 
 import asyncio
 from pathlib import Path
@@ -15,5 +18,5 @@ def delete_entry(
     if new_db_path.is_dir() == False:
         new_db_path.mkdir()
 
-    db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
+    db = FileSystemVolumeServerDB(new_db_path, store_type=StoreType.zip)
     asyncio.run(db.delete(namespace=source_db, key=entry_id))

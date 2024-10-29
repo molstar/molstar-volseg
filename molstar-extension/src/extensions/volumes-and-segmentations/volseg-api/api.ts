@@ -5,11 +5,11 @@
  * @author Aliaksei Chareshneu <chareshneu.tech@gmail.com>
  */
 
-import { DescriptionData, SegmentAnnotationData, type Metadata, AnnotationMetadata } from './data';
+import { DescriptionData, SegmentAnnotationData, type Meta, AnnotationsMetadata } from './data';
 
 
-export const DEFAULT_VOLSEG_SERVER = 'https://molstarvolseg.ncbr.muni.cz/v2';
-
+// export const DEFAULT_VOLSEG_SERVER = 'https://molstarvolseg.ncbr.muni.cz/v2';
+export const DEFAULT_VOLSEG_SERVER = 'http://147.251.21.60:1111/v1';
 
 export class VolumeApiV2 {
     public volumeServerUrl: string;
@@ -18,7 +18,7 @@ export class VolumeApiV2 {
         this.volumeServerUrl = volumeServerUrl.replace(/\/$/, ''); // trim trailing slash
     }
 
-    public async updateAnnotationsJson(source: string, entryId: string, annotationsJson: AnnotationMetadata) {
+    public async updateAnnotationsJson(source: string, entryId: string, annotationsJson: AnnotationsMetadata) {
         const url = `${this.volumeServerUrl}/${source}/${entryId}/annotations_json/update`;
         const obj = JSON.stringify({ annotations_json: annotationsJson });
         await fetch(url, {
@@ -112,7 +112,7 @@ export class VolumeApiV2 {
         return await response.json();
     }
 
-    public async getMetadata(source: string, entryId: string): Promise<Metadata> {
+    public async getMetadata(source: string, entryId: string): Promise<Meta> {
         const url = this.metadataUrl(source, entryId);
         const response = await fetch(url);
         if (!response.ok) throw new Error(`Failed to fetch metadata from ${url}`);

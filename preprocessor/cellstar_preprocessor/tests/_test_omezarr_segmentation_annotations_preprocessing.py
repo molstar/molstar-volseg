@@ -1,6 +1,6 @@
 import pytest
 from cellstar_db.models import (
-    AnnotationsMetadata,
+    Annotations,
     DescriptionData,
     SegmentAnnotationData,
     SegmentationKind,
@@ -30,7 +30,7 @@ def test_omezarr_segmentation_annotations_preprocessing(omezar_test_input: TestI
         )
 
         omezarr_segmentations_preprocessing(s=internal_segmentation)
-        d: AnnotationsMetadata = omezarr_segmentation_annotations_preprocessing(
+        d: Annotations = omezarr_segmentation_annotations_preprocessing(
             s=internal_segmentation
         )
         # d = omezarr

@@ -2,7 +2,7 @@ import math
 
 import numpy as np
 import zarr
-from cellstar_db.models import SegmentationPrimaryDescriptor
+from cellstar_db.models import DownsamplingLevelDict, PreparedLatticeSegmentationData, PreparedMeshSegmentationData, PrimaryDescriptor
 from cellstar_preprocessor.flows.common import (
     compute_downsamplings_to_be_stored,
     compute_number_of_downsampling_steps,
@@ -22,7 +22,7 @@ from cellstar_preprocessor.flows.segmentation.category_set_downsampling_methods 
 # )
 from cellstar_preprocessor.flows.segmentation.helper_methods import (
     compute_vertex_density,
-    simplify_meshes,
+    simplify_mesh,
     store_mesh_data_in_zarr,
 )
 from cellstar_db.models import (
@@ -33,13 +33,12 @@ from cellstar_preprocessor.model.segmentation import InternalSegmentation
 from cellstar_preprocessor.tools.magic_kernel_downsampling_3d.magic_kernel_downsampling_3d import (
     MagicKernel3dDownsampler,
 )
-
-
-def segmentation_downsampling(internal_segmentation: InternalSegmentation):
+        
+def __segmentation_downsampling(internal_segmentation: InternalSegmentation):
     zarr_structure = open_zarr(internal_segmentation.path)
     if (
         internal_segmentation.primary_descriptor
-        == SegmentationPrimaryDescriptor.three_d_volume
+        == PrimaryDescriptor.three_d_volume
     ):
         for lattice_gr_name, lattice_gr in zarr_structure[
             LATTICE_SEGMENTATION_DATA_GROUPNAME
@@ -85,7 +84,7 @@ def segmentation_downsampling(internal_segmentation: InternalSegmentation):
 
     elif (
         internal_segmentation.primary_descriptor
-        == SegmentationPrimaryDescriptor.mesh_list
+        == PrimaryDescriptor.mesh_list
     ):
         simplification_curve: dict[int, float] = (
             internal_segmentation.simplification_curve
@@ -110,9 +109,9 @@ def segmentation_downsampling(internal_segmentation: InternalSegmentation):
                             break
                         if fraction == 1:
                             continue  # original data, don't need to compute anything
-                        mesh_data_dict = simplify_meshes(
+                        mesh_data_dict = simplify_mesh(
                             original_detail_lvl_mesh_list_group,
-                            ratio=fraction,
+                            fraction=fraction,
                             segment_id=segment_name_id,
                         )
                         # TODO: potentially simplify meshes may output mesh with 0 vertices, normals, triangles

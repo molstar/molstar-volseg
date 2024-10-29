@@ -1,5 +1,5 @@
 import zarr
-from cellstar_db.models import SegmentationPrimaryDescriptor
+from cellstar_db.models import PrimaryDescriptor
 from cellstar_preprocessor.flows.constants import (
     LATTICE_SEGMENTATION_DATA_GROUPNAME,
     MESH_SEGMENTATION_DATA_GROUPNAME,
@@ -41,7 +41,7 @@ def sff_segmentation_preprocessing(internal_segmentation: InternalSegmentation):
             LATTICE_SEGMENTATION_DATA_GROUPNAME
         )
         internal_segmentation.primary_descriptor = (
-            SegmentationPrimaryDescriptor.three_d_volume
+            PrimaryDescriptor.three_d_volume
         )
         internal_segmentation.value_to_segment_id_dict = map_value_to_segment_id(
             zarr_structure
@@ -54,7 +54,7 @@ def sff_segmentation_preprocessing(internal_segmentation: InternalSegmentation):
             MESH_SEGMENTATION_DATA_GROUPNAME
         )
         internal_segmentation.primary_descriptor = (
-            SegmentationPrimaryDescriptor.mesh_list
+            PrimaryDescriptor.mesh_list
         )
         internal_segmentation.simplification_curve = make_simplification_curve(
             MESH_SIMPLIFICATION_N_LEVELS, MESH_SIMPLIFICATION_LEVELS_PER_ORDER

@@ -1,11 +1,11 @@
 
 import base64
-from dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 import logging
 from pathlib import Path
 import zlib
 # from cellstar_preprocessor.flows.segmentation.helper_methods import extract_raw_annotations_from_sff
-from cellstar_db.models import LatticeSFF, MeshElementBaseSFF, PreparedMeshData, PreparedMeshSegmentationData, PreparedSegmentation, PreparedLatticeSegmentationData, PreparedSegmentationMetadata, SFFSegmentationModel, SegmentationPrimaryDescriptor
+from cellstar_db.models import LatticeSFF, MeshElementBaseSFF, PreparedMeshData, PreparedMeshSegmentationData, PreparedSegmentation, PreparedLatticeSegmentationData, PreparedSegmentationMetadata, SFFSegmentationModel, PrimaryDescriptor, SegmentationKind
 from cellstar_preprocessor.flows.common import chunk_numpy_arr, decide_np_dtype
 from cellstar_preprocessor.tools.decode_base64_data.decode_base64_data import decode_base64_data
 import numpy as np
@@ -17,24 +17,17 @@ from vedo import Mesh
 class SFFWrapper:
     path: Path
     
-    
-    # 1. do post init
-    # 2. in it set reader to sff segmentation
-    # 3. set raw annotations dict
-    # create pydantic model from it
-    
     def create_segmentation_ids_mapping(self):
         return { str(i): str(i) for i in self.segmentation_ids }
     
     @property
-    def segmentation_nums(self):
-        # lattice nums
-        return [int(l.id) for l in self.data_model.lattice_list]
-    
-    @property
     def segmentation_ids(self):
-        # lattice nums
-        return [str(i) for i in self.segmentation_nums]
+        p = self.primary_descriptor
+        match p:
+            case PrimaryDescriptor.mesh_list:
+                return [self.path.stem]
+            case PrimaryDescriptor.three_d_volume:
+                return [str(i.id) for i in self.data_model.lattice_list]
     
     @property
     def sfftk_reader(self):
@@ -44,6 +37,7 @@ class SFFWrapper:
     @property
     def data_model(self):
         obj = self.sfftk_reader.as_json()
+        # fix it, should convert str to ints etc.
         return SFFSegmentationModel.model_validate(obj)
     
     
@@ -62,7 +56,7 @@ class SFFWrapper:
         return d
     
     def _lattice_data_to_np_arr(
-        # can pass object
+        self,
         l: LatticeSFF
         # data: str, mode: str, endianness: str, arr_shape: tuple[int, int, int]
         
@@ -76,7 +70,7 @@ class SFFWrapper:
             # TODO: decompress dask?
             decoded_data = base64.b64decode(l.data)
             byteseq = zlib.decompress(decoded_data)
-            np_dtype = decide_np_dtype(mode=l.mode, endianness=l.endianness.value)
+            np_dtype = decide_np_dtype(mode=l.mode, endianness=l.endianness)
             arr_shape = l.size.to_tuple()
             arr = np.frombuffer(byteseq, dtype=np_dtype).reshape(arr_shape, order="F")
         except Exception as e:
@@ -92,12 +86,12 @@ class SFFWrapper:
         self.value_to_segment_id_dict = self.map_value_to_segment_id()
         for lattice in self.data_model.lattice_list:
             decoded: np.ndarray = self._lattice_data_to_np_arr(
-                
+                lattice
             )
             d = PreparedLatticeSegmentationData(
                 timeframe_index=0,
                 resolution=1,
-                size=decoded.nbytes,
+                nbytes=decoded.nbytes,
                 segmentation_id=str(lattice.id),
                 data=decoded
                 
@@ -109,9 +103,10 @@ class SFFWrapper:
             metadata=PreparedSegmentationMetadata(
                 timeframe_indices=timeframe_indices,
                 resolutions=resolutions,
-                segmentation_nums=self.segmentation_nums,
-                segmentation_ids=self.segmentation_ids
-            )    
+                segmentation_ids=self.segmentation_ids,
+                value_to_segment_id_dict=self.value_to_segment_id_dict
+            ),
+            kind=SegmentationKind.lattice
         )
     
     def _decode_mesh_component_data(self, component: MeshElementBaseSFF):
@@ -125,9 +120,9 @@ class SFFWrapper:
         return chunked_component_data
     
     def _process_mesh_segmentation_data(self):
-        resolution = 1
+        resolution = 1.0
         timeframe_index = 0
-        segmentation_id = "0"
+        segmentation_id = self.path.stem
         l: list[PreparedMeshData] = []
         for segment in self.data_model.segment_list:
             segment_id = int(segment.id)
@@ -139,9 +134,6 @@ class SFFWrapper:
                     normals = self._decode_mesh_component_data(mesh.normals) \
                         if mesh.normals is not None else None
                         
-                    # TODO: use compute here if does not work
-                    # TODO: pre downsample more here if does not work
-                    # too big
                     vedo_mesh = Mesh([vertices, triangles])
                     l.append(
                         PreparedMeshData(
@@ -150,88 +142,40 @@ class SFFWrapper:
                             normals = normals,
                             area = vedo_mesh.area(),
                             segment_id = segment_id,
-                            mesh_id = mesh_id
+                            mesh_id = mesh_id,
+                            fraction=1.0
                         )
                     )
         
         
         
         
-    #     unchunked_component_data = decode_base64_data(
-    #     data=mesh[mesh_component_name].data[...][0],
-    #     mode=mesh[mesh_component_name].mode[...][0],
-    #     endianness=mesh[mesh_component_name].endianness[...][0],
-    # )
-    # # chunked onto triples
-    # chunked_component_data = chunk_numpy_arr(unchunked_component_data, 3)
-
-    # component_arr = create_dataset_wrapper(
-    #     zarr_group=target_group,
-    #     data=chunked_component_data,
-    #     name=mesh_component_name,
-    #     shape=chunked_component_data.shape,
-    #     dtype=chunked_component_data.dtype,
-    #     params_for_storing=params_for_storing,
-    # )
-
-    # component_arr.attrs[f"num_{mesh_component_name}"] = int(
-    #     mesh[mesh_component_name][f"num_{mesh_component_name}"][...]
-    # )
-        
         return PreparedSegmentation(
             data=[
                 PreparedMeshSegmentationData(
                     segmentation_id=segmentation_id,
-                    timeframe_indices=timeframe_index,
+                    timeframe_index=timeframe_index,
                     resolution=resolution,
-                    size=None,
-                    mesh_list=l
+                    nbytes=None,
+                    global_mesh_list=l
                     )],
             metadata=PreparedSegmentationMetadata(
                 timeframe_indices=[timeframe_index],
                 resolutions=[resolution],
-                segmentation_nums=self.segmentation_nums,
-                segmentation_ids=self.segmentation_ids
-            )    
+                segmentation_ids=[segmentation_id]
+            ),
+            kind=SegmentationKind.lattice
         )
-                        
-                        
-        # for segment_name, segment in zarr_structure.segment_list.groups():
-        #     segment_id = int(segment.id[...])
-        #     single_segment_group = timeframe_gr.create_group(segment_id)
-        #     single_detail_lvl_group = single_segment_group.create_group(1)
-            # if "mesh_list" in segment:
-            #     for mesh_name, mesh in segment.mesh_list.groups():
-            #         mesh_id = int(mesh.id[...])
-            #         single_mesh_group = single_detail_lvl_group.create_group(mesh_id)
-
-            #         for mesh_component_name, mesh_component in mesh.groups():
-            #             if mesh_component_name != "id":
-            #                 write_mesh_component_data_to_zarr_arr(
-            #                     target_group=single_mesh_group,
-            #                     mesh=mesh,
-            #                     mesh_component_name=mesh_component_name,
-            #                     params_for_storing=params_for_storing,
-            #                 )
-            #         # TODO: check in which units is area and volume
-            #         vertices = single_mesh_group["vertices"][...]
-            #         triangles = single_mesh_group["triangles"][...]
-            #         vedo_mesh_obj = Mesh([vertices, triangles])
-            #         single_mesh_group.attrs["num_vertices"] = (
-            #             single_mesh_group.vertices.attrs["num_vertices"]
-            #         )
-            #         single_mesh_group.attrs["area"] = vedo_mesh_obj.area()
-            #         # single_mesh_group.attrs['volume'] = vedo_mesh_obj.volume()
-
     
     def process_data(self):
         primary_descriptor = self.data_model.primary_descriptor
+        # would not work for non sff 
         match primary_descriptor:
-            case SegmentationPrimaryDescriptor.three_d_volume:
+            case PrimaryDescriptor.three_d_volume:
                 return self._process_lattice_segmentation_data()
-            case SegmentationPrimaryDescriptor.mesh_list:
+            case PrimaryDescriptor.mesh_list:
                 return self._process_mesh_segmentation_data()
-            case SegmentationPrimaryDescriptor.shape_primitive_list:
+            case PrimaryDescriptor.shape_primitive_list:
                 raise NotImplementedError()
             case _:
                 raise ValueError()

@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Protocol, Tuple
 
 from cellstar_db.models import (
-    AnnotationsMetadata,
+    Annotations,
     GeometricSegmentationData,
     MeshesData,
     SliceData,
@@ -79,11 +79,11 @@ class VolumeServerDB(Protocol):
 
     def read(self, namespace: str, key: str) -> DBReadContext: ...
 
-    async def read_metadata(self, namespace: str, key: str) -> VolumeMetadata: ...
+    async def read_info(self, namespace: str, key: str) -> VolumeMetadata: ...
 
     async def read_annotations(
         self, namespace: str, key: str
-    ) -> AnnotationsMetadata: ...
+    ) -> Annotations: ...
 
     async def list_sources(self) -> list[str]: ...
 

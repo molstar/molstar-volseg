@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from cellstar_preprocessor.tools.gunzip.gunzip import gunzip
+from pydantic.dataclasses import dataclass
 import os
 from pathlib import Path
 import resource
@@ -12,15 +13,16 @@ import ome_zarr.utils
 
 
 @dataclass
-class Uncompresser:
+class Uncompressor:
     source: Path 
     compression_format: CompressionFormat
-    destination_dir: Path
+    # directory of file (if gz)
+    destination: Path
     
     def uncompress(self):
         f = self.compression_format
         match f:
-            case CompressionFormat.zip_archive:
+            case CompressionFormat.zip_dir:
                 # TODO: will it work with normal non ometiff archieves
                 # will it retrieve dir structure?
                 with zipfile.ZipFile(str(self.source.resolve()), "r") as zip_ref:
@@ -28,10 +30,11 @@ class Uncompresser:
                         if zip_info.is_dir():
                             continue
                         zip_info.filename = os.path.basename(zip_info.filename)
-                        zip_ref.extract(zip_info, str(self.destination_dir.resolve()))
-
-            # case CompressionFormat.gzip_archive:
-            #     pass
+                        zip_ref.extract(zip_info, str(self.destination.resolve()))
+                return self.destination
+            case CompressionFormat.gzipped_file | CompressionFormat.hff_gzipped_file | CompressionFormat.map_gzipped_file:
+                # source wrong
+                return gunzip(self.source, self.destination)
             # TODO: other
             case _:
                 raise NotImplementedError(f'Support for format {f} has not been implemented yet')

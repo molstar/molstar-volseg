@@ -1,13 +1,13 @@
 import pytest
 from cellstar_db.file_system.annotations_context import AnnnotationsEditContext
-from cellstar_db.models import AnnotationsMetadata
+from cellstar_db.models import Annotations
 from cellstar_db.tests.conftest import TEST_ENTRY_PREPROCESSOR_ARGUMENTS
 
 
 @pytest.mark.asyncio
 async def test_add_annotations(generate_test_data):
     testing_db, test_data = generate_test_data
-    annotations_metadata_before_adding: AnnotationsMetadata = (
+    annotations_metadata_before_adding: Annotations = (
         await testing_db.read_annotations(
             TEST_ENTRY_PREPROCESSOR_ARGUMENTS.source_db,
             TEST_ENTRY_PREPROCESSOR_ARGUMENTS.entry_id,
@@ -24,7 +24,7 @@ async def test_add_annotations(generate_test_data):
 
         # check that annotations were added
         # i.e. if length of annotations list increased by length of test_data['add_annotations']
-        annotations_metadata_after_adding: AnnotationsMetadata = (
+        annotations_metadata_after_adding: Annotations = (
             await testing_db.read_annotations(
                 TEST_ENTRY_PREPROCESSOR_ARGUMENTS.source_db,
                 TEST_ENTRY_PREPROCESSOR_ARGUMENTS.entry_id,

@@ -16,7 +16,7 @@ from cellstar_query.requests import (
     EntriesRequest,
     GeometricSegmentationRequest,
     MeshRequest,
-    MetadataRequest,
+    InfoRequest,
     VolumeRequestBox,
     VolumeRequestDataKind,
     VolumeRequestInfo,
@@ -26,6 +26,7 @@ from cellstar_query.serialization.cif import (
     serialize_volume_info,
     serialize_volume_slice,
 )
+from db.cellstar_db.models import Info
 
 __MAX_DOWN_SAMPLING_VALUE__ = 1000000
 
@@ -74,19 +75,20 @@ class VolumeServerService:
 
         return entries
 
-    async def get_metadata(self, req: MetadataRequest) -> dict:
-        grid = await self.db.read_metadata(req.source, req.structure_id)
+    async def get_info(self, req: InfoRequest):
+        grid = await self.db.read_info(req.source, req.structure_id)
         try:
             annotation = await self.db.read_annotations(req.source, req.structure_id)
         except Exception:
             annotation = None
 
-        return {"grid": grid.model_dump(), "annotation": annotation}
+        # should return model 
+        return Info(grid=grid.model(), annotation=annotation)
 
     async def get_volume_data(
         self, req: VolumeRequestInfo, req_box: Optional[VolumeRequestBox] = None
     ) -> bytes:
-        metadata = await self.db.read_metadata(req.source, req.structure_id)
+        metadata = await self.db.read_info(req.source, req.structure_id)
 
         lattice_ids = metadata.segmentation_lattice_ids() or []
         if req.segmentation_id not in lattice_ids:
@@ -135,8 +137,8 @@ class VolumeServerService:
 
         return serialize_volume_slice(db_slice, metadata, slice_box)
 
-    async def get_volume_info(self, req: MetadataRequest) -> bytes:
-        metadata = await self.db.read_metadata(req.source, req.structure_id)
+    async def get_volume_info(self, req: InfoRequest) -> bytes:
+        metadata = await self.db.read_info(req.source, req.structure_id)
         box = self._decide_slice_box(None, None, metadata)
         return serialize_volume_info(metadata, box)
 
@@ -155,7 +157,7 @@ class VolumeServerService:
 
     async def get_meshes_bcif(self, req: MeshRequest) -> bytes:
         with Timing("read metadata"):
-            metadata = await self.db.read_metadata(req.source, req.structure_id)
+            metadata = await self.db.read_info(req.source, req.structure_id)
         # with Timing("decide box"):
         #     box = self._decide_slice_box(None, None, metadata)
         # for meshes instead can create box
@@ -185,7 +187,7 @@ class VolumeServerService:
                     #     pass
                 except KeyError as e:
                     print("Exception in get_meshes: " + str(e))
-                    meta = await self.db.read_metadata(req.source, req.structure_id)
+                    meta = await self.db.read_info(req.source, req.structure_id)
                     segments_levels = self._extract_segments_detail_levels(
                         meta, timeframe=req.time, segmentation_id=req.segmentation_id
                     )
@@ -207,7 +209,7 @@ class VolumeServerService:
                 )
             except KeyError as e:
                 print("Exception in get_meshes: " + str(e))
-                meta = await self.db.read_metadata(req.source, req.structure_id)
+                meta = await self.db.read_info(req.source, req.structure_id)
                 segments_levels = self._extract_segments_detail_levels(
                     meta, timeframe=req.time, segmentation_id=req.segmentation_id
                 )
@@ -226,14 +228,14 @@ class VolumeServerService:
                 metadata.segmentation_downsamplings(lattice_id)
             )
             # check if downsampling exists
-            exists = any(i["level"] == level for i in segm_downsamplings)
+            exists = any(i.level == level for i in segm_downsamplings)
             # check if
             if not exists:
                 return False
             right_downsampling: DownsamplingLevelInfo = list(
-                filter(lambda i: i["level"] == level, segm_downsamplings)
+                filter(lambda i: i.level == level, segm_downsamplings)
             )[0]
-            if right_downsampling["available"] == False:
+            if right_downsampling.available == False:
                 return False
 
         return True
@@ -279,18 +281,18 @@ class VolumeServerService:
         # if not, calculates box based on downsampling
         # returns first box
         for downsampling_level_info in metadata.volume_downsamplings():
-            if downsampling_level_info["available"] == False:
+            if downsampling_level_info.available == False:
                 continue
 
             if len(metadata.segmentation_lattice_ids()) > 0:
-                level = downsampling_level_info["level"]
+                level = downsampling_level_info.level
                 exists = self._check_if_downsampling_exists_in_segmentations(
                     level, metadata
                 )
                 if not exists:
                     continue
 
-            downsampling_rate = downsampling_level_info["level"]
+            downsampling_rate = downsampling_level_info.level
             if req_box:
                 box = calc_slice_box(
                     req_box.bottom_left, req_box.top_right, metadata, downsampling_rate

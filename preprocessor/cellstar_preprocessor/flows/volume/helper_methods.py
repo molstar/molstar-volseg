@@ -119,21 +119,21 @@ def store_volume_data_in_zarr(
     data: da.Array,
     volume_data_group: zarr.Group,
     params_for_storing: dict,
-    force_dtype: np.dtype,
     resolution: str,
     timeframe_index: str,
     channel_id: str,
+    force_dtype: np.dtype | None = None,
 ):
     assert channel_id is not None
     resolution_data_group: zarr.Group = volume_data_group.require_group(resolution)
     time_frame_data_group = resolution_data_group.require_group(timeframe_index)
-
+    dtype = force_dtype if force_dtype is not None else data.dtype
     zarr_arr = create_dataset_wrapper(
         zarr_group=time_frame_data_group,
         data=data,
         name=str(channel_id),
         shape=data.shape,
-        dtype=force_dtype,
+        dtype=dtype,
         params_for_storing=params_for_storing,
         is_empty=True,
     )

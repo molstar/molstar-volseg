@@ -1,12 +1,15 @@
 {   
     "$schema": "preprocessor_params.schema.json",
     "db_path": "preprocessor/temp/test_db",
-    "entry_id": "actin",
+    "entry_id": "custom-actin",
     "source_db": "custom",
     "inputs": [
         {
             "kind": "ometiff_image",
-            "path": "PC-3_control_F01.tif"
+            "path": "PC-3_control_F01.tif",
+            "parameters": {
+                "pre_downsampling_factor": 8
+            }
         },
         {
             "kind": "wrl",

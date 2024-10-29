@@ -21,6 +21,7 @@ from cellstar_db.models import (
     MeshData,
     MeshesData,
     SliceData,
+    StoreType,
 )
 from cellstar_db.protocol import DBReadContext, VolumeServerDB
 from cellstar_db.utils.box import normalize_box
@@ -440,7 +441,7 @@ class FileSystemDBReadContext(DBReadContext):
         self.namespace = namespace
         if self.db.store_type == "directory":
             self.store = zarr.DirectoryStore(path=self.path)
-        elif self.db.store_type == "zip":
+        elif self.db.store_type == StoreType.zip:
             self.store = zarr.ZipStore(
                 path=self.path, compression=0, allowZip64=True, mode="r"
             )

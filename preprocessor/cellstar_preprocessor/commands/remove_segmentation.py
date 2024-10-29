@@ -1,3 +1,4 @@
+from cellstar_db.models import StoreType
 import typer
 from cellstar_db.file_system.db import FileSystemVolumeServerDB
 from cellstar_db.file_system.volume_and_segmentation_context import VolumeAndSegmentationContext
@@ -19,7 +20,7 @@ def remove_segmentation(
     if new_db_path.is_dir() == False:
         new_db_path.mkdir()
 
-    db = FileSystemVolumeServerDB(new_db_path, store_type="zip")
+    db = FileSystemVolumeServerDB(new_db_path, store_type=StoreType.zip)
 
     with db.edit_data(
         namespace=source_db, key=entry_id, working_folder=Path(working_folder)
