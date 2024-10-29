@@ -1,12 +1,59 @@
 {
     "version": "0.2.0",
     "configurations": [
+    {
+        "type": "bashdb",
+        "request": "launch",
+        "name": "Bash-Debug (hardcoded script name)",
+        "cwd": "${workspaceFolder}",
+        "program": "${workspaceFolder}/install_deps.sh",
+        "args": []
+    },
         {
             "name": "Python: Current File",
             "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
+        },
+        {
+            "name": "cellim-1-no-tubulin",
+            "type": "debugpy",
+            "justMyCode": false,
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "preprocess",
+                "--arguments-json",
+                "preprocessor/cellstar_preprocessor/model/cellim_1_params_no_tubulin.json"
+            ]
+        },
+        {
+            "name": "cellim-1",
+            "type": "debugpy",
+            "justMyCode": false,
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "preprocess",
+                "--arguments-json",
+                "preprocessor/cellstar_preprocessor/model/cellim_1_params.json"
+            ]
+        },
+        {
+            "name": "cellim-2",
+            "type": "debugpy",
+            "justMyCode": false,
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "preprocess",
+                "--arguments-json",
+                "preprocessor/cellstar_preprocessor/model/cellim_2_params.json"
+            ]
         },
         {
             "name": "build_db_generalization",
