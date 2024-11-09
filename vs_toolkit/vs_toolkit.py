@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Optional, Protocol, TypedDict, Union
 from zipfile import ZIP_DEFLATED, ZipFile
+from molviewspec.builder import create_builder
 
 from cellstar_db.file_system.db import FileSystemVolumeServerDB
 from cellstar_db.models import Metadata, TimeInfo
@@ -118,12 +119,13 @@ class JsonQueryParams(TypedDict):
     detail_lvl: Optional[int]
     max_points: Optional[int]
 
+OutputFormatsT = Literal['mvsx', 'cvsx']
 
 class ParsedArgs(TypedDict):
     db_path: Path
     out: Path
     json_params_path: Path
-
+    format: OutputFormatsT
 
 def _parse_argparse_args(args: argparse.Namespace):
     # TODO: validate similar to query app
@@ -131,6 +133,7 @@ def _parse_argparse_args(args: argparse.Namespace):
         db_path=Path(args.db_path),
         out=Path(args.out),
         json_params_path=Path(args.json_params_path),
+        format=str(args.format)
     )
 
 
@@ -301,11 +304,26 @@ def _get_volume_timeframes_from_metadata(grid_metadata: Metadata):
 
     return list(range(start, end + 1))
 
+def _to_mvsx(responses: list[QueryResponse], indexJson: CVSXFilesIndex):
+    """
+    Only works for a volume query 
+    """
+    builder = create_builder()
+    # TODO: replacement for download?
+    (
+        # TODO: local url in MVSX archive
+        builder.download(url='https://raw.githack.com/molstar/molstar-volseg/master/test-data/preprocessor/sample_volumes/emdb/EMD-1832.map')
+        .parse(format='map')
+        .raw_volume(source='map')
+        .volume_representation(type="isosurface")
+        .color(color='aqua')
+        # .color_from_uri(schema='volume', uri='./_examples/_input/volseg_example_annotations.json', format='json')
+        # .transparency(transparency=0.4)
+    )
 
-def _write_to_file(responses: list[QueryResponse], out_path: Path):
+def _write_to_file(responses: list[QueryResponse], out_path: Path, format: OutputFormatsT):
     # TODO: add here index.json with data on each file
 
-    # should be similar to create in memory zip
     file = io.BytesIO()
 
     indexJson: CVSXFilesIndex = {
@@ -317,99 +335,106 @@ def _write_to_file(responses: list[QueryResponse], out_path: Path):
         # 'geometricSegmentations': [],
         "query": None,
     }
-    with ZipFile(file, "w", ZIP_DEFLATED) as zip_file:
-        for r in responses:
-            response = r.response
-            type = r.type
-            input_data = r.input_data
+    
+    match format:
+        case 'cvsx':
+            with ZipFile(file, "w", ZIP_DEFLATED) as zip_file:
+                for r in responses:
+                    response = r.response
+                    type = r.type
+                    input_data = r.input_data
 
-            if type == "volume":
-                # name should be created based on type and input data
-                channel_id = input_data["channel_id"]
-                time = input_data["time"]
-                name = f"{type}_{channel_id}_{time}.bcif"
-                zip_file.writestr(name, response)
-                info: VolumeFileInfo = {
-                    "channelId": channel_id,
-                    "timeframeIndex": time,
-                    "type": type,
-                }
-                if not "volumes" in indexJson:
-                    indexJson["volumes"] = {}
+                    if type == "volume":
+                        # name should be created based on type and input data
+                        channel_id = input_data["channel_id"]
+                        time = input_data["time"]
+                        name = f"{type}_{channel_id}_{time}.bcif"
+                        zip_file.writestr(name, response)
+                        info: VolumeFileInfo = {
+                            "channelId": channel_id,
+                            "timeframeIndex": time,
+                            "type": type,
+                        }
+                        if not "volumes" in indexJson:
+                            indexJson["volumes"] = {}
 
-                indexJson["volumes"][name] = info
+                        indexJson["volumes"][name] = info
 
-            elif type == "lattice":
-                segmentation_id = input_data["segmentation_id"]
-                time = input_data["time"]
-                name = f"{type}_{segmentation_id}_{time}.bcif"
+                    elif type == "lattice":
+                        segmentation_id = input_data["segmentation_id"]
+                        time = input_data["time"]
+                        name = f"{type}_{segmentation_id}_{time}.bcif"
 
-                info: LatticeSegmentationFileInfo = {
-                    "timeframeIndex": time,
-                    "type": type,
-                    "segmentationId": segmentation_id,
-                }
-                if not "latticeSegmentations" in indexJson:
-                    indexJson["latticeSegmentations"] = {}
+                        info: LatticeSegmentationFileInfo = {
+                            "timeframeIndex": time,
+                            "type": type,
+                            "segmentationId": segmentation_id,
+                        }
+                        if not "latticeSegmentations" in indexJson:
+                            indexJson["latticeSegmentations"] = {}
 
-                indexJson["latticeSegmentations"][name] = info
+                        indexJson["latticeSegmentations"][name] = info
 
-                zip_file.writestr(name, response)
-            elif type == "mesh":
-                # how to include segmentation id here?
-                segmentation_id = input_data["segmentation_id"]
-                time = input_data["time"]
-                meshes: list[str, bytes] = response
-                filenames = []
-                for segment_id, content in meshes:
-                    filename = f"{type}_{segment_id}_{segmentation_id}_{time}.bcif"
-                    filenames.append(filename)
-                    zip_file.writestr(filename, content)
+                        zip_file.writestr(name, response)
+                    elif type == "mesh":
+                        # how to include segmentation id here?
+                        segmentation_id = input_data["segmentation_id"]
+                        time = input_data["time"]
+                        meshes: list[str, bytes] = response
+                        filenames = []
+                        for segment_id, content in meshes:
+                            filename = f"{type}_{segment_id}_{segmentation_id}_{time}.bcif"
+                            filenames.append(filename)
+                            zip_file.writestr(filename, content)
 
-                info: MeshSegmentationFilesInfo = {
-                    "segmentationId": segmentation_id,
-                    "timeframeIndex": time,
-                    "segmentsFilenames": filenames,
-                    "type": type,
-                }
+                        info: MeshSegmentationFilesInfo = {
+                            "segmentationId": segmentation_id,
+                            "timeframeIndex": time,
+                            "segmentsFilenames": filenames,
+                            "type": type,
+                        }
 
-                if not "meshSegmentations" in indexJson:
-                    indexJson["meshSegmentations"] = []
+                        if not "meshSegmentations" in indexJson:
+                            indexJson["meshSegmentations"] = []
 
-                indexJson["meshSegmentations"].append(info)
+                        indexJson["meshSegmentations"].append(info)
 
-            elif type == "annotations" or type == "metadata" or type == "query":
-                name = f"{type}.json"
-                dumped_JSON: str = json.dumps(response, ensure_ascii=False, indent=4)
-                zip_file.writestr(name, data=dumped_JSON)
-                indexJson[type] = name
-            # TODO: change geometric-segmentation
-            elif type == "geometric-segmentation":
-                segmentation_id = input_data["segmentation_id"]
-                time = input_data["time"]
-                name = f"{type}_{segmentation_id}_{time}.json"
-                dumped_JSON: str = json.dumps(response, ensure_ascii=False, indent=4)
-                zip_file.writestr(name, data=dumped_JSON)
+                    elif type == "annotations" or type == "metadata" or type == "query":
+                        name = f"{type}.json"
+                        dumped_JSON: str = json.dumps(response, ensure_ascii=False, indent=4)
+                        zip_file.writestr(name, data=dumped_JSON)
+                        indexJson[type] = name
+                    # TODO: change geometric-segmentation
+                    elif type == "geometric-segmentation":
+                        segmentation_id = input_data["segmentation_id"]
+                        time = input_data["time"]
+                        name = f"{type}_{segmentation_id}_{time}.json"
+                        dumped_JSON: str = json.dumps(response, ensure_ascii=False, indent=4)
+                        zip_file.writestr(name, data=dumped_JSON)
 
-                info: GeometricSegmentationFileInfo = {
-                    "segmentationId": segmentation_id,
-                    "timeframeIndex": time,
-                    "type": type,
-                }
-                if not "geometricSegmentations" in indexJson:
-                    indexJson["geometricSegmentations"] = {}
+                        info: GeometricSegmentationFileInfo = {
+                            "segmentationId": segmentation_id,
+                            "timeframeIndex": time,
+                            "type": type,
+                        }
+                        if not "geometricSegmentations" in indexJson:
+                            indexJson["geometricSegmentations"] = {}
 
-                indexJson["geometricSegmentations"][name] = info
+                        indexJson["geometricSegmentations"][name] = info
 
-        dumped_index_JSON: str = json.dumps(indexJson, ensure_ascii=False, indent=4)
-        zip_file.writestr(INDEX_JSON_FILENAME, data=dumped_index_JSON)
+                dumped_index_JSON: str = json.dumps(indexJson, ensure_ascii=False, indent=4)
+                zip_file.writestr(INDEX_JSON_FILENAME, data=dumped_index_JSON)
 
-    # print(indexJson)
-    zip_data = file.getvalue()
+            # print(indexJson)
+            zip_data = file.getvalue()
 
-    with open(str(out_path.resolve()), "wb") as f:
-        f.write(zip_data)
-
+            with open(str(out_path.resolve()), "wb") as f:
+                f.write(zip_data)
+        case 'mvsx':
+            mvsx = _to_mvsx(responses, indexJson)
+            file = _write_file(out_path, format)
+        case _:
+            raise Exception(f'Format {format} is not supported.')
 
 def _get_timeframes_from_timeinfo(t: TimeInfo, segmentation_id: str):
     return list(range(t[segmentation_id]["start"], t[segmentation_id]["end"] + 1))
@@ -606,7 +631,7 @@ async def query(args: argparse.Namespace):
         r = await query.execute()
         responses.append(r)
 
-    _write_to_file(responses, parsed_args["out"])
+    _write_to_file(responses, parsed_args["out"], parsed_args["format"])
 
 
 async def main():
@@ -617,6 +642,8 @@ async def main():
     # common_subparsers = main_parser.add_subparsers(title='Query type', dest='query_type', help='Select one of: ')
     # COMMON ARGUMENTS
     required_named = main_parser.add_argument_group("Required named arguments")
+    # TODO: check if choices should be a list instead
+    required_named.add_argument("--format", type=str, default='mvsx', choices=OutputFormatsT, required=True, help="Produce CVSX or mvsx file as an output")
     required_named.add_argument("--db_path", type=str, required=True, help="Path to db")
     # TODO: exclude extension
     required_named.add_argument(
