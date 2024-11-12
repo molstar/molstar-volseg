@@ -43,7 +43,7 @@ First create `json_with_query_params.json` file with the following content:
 
 Then use the following command:
     ```
-    python vs_toolkit.py --db_path temp/test_db --out results.cvsx composite --json-params-path json_with_query_params.json
+    python vs_toolkit.py --db_path temp/test_db --out results.cvsx --json-params-path json_with_query_params.json
     ```
     
 This will query data for channel `2` and time frame `4` for volume and data for all available segmentation kinds and time frame `4`, and pack it into `idr-13457537.cvsx` file
