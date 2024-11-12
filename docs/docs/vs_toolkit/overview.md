@@ -34,11 +34,12 @@ This example shows how produce `results.cvsx` CVSX file for `idr-13457537`intern
 First create `json_with_query_params.json` file with the following content: 
 
 ```json
+{
         "entry_id": "idr-13457537",
         "source_db": "idr",
         "channel_id": "2",
         "time": 4
-
+}
 ```
 
 Then use the following command:
