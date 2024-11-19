@@ -588,3 +588,13 @@ class VolumeMetadata(Protocol):
         mesh simplification ratios (fractions, e.g. 0.8) as values
         """
         ...
+
+
+class ModelArbitraryTypes(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class Asset(ModelArbitraryTypes):
+    filename: str
+    data: str | bytes
