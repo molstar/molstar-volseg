@@ -1,4 +1,6 @@
 ### Custom
+working_folder/*
+preprocessor/cellstar_preprocessor/tools/open_wrl_file/*
 molstar-extension/site/*
 molstar-extension/node_modules/
 molstar-extension/debug.log
@@ -317,3 +319,4 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+working_folder/custom-actin/.zattrs
