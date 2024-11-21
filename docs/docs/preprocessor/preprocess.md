@@ -20,7 +20,7 @@ The `preprocess` command of `preprocessor/cellstar_preprocessor/preprocess.py` s
   |`--working-folder` | path to directory where temporary files will be stored during the build process |
   |`--db-path` | path to folder with database |
   |`--input-path` | Path to input file. Should be provided for each input file separately (see examples) |
-  |`--input-kind` | Kind of input file. One of the following: <code>[map\|sff\|omezarr\|mask\|application_specific_segmentation\|custom_annotations\|nii_volume\|nii_segmentation\|geometric_segmentation\|star_file_geometric_segmentation\|ometiff_image\|ometiff_segmentation\|extra_data]</code>. See examples for more details. |
+  |`--input-kind` | Kind of input file. One of the following: <code>[map\|sff\|omezarr\|mask\|application_specific_segmentation\|custom_annotations\|nii_volume\|nii_segmentation\|geometric_segmentation\|ometiff_image\|ometiff_segmentation\|extra_data]</code>. See examples for more details. |
 
 
 As one can see, `preprocess` command has two possible modes for the `preprocess`: `add` and `extend`.
