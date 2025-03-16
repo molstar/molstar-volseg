@@ -1,15 +1,17 @@
-import { useEffect, useState } from 'react';
+// import { useEffect, useState } from 'react';
 
 const DocsLink = 'https://molstar.org/viewer-docs/volumes_and_segmentations/overview/';
 
-const ViewerURL = 'https://molstar.org/viewer/';
+// const ViewerURL = 'https://molstar.org/viewer/';
 
 export function LandingPage() {
-    const today = new Date();
+    // const today = new Date();
 
     return <div className='container' style={{ marginBottom: 20 }}>
         <div className='row' style={{ textAlign: 'center', marginTop: 40 }}>
-            <img style={{ maxWidth: 160, width: '100%', marginBottom: 20 }} src='img/molstar-logo.png' alt='logo' />
+            <a href='https://molstar.org' target='_blank' rel='noreferrer'>
+                <img style={{ maxWidth: 160, width: '100%', marginBottom: 20 }} src='img/molstar-logo.png' alt='logo' />
+            </a>
             <h2 style={{ fontWeight: 'bold' }}>
                 Volumes & Segmentations
             </h2>
@@ -31,25 +33,39 @@ export function LandingPage() {
                     <source src='img/intro.mp4' type='video/mp4' />
                 </video>
             </div>
-            <div className='seven columns'  style= {{ display: 'flex', alignItems: 'center' }}>
+            <div className='seven columns' style={{ display: 'flex', alignItems: 'center' }}>
                 <div style={{ textAlign: 'justify', margin: 5 }}>
                     Mol* Volumes & Segmentations (Mol*VS) is a <a href='https://doi.org/10.1093/nar/gkab314'>Mol* Viewer</a> extension which adds support for large scale volumetric data & their segmentations.
-                    Building on the existing Mol* ecosystem, this extension allows seamless integration of biomolecular data from cellular to atomic scale. It provides the means to visualize 
+                    Building on the existing Mol* ecosystem, this extension allows seamless integration of biomolecular data from cellular to atomic scale. It provides the means to visualize
                     large-scale volumetric and segmentation data from cryo-EM, light miscroscopy, volume-EM, and other imagining experiments together with related
                     3D model data and biological annotations. This website is free and open to all users and there is no login requirement.
                 </div>
             </div>
         </div>
 
+        <div className='row' style={{ textAlign: 'justify', marginTop: 40 }}>
+            <div className='twelve columns'>
+                <b>When using Volume and Segmentations, please cite:</b><br />
+                <div style={{ lineHeight: 1.2 }}>
+                    <span style={{ fontSize: 'smaller' }}>Aliaksei Chareshneu, Alessio Cantara, Dominick Tichý, David Sehnal: <a
+                        href='https://doi.org/10.1002/cpz1.70070'>Visualizing Volumetric and Segmentation Data using Mol* Volumes & Segmentations 2.0</a>, <i>Current Protocols</i>, 2024; <a
+                        href='https://doi.org/10.1002/cpz1.70070'>10.1002/cpz1.70070</a>.</span> <br />
+
+                    <span style={{ fontSize: 'smaller' }}>Aliaksei Chareshneu, Adam Midlik, Crina-Maria Ionescu, Alexander Rose, Vladimír Horský, Alessio Cantara, Radka Svobodová, Karel Berka, David Sehnal: <a
+                        href='https://doi.org/10.1093/nar/gkad411'>Mol* Volumes and Segmentations: visualization and interpretation of cell imaging data alongside macromolecular structure data and biological annotations</a>, <i>Nucleic Acids Research</i>, 2023; <a
+                        href='https://doi.org/10.1093/nar/gkad411'>10.1093/nar/gkad411</a>.</span>
+                </div>
+            </div>
+
+            <div className='one columns'>
+            </div>
+        </div>
+
         <div style={{ borderTop: '1px solid #E0DDD4', margin: '30px 0' }} />
 
-        <div className='row' style={{ textAlign: 'center', marginTop: 20 }}>
+        {/* <div className='row' style={{ textAlign: 'center', marginTop: 20 }}>
             <div className='twelve columns'>
                 <h4 className='hero-heading' style={{ marginBottom: 30 }}><b>Interactive Examples</b></h4>
-                {/* <div style={{ fontSize: '0.95rem', maxWidth: 500, margin: '10px auto 40px auto', color: '#555' }}>
-                    WebGL2 support is required to view the interactive examples. The examples were tested in Firefox, Chrome & Safari on PC, Linux and MacOS/iOS.
-                    Some users experienced rendering problems with integrated Intel graphics cards.
-                </div> */}
                 <div className='examples'>
                     <div className='tooltip'>
                         <a href={resolveExampleSnapshotURL('emd-1014.molj')}
@@ -103,11 +119,44 @@ export function LandingPage() {
                     </div>
                 </div>
             </div>
+        </div> */}
+
+        <div className='row' style={{ textAlign: 'center', marginTop: 20 }}>
+            <div className='twelve columns'>
+                <h4 className='hero-heading' style={{ marginBottom: 30 }}><b>Live Examples</b></h4>
+                <div className='examples'>
+                    <div className='tooltip'>
+                        <a href='https://molstar.org/molstar-volseg/index.html?cvsx-url=https://rawcdn.githack.com/molstar/molstar-volseg/2c677ab0f1b7b7d27f292e0bd209de83e732d216/vs_toolkit/sample_cvsx/emd-1832.cvsx'
+                            target='_blank' rel='noreferrer'><img alt='EMD 1832' src='img/examples/emd-1832.png' /></a>
+                        <p className='tooltip-info'>
+                            Drosophila melanogaster CMG complex bound to ADP.BeF3
+                            (<b><a href='https://www.ebi.ac.uk/emdb/EMD-1832' target='_blank' rel='noreferrer'>EMD 1832</a></b>, <b><a href='http://doi.org/doi:10.1038/nsmb.2004' target='_blank' rel='noreferrer'>doi:10.1038/nsmb.2004</a></b>)
+
+                        </p>
+                    </div>
+                    <div className='tooltip'>
+                        <a href='https://molstar.org/molstar-volseg/index.html?cvsx-url=https://rawcdn.githack.com/molstar/molstar-volseg/026803da23fd23e01a967e5f811a09e8e85a7e6d/vs_toolkit/sample_cvsx/idr-13457537.cvsx' target='_blank' rel='noreferrer'><img
+                            alt='IDR 13457537' src='img/examples/idr-13457537.png' /></a>
+                        <p className='tooltip-info'>
+                            Exploring large datasets from light microscopy experiments <a href='https://idr.openmicroscopy.org/webclient/img_detail/13457537' target='_blank' rel='noreferrer'>
+                                IDR 13457537
+                            </a> showcases <a href='https://ngff.openmicroscopy.org/latest/'>OME NGFF</a> support.
+                        </p>
+                    </div>
+                    <div className='tooltip'>
+                        <a href='https://www.ebi.ac.uk/empiar/tomo-viewer/' target='_blank' rel='noreferrer'><img
+                            alt='EMPIAR TomoViewer' src='img/examples/tomo-viewer.png' /></a>
+                        <p className='tooltip-info'>
+                            The extension is used by <a href='https://www.ebi.ac.uk/empiar/tomo-viewer/' target='_blank' rel='noreferrer'>EMPIAR's TomoViewer</a>.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div style={{ borderTop: '1px solid #E0DDD4', margin: '30px 0' }} />
+        {/* <div style={{ borderTop: '1px solid #E0DDD4', margin: '30px 0' }} /> */}
 
-        <div className='row' style={{ marginTop: 0, display: 'flex' }}>
+        {/* <div className='row' style={{ marginTop: 0, display: 'flex' }}>
             <div className='twelve columns'
                 style= {{ textAlign: 'justify' }}>
                 <a className='button button-primary' href={ViewerURL} style={{ fontSize: '2rem', width: '100%' }}
@@ -133,24 +182,28 @@ export function LandingPage() {
                         target='_blank' rel='noreferrer'>Issues and Feedback</a>
                 </div>
             </div>
-        </div>
+        </div> */}
 
         <div style={{ borderTop: '1px solid #E0DDD4', margin: '30px 0' }} />
 
         <div className='row' style={{ display: 'flex' }}>
             <div className='four columns' style={{ display: 'flex', alignItems: 'center' }}>
                 <div>
-                    <a className='button button-primary' href='https://github.com/molstar/cellstar-volume-server/' style={{ fontSize: '2rem', width: '100%' }} target='_blank' rel='noreferrer'>
+                    <a className='button button-primary' href='https://github.com/molstar/molstar-volseg/' style={{ fontSize: '2rem', width: '100%' }} target='_blank' rel='noreferrer'>
                         <svg width='14' height='14' style={{ marginRight: '0.75rem' }}><use href='#github-logo' /></svg>
                         GitHub
                     </a>
                     <a className='button' href='https://molstar.org/viewer-docs/volumes_and_segmentations/running-molstarvs-locally/' style={{ fontSize: '2rem', width: '100%', marginBottom: 0 }}
                         target='_blank' rel='noreferrer'>Running Mol*VS Locally</a>
+                    <a className='button' href={DocsLink} style={{ fontSize: '2rem', width: '100%' }}
+                        target='_blank' rel='noreferrer'>Documentation</a>
+                    <a className='button' href='https://github.com/molstar/molstar-volseg/issues' style={{ fontSize: '2rem', width: '100%', marginBottom: 0 }}
+                        target='_blank' rel='noreferrer'>Issues and Feedback</a>
                 </div>
             </div>
             <div className='eight columns'
-                style= {{ textAlign: 'justify', display: 'flex', alignItems: 'center' }}>
-                Mol*VS is an open-source project with a permissive MIT license.<br/>
+                style={{ textAlign: 'justify', display: 'flex', alignItems: 'center' }}>
+                Mol*VS is an open-source project with a permissive MIT license.<br />
                 Do you have volume or mesh segmentation data that you wish to visualize before/without submission to a public database? You can do so by running an independent instance of Mol* with the Volumes and Segmentations extension.
             </div>
         </div>
@@ -172,26 +225,26 @@ export function LandingPage() {
     </div>
 }
 
-function resolveExampleSnapshotURL(snapshot: string) {
-    const snapshotRoot = `${window.location.origin}/snapshots/`;
-    // const snapshotRoot = 'https://molstarvolseg.ncbr.muni.cz/snapshots/';
-    return `${ViewerURL}?snapshot-url=${encodeURIComponent(`${snapshotRoot}${snapshot}`)}&snapshot-url-type=molj&prefer-webgl1=1`;
-}
+// function resolveExampleSnapshotURL(snapshot: string) {
+//     const snapshotRoot = `${window.location.origin}/snapshots/`;
+//     // const snapshotRoot = 'https://molstarvolseg.ncbr.muni.cz/snapshots/';
+//     return `${ViewerURL}?snapshot-url=${encodeURIComponent(`${snapshotRoot}${snapshot}`)}&snapshot-url-type=molj&prefer-webgl1=1`;
+// }
 
-function EntryCount() {
-    const [count, setCount] = useState<any>('...');
-    useEffect(() => {
-        fetch('https://molstarvolseg.ncbr.muni.cz/v2/list_entries/10000')
-            .then(res => res.json())
-            .then(res => {
-                let count = 0;
-                for (const xs of Array.from(Object.values(res))) count += (xs as any).length ?? 0;
-                setCount(count);
-            })
-            .catch(err => {
-                console.log(err);
-            });
-    });
+// function EntryCount() {
+//     const [count, setCount] = useState<any>('...');
+//     useEffect(() => {
+//         fetch('https://molstarvolseg.ncbr.muni.cz/v2/list_entries/10000')
+//             .then(res => res.json())
+//             .then(res => {
+//                 let count = 0;
+//                 for (const xs of Array.from(Object.values(res))) count += (xs as any).length ?? 0;
+//                 setCount(count);
+//             })
+//             .catch(err => {
+//                 console.log(err);
+//             });
+//     });
 
-    return <>{count}</>;
-}
+//     return <>{count}</>;
+// }
