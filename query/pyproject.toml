@@ -1,0 +1,20 @@
+[project]
+name = "cellstar-query"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Stanislav Geidl" }
+]
+requires-python = ">=3.10"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = ["cellstar_query/**"]
+
+[tool.uv]
+package = true
