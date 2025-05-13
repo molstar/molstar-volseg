@@ -47,7 +47,7 @@
                 "color": {
                     "type": ["array", "null"],
                     "items": {
-                        "type": "number"   
+                        "type": "number"
                     },
                     "minItems": 4,
                     "maxItems": 4

@@ -15,7 +15,7 @@ Other requirements:
 
 # Obtaining the code & setting up the environment
 
-Clone this GitHub repository: 
+Clone this GitHub repository:
 
 ```
 git clone https://github.com/molstar/molstar-volseg
@@ -109,7 +109,7 @@ Supported `build.py` arguments:
  - `--raw_input_files_dir` - path to raw input files to preprocess, defaults to `test-data/preprocessor/raw_input_files`
  - `--db_path` - path to db folder, defaults to `test-data/db`
  - `--temp_zarr_hierarchy_storage_path` - path to directory where temporary files will be stored during the build process. Defaults to `test-data/preprocessor/temp_zarr_hierarchy_storage/${DB_PATH}`
-	
+
 
 # Hosting
 
@@ -148,7 +148,7 @@ python serve.py
 
 ## Setting up Mol* Viewer
 
-- To view the data, a [Volumes and Segmentations extension](https://github.com/molstar/molstar/tree/master/src/extensions/volumes-and-segmentations) is available as part of the [Mol* Viewer](https://github.com/molstar/molstar). 
+- To view the data, a [Volumes and Segmentations extension](https://github.com/molstar/molstar/tree/master/src/extensions/volumes-and-segmentations) is available as part of the [Mol* Viewer](https://github.com/molstar/molstar).
 - In order to install the plugin, run the following commands:
 ```
 git clone https://github.com/molstar/molstar.git
@@ -214,12 +214,12 @@ npm run build
 
 ## Internal script for preprocessing database, hosting API and Landing page
 
-We use the [build_and_deploy.py](../preprocessor/src/tools/deploy_db/build_and_deploy.py) script to preprocess the database and host the API and Landing Page. Note that it will not host the Mol* viewer locally. Nevertheless, this script with some modifications might be useful when running the solution on your own data. 
+We use the [build_and_deploy.py](../preprocessor/src/tools/deploy_db/build_and_deploy.py) script to preprocess the database and host the API and Landing Page. Note that it will not host the Mol* viewer locally. Nevertheless, this script with some modifications might be useful when running the solution on your own data.
 
 To build database, host Landing Page and API, from `molstar-volseg` directory (default) run:
 
 ```
-python preprocessor/src/tools/deploy_db/build_and_deploy.py  --csv_with_entry_ids test-data/preprocessor/db_building_parameters_custom_entries.csv	
+python preprocessor/src/tools/deploy_db/build_and_deploy.py  --csv_with_entry_ids test-data/preprocessor/db_building_parameters_custom_entries.csv
 ```
 
 `preprocessor/src/tools/deploy_db/build_and_deploy.py` arguments:

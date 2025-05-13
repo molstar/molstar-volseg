@@ -110,7 +110,7 @@ def _download(uri: str, final_path: Path, kind: InputKind):
             return complete_path
         except Exception as e:
             print(f'uri: {uri}, final_path: {final_path}, kind: {kind}')
-            
+
 
 
 def _copy_file(uri: str, final_path: Path, kind: InputKind):
@@ -185,7 +185,7 @@ def _get_file_pool_wrapper(params: InputItemParams):
     final_path = params["final_path"]
     complete_path = _get_file(raw_input, final_path)
     updated_params: InputItemParams = copy.deepcopy(params)
-    
+
     if complete_path.suffix == ".gz":
         complete_path = gunzip(complete_path)
 
@@ -194,7 +194,7 @@ def _get_file_pool_wrapper(params: InputItemParams):
         complete_path = _unzip_multiseries_ometiff_zip(
             complete_path, raw_input["kind"]
         )
-    
+
     updated_params["complete_path"] = complete_path
     return updated_params
 
@@ -211,7 +211,7 @@ def _create_db_building_params(updated_download_items: list[InputItemParams]):
             if p["entry_id"] == item["entry_id"] and p["source_db"] == p["source_db"]:
                 target_item_idx = idx
                 break
-        
+
         single_input = (str(complete_path.resolve()), kind)
         if target_item_idx == None:
             input_for_building_db: InputForBuildingDatabase = {
@@ -226,9 +226,9 @@ def _create_db_building_params(updated_download_items: list[InputItemParams]):
                     input_for_building_db[param] = i["preprocessor_parameters"][
                         param
                     ]
-            
+
             db_building_params.append(input_for_building_db)
-            
+
         else:
             f = list(filter(lambda p: p["entry_id"] == item["entry_id"] and p["source_db"] == p["source_db"], db_building_params))
             assert len(f) == 1, 'There must be a single item in the list of inputs for building db'
@@ -240,9 +240,9 @@ def _create_db_building_params(updated_download_items: list[InputItemParams]):
             db_building_params[target_item_idx] = old_item
             new_inputs_content = db_building_params[target_item_idx]["inputs"]
             print(f"New inputs content: {new_inputs_content} for ")
-            
+
     return db_building_params
-    
+
 def download(args: argparse.Namespace):
     db_building_params: list[InputForBuildingDatabase] = []
 
@@ -256,9 +256,9 @@ def download(args: argparse.Namespace):
 
     download_params_file_path = Path(args.raw_input_download_params)
     download_params = _parse_raw_input_download_params_file(download_params_file_path)
-    
+
     download_items: list[InputItemParams] = []
-    
+
     for item in download_params:
         entry_folder_path = raw_unput_files_dir / item["source_db"] / item["entry_id"]
         for raw_input in item["inputs"]:
@@ -270,19 +270,19 @@ def download(args: argparse.Namespace):
 
             if "preprocessor_parameters" in raw_input:
                 d["preprocessor_parameters"] = raw_input["preprocessor_parameters"]
-            
+
             download_items.append(d)
-            
+
     with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
         updated_download_items = p.map(_get_file_pool_wrapper, download_items)
 
     del download_items
-    
+
     p.join()
 
     # 2. separate function for creating db_building_params
     db_building_params = _create_db_building_params(updated_download_items)
-    
+
     return db_building_params
 
 

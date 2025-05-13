@@ -16,8 +16,8 @@ def download_and_build(
     print('Building parameters stored to JSON')
     build(args)
     # NOTE: database is not build, breaks here
-    print('Database was build') 
-    
+    print('Database was build')
+
 def parse_script_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -41,7 +41,7 @@ def parse_script_args():
     parser.add_argument(
         "--clean_existing_raw_inputs_folder", action="store_true", default=False
     )
-    
+
     # parser.add_argument('--raw_input_files_dir', type=Path, default=RAW_INPUT_FILES_DIR, help='dir with raw input files')
     parser.add_argument(
         "--db_path", type=str, default=DEFAULT_DB_PATH, help="path to db folder"

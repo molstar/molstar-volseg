@@ -1,6 +1,6 @@
 name: Deploy api
 
-on: 
+on:
   workflow_dispatch:
     inputs:
       args:

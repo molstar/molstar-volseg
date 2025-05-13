@@ -8,7 +8,7 @@ if __name__ == "__main__":
     parser.add_argument("--ssl_keyfile", type=str)
     parser.add_argument("--ssl_certfile", type=str)
     args = parser.parse_args()
-    
+
     print("Mol* Volume Server")
     print(settings.dict())
     if args.ssl_certfile and args.ssl_keyfile:

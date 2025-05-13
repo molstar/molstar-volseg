@@ -48,6 +48,6 @@ nav:
     - Hosting Server API: 'server_api/overview.md'
 
 repo_url: https://github.com/molstar/molstar-volseg
-# edit_uri: 
+# edit_uri:
 # site_url: https://molstar.github.io/molstar-volseg/documentation
 dev_addr: '127.0.0.1:5000'

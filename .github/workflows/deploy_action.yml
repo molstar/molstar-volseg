@@ -1,6 +1,6 @@
 name: Run command on Mol* server
 
-on: 
+on:
   workflow_dispatch:
     inputs:
       args:

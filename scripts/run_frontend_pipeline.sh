@@ -11,5 +11,4 @@ mamba env update --file environment.yaml --prune
 
 pip install -e .
 
-python preprocessor/src/tools/deploy_db/deploy_frontend.py "$@" &> /sw/log_frontend_$TIMESTAMP.txt 
-
+python preprocessor/src/tools/deploy_db/deploy_frontend.py "$@" &> /sw/log_frontend_$TIMESTAMP.txt

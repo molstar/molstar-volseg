@@ -20,8 +20,8 @@ function getGitSha() {
 }
 
 
-// const DEFAULT_API_PREFIX = process.env.REACT_APP_VOLUME_API 
-//     ? !process.env.REACT_APP_VOLUME_API.endsWith('/') ? `${process.env.REACT_APP_VOLUME_API}/` : process.env.REACT_APP_VOLUME_API 
+// const DEFAULT_API_PREFIX = process.env.REACT_APP_VOLUME_API
+//     ? !process.env.REACT_APP_VOLUME_API.endsWith('/') ? `${process.env.REACT_APP_VOLUME_API}/` : process.env.REACT_APP_VOLUME_API
 //     : 'http://localhost:9000/';
 
 const DEFAULT_API_PREFIX = createApiPrefix()
@@ -71,7 +71,7 @@ export class VolumeApiV2 {
     public volumeServerUrl: string;
     public volumeServerGitTag: string;
     public volumeServerGitSha: string;
-    
+
     public constructor(
         volumeServerUrl: string = DEFAULT_VOLUME_SERVER_V2,
         volumeServerGitTag: string = GIT_TAG,

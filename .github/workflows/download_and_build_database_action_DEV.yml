@@ -1,6 +1,6 @@
 name: Download and build database on Cell* Dev server
 
-on: 
+on:
   workflow_dispatch:
     inputs:
       args:

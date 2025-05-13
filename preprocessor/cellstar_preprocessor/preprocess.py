@@ -848,7 +848,7 @@ class Preprocessor:
         analyzed_inputs: list[InputT] = []
 
         self.__check_if_inputs_exists(raw_inputs_list)
-        
+
         for input_item in raw_inputs_list:
             if input_item[1] == InputKind.extra_data:
                 analyzed_inputs.append(ExtraDataInput(input_path=input_item[0]))

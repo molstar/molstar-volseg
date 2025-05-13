@@ -15,4 +15,4 @@ git pull
 source /home/ubuntu/mambaforge/bin/activate cellstar-volume-server-PRODUCTION
 
 # call script
-python preprocessor/cellstar_preprocessor/tools/deploy_api/deploy_api.py "$@" &> /sw/log_api_$TIMESTAMP.txt 
+python preprocessor/cellstar_preprocessor/tools/deploy_api/deploy_api.py "$@" &> /sw/log_api_$TIMESTAMP.txt

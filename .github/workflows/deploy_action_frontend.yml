@@ -1,6 +1,6 @@
 name: Deploy frontend
 
-on: 
+on:
   workflow_dispatch:
     inputs:
       args:

@@ -24,4 +24,3 @@
   "include": [ "src/**/*", "src/extensions/volumes-and-segmentations", "src/extensions/meshes", "src/extensions/cvsx-extension" ],
   // "exclude": [ "src/servers/**/*", "src/perf-tests/*", "src/cli/**/*" ]
 }
-

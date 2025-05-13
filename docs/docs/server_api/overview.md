@@ -26,7 +26,7 @@ From the root repository directory, run `server/cellstar_server/serve.py` script
 ```shell
 python server/cellstar_server/serve.py
 ```
- 
+
 It will deploy server API at [http://localhost:9000/](http://localhost:9000/) with API documentation available at [http://localhost:9000/docs](http://localhost:9000/docs).
 
 In order for Mol\* Volumes & Segmentations extension of Mol\* 3D viewer to be able to load entries, [http://localhost:9000/v1](http://localhost:9000/v1) should be specified as Server Url parameter:

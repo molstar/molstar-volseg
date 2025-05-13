@@ -124,7 +124,7 @@ In order to add an `empiar-10988` entry with lattice segmentations based on mask
 
 	Next, create `test-data/preprocessor/sample_segmentations/empiar/empiar-10988` directory, change current directory to it, and download electron density mask files. E.g. from the root repository directory (`molstar-volseg` by default) run:
 
-    
+
     ```shell
     mkdir -p test-data/preprocessor/sample_segmentations/empiar/empiar-10988
     cd test-data/preprocessor/sample_segmentations/empiar/empiar-10988
@@ -167,12 +167,12 @@ In order to add an `empiar-10988` entry with lattice segmentations based on mask
 3. Add `empiar-10988` entry to the internal database
 
     In order to add an `empiar-10988` entry with segmentations based on masks to the internal database, from root directory (`molstar-volseg` by default) run:
-    
+
 ```shell
     python preprocessor/cellstar_preprocessor/preprocess.py preprocess --mode add --input-path extra_data_empiar_10988.json --input-kind extra_data --input-path test-data/preprocessor/sample_volumes/empiar/empiar-10988/TS_026.rec --input-kind map --input-path test-data/preprocessor/sample_segmentations/empiar/empiar-10988/TS_026.labels.mrc --input-kind mask --input-path test-data/preprocessor/sample_segmentations/empiar/empiar-10988/TS_026_membranes.mrc --input-kind mask --input-path test-data/preprocessor/sample_segmentations/empiar/empiar-10988/TS_026_fas.mrc --input-kind mask --input-path test-data/preprocessor/sample_segmentations/empiar/empiar-10988/TS_026_cytosol.mrc --input-kind mask --input-path test-data/preprocessor/sample_segmentations/empiar/empiar-10988/TS_026_cyto_ribosomes.mrc --input-kind mask --min-downsampling-level 4 --remove-original-resolution --entry-id empiar-10988 --source-db empiar --source-db-id empiar-10988 --source-db-name empiar --working-folder temp_working_folder --db-path preprocessor/temp/test_db
 ```
 
-Note that we are setting minimum downsampling level to `4` by using `--min-downsampling-level` argument and removing original resolution via `--remove-original-resolution` argument. The reason for this is that rendering of the original resolution data, and even the 2nd downsampling is computationally demanding. It is not related to the application itself, but rather to the size and complexity of the dataset.   
+Note that we are setting minimum downsampling level to `4` by using `--min-downsampling-level` argument and removing original resolution via `--remove-original-resolution` argument. The reason for this is that rendering of the original resolution data, and even the 2nd downsampling is computationally demanding. It is not related to the application itself, but rather to the size and complexity of the dataset.
 
 ### EMPIAR-11756
 In order to add an empiar-11756 entry with geometric segmentation to the internal database, follow the steps below:
@@ -189,7 +189,7 @@ In order to add an empiar-11756 entry with geometric segmentation to the interna
 
 	Next, create `test-data/preprocessor/sample_segmentations/empiar/empiar-11756` directory, change current directory to it, and download two `.star` files. E.g. from the root repository directory (`molstar-volseg` by default) run:
 
-    
+
     ```shell
     mkdir -p test-data/preprocessor/sample_segmentations/empiar/empiar-11756
     cd test-data/preprocessor/sample_segmentations/empiar/empiar-11756
@@ -219,7 +219,7 @@ In order to add an empiar-11756 entry with geometric segmentation to the interna
                 7.84,
                 7.84
             ]
-        }   
+        }
     }
     ```
 
@@ -255,9 +255,9 @@ In order to add an custom-hipsc_230741 entry to the internal database, follow th
     wget -O hipsc_230741_volume.ome.tif https://allencell.s3.amazonaws.com/aics/hipsc_single_cell_image_dataset/crop_raw/7922e74b69b77d6b51ea5f1627418397ab6007105a780913663ce1344905db5c_raw.ome.tif?versionId=yQ6YaOj1YgDNgS4DpsnmrNAkOQ.4pgS6
 	```
 
-	Next, create `test-data/preprocessor/sample_segmentations/custom/custom-hipsc_230741` directory, change current directory to it, and download OME-TIFF file with segmentation data. E.g. from the root repository directory (`molstar-volseg` by default) run: 
+	Next, create `test-data/preprocessor/sample_segmentations/custom/custom-hipsc_230741` directory, change current directory to it, and download OME-TIFF file with segmentation data. E.g. from the root repository directory (`molstar-volseg` by default) run:
 
-    
+
     ```shell
     mkdir -p test-data/preprocessor/sample_segmentations/custom/custom-hipsc_230741
     cd test-data/preprocessor/sample_segmentations/custom/custom-hipsc_230741
@@ -265,17 +265,17 @@ In order to add an custom-hipsc_230741 entry to the internal database, follow th
     ```
 
 2. Prepare addtional input files.
-    
+
     OMETIFF input files with volume and segmentation data contains incomplete information for preprocessing and subsequent rendering. To alleviate this, one can create JSON file with extra data, based on the content of [metadata.csv](https://open.quiltdata.com/b/allencell/tree/aics/hipsc_single_cell_image_dataset/metadata.csv).
-    Namely, we need to set voxel size, biologically meaningfull channel IDs for volume data and segmentation IDs for segmentation data, and specify missing OME-TIFF dimenstions. Besides, we can add biologically relavant annotation information (cell stage) that will be rendered in the Mol\* VS 2.0 user interface. 
+    Namely, we need to set voxel size, biologically meaningfull channel IDs for volume data and segmentation IDs for segmentation data, and specify missing OME-TIFF dimenstions. Besides, we can add biologically relavant annotation information (cell stage) that will be rendered in the Mol\* VS 2.0 user interface.
 
     We can extract the necessary information from [metadata.csv](https://open.quiltdata.com/b/allencell/tree/aics/hipsc_single_cell_image_dataset/metadata.csv) using the following approach:
 
      - **Voxel size**: value of `scale_micron` field (`[0.108333, 0.108333, 0.108333]`) converted to Angstroms (`[1083.33, 1083.33, 1083.33]`)
      - **Biologically meaningful channel IDs**: can be obtained from content of `name_dict` field, which corresponds to Python dictionary. We need the value of `crop_raw` key (`['dna', 'membrane', 'structure']`)
      - **Biologically meaningful segmentation IDs**: can be obtained from content of `name_dict` field as well. We need the value of `crop_seg` key (` ['dna_segmentation', 'membrane_segmentation', 'membrane_segmentation_roof', 'struct_segmentation', 'struct_segmentation_roof']`)
-     - **Missing OME-TIFF dimensions**: is not specified anywhere. To obtain this, we will need to open OME-TIFF file using `pyometiff` library that should be installed by default while creating the environment for Mol\* VS 2.0. 
-     
+     - **Missing OME-TIFF dimensions**: is not specified anywhere. To obtain this, we will need to open OME-TIFF file using `pyometiff` library that should be installed by default while creating the environment for Mol\* VS 2.0.
+
         You can run `python preprocessor/cellstar_preprocessor/tools/check_ometiff_dimensions/check_ometiff_dimensions.py` script to check the dimensions of OME-TIFF file:
 
         ```shell
@@ -308,8 +308,8 @@ In order to add an custom-hipsc_230741 entry to the internal database, follow th
             Data array shape (119, 3, 281, 268)
         ```
         It is obvious that the number of dimensions (5) does not correspond to array shape. In that case, most likely time dimension (`T`) is missing from the data array.
-    
-     - **Biologically relevant annotations**: We can add biologically relevant annotation data available in [metadata.csv](https://open.quiltdata.com/b/allencell/tree/aics/hipsc_single_cell_image_dataset/metadata.csv). Namely, the content of `cell_stage` field, which, for that cell ID is `M4M5`. 
+
+     - **Biologically relevant annotations**: We can add biologically relevant annotation data available in [metadata.csv](https://open.quiltdata.com/b/allencell/tree/aics/hipsc_single_cell_image_dataset/metadata.csv). Namely, the content of `cell_stage` field, which, for that cell ID is `M4M5`.
 
     Now, when we have obtained all the missing information, create `test-data/preprocessor/sample_segmentations/custom/custom-hipsc_230741/extra_data.json` JSON file with the following content:
     ```json
@@ -353,7 +353,7 @@ In order to add an custom-hipsc_230741 entry to the internal database, follow th
             }
         }
     }
-    ``` 
+    ```
 
 3. Add custom-hipsc_230741 entry to the internal database
 

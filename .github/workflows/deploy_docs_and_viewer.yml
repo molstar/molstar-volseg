@@ -78,7 +78,7 @@ jobs:
           mkdir -p ./public/docs
           cp -r docs/site/* ./public/docs/.
           cp -r molstar-extension/site/* ./public/.
-          
+
       - name: 🚢 deploy docs and viewer
         uses: peaceiris/actions-gh-pages@v4
         with:

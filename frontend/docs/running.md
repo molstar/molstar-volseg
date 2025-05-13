@@ -22,7 +22,7 @@ Running the example
   ```sh
   # in the root dir of the cellstar-volume-server
   conda activate cellstar-volume-server
-  python main.py 
+  python main.py
   # serves on localhost:9000
   ```
 

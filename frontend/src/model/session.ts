@@ -359,7 +359,7 @@ export class Session {
 
         // root.apply(StateTransforms.Representation.VolumeRepresentation3D, createVolumeRepresentationParams(this.plugin, volume, {
         //     type: 'direct-volume',
-        //     typeParams: { 
+        //     typeParams: {
         //         ignoreLight: true,
         //         stepsPerCell: 1,
         //         controlPoints,

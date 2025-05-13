@@ -2,8 +2,8 @@ import { BehaviorSubject } from 'rxjs';
 import { UUID } from 'molstar/lib/mol-util';
 
 
-/** Restricts SubjectBehavior.next method to a specific session, 
- * so that async functions from the previous sessions cannot 
+/** Restricts SubjectBehavior.next method to a specific session,
+ * so that async functions from the previous sessions cannot
  * change state in the current session. */
 export class SubjectSessionManager {
     currentSession: UUID = UUID.createv4();

@@ -13,4 +13,4 @@ git pull
 source /home/ubuntu/mambaforge/bin/activate cellstar-volume-server-PRODUCTION
 
 # run script
-python preprocessor/cellstar_preprocessor/tools/deploy_db/download_and_build.py "$@" &> /sw/log_$TIMESTAMP.txt 
+python preprocessor/cellstar_preprocessor/tools/deploy_db/download_and_build.py "$@" &> /sw/log_$TIMESTAMP.txt

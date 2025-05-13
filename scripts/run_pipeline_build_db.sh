@@ -11,5 +11,4 @@ mamba env update --file environment.yaml --prune
 
 pip install -e .
 
-python preprocessor/src/tools/deploy_db/build.py "$@" &> /sw/log_build_$TIMESTAMP.txt 
-
+python preprocessor/src/tools/deploy_db/build.py "$@" &> /sw/log_build_$TIMESTAMP.txt

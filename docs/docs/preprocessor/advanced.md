@@ -60,7 +60,7 @@ To leverage this advanced functionality, users should provide an additional inpu
 
 [![](extra_data_schema.jpg)](extra_data_schema.jpg)
 
-Note that all fields within the extra data section are designated as optional. Besides, the file containing the extra data must be provided as the first input file during the preprocessing execution. Full JSON schema is available online at [Github repository](https://github.com/molstar/molstar-volseg/blob/master/db/cellstar_db/extra_data_schema.json). 
+Note that all fields within the extra data section are designated as optional. Besides, the file containing the extra data must be provided as the first input file during the preprocessing execution. Full JSON schema is available online at [Github repository](https://github.com/molstar/molstar-volseg/blob/master/db/cellstar_db/extra_data_schema.json).
 
 [Tutorial on adding empiar-11756 entry to the internal database](../preprocessor/preprocess.md#empiar-11756) provides a practical example of utilizing JSON with extra data as one of the Preprocessor's input arguments. In this specific instance, this advanced functionality is employed to override the voxel size that the Preprocessor would automatically determine based on erroneous map header data within the volume map input file.
 

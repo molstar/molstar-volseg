@@ -1047,6 +1047,3 @@ export class VolsegEntryData extends PluginBehavior.WithSubscribers<VolsegEntryP
     }
 
 }
-
-
-

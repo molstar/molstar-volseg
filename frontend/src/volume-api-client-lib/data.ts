@@ -2,8 +2,8 @@
 // METADATA
 
 export interface Metadata {
-    grid: { 
-        general: { 
+    grid: {
+        general: {
             details: string ,
             source_db_name: string,
             source_db_id: string,
@@ -50,8 +50,8 @@ export interface SegmentationMeshes {
             }
         }
     }
-    detail_lvl_to_fraction: { 
-        [lvl: number]: number 
+    detail_lvl_to_fraction: {
+        [lvl: number]: number
     }
 }
 
@@ -79,21 +79,18 @@ type Vector3 = [number, number, number];
 
 /** Data representing a single mesh */
 export interface MeshData {
-    /** Unique numeric identifier of a mesh within a segment 
+    /** Unique numeric identifier of a mesh within a segment
      * (Actually I don't have any real-life example of a segment that would contain more than one mesh.
      * Maybe Aliaksei will know.) */
     mesh_id: number,
-    
-    /** Array of vertex indices [A0, B0, C0, A1, B1, C1, ... A(m-1), B(m-1), C(m-1)], 
-     * where m is the number of triangles, 
+
+    /** Array of vertex indices [A0, B0, C0, A1, B1, C1, ... A(m-1), B(m-1), C(m-1)],
+     * where m is the number of triangles,
      * and i-th triangle is formed by vertices Ai, Bi, Ci */
     triangles: number[],
-    
-    /** Array of floats [x0, y0, z0, x1, y1, z1, ... x(n-1), y(n-1), z(n-1)], 
-     * where n is the number of vertices, 
-     * and j-th vertex has coordinates xj, yj, zj */ 
-    vertices: number[],  
+
+    /** Array of floats [x0, y0, z0, x1, y1, z1, ... x(n-1), y(n-1), z(n-1)],
+     * where n is the number of vertices,
+     * and j-th vertex has coordinates xj, yj, zj */
+    vertices: number[],
 }
-
-
-

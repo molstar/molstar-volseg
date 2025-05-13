@@ -188,7 +188,7 @@ def extract_metadata_from_mask(internal_segmentation: InternalSegmentation):
                 internal_segmentation.map_headers[lattice_id]
             ),
         )
-        
+
         _get_mask_segmentation_sampling_info(lattice_gr, segmentation_sampling_info, internal_segmentation.map_headers[lattice_id], downsamplings)
 
         segmentation_lattices_metadata["segmentation_sampling_info"][

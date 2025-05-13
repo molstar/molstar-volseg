@@ -26,7 +26,7 @@ export namespace MetadataUtils {
         const details = segmentIds[segmentId].detail_lvls;
         return Object.keys(details).map(s => parseInt(s));
     }
-    /** Get the worst available detail level that is not worse than preferredDetail. 
+    /** Get the worst available detail level that is not worse than preferredDetail.
      * If preferredDetail is null, get the worst detail level overall.
      * (worse = greater number) */
     export function getSufficientDetail(metadata: Metadata, segmentId: number, preferredDetail: number | null) {

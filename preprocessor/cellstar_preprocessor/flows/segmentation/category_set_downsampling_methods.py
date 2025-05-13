@@ -84,7 +84,7 @@ def downsample_categorical_data(
             start_coords[1] : end_coords[1],
             start_coords[2] : end_coords[2],
         ]
-        
+
         # exclude block if any dimension = 0
         if any(i == 0 for i in block.shape):
             continue
@@ -126,7 +126,7 @@ def downsample_2x2x2_block(
     # by changing its args to block, categories
     # i.e. get categories ouside the function and pass it in
     # as numpy arrays
-    
+
     potentially_new_category: set = compute_union(block, previous_table)
     category_id: int = current_table.resolve_category(potentially_new_category)
     return category_id

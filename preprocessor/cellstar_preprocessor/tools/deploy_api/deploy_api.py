@@ -55,13 +55,13 @@ def run_api(args):
 
     if platform == "win32":
         deploy_env['DB_PATH'] = str(db_path.resolve())
-        
+
     if args.api_port:
         deploy_env['PORT'] = args.api_port
     lst = [
-        "python", "serve.py", 
+        "python", "serve.py",
     ]
-    
+
     if args.ssl_certfile and args.ssl_keyfile:
         lst.extend(
             [
@@ -71,7 +71,7 @@ def run_api(args):
                 str(Path(args.ssl_certfile).resolve())
             ]
         )
-    
+
     api_process = subprocess.Popen(lst, env=deploy_env, cwd='server/cellstar_server/')
     PROCESS_IDS_LIST.append(api_process.pid)
     print(f'API is running with args {vars(args)}')
@@ -89,4 +89,3 @@ if __name__ == '__main__':
     atexit.register(clean_up_processes, PROCESS_IDS_LIST)
     args = parse_script_args()
     deploy(args)
-

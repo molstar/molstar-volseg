@@ -129,7 +129,7 @@ npm install molstar-volseg
                 if (mvsUrl && mvsData) console.error('Cannot specify mvs-url and mvs-data URL parameters at the same time. Ignoring both.');
                 else if (mvsUrl) viewer.loadMvsFromUrl(mvsUrl, mvsFormat);
                 else if (mvsData) viewer.loadMvsData(mvsData, mvsFormat);
-                
+
                 var cvsxUrl = getParam('cvsx-url', '[^&]+').trim();
                 var cvsxFormat = getParam('cvsx-format', '[^&]+').trim() || 'cvsx';
                 if (cvsxUrl) viewer.loadCvsxFromUrl(cvsxUrl, cvsxFormat)
@@ -179,4 +179,3 @@ npm install http-server -g
 http-server
 ```
 It will serve the webpage with Mol* Viewer with Mol* Volumes & Segmentations extension at `http://127.0.0.1:8080` by default.
-

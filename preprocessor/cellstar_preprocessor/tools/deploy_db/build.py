@@ -99,7 +99,7 @@ def _preprocessor_internal_wrapper(
         )
     )
     print(f'Internal wrapper have added {entry_id} to the database')
-    
+
 
 def _preprocessor_external_wrapper(
     arguments_list: list[tuple[InputForBuildingDatabase, str, str]]
@@ -133,14 +133,14 @@ def build(args):
 
     config = json_to_list_of_inputs_for_building(Path(args.db_building_parameters_json))
     print('JSON with building parameters was parsed')
-    
+
     arguments_list = prepare_input_for_preprocessor(
         config=config,
         db_path=args.db_path,
         temp_zarr_hierarchy_storage_path=temp_zarr_hierarchy_storage_path,
     )
     print('Arguments list for preprocessor external wrapper was prepared')
-    
+
     _preprocessor_external_wrapper(arguments_list)
 
     print('Preprocessor external wrapper preprocessed all entries')

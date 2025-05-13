@@ -191,4 +191,3 @@ export async function actionToggleSegment(model: VolsegEntryData, segmentKey: st
 }
 export const SourceChoice = new Choice({ emdb: 'EMDB', empiar: 'EMPIAR', idr: 'IDR', pdbe: 'PDBe', custom: 'CUSTOM' }, 'emdb');
 export type Source = Choice.Values<typeof SourceChoice>;
-

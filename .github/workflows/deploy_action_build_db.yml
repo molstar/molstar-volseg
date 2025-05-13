@@ -1,6 +1,6 @@
 name: Build db
 
-on: 
+on:
   workflow_dispatch:
     inputs:
       args:

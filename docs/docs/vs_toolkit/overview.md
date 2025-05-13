@@ -2,7 +2,7 @@
 ## Quick start
 To run the Volumes & Segmentations toolkit and produce the static files suitable for visualization at the frontend:
 
-1. Build the internal database by adding desired entries using preprocessor (see [Documentation for preprocess command of Preprocessor](../preprocessor/preprocess.md) and [examples on how to add entries to the internal database](../preprocessor/preprocess.md#examples-of-using-preprocess-command-in-mode-add.md)) 
+1. Build the internal database by adding desired entries using preprocessor (see [Documentation for preprocess command of Preprocessor](../preprocessor/preprocess.md) and [examples on how to add entries to the internal database](../preprocessor/preprocess.md#examples-of-using-preprocess-command-in-mode-add.md))
 
 2. From repository root (`molstar-volseg` by default) run:
 ```shell
@@ -31,7 +31,7 @@ To run the Volumes & Segmentations toolkit and produce the static files suitable
 ## Example
 This example shows how produce `results.cvsx` CVSX file for `idr-13457537`internal database entry (with the database located in `temp/test_db`) containing the volume data for channel 2 and timeframe index 4, and segmentation data for all available segmentation kinds and timeframe index 4
 
-First create `json_with_query_params.json` file with the following content: 
+First create `json_with_query_params.json` file with the following content:
 
 ```json
 {
@@ -46,5 +46,5 @@ Then use the following command:
     ```
     python vs_toolkit.py --db_path temp/test_db --out results.cvsx --json-params-path json_with_query_params.json
     ```
-    
+
 This will query data for channel `2` and time frame `4` for volume and data for all available segmentation kinds and time frame `4`, and pack it into `idr-13457537.cvsx` file
